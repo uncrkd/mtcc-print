@@ -1,0 +1,10 @@
+{
+    "value": {
+        "lat": 43.6437126000000006342816050164401531219482421875,
+        "lng": -79.3868063000000034890035749413073062896728515625,
+        "formatted_address": "255 Front St W, Toronto, ON M5V 2W6, Canada",
+        "place_id": "ChIJ5ZZHo9Y0K4gRv5X9yFE_Q18"
+    },
+    "cached_at": "2026-03-11T12:11:24-05:00",
+    "expires_at": 1773335484
+}

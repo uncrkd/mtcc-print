@@ -1,0 +1,937 @@
+{
+    "entries": [
+        {
+            "id": "act_69b100e472806",
+            "timestamp": "2026-03-11 00:43:00",
+            "action": "packing_updated",
+            "order_ref": "TECH-012",
+            "details": "Packing set to: Custom",
+            "user": "Print Stuff Pro",
+            "source": "vendor_portal"
+        },
+        {
+            "id": "act_69b100e323e8d",
+            "timestamp": "2026-03-11 00:42:59",
+            "action": "packing_updated",
+            "order_ref": "TECH-012",
+            "details": "Packing set to: Tube",
+            "user": "Print Stuff Pro",
+            "source": "vendor_portal"
+        },
+        {
+            "id": "act_69b100e1cef47",
+            "timestamp": "2026-03-11 00:42:57",
+            "action": "packing_updated",
+            "order_ref": "TECH-012",
+            "details": "Packing set to: Box",
+            "user": "Print Stuff Pro",
+            "source": "vendor_portal"
+        },
+        {
+            "id": "act_69b100e03d276",
+            "timestamp": "2026-03-11 00:42:56",
+            "action": "packing_updated",
+            "order_ref": "TECH-012",
+            "details": "Packing set to: Tube",
+            "user": "Print Stuff Pro",
+            "source": "vendor_portal"
+        },
+        {
+            "id": "act_69b0ff5e1c87a",
+            "timestamp": "2026-03-11 00:36:30",
+            "action": "packing_updated",
+            "order_ref": "TECH-012",
+            "details": "Packing set to: None",
+            "user": "Print Stuff Pro",
+            "source": "vendor_portal"
+        },
+        {
+            "id": "act_69b0ff5940638",
+            "timestamp": "2026-03-11 00:36:25",
+            "action": "packing_updated",
+            "order_ref": "MST-014",
+            "details": "Packing set to: Custom",
+            "user": "Print Stuff Pro",
+            "source": "vendor_portal"
+        },
+        {
+            "id": "act_69b0ff574c619",
+            "timestamp": "2026-03-11 00:36:23",
+            "action": "packing_updated",
+            "order_ref": "MST-014",
+            "details": "Packing set to: Box",
+            "user": "Print Stuff Pro",
+            "source": "vendor_portal"
+        },
+        {
+            "id": "act_69b0ff562efee",
+            "timestamp": "2026-03-11 00:36:22",
+            "action": "packing_updated",
+            "order_ref": "MST-014",
+            "details": "Packing set to: None",
+            "user": "Print Stuff Pro",
+            "source": "vendor_portal"
+        },
+        {
+            "id": "act_69b0ff5258598",
+            "timestamp": "2026-03-11 00:36:18",
+            "action": "packing_updated",
+            "order_ref": "MST-014",
+            "details": "Packing set to: Tube",
+            "user": "Print Stuff Pro",
+            "source": "vendor_portal"
+        },
+        {
+            "id": "act_69b0ff507fbe9",
+            "timestamp": "2026-03-11 00:36:16",
+            "action": "packing_updated",
+            "order_ref": "MST-014",
+            "details": "Packing set to: Box",
+            "user": "Print Stuff Pro",
+            "source": "vendor_portal"
+        },
+        {
+            "id": "act_69b0ff4f205db",
+            "timestamp": "2026-03-11 00:36:15",
+            "action": "packing_updated",
+            "order_ref": "MST-014",
+            "details": "Packing set to: Tube",
+            "user": "Print Stuff Pro",
+            "source": "vendor_portal"
+        },
+        {
+            "id": "act_69b0ff4962712",
+            "timestamp": "2026-03-11 00:36:09",
+            "action": "packing_updated",
+            "order_ref": "MST-014",
+            "details": "Packing set to: None",
+            "user": "Print Stuff Pro",
+            "source": "vendor_portal"
+        },
+        {
+            "id": "act_69b0ff48b2bee",
+            "timestamp": "2026-03-11 00:36:08",
+            "action": "packing_updated",
+            "order_ref": "MST-014",
+            "details": "Packing set to: Custom",
+            "user": "Print Stuff Pro",
+            "source": "vendor_portal"
+        },
+        {
+            "id": "act_69b0fd9ecb2b5",
+            "timestamp": "2026-03-11 00:29:02",
+            "action": "packing_updated",
+            "order_ref": "MST-014",
+            "details": "Packing set to: None",
+            "user": "Print Stuff Pro",
+            "source": "vendor_portal"
+        },
+        {
+            "id": "act_69b0fd9cd7074",
+            "timestamp": "2026-03-11 00:29:00",
+            "action": "packing_updated",
+            "order_ref": "MST-014",
+            "details": "Packing set to: Custom",
+            "user": "Print Stuff Pro",
+            "source": "vendor_portal"
+        },
+        {
+            "id": "act_69b0fd966efd7",
+            "timestamp": "2026-03-11 00:28:54",
+            "action": "packing_updated",
+            "order_ref": "MST-014",
+            "details": "Packing set to: Box",
+            "user": "Print Stuff Pro",
+            "source": "vendor_portal"
+        },
+        {
+            "id": "act_69b0fad62df63",
+            "timestamp": "2026-03-11 00:17:10",
+            "action": "packing_details_updated",
+            "order_ref": "TECH-012",
+            "details": "Packing details: qty 1",
+            "user": "Print Stuff Pro",
+            "source": "vendor_portal"
+        },
+        {
+            "id": "act_69b0fa1a11238",
+            "timestamp": "2026-03-11 00:14:02",
+            "action": "packing_details_updated",
+            "order_ref": "TECH-012",
+            "details": "Packing details: qty 1",
+            "user": "Print Stuff Pro",
+            "source": "vendor_portal"
+        },
+        {
+            "id": "act_69b0f8d3a03ca",
+            "timestamp": "2026-03-11 00:08:35",
+            "action": "packing_details_updated",
+            "order_ref": "TECH-012",
+            "details": "Packing details: qty 1",
+            "user": "Print Stuff Pro",
+            "source": "vendor_portal"
+        },
+        {
+            "id": "act_69b0f6bdabccc",
+            "timestamp": "2026-03-10 23:59:41",
+            "action": "packing_details_updated",
+            "order_ref": "TECH-012",
+            "details": "Packing details: qty 1",
+            "user": "Print Stuff Pro",
+            "source": "vendor_portal"
+        },
+        {
+            "id": "act_69b0eb523a10b",
+            "timestamp": "2026-03-10 23:10:58",
+            "action": "packing_details_updated",
+            "order_ref": "MST-014",
+            "details": "Packing details: qty 1",
+            "user": "Print Stuff Pro",
+            "source": "vendor_portal"
+        },
+        {
+            "id": "act_69b0eb50ec1b1",
+            "timestamp": "2026-03-10 23:10:56",
+            "action": "packing_updated",
+            "order_ref": "MST-014",
+            "details": "Packing set to: Tube",
+            "user": "Print Stuff Pro",
+            "source": "vendor_portal"
+        },
+        {
+            "id": "act_69b0eb0808473",
+            "timestamp": "2026-03-10 23:09:44",
+            "action": "packing_updated",
+            "order_ref": "TECH-012",
+            "details": "Packing set to: Box",
+            "user": "Print Stuff Pro",
+            "source": "vendor_portal"
+        },
+        {
+            "id": "act_69b0ea6d7b2d1",
+            "timestamp": "2026-03-10 23:07:09",
+            "action": "packing_details_updated",
+            "order_ref": "TECH-012",
+            "details": "Packing details: qty 1",
+            "user": "Print Stuff Pro",
+            "source": "vendor_portal"
+        },
+        {
+            "id": "act_69b0ea6c3c4f5",
+            "timestamp": "2026-03-10 23:07:08",
+            "action": "packing_updated",
+            "order_ref": "TECH-012",
+            "details": "Packing set to: Tube",
+            "user": "Print Stuff Pro",
+            "source": "vendor_portal"
+        },
+        {
+            "id": "act_69b0ea6a6d883",
+            "timestamp": "2026-03-10 23:07:06",
+            "action": "packing_details_updated",
+            "order_ref": "TECH-012",
+            "details": "Packing details: qty ",
+            "user": "Print Stuff Pro",
+            "source": "vendor_portal"
+        },
+        {
+            "id": "act_69b0ea644e9f5",
+            "timestamp": "2026-03-10 23:07:00",
+            "action": "packing_updated",
+            "order_ref": "TECH-012",
+            "details": "Packing set to: Box",
+            "user": "Print Stuff Pro",
+            "source": "vendor_portal"
+        },
+        {
+            "id": "act_69b0e5ae10b42",
+            "timestamp": "2026-03-10 22:46:54",
+            "action": "packing_details_updated",
+            "order_ref": "TECH-012",
+            "details": "Packing details: qty 3",
+            "user": "Print Stuff Pro",
+            "source": "vendor_portal"
+        },
+        {
+            "id": "act_69b0e56d93a4d",
+            "timestamp": "2026-03-10 22:45:49",
+            "action": "packing_details_updated",
+            "order_ref": "TECH-012",
+            "details": "Packing details: qty 1",
+            "user": "Print Stuff Pro",
+            "source": "vendor_portal"
+        },
+        {
+            "id": "act_69b0a606ef4a1",
+            "timestamp": "2026-03-10 18:15:18",
+            "action": "vendor_ref_updated",
+            "order_ref": "MST-014",
+            "details": "Vendor order # set: 1544652",
+            "user": "Print Stuff Pro",
+            "source": "vendor_portal"
+        },
+        {
+            "id": "act_69ae616e64f29",
+            "timestamp": "2026-03-09 00:58:06",
+            "action": "batch_price_submitted",
+            "order_ref": "FB-001",
+            "details": "Batch price submitted: $127.69 (2 items, tubes: 2 \u00d7 $7.50)",
+            "user": "Print Stuff Pro",
+            "source": "vendor_portal"
+        },
+        {
+            "id": "act_69aa6079a9c1a",
+            "timestamp": "2026-03-05 23:04:57",
+            "action": "price_accepted",
+            "order_ref": "MST-014",
+            "details": "Price accepted: $50.29",
+            "user": "Zeus (God Mode)",
+            "source": "admin_via_vendor_portal"
+        },
+        {
+            "id": "act_69aa5a14defa3",
+            "timestamp": "2026-03-05 22:37:40",
+            "action": "packing_updated",
+            "order_ref": "TECH-017",
+            "details": "Packing set to: Custom",
+            "user": "Zeus (God Mode)",
+            "source": "admin_via_vendor_portal"
+        },
+        {
+            "id": "act_69aa5a089ce36",
+            "timestamp": "2026-03-05 22:37:28",
+            "action": "packing_updated",
+            "order_ref": "COMIC-010",
+            "details": "Packing set to: Box",
+            "user": "Zeus (God Mode)",
+            "source": "admin_via_vendor_portal"
+        },
+        {
+            "id": "act_69aa59fc5ec15",
+            "timestamp": "2026-03-05 22:37:16",
+            "action": "packing_updated",
+            "order_ref": "COMIC-004",
+            "details": "Packing set to: Tube",
+            "user": "Zeus (God Mode)",
+            "source": "admin_via_vendor_portal"
+        },
+        {
+            "id": "act_69a7e04504cda",
+            "timestamp": "2026-03-04 01:33:25",
+            "action": "vendor_price_submitted",
+            "order_ref": "MST-014",
+            "details": "Price submitted: $50.29 (base $37.00 + packing $7.50 + tax $5.79)",
+            "user": "Print Stuff Pro",
+            "source": "vendor_portal"
+        },
+        {
+            "id": "act_6989826e693e0",
+            "timestamp": "2026-02-09 00:45:02",
+            "action": "vendor_marked_ready",
+            "order_ref": "TECH-003",
+            "details": "Marked as printed\/ready via admin (vendor portal)",
+            "user": "Zeus (God Mode)",
+            "source": "admin_via_vendor_portal"
+        },
+        {
+            "id": "act_69898259c8e27",
+            "timestamp": "2026-02-09 00:44:41",
+            "action": "vendor_approved",
+            "order_ref": "TECH-017",
+            "details": "Order approved for print via admin (vendor portal)",
+            "user": "Zeus (God Mode)",
+            "source": "admin_via_vendor_portal"
+        },
+        {
+            "id": "act_69898255dde17",
+            "timestamp": "2026-02-09 00:44:37",
+            "action": "vendor_approved",
+            "order_ref": "COMIC-004",
+            "details": "Order approved for print via admin (vendor portal)",
+            "user": "Zeus (God Mode)",
+            "source": "admin_via_vendor_portal"
+        },
+        {
+            "id": "act_69898246c971a",
+            "timestamp": "2026-02-09 00:44:22",
+            "action": "vendor_approved",
+            "order_ref": "COMIC-010",
+            "details": "Order approved for print via admin (vendor portal)",
+            "user": "Zeus (God Mode)",
+            "source": "admin_via_vendor_portal"
+        },
+        {
+            "timestamp": "2026-01-14T12:16:13-06:00",
+            "username": "george",
+            "name": "George",
+            "role": "Super Admin",
+            "action": "User Created",
+            "details": {
+                "new_user": "mtcc",
+                "role": "admin"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-01-15T14:44:51-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Password authentication",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/143.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-01-16T00:28:59-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Password authentication",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/143.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-01-16T01:57:40-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Password authentication",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/143.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-01-16T10:44:30-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Password authentication",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/143.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-01-16T12:40:59-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Password authentication",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/143.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-01-16T15:59:46-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Password authentication",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/143.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-01-16T17:09:38-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Password authentication",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/143.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-01-17T00:39:33-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Password authentication",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/143.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-01-17T10:06:16-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_failed",
+            "details": {
+                "success": false,
+                "reason": "Invalid password",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/143.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-01-17T10:06:24-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Password authentication",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/143.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-01-17T11:50:05-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Password authentication",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/143.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-01-17T13:37:58-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Password authentication",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/143.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-01-17T15:22:06-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Password authentication",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/143.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-01-18T21:52:36-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Password authentication",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/143.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-01-19T00:40:46-06:00",
+            "username": "george",
+            "name": "George",
+            "role": "Super Admin",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Password authentication",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/143.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-01-28T13:15:32-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Password authentication",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/144.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-01-30T20:27:09-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Password authentication",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/144.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "76.70.112.182"
+        },
+        {
+            "timestamp": "2026-01-30T23:17:17-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Password authentication",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/144.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "76.70.112.182"
+        },
+        {
+            "timestamp": "2026-01-31T08:31:35-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Auto-login via Remember Me",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/144.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "76.70.112.182"
+        },
+        {
+            "timestamp": "2026-01-31T11:38:40-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Auto-login via Remember Me",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/144.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "76.70.112.182"
+        },
+        {
+            "timestamp": "2026-01-31T17:02:02-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Password authentication",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/144.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "76.70.112.182"
+        },
+        {
+            "timestamp": "2026-02-01T01:02:44-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Auto-login via Remember Me",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/144.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "76.70.112.182"
+        },
+        {
+            "timestamp": "2026-02-01T01:03:44-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Auto-login via Remember Me",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/144.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "76.70.112.182"
+        },
+        {
+            "timestamp": "2026-02-01T13:49:42-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Password authentication",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/144.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "76.70.112.182"
+        },
+        {
+            "timestamp": "2026-02-01T19:41:57-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Password authentication",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/144.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "76.70.112.182"
+        },
+        {
+            "timestamp": "2026-02-02T08:29:04-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Password authentication",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/144.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "76.70.112.182"
+        },
+        {
+            "timestamp": "2026-02-03T00:49:52-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Password authentication",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/144.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-02-03T12:38:42-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Password authentication",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/144.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-02-04T22:48:55-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Password authentication",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/144.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-02-04T23:45:56-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Password authentication",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/144.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-02-05T07:46:20-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Auto-login via Remember Me",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/144.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-02-05T07:47:20-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Auto-login via Remember Me",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/144.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-02-05T15:48:20-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Auto-login via Remember Me",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/144.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-02-05T15:49:20-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Auto-login via Remember Me",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/144.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-02-05T23:50:21-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Auto-login via Remember Me",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/144.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-02-05T23:51:21-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Auto-login via Remember Me",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/144.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-02-06T07:52:21-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Auto-login via Remember Me",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/144.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-02-06T07:53:21-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Auto-login via Remember Me",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/144.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-02-06T15:54:21-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Auto-login via Remember Me",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/144.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-02-06T15:55:21-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Auto-login via Remember Me",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/144.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        }
+    ]
+}

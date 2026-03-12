@@ -1,0 +1,1490 @@
+/**
+ * Production Management Styles - Phase 4
+ * =====================================
+ * Styles for vendor management and production queue interface.
+ * 
+ * Location: /admin/production-styles.css
+ */
+
+/* =====================================================
+   CONTAINER
+   ===================================================== */
+.production-container {
+    padding: 0 20px 40px;
+}
+
+/* =====================================================
+   TAB NAVIGATION
+   ===================================================== */
+.tab-navigation {
+    display: flex;
+    gap: 0;
+    margin-bottom: 24px;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.tab-btn {
+    padding: 12px 24px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #64748b;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: 'Montserrat', sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tab-btn:hover {
+    color: #475569;
+    background: #f8fafc;
+}
+
+.tab-btn.active {
+    color: #7c3aed;
+    border-bottom-color: #7c3aed;
+}
+
+.tab-btn .badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    background: #e2e8f0;
+    color: #64748b;
+    border-radius: 10px;
+}
+
+.tab-btn.active .badge {
+    background: #7c3aed;
+    color: white;
+}
+
+.tab-btn .badge.alert {
+    background: #ef4444;
+    color: white;
+}
+
+/* =====================================================
+   TAB CONTENT
+   ===================================================== */
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* =====================================================
+   ALERT BOX
+   ===================================================== */
+.alert-box {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+}
+
+.alert-box.warning {
+    background: #fef3c7;
+    border: 1px solid #fcd34d;
+    color: #92400e;
+}
+
+.alert-box .btn-link {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: #7c3aed;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.alert-box .btn-link:hover {
+    text-decoration: underline;
+}
+
+/* =====================================================
+   QUEUE TABLE
+   ===================================================== */
+.queue-table-wrapper {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+}
+
+.queue-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.queue-table th {
+    background: #f8fafc;
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.queue-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 0.875rem;
+    color: #374151;
+}
+
+.queue-table tr:last-child td {
+    border-bottom: none;
+}
+
+.queue-table tbody tr:nth-child(even) {
+    background: #fafbfc;
+}
+
+.queue-table tbody tr:hover {
+    background: #f8fafc;
+    box-shadow: 0 2px 8px rgba(124, 58, 237, 0.1);
+}
+
+.queue-table tbody tr:nth-child(even):hover {
+    background: #f1f5f9;
+}
+
+.order-link {
+    color: #7c3aed;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.order-link:hover {
+    text-decoration: underline;
+}
+
+/* Action Buttons in Table */
+.action-buttons {
+    display: flex;
+    gap: 6px;
+}
+
+.action-buttons button {
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s ease;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.btn-push {
+    background: #7c3aed;
+    color: white;
+}
+
+.btn-push:hover {
+    background: #6d28d9;
+}
+
+.btn-issue {
+    background: #dc2626;
+    color: white;
+    border: none !important;
+}
+
+.btn-issue:hover {
+    background: #b91c1c;
+}
+
+.btn-confirm {
+    background: #10b981;
+    color: white;
+}
+
+.btn-confirm:hover {
+    background: #059669;
+}
+
+.btn-ready {
+    background: #06b6d4;
+    color: white;
+}
+
+.btn-ready:hover {
+    background: #0891b2;
+}
+
+.btn-resolve {
+    background: #10b981;
+    color: white;
+}
+
+.btn-resolve:hover {
+    background: #059669;
+}
+
+/* Status Badges */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.status-badge.status-production {
+    background: #f3e8ff;
+    color: #7c3aed;
+}
+
+.status-badge.status-printing {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.status-badge.status-ready {
+    background: #ecfeff;
+    color: #0e7490;
+}
+
+/* =====================================================
+   IN PROGRESS - BULK ACTION BAR
+   ===================================================== */
+.progress-bulk-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    margin-bottom: 12px;
+}
+
+.progress-bulk-bar .bulk-count {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #475569;
+    margin-right: 6px;
+}
+
+.progress-bulk-bar button {
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s ease;
+    font-family: 'Montserrat', sans-serif;
+}
+
+
+/* =====================================================
+   VENDORS GRID
+   ===================================================== */
+.vendors-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 20px;
+}
+
+.vendor-card {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+    transition: all 0.2s ease;
+}
+
+.vendor-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.vendor-card.inactive {
+    opacity: 0.6;
+}
+
+.vendor-card.is-default {
+    border-color: #c4b5fd;
+    box-shadow: 0 0 0 1px #c4b5fd;
+}
+
+.vendor-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 16px 20px;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.vendor-header-left {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.vendor-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.default-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    background: #f5f3ff;
+    color: #7c3aed;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.vendor-status {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.vendor-status.active {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.vendor-status.inactive {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+.vendor-card-body {
+    padding: 20px;
+}
+
+.vendor-info {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.vendor-info-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 0.85rem;
+}
+
+.vendor-info-row .icon {
+    flex-shrink: 0;
+    width: 20px;
+    text-align: center;
+    color: #64748b;
+}
+
+.vendor-info-row .value {
+    color: #374151;
+    word-break: break-word;
+}
+
+.vendor-info-row .value a {
+    color: #7c3aed;
+    text-decoration: none;
+}
+
+.vendor-info-row .value a:hover {
+    text-decoration: underline;
+}
+
+.vendor-card-footer {
+    display: flex;
+    gap: 8px;
+    padding: 16px 20px;
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+}
+
+.vendor-card-footer .btn {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+    font-family: 'Montserrat', sans-serif;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.vendor-card-footer .btn-edit {
+    flex: 1;
+    background: #7c3aed;
+    color: white;
+    border: none;
+}
+
+.vendor-card-footer .btn-edit:hover {
+    background: #6d28d9;
+}
+
+.vendor-card-footer .btn-toggle {
+    flex: 1;
+    background: white;
+    color: #64748b;
+    border: 1px solid #e2e8f0;
+}
+
+.vendor-card-footer .btn-toggle:hover {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.vendor-card-footer .btn-default {
+    background: white;
+    color: #f59e0b;
+    border: 1px solid #fcd34d;
+    flex: 0 0 auto;
+}
+
+.vendor-card-footer .btn-default:hover {
+    background: #fffbeb;
+}
+
+.vendor-card-footer .btn-delete {
+    background: white;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+    flex: 0 0 auto;
+}
+
+.vendor-card-footer .btn-delete:hover {
+    background: #fef2f2;
+}
+
+/* Add Vendor Card */
+.add-vendor-card {
+    border: 2px dashed #cbd5e1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-height: 200px;
+}
+
+.add-vendor-card:hover {
+    border-color: #7c3aed;
+    background: #f5f3ff;
+}
+
+.add-vendor-card .plus-icon {
+    font-size: 3rem;
+    color: #94a3b8;
+    margin-bottom: 12px;
+    line-height: 1;
+}
+
+.add-vendor-card:hover .plus-icon {
+    color: #7c3aed;
+}
+
+.add-vendor-card .add-text {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #64748b;
+}
+
+.add-vendor-card:hover .add-text {
+    color: #7c3aed;
+}
+
+.add-vendor-card .max-text {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    margin-top: 4px;
+}
+
+/* =====================================================
+   EMPTY STATE
+   ===================================================== */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #64748b;
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+}
+
+.empty-state .icon {
+    font-size: 3rem;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.empty-state .title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 8px;
+}
+
+.empty-state .description {
+    font-size: 0.9rem;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.empty-state.success {
+    border-color: #bbf7d0;
+    background: linear-gradient(135deg, #f0fdf4 0%, white 100%);
+}
+
+.empty-state.success .icon {
+    opacity: 1;
+    color: #22c55e;
+}
+
+/* =====================================================
+   MODAL
+   ===================================================== */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-overlay.show {
+    display: flex;
+}
+
+.modal {
+    background: white;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    margin: 20px;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.modal-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.modal-close {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: #f1f5f9;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1.25rem;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-close:hover {
+    background: #e2e8f0;
+    color: #374151;
+}
+
+.modal-body {
+    padding: 24px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group:last-child {
+    margin-bottom: 0;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 6px;
+}
+
+.form-group label .required {
+    color: #dc2626;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 10px 14px;
+    font-size: 0.9rem;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-family: 'Montserrat', sans-serif;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #7c3aed;
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.form-group.checkbox-group label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.form-group.checkbox-group input[type="checkbox"] {
+    width: auto;
+}
+
+.push-order-info {
+    background: #f8fafc;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 0.875rem;
+    color: #374151;
+}
+
+.modal-footer {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    padding: 20px 24px;
+    border-top: 1px solid #e2e8f0;
+    background: #f8fafc;
+    border-radius: 0 0 16px 16px;
+}
+
+.modal-footer .btn {
+    padding: 10px 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'Montserrat', sans-serif;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.modal-footer .btn-cancel {
+    background: white;
+    color: #64748b;
+    border: 1px solid #e2e8f0;
+}
+
+.modal-footer .btn-cancel:hover {
+    background: #f1f5f9;
+}
+
+.modal-footer .btn-save {
+    background: #7c3aed;
+    color: white;
+    border: none;
+}
+
+.modal-footer .btn-save:hover {
+    background: #6d28d9;
+}
+
+.modal-footer .btn-save:disabled {
+    background: #a5b4fc;
+    cursor: not-allowed;
+}
+
+.modal-footer .btn-warning {
+    background: #f59e0b;
+    color: white;
+    border: none;
+}
+
+.modal-footer .btn-warning:hover {
+    background: #d97706;
+}
+
+/* =====================================================
+   TOAST NOTIFICATION
+   ===================================================== */
+.toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 14px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    z-index: 2000;
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.3s ease;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.toast.show {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.toast.success {
+    background: #059669;
+    color: white;
+}
+
+.toast.error {
+    background: #dc2626;
+    color: white;
+}
+
+
+
+/* =====================================================
+   PAGE HEADER BUTTONS (on dark purple gradient)
+   ===================================================== */
+.pf-header-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    white-space: nowrap;
+    border: none;
+    line-height: 1;
+}
+
+.pf-btn-analytics {
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+.pf-btn-analytics:hover {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+.pf-btn-push-selected {
+    background: white;
+    color: rgba(64, 0, 128, 1);
+    font-weight: 700;
+}
+.pf-btn-push-selected:hover {
+    background: #f0ecff;
+}
+
+/* =====================================================
+   FILE ISSUES - Detail Column & Notes Sub-Rows
+   ===================================================== */
+.issue-details-cell {
+    max-width: 400px;
+}
+
+.issue-reason {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 0;
+}
+
+.issue-source {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+.issue-source.source-vendor {
+    background: #fef3c7;
+    color: #92400e;
+}
+.issue-source.source-admin {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.issue-text {
+    font-size: 0.8rem;
+    color: #374151;
+    line-height: 1.4;
+}
+
+.issue-time {
+    font-size: 0.7rem;
+    color: #9ca3af;
+    flex-basis: 100%;
+}
+
+/* Notes sub-rows beneath each file issue order */
+.issue-notes-row {
+    border-top: none !important;
+}
+.issue-notes-row > td {
+    padding: 5px 12px 5px 28px !important;
+    border-top: none !important;
+    font-size: 0.8rem;
+    line-height: 1.4;
+}
+
+/* Vendor note rows - amber tint */
+.vendor-note-row > td {
+    background: #fffbeb;
+}
+
+/* Admin production note rows - blue tint */
+.production-note-row > td {
+    background: #eff6ff;
+}
+
+/* Customer note rows - gray tint */
+.customer-note-row > td {
+    background: #f9fafb;
+}
+
+/* Label styling for notes rows */
+.notes-row-label {
+    font-weight: 600;
+    margin-right: 6px;
+    white-space: nowrap;
+}
+.notes-row-label.vendor-label {
+    color: #92400e;
+}
+.notes-row-label.admin-label {
+    color: #1e40af;
+}
+.notes-row-label.customer-label {
+    color: #6b7280;
+}
+
+.notes-row-text {
+    color: #374151;
+}
+
+.notes-row-time {
+    font-size: 0.7rem;
+    color: #9ca3af;
+    margin-left: 8px;
+}
+
+/* Visual separator between issue groups - notes sub-rows get grouped with their parent */
+.issue-table .issue-notes-row + .issue-row > td {
+    border-top: 2px solid #d1d5db;
+    padding-top: 10px;
+}
+
+/* Muted text helper */
+.text-muted {
+    color: #9ca3af;
+}
+
+/* =====================================================
+   RESPONSIVE
+   ===================================================== */
+@media (max-width: 768px) {
+    .production-container {
+        padding: 0 12px 24px;
+    }
+    
+    .tab-navigation {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .tab-btn {
+        padding: 10px 16px;
+        font-size: 0.85rem;
+        white-space: nowrap;
+    }
+    
+    .queue-table-wrapper {
+        overflow-x: auto;
+    }
+    
+    .queue-table th,
+    .queue-table td {
+        padding: 10px 12px;
+        white-space: nowrap;
+    }
+    
+    .vendors-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .vendor-card-footer {
+        flex-wrap: wrap;
+    }
+    
+    .vendor-card-footer .btn-edit,
+    .vendor-card-footer .btn-toggle {
+        flex: 1 1 calc(50% - 4px);
+    }
+    
+    .modal {
+        margin: 10px;
+        max-height: 95vh;
+    }
+}
+
+@media (max-width: 480px) {
+    .action-buttons {
+        flex-direction: column;
+        gap: 4px;
+    }
+    
+    .action-buttons button {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .vendor-card-footer {
+        flex-direction: column;
+    }
+    
+    .vendor-card-footer .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* =====================================================
+   PHASE 6: ENHANCED TRACKING STYLES
+   ===================================================== */
+
+/* Overdue & Critical Row Styles */
+/* Colored row backgrounds removed - using standard alternating rows */
+
+/* Status Badge Variants */
+.status-badge.status-overdue {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-badge.status-critical {
+    background: #dc2626;
+    color: white;
+}
+
+/* Time Indicator */
+.time-indicator {
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+.time-indicator.overdue {
+    color: #d97706;
+    font-weight: 600;
+}
+
+.time-indicator.critical {
+    color: #dc2626;
+    font-weight: 700;
+}
+
+/* Download Badge */
+.download-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.download-badge.has-downloads {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.download-badge.no-downloads {
+    background: #f1f5f9;
+    color: #94a3b8;
+}
+
+/* New Action Buttons */
+.btn-details {
+    background: #6366f1;
+    color: white;
+    border: none !important;
+}
+
+.btn-details:hover {
+    background: #4f46e5;
+}
+
+.btn-resend {
+    background: #2563eb;
+    color: white;
+    border: none !important;
+}
+
+.btn-resend:hover {
+    background: #1d4ed8;
+}
+
+/* Wide Modal Variant */
+.modal.modal-wide {
+    max-width: 700px;
+}
+
+/* Details Grid */
+.details-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.details-section {
+    background: #f8fafc;
+    border-radius: 10px;
+    padding: 16px 20px;
+}
+
+.details-section h4 {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #374151;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0 0 12px 0;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.details-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 8px 0;
+    font-size: 0.9rem;
+}
+
+.details-row .label {
+    color: #64748b;
+    flex-shrink: 0;
+    margin-right: 16px;
+}
+
+.details-row .value {
+    color: #1e293b;
+    font-weight: 500;
+    text-align: right;
+}
+
+.details-row .value.active {
+    color: #16a34a;
+}
+
+.details-row .value.expired {
+    color: #dc2626;
+}
+
+.details-row .value.revoked {
+    color: #64748b;
+}
+
+.details-row .token-value {
+    font-family: monospace;
+    background: #e2e8f0;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+}
+
+.details-row .portal-link {
+    color: #7c3aed;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.details-row .portal-link:hover {
+    text-decoration: underline;
+}
+
+.btn-copy {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 2px 6px;
+    margin-left: 8px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+}
+
+.btn-copy:hover {
+    background: #e2e8f0;
+}
+
+.details-row.notes-row {
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.details-row.notes-row .value {
+    text-align: left;
+    margin-top: 4px;
+    background: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.no-data {
+    color: #94a3b8;
+    font-style: italic;
+    font-size: 0.85rem;
+}
+
+/* Alert Section in Details */
+.details-section.alert-section {
+    border: 2px solid;
+}
+
+.details-section.alert-section.warning {
+    background: #fef3c7;
+    border-color: #f59e0b;
+}
+
+.details-section.alert-section.warning h4 {
+    color: #92400e;
+    border-bottom-color: #fcd34d;
+}
+
+.details-section.alert-section.warning p {
+    color: #78350f;
+    margin: 8px 0;
+    line-height: 1.5;
+}
+
+.details-section.alert-section.critical {
+    background: #fee2e2;
+    border-color: #dc2626;
+}
+
+.details-section.alert-section.critical h4 {
+    color: #991b1b;
+    border-bottom-color: #fca5a5;
+}
+
+.details-section.alert-section.critical p {
+    color: #7f1d1d;
+    margin: 8px 0;
+    line-height: 1.5;
+}
+
+/* Loading Spinner */
+.loading-spinner {
+    text-align: center;
+    padding: 40px;
+    color: #64748b;
+}
+
+.error-message {
+    text-align: center;
+    padding: 40px;
+    color: #dc2626;
+}
+
+/* Tier Display in Details */
+.value.tier-sameday,
+.value.tier-nextday {
+    color: #dc2626;
+    font-weight: 700;
+}
+
+.value.tier-2days,
+.value.tier-3days {
+    color: #d97706;
+}
+
+/* Modal Footer Button Override */
+.modal-footer .btn-resend {
+    background: #3b82f6;
+    color: white;
+    border: none !important;
+}
+
+.modal-footer .btn-resend:hover {
+    background: #2563eb;
+}
+
+/* Responsive for Details Modal */
+@media (max-width: 600px) {
+    .modal.modal-wide {
+        max-width: 100%;
+    }
+    
+    .details-row {
+        flex-direction: column;
+        gap: 4px;
+    }
+    
+    .details-row .value {
+        text-align: left;
+    }
+}
+
+/* =====================================================
+   PHASE 7: REMINDER STYLES
+   ===================================================== */
+
+/* Reminder History in Details Modal */
+.reminder-history {
+    margin-top: 12px;
+}
+
+.reminder-history .label {
+    display: block;
+    color: #64748b;
+    font-size: 0.85rem;
+    margin-bottom: 6px;
+}
+
+.reminder-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    background: white;
+    border-radius: 6px;
+    padding: 8px 12px;
+}
+
+.reminder-list li {
+    padding: 4px 0;
+    font-size: 0.85rem;
+    color: #475569;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.reminder-list li:last-child {
+    border-bottom: none;
+}
+
+.reminder-action {
+    margin-top: 12px;
+    text-align: center;
+}
+
+.btn-reminder {
+    background: #f59e0b;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-reminder:hover {
+    background: #d97706;
+}
+
+/* Reminder Badge in Table */
+.reminder-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.reminder-badge.has-reminders {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.reminder-badge.no-reminders {
+    background: #f1f5f9;
+    color: #94a3b8;
+}
+
+/* Reminder Status Indicator */
+.reminder-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.8rem;
+    color: #64748b;
+}
+
+.reminder-indicator.active {
+    color: #f59e0b;
+}
+
+.reminder-indicator .icon {
+    font-size: 0.9rem;
+}
+
+/* Reminder Stats Card */
+.reminder-stats {
+    background: #f8fafc;
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 20px;
+}
+
+.reminder-stats h4 {
+    font-size: 0.9rem;
+    color: #374151;
+    margin: 0 0 12px 0;
+}
+
+.reminder-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.reminder-stat {
+    text-align: center;
+}
+
+.reminder-stat .value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.reminder-stat .label {
+    font-size: 0.75rem;
+    color: #64748b;
+    text-transform: uppercase;
+}
+
+.reminder-stat.enabled .value {
+    color: #16a34a;
+}
+
+.reminder-stat.disabled .value {
+    color: #dc2626;
+}
+
+@media (max-width: 480px) {
+    .reminder-stats-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Ready to Ship tab - success badge */
+.tab-btn .badge.success {
+    background: #dcfce7;
+    color: #166534;
+}
+
+/* Ready table row styling */
+.ready-table tbody tr:hover td {
+    background: #f0fdf4;
+}
+
+/* Delivery badges */
+.delivery-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.delivery-mtcc {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.delivery-address {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+
+/* Damaged status */
+.pf-status-damaged { background: #fef2f2; color: #991b1b; border-color: #dc2626; }

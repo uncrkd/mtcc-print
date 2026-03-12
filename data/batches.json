@@ -1,0 +1,300 @@
+{
+    "active": [
+        {
+            "batch_id": "B-001",
+            "created_at": "2026-02-10T01:52:30-06:00",
+            "created_by": "admin",
+            "auto_suggested": false,
+            "status": "pending",
+            "order_refs": [
+                "NFS-009",
+                "CBSW-006"
+            ],
+            "orders": [
+                {
+                    "ref": "NFS-009",
+                    "customer_name": "Steve Rogers",
+                    "destination": "MTCC North",
+                    "destination_type": "mtcc",
+                    "due_date": "Feb 10",
+                    "due_time": "12:00 PM"
+                },
+                {
+                    "ref": "CBSW-006",
+                    "customer_name": "George Chatjaveridis",
+                    "destination": "MTCC North",
+                    "destination_type": "mtcc",
+                    "due_date": "Feb 10",
+                    "due_time": "3:00 PM"
+                }
+            ],
+            "order_count": 2,
+            "destinations": [
+                {
+                    "label": "MTCC North",
+                    "type": "mtcc",
+                    "address": "255 Front Street West, Toronto, ON M5V 2W6",
+                    "count": 2
+                }
+            ],
+            "stops": [
+                {
+                    "type": "pickup",
+                    "name": "Print Stuff Alternate",
+                    "address": "",
+                    "vendor_phone": "",
+                    "order_refs": [
+                        "NFS-009"
+                    ],
+                    "order_details": [
+                        {
+                            "ref": "NFS-009",
+                            "customer_name": "Steve Rogers",
+                            "material": "poster",
+                            "size": "48\" x 36\"",
+                            "quantity": 1
+                        }
+                    ],
+                    "coords": null,
+                    "status": "pending"
+                },
+                {
+                    "type": "pickup",
+                    "name": "Print Stuff Pro",
+                    "address": "",
+                    "vendor_phone": "",
+                    "order_refs": [
+                        "CBSW-006"
+                    ],
+                    "order_details": [
+                        {
+                            "ref": "CBSW-006",
+                            "customer_name": "George Chatjaveridis",
+                            "material": "poster",
+                            "size": "48\" x 48\"",
+                            "quantity": 1
+                        }
+                    ],
+                    "coords": null,
+                    "status": "pending"
+                },
+                {
+                    "type": "dropoff",
+                    "name": "MTCC North",
+                    "address": "255 Front Street West, Toronto, ON M5V 2W6",
+                    "destination_instructions": "Business Centre, 300 Level, outside Hall C",
+                    "customer_phone": "(416) 444-5448",
+                    "order_refs": [
+                        "NFS-009",
+                        "CBSW-006"
+                    ],
+                    "order_details": [
+                        {
+                            "ref": "NFS-009",
+                            "customer_name": "Steve Rogers",
+                            "material": "poster",
+                            "size": "48\" x 36\"",
+                            "quantity": 1
+                        },
+                        {
+                            "ref": "CBSW-006",
+                            "customer_name": "George Chatjaveridis",
+                            "material": "poster",
+                            "size": "48\" x 48\"",
+                            "quantity": 1
+                        }
+                    ],
+                    "coords": {
+                        "lat": 43.64390590000000003101376933045685291290283203125,
+                        "lng": -79.3866885999999993828168953768908977508544921875,
+                        "formatted_address": "255 Front St W, Toronto, ON M5V 2W6, Canada",
+                        "place_id": "ChIJ5ZZHo9Y0K4gRv5X9yFE_Q18"
+                    },
+                    "status": "pending"
+                }
+            ],
+            "route": {
+                "distance_km": 0,
+                "duration_min": 0,
+                "estimated": true,
+                "calculated_at": "2026-02-10T01:52:30-06:00"
+            },
+            "payout": {
+                "total": 45,
+                "breakdown": [
+                    {
+                        "label": "Base rate",
+                        "amount": 30
+                    },
+                    {
+                        "label": "1 extra stop",
+                        "amount": 10
+                    },
+                    {
+                        "label": "Early morning",
+                        "amount": 5
+                    }
+                ]
+            },
+            "urgency": {
+                "level": "normal",
+                "hours_remaining": 10.0999999999999996447286321199499070644378662109375,
+                "due_date_formatted": "Feb 10",
+                "due_time_formatted": "12:00 PM"
+            },
+            "current_stop_index": 0,
+            "event_acronym": "NFS",
+            "courier": null,
+            "courier_id": "",
+            "courier_name": "",
+            "notes": "",
+            "dispatched_at": null,
+            "completed_at": null
+        },
+        {
+            "batch_id": "B-002",
+            "created_at": "2026-02-10T01:52:50-06:00",
+            "created_by": "admin",
+            "auto_suggested": false,
+            "status": "dispatched",
+            "order_refs": [
+                "MST-004",
+                "MST-010"
+            ],
+            "orders": [
+                {
+                    "ref": "MST-004",
+                    "customer_name": "Albert Einstein",
+                    "destination": "MTCC North",
+                    "destination_type": "mtcc",
+                    "due_date": "Feb 14",
+                    "due_time": "Anytime"
+                },
+                {
+                    "ref": "MST-010",
+                    "customer_name": "Bruce Wayne",
+                    "destination": "MTCC North",
+                    "destination_type": "mtcc",
+                    "due_date": "Feb 14",
+                    "due_time": "Anytime"
+                }
+            ],
+            "order_count": 2,
+            "destinations": [
+                {
+                    "label": "MTCC North",
+                    "type": "mtcc",
+                    "address": "255 Front Street West, Toronto, ON M5V 2W6",
+                    "count": 2
+                }
+            ],
+            "stops": [
+                {
+                    "type": "pickup",
+                    "name": "Print Stuff Pro",
+                    "address": "",
+                    "vendor_phone": "",
+                    "order_refs": [
+                        "MST-004",
+                        "MST-010"
+                    ],
+                    "order_details": [
+                        {
+                            "ref": "MST-004",
+                            "customer_name": "Albert Einstein",
+                            "material": "poster",
+                            "size": "48\" x 48\"",
+                            "quantity": 1
+                        },
+                        {
+                            "ref": "MST-010",
+                            "customer_name": "Bruce Wayne",
+                            "material": "poster",
+                            "size": "48\" x 48\"",
+                            "quantity": 1
+                        }
+                    ],
+                    "coords": null,
+                    "status": "pending"
+                },
+                {
+                    "type": "dropoff",
+                    "name": "MTCC North",
+                    "address": "255 Front Street West, Toronto, ON M5V 2W6",
+                    "destination_instructions": "Business Centre, 300 Level, outside Hall C",
+                    "customer_phone": "(555) 456-7896",
+                    "order_refs": [
+                        "MST-004",
+                        "MST-010"
+                    ],
+                    "order_details": [
+                        {
+                            "ref": "MST-004",
+                            "customer_name": "Albert Einstein",
+                            "material": "poster",
+                            "size": "48\" x 48\"",
+                            "quantity": 1
+                        },
+                        {
+                            "ref": "MST-010",
+                            "customer_name": "Bruce Wayne",
+                            "material": "poster",
+                            "size": "48\" x 48\"",
+                            "quantity": 1
+                        }
+                    ],
+                    "coords": {
+                        "lat": 43.64390590000000003101376933045685291290283203125,
+                        "lng": -79.3866885999999993828168953768908977508544921875,
+                        "formatted_address": "255 Front St W, Toronto, ON M5V 2W6, Canada",
+                        "place_id": "ChIJ5ZZHo9Y0K4gRv5X9yFE_Q18"
+                    },
+                    "status": "pending"
+                }
+            ],
+            "route": {
+                "distance_km": 0,
+                "duration_min": 0,
+                "estimated": true,
+                "calculated_at": "2026-02-10T01:52:50-06:00"
+            },
+            "payout": {
+                "total": 35,
+                "breakdown": [
+                    {
+                        "label": "Base rate",
+                        "amount": 30
+                    },
+                    {
+                        "label": "Early morning",
+                        "amount": 5
+                    }
+                ]
+            },
+            "urgency": {
+                "level": "normal",
+                "hours_remaining": 111.099999999999994315658113919198513031005859375,
+                "due_date_formatted": "Feb 14",
+                "due_time_formatted": "Anytime"
+            },
+            "current_stop_index": 0,
+            "event_acronym": "MST",
+            "courier": {
+                "pin": "123456",
+                "name": "Mike (Courier)",
+                "assigned_at": "2026-02-10T01:52:50-06:00"
+            },
+            "courier_id": "123456",
+            "courier_name": "Mike (Courier)",
+            "notes": "",
+            "dispatched_at": "2026-02-10T01:52:50-06:00",
+            "completed_at": null
+        }
+    ],
+    "completed": [],
+    "metadata": {
+        "last_batch_number": 2,
+        "last_updated": "2026-02-10T02:12:45-06:00",
+        "version": "2.0"
+    }
+}

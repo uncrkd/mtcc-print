@@ -1,0 +1,69 @@
+{
+    "pricing": {
+        "base_rate": 30,
+        "modifiers": {
+            "additional_stop": 10,
+            "per_km_over_threshold": 0.34999999999999997779553950749686919152736663818359375,
+            "rush": 8,
+            "extended_distance": 8,
+            "bad_weather": 5
+        },
+        "time_windows": {
+            "early_morning": {
+                "before": "09:00",
+                "amount": 5
+            },
+            "morning": {
+                "start": "09:00",
+                "end": "12:00",
+                "amount": 0
+            },
+            "lunch": {
+                "start": "12:00",
+                "end": "14:00",
+                "amount": 0
+            },
+            "afternoon": {
+                "start": "14:00",
+                "end": "17:00",
+                "amount": 3
+            },
+            "evening": {
+                "after": "17:00",
+                "amount": 5
+            }
+        },
+        "distance_threshold_km": 50,
+        "extended_distance_threshold_km": 35,
+        "bonus_presets": [
+            5,
+            8,
+            10,
+            15,
+            20
+        ]
+    },
+    "weather": {
+        "rain_threshold_mm": 0.5,
+        "snow_threshold_mm": 0.5,
+        "wind_threshold_kmh": 40,
+        "temp_threshold_c": -10,
+        "auto_toggle_enabled": true,
+        "bad_weather_active": false
+    },
+    "urgency": {
+        "urgent_hours": 3,
+        "priority_hours": 5,
+        "auto_bonus_urgent": 10,
+        "auto_bonus_priority": 8
+    },
+    "notifications": {
+        "poll_interval_seconds": 30,
+        "max_notifications": 50
+    },
+    "metadata": {
+        "created_at": "2026-02-05T00:00:00-05:00",
+        "updated_at": "2026-03-11T13:39:03-05:00",
+        "version": "1.0"
+    }
+}

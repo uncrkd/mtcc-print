@@ -1,0 +1,59 @@
+{
+    "fetched_at": "2026-03-12T00:01:04-05:00",
+    "data": {
+        "current": {
+            "temp": 0,
+            "icon": "\u2601\ufe0f",
+            "desc": "Overcast",
+            "wind": 21,
+            "rain": 0,
+            "snow": 0,
+            "humidity": 78
+        },
+        "forecast": [
+            {
+                "day": "Today",
+                "date": "Mar 12",
+                "icon": "\u2601\ufe0f",
+                "desc": "Overcast",
+                "high": 2,
+                "low": -1
+            },
+            {
+                "day": "Fri",
+                "date": "Mar 13",
+                "icon": "\u2744\ufe0f",
+                "desc": "Heavy Snow",
+                "high": 4,
+                "low": -1
+            },
+            {
+                "day": "Sat",
+                "date": "Mar 14",
+                "icon": "\ud83c\udf26\ufe0f",
+                "desc": "Light Drizzle",
+                "high": 2,
+                "low": -5
+            },
+            {
+                "day": "Sun",
+                "date": "Mar 15",
+                "icon": "\u2744\ufe0f",
+                "desc": "Heavy Snow",
+                "high": 4,
+                "low": -3
+            },
+            {
+                "day": "Mon",
+                "date": "Mar 16",
+                "icon": "\ud83c\udf27\ufe0f",
+                "desc": "Showers",
+                "high": 9,
+                "low": -3
+            }
+        ],
+        "bad_weather": false,
+        "bad_reasons": [],
+        "updated_at": "12:01 AM"
+    }
+}

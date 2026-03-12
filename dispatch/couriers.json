@@ -1,0 +1,122 @@
+{
+    "users": {
+        "123456": {
+            "name": "Mike (Courier)",
+            "role": "courier",
+            "active": true,
+            "created": "2026-01-08",
+            "phone": "",
+            "email": "",
+            "vehicle_type": "car",
+            "availability": "online",
+            "last_seen": "2026-03-11 12:11:24",
+            "total_deliveries": 0,
+            "total_earned": 0,
+            "notes": "Migrated from PIN 1234"
+        },
+        "567890": {
+            "name": "Sarah (Courier)",
+            "role": "courier",
+            "active": true,
+            "created": "2026-01-08",
+            "phone": "",
+            "email": "",
+            "vehicle_type": "car",
+            "availability": "offline",
+            "last_seen": null,
+            "total_deliveries": 0,
+            "total_earned": 0,
+            "notes": "Migrated from PIN 5678"
+        },
+        "777777": {
+            "name": "MTCC Front Desk",
+            "role": "mtcc_staff",
+            "active": true,
+            "created": "2026-01-08",
+            "phone": "",
+            "email": "",
+            "vehicle_type": "car",
+            "availability": "online",
+            "last_seen": "2026-02-08 03:57:52",
+            "total_deliveries": 0,
+            "total_earned": 0,
+            "notes": "Migrated from PIN 7777"
+        },
+        "999999": {
+            "name": "George (Admin)",
+            "role": "admin",
+            "active": true,
+            "created": "2026-01-08",
+            "phone": "",
+            "email": "",
+            "vehicle_type": "car",
+            "availability": "online",
+            "last_seen": "2026-02-23 16:09:31",
+            "total_deliveries": 0,
+            "total_earned": 0,
+            "notes": "Migrated from PIN 9999"
+        },
+        "323700": {
+            "name": "Tom",
+            "role": "courier",
+            "active": true,
+            "created": "2026-01-08 22:20:56",
+            "phone": "",
+            "email": "",
+            "vehicle_type": "car",
+            "availability": "offline",
+            "last_seen": null,
+            "total_deliveries": 0,
+            "total_earned": 0,
+            "notes": "Migrated from PIN 3237"
+        }
+    },
+    "roles": {
+        "courier": {
+            "label": "Courier",
+            "allowed_statuses": [
+                "shipped",
+                "delivered"
+            ],
+            "description": "Can mark orders as shipped or delivered"
+        },
+        "mtcc_staff": {
+            "label": "MTCC Staff",
+            "allowed_statuses": [
+                "pickedup",
+                "unclaimed"
+            ],
+            "description": "Can mark orders as picked up or unclaimed by customer"
+        },
+        "admin": {
+            "label": "Administrator",
+            "allowed_statuses": [
+                "paid",
+                "preflight",
+                "printing",
+                "ready",
+                "dispatched",
+                "shipped",
+                "delivered",
+                "pickedup",
+                "file_issue",
+                "unclaimed",
+                "missing",
+                "cancelled",
+                "refunded"
+            ],
+            "description": "Full access to all status changes"
+        }
+    },
+    "settings": {
+        "pin_length": 6,
+        "session_expires": "23:59:59",
+        "max_login_attempts": 5,
+        "lockout_minutes": 15
+    },
+    "metadata": {
+        "lastUpdated": "2026-02-05",
+        "version": "2.0",
+        "migration_notes": "PINs migrated from 4 to 6 digits. Added preflight, ready, dispatched statuses."
+    }
+}

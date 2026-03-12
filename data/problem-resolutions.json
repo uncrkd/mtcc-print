@@ -1,0 +1,44 @@
+{
+    "resolutions": [
+        {
+            "ref": "ASTMH-001",
+            "type": "dispatch_past_due",
+            "customer": "Oscar Cortes Azuero",
+            "event": "",
+            "detected_at": "2026-02-28T12:55:14",
+            "resolved_at": "2026-03-06T09:56:33",
+            "duration_hours": 141,
+            "resolved_by": "zeus"
+        },
+        {
+            "ref": "NFS-002",
+            "type": "dispatch_past_due",
+            "customer": "Ace Ventura",
+            "event": "",
+            "detected_at": "2026-02-28T12:55:14",
+            "resolved_at": "2026-03-06T09:56:33",
+            "duration_hours": 141,
+            "resolved_by": "zeus"
+        },
+        {
+            "ref": "NFS-004",
+            "type": "dispatch_past_due",
+            "customer": "A.C. Slater",
+            "event": "",
+            "detected_at": "2026-02-28T12:55:14",
+            "resolved_at": "2026-03-06T09:56:33",
+            "duration_hours": 141,
+            "resolved_by": "zeus"
+        },
+        {
+            "ref": "TECH-019",
+            "type": "dispatch_past_due",
+            "customer": "George Chatjaveridis",
+            "event": "",
+            "detected_at": "2026-02-28T12:55:14",
+            "resolved_at": "2026-03-06T09:56:33",
+            "duration_hours": 141,
+            "resolved_by": "zeus"
+        }
+    ]
+}

@@ -1,0 +1,1082 @@
+/**
+ * Problem Orders - Shared Styles
+ * Compact stat cards, severity rows, timers, sorting, actions
+ * Location: /admin/problem-styles.css
+ */
+
+/* ============================================
+   STAT CARDS - Compact horizontal
+   ============================================ */
+.prob-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.prob-stat-card {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 0;
+    flex: 1 1 auto;
+    min-width: 140px;
+    overflow: hidden;
+    transition: transform 0.15s;
+}
+
+.prob-stat-card:hover { transform: translateY(-1px); }
+
+.prob-stat-card .prob-stat-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    flex: 1;
+    min-width: 0;
+}
+
+.prob-stat-card .prob-stat-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.prob-stat-card .prob-stat-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    color: #374151;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.prob-stat-card .prob-stat-label a {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-style: dotted;
+}
+
+.prob-stat-card .prob-stat-divider {
+    width: 1px;
+    align-self: stretch;
+    background: #e5e7eb;
+}
+
+.prob-stat-card .prob-stat-count {
+    font-size: 22px;
+    font-weight: 700;
+    padding: 10px 16px;
+    min-width: 50px;
+    text-align: center;
+    color: #1f2937;
+}
+
+/* Card color variants - left accent border */
+.prob-stat-card.critical {
+    border-left: 3px solid #ef4444;
+    background: linear-gradient(135deg, #fef2f2, #fff);
+}
+.prob-stat-card.critical .prob-stat-count { color: #dc2626; }
+
+.prob-stat-card.warning {
+    border-left: 3px solid #f59e0b;
+    background: linear-gradient(135deg, #fffbeb, #fff);
+}
+.prob-stat-card.warning .prob-stat-count { color: #d97706; }
+
+.prob-stat-card.info {
+    border-left: 3px solid #6366f1;
+    background: linear-gradient(135deg, #eef2ff, #fff);
+}
+.prob-stat-card.info .prob-stat-count { color: #4f46e5; }
+
+.prob-stat-card.dispatch {
+    border-left: 3px solid #8b5cf6;
+    background: linear-gradient(135deg, #f5f3ff, #fff);
+}
+.prob-stat-card.dispatch .prob-stat-count { color: #7c3aed; }
+
+.prob-stat-card.success {
+    border-left: 3px solid #10b981;
+    background: linear-gradient(135deg, #ecfdf5, #fff);
+}
+.prob-stat-card.success .prob-stat-count { color: #059669; }
+
+/* ============================================
+   SECTIONS
+   ============================================ */
+.prob-section {
+    margin-bottom: 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #fff;
+}
+
+.prob-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    background: #f9fafb;
+    cursor: pointer;
+    user-select: none;
+    border-bottom: 1px solid #e5e7eb;
+    transition: background 0.15s;
+}
+
+.prob-section-header:hover { background: #f3f4f6; }
+
+.prob-section-header.collapsed { border-bottom: none; }
+
+.prob-section-header .prob-section-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+}
+
+.prob-section-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.prob-section-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    border-radius: 11px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #fff;
+    background: #6b7280;
+}
+
+.prob-section-count.critical { background: #ef4444; }
+.prob-section-count.warning { background: #f59e0b; }
+
+.prob-section-actions {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.prob-section-export {
+    padding: 3px 8px;
+    font-size: 11px;
+    font-weight: 500;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    background: #fff;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.prob-section-export:hover {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.prob-section-toggle {
+    font-size: 12px;
+    color: #9ca3af;
+    transition: transform 0.2s;
+}
+
+.prob-section-header.collapsed .prob-section-toggle { transform: rotate(-90deg); }
+
+.prob-section-body { padding: 0; }
+
+.hidden { display: none !important; }
+
+/* ============================================
+   TABLES
+   ============================================ */
+.prob-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.prob-table thead th {
+    padding: 8px 10px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    color: #6b7280;
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+    white-space: nowrap;
+    position: relative;
+}
+
+/* Sortable headers */
+.prob-table th.sortable {
+    cursor: pointer;
+    padding-right: 18px;
+}
+
+.prob-table th.sortable:hover { color: #374151; background: #f3f4f6; }
+
+.prob-table th.sortable::after {
+    content: '⇅';
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 10px;
+    color: #d1d5db;
+}
+
+.prob-table th.sort-asc::after { content: '▲'; color: #6366f1; }
+.prob-table th.sort-desc::after { content: '▼'; color: #6366f1; }
+
+.prob-table tbody td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #f3f4f6;
+    vertical-align: middle;
+    color: #374151;
+}
+
+.prob-table tbody tr:last-child td { border-bottom: none; }
+
+.prob-table tbody tr:hover { background: #f9fafb; }
+
+/* Severity row striping */
+.prob-table tbody tr.row-critical {
+    border-left: 3px solid #ef4444;
+}
+
+.prob-table tbody tr.row-warning {
+    border-left: 3px solid #f59e0b;
+}
+
+/* Reference link */
+.prob-table .ref-link {
+    font-weight: 600;
+    color: #4f46e5;
+    text-decoration: none;
+}
+
+.prob-table .ref-link:hover { text-decoration: underline; }
+
+/* ============================================
+   LIVE TIMERS
+   ============================================ */
+.prob-timer {
+    font-size: 13px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 4px;
+    display: inline-block;
+    white-space: nowrap;
+    min-width: 80px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+
+.prob-timer.timer-ok {
+    background: #ecfdf5;
+    color: #065f46;
+}
+
+.prob-timer.timer-warn {
+    background: #fffbeb;
+    color: #92400e;
+}
+
+.prob-timer.timer-crit {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+/* ============================================
+   TIER BADGES
+   ============================================ */
+.tier-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.tier-sameday { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+.tier-nextday { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
+.tier-2days { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+.tier-3days { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+.tier-standard { background: #f0f9ff; color: #0369a1; border: 1px solid #bae6fd; }
+.tier-early { background: #faf5ff; color: #7e22ce; border: 1px solid #e9d5ff; }
+
+/* ============================================
+   ACTION BUTTONS
+   ============================================ */
+.prob-actions {
+    white-space: nowrap;
+    display: flex;
+    gap: 4px;
+}
+
+.prob-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 3px 8px;
+    font-size: 11px;
+    font-weight: 500;
+    border-radius: 4px;
+    text-decoration: none;
+    transition: all 0.15s;
+    border: 1px solid #d1d5db;
+    background: #fff;
+    color: #374151;
+    cursor: pointer;
+}
+
+.prob-action-btn:hover {
+    background: #f3f4f6;
+    border-color: #9ca3af;
+}
+
+.prob-action-btn.reminder {
+    border-color: #fbbf24;
+    background: #fffbeb;
+    color: #92400e;
+}
+
+.prob-action-btn.reminder:hover {
+    background: #fef3c7;
+}
+
+/* ============================================
+   HEADER CONTROLS (auto-refresh, collapse/expand)
+   ============================================ */
+.prob-header-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.prob-ctrl-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 10px;
+    font-size: 12px;
+    font-weight: 500;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: #fff;
+    color: #374151;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+}
+
+.prob-ctrl-btn:hover { background: #f3f4f6; border-color: #9ca3af; }
+
+.prob-ctrl-btn.active,
+.prob-ctrl-btn.paused { border-color: #ef4444; color: #ef4444; }
+
+.refresh-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    padding: 0 4px;
+    height: 18px;
+    border-radius: 9px;
+    background: #6366f1;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    font-family: 'Courier New', monospace;
+}
+
+/* ============================================
+   ALL CLEAR STATE
+   ============================================ */
+.prob-all-clear {
+    text-align: center;
+    padding: 60px 20px;
+    background: linear-gradient(135deg, #ecfdf5, #f0fdf4);
+    border: 1px solid #bbf7d0;
+    border-radius: 12px;
+    margin: 20px 0;
+}
+
+.prob-all-clear-icon { font-size: 48px; margin-bottom: 12px; }
+.prob-all-clear h2 { font-size: 20px; color: #065f46; margin: 0 0 8px; }
+.prob-all-clear p { color: #047857; font-size: 14px; margin: 0; }
+
+/* ============================================
+   SECTION DIVIDER (All Problems page)
+   ============================================ */
+.prob-divider {
+    font-size: 13px;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 20px 0 10px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.prob-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #e5e7eb;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 768px) {
+    .prob-stats { flex-direction: column; }
+    .prob-stat-card { min-width: 100%; }
+    .prob-table { font-size: 12px; }
+    .prob-actions { flex-direction: column; }
+}
+
+/* ============================================
+   EVENT FILTER
+   ============================================ */
+.prob-filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    padding: 10px 14px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    flex-wrap: wrap;
+}
+
+.prob-filter-bar label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+}
+
+.prob-filter-bar select {
+    padding: 6px 28px 6px 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: inherit;
+    background: #fff;
+    color: #374151;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%236b7280'%3E%3Cpath d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+}
+
+.prob-filter-bar select:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
+}
+
+.prob-filter-active {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background: #eef2ff;
+    border: 1px solid #c7d2fe;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #4f46e5;
+}
+
+.prob-filter-active a {
+    color: #6366f1;
+    text-decoration: none;
+    font-weight: 700;
+}
+
+/* ============================================
+   BULK ACTIONS TOOLBAR
+   ============================================ */
+.prob-bulk-toolbar {
+    position: fixed;
+    bottom: -60px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px;
+    background: #1f2937;
+    color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+    z-index: 1000;
+    transition: bottom 0.3s ease;
+    font-size: 13px;
+}
+
+.prob-bulk-toolbar.visible {
+    bottom: 20px;
+}
+
+.prob-bulk-toolbar .bulk-dismiss {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #4b5563;
+    border-radius: 50%;
+    background: transparent;
+    color: #9ca3af;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    transition: all 0.15s;
+}
+
+.prob-bulk-toolbar .bulk-dismiss:hover {
+    background: #4b5563;
+    color: #fff;
+}
+
+.prob-bulk-toolbar .bulk-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 24px;
+    padding: 0 6px;
+    border-radius: 12px;
+    background: #6366f1;
+    color: #fff;
+    font-weight: 700;
+    font-size: 12px;
+}
+
+.prob-bulk-toolbar .bulk-label {
+    font-weight: 500;
+    margin-right: 4px;
+    white-space: nowrap;
+}
+
+.prob-bulk-toolbar .bulk-divider {
+    width: 1px;
+    height: 24px;
+    background: #4b5563;
+}
+
+.prob-bulk-toolbar select {
+    padding: 4px 24px 4px 8px;
+    border: 1px solid #4b5563;
+    border-radius: 6px;
+    background: #374151;
+    color: #fff;
+    font-size: 12px;
+    font-family: inherit;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' fill='%239ca3af'%3E%3Cpath d='M5 7L0 2h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 6px center;
+}
+
+.prob-bulk-toolbar button {
+    padding: 5px 12px;
+    border: 1px solid #4b5563;
+    border-radius: 6px;
+    background: #374151;
+    color: #e5e7eb;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+}
+
+.prob-bulk-toolbar button:hover {
+    background: #4b5563;
+    color: #fff;
+}
+
+.prob-bulk-toolbar button.bulk-danger {
+    border-color: #ef4444;
+    color: #fca5a5;
+}
+
+.prob-bulk-toolbar button.bulk-danger:hover {
+    background: #ef4444;
+    color: #fff;
+}
+
+.prob-bulk-toolbar button.bulk-remind {
+    border-color: #fbbf24;
+    color: #fde68a;
+}
+
+.prob-bulk-toolbar button.bulk-remind:hover {
+    background: #f59e0b;
+    color: #fff;
+}
+
+/* Checkbox column */
+.prob-checkbox-cell {
+    width: 32px;
+    text-align: center;
+    padding: 8px 4px !important;
+}
+
+.prob-checkbox-cell input[type="checkbox"],
+.prob-select-all {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: #6366f1;
+}
+
+/* ============================================
+   CLICKABLE STAT CARDS
+   ============================================ */
+.prob-stat-card.clickable {
+    cursor: pointer;
+    position: relative;
+}
+
+.prob-stat-card.clickable:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.prob-stat-card.clickable:active {
+    transform: translateY(0);
+}
+
+.section-highlight {
+    animation: sectionPulse 1.5s ease-out;
+}
+
+@keyframes sectionPulse {
+    0% { box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.4); border-radius: 8px; }
+    100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+/* ============================================
+   THEMED MODALS
+   ============================================ */
+.prob-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(17, 24, 39, 0.5);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.prob-modal-overlay.visible {
+    opacity: 1;
+}
+
+.prob-modal {
+    background: #fff;
+    border-radius: 16px;
+    padding: 32px;
+    max-width: 420px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    text-align: center;
+    transform: scale(0.95);
+    transition: transform 0.2s ease;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.prob-modal-overlay.visible .prob-modal {
+    transform: scale(1);
+}
+
+.prob-modal-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+    font-size: 24px;
+}
+
+.prob-modal-icon.danger { background: #fef2f2; border: 2px solid #fecaca; }
+.prob-modal-icon.warning { background: #fffbeb; border: 2px solid #fde68a; }
+.prob-modal-icon.info { background: #eef2ff; border: 2px solid #c7d2fe; }
+
+.prob-modal-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 8px;
+}
+
+.prob-modal-body {
+    font-size: 14px;
+    color: #6b7280;
+    line-height: 1.5;
+    margin-bottom: 20px;
+}
+
+.prob-modal-body strong {
+    color: #374151;
+    font-weight: 600;
+}
+
+.prob-modal-input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: 'Montserrat', sans-serif;
+    text-align: center;
+    margin-bottom: 20px;
+    transition: border-color 0.15s;
+    box-sizing: border-box;
+}
+
+.prob-modal-input:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.prob-modal-input.prob-modal-input-error {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+    animation: modalShake 0.4s ease;
+}
+
+@keyframes modalShake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-6px); }
+    40%, 80% { transform: translateX(6px); }
+}
+
+.prob-modal-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.prob-modal-btn {
+    padding: 10px 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: 'Montserrat', sans-serif;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+}
+
+.prob-modal-btn-cancel {
+    background: #f3f4f6;
+    color: #4b5563;
+}
+
+.prob-modal-btn-cancel:hover {
+    background: #e5e7eb;
+}
+
+.prob-modal-btn-primary {
+    background: #6366f1;
+    color: #fff;
+}
+
+.prob-modal-btn-primary:hover {
+    background: #4f46e5;
+}
+
+.prob-modal-btn-danger {
+    background: #ef4444;
+    color: #fff;
+}
+
+.prob-modal-btn-danger:hover {
+    background: #dc2626;
+}
+
+/* ============================================
+   INLINE NOTES
+   ============================================ */
+.prob-note-btn {
+    background: none;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 14px;
+    position: relative;
+    transition: all 0.15s;
+    line-height: 1;
+}
+
+.prob-note-btn:hover { background: #f3f4f6; border-color: #d1d5db; }
+.prob-note-btn.has-notes { border-color: #6366f1; background: #eef2ff; }
+
+.note-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: #6366f1;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.prob-notes-row td {
+    padding: 0 !important;
+    background: #f9fafb !important;
+    border-top: none !important;
+}
+
+.prob-notes-panel {
+    padding: 12px 16px;
+    border-top: 2px solid #6366f1;
+}
+
+.prob-notes-list {
+    margin-bottom: 10px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.prob-notes-empty, .prob-notes-loading {
+    font-size: 12px;
+    color: #9ca3af;
+    font-style: italic;
+}
+
+.prob-note-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 6px 0;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.prob-note-item:last-child { border-bottom: none; }
+
+.prob-note-text {
+    flex: 1;
+    font-size: 13px;
+    color: #374151;
+    line-height: 1.4;
+}
+
+.prob-note-meta {
+    font-size: 11px;
+    color: #9ca3af;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.prob-note-delete {
+    background: none;
+    border: none;
+    color: #d1d5db;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    padding: 0 2px;
+    flex-shrink: 0;
+}
+
+.prob-note-delete:hover { color: #ef4444; }
+
+.prob-notes-add {
+    display: flex;
+    gap: 8px;
+}
+
+.prob-notes-input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.prob-notes-input:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
+}
+
+.prob-notes-submit {
+    padding: 8px 16px;
+    background: #6366f1;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: 'Montserrat', sans-serif;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.prob-notes-submit:hover { background: #4f46e5; }
+
+/* ============================================
+   ESCALATION BORDERS
+   ============================================ */
+tr.escalation-warning {
+    border-left: 3px solid #f59e0b !important;
+    background-color: #fffbeb !important;
+}
+
+tr.escalation-warning:hover { background-color: #fef3c7 !important; }
+
+tr.escalation-danger {
+    border-left: 3px solid #ef4444 !important;
+    background-color: #fef2f2 !important;
+}
+
+tr.escalation-danger:hover { background-color: #fee2e2 !important; }
+
+tr.escalation-critical {
+    border-left: 3px solid #ef4444 !important;
+    background-color: #fef2f2 !important;
+    animation: escalationPulse 2s ease-in-out infinite;
+}
+
+@keyframes escalationPulse {
+    0%, 100% { background-color: #fef2f2; }
+    50% { background-color: #fee2e2; }
+}
+
+/* ============================================
+   NEW BADGE
+   ============================================ */
+.prob-new-badge {
+    display: inline-block;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    background: #3b82f6;
+    color: #fff;
+    padding: 1px 5px;
+    border-radius: 3px;
+    margin-left: 6px;
+    vertical-align: middle;
+    line-height: 1.4;
+}
+
+/* ============================================
+   NEW PROBLEMS BANNER
+   ============================================ */
+.prob-new-banner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    font-size: 13px;
+    color: #1e40af;
+}
+
+.prob-new-banner-icon {
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.prob-new-banner-dismiss {
+    margin-left: auto;
+    background: none;
+    border: 1px solid #93c5fd;
+    border-radius: 4px;
+    color: #3b82f6;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: 'Montserrat', sans-serif;
+    padding: 3px 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.prob-new-banner-dismiss:hover {
+    background: #dbeafe;
+}
+
+/* ============================================
+   RESOLUTION BAR
+   ============================================ */
+.prob-resolution-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    font-size: 13px;
+    color: #166534;
+}
+
+.prob-resolution-icon {
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.prob-resolution-text {
+    flex: 1;
+}
+
+.prob-resolution-avg {
+    font-size: 12px;
+    color: #15803d;
+    white-space: nowrap;
+}

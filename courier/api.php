@@ -1,0 +1,1583 @@
+<?php
+/**
+ * Courier App API
+ * Handles all courier/staff mobile app requests
+ * Location: /courier/api.php
+ * 
+ * Endpoints (via POST 'action' parameter):
+ *   Auth:     login, logout, session_check
+ *   Orders:   get_available, get_my_deliveries, get_pickup_queue, get_activity
+ *   Dispatch: accept_delivery, update_status, scan_order
+ *   Earnings: get_earnings
+ */
+session_start();
+
+header('Content-Type: application/json');
+
+// Include shared dispatch functions (provides all DISPATCH_* constants and helpers)
+$dispatchFunctions = __DIR__ . '/../dispatch/dispatch-functions.php';
+if (!file_exists($dispatchFunctions)) {
+    echo json_encode(['success' => false, 'error' => 'System configuration error']);
+    exit;
+}
+require_once $dispatchFunctions;
+
+// Include dispatch email functions
+$emailFunctions = __DIR__ . '/../dispatch-email-functions.php';
+if (file_exists($emailFunctions)) {
+    require_once $emailFunctions;
+}
+
+// Include Google Maps Routes API
+require_once __DIR__ . '/routes-api.php';
+
+// Include Weather API
+require_once __DIR__ . '/weather-api.php';
+
+// Statuses file (same location as admin uses)
+if (!defined('COURIER_STATUSES_FILE')) {
+    define('COURIER_STATUSES_FILE', __DIR__ . '/../data/statuses.json');
+}
+
+// Photos directory
+define('COURIER_PHOTOS_DIR', __DIR__ . '/../uploads/delivery-photos/');
+if (!is_dir(COURIER_PHOTOS_DIR)) {
+    mkdir(COURIER_PHOTOS_DIR, 0755, true);
+}
+
+// Get action
+$action = $_POST['action'] ?? $_GET['action'] ?? '';
+
+if (!$action) {
+    echo json_encode(['success' => false, 'error' => 'No action specified']);
+    exit;
+}
+
+// Route request
+switch ($action) {
+    // Auth
+    case 'login':          handleLogin(); break;
+    case 'logout':         handleLogout(); break;
+    case 'session_check':  handleSessionCheck(); break;
+    // Order Queries
+    case 'get_available':      requireAuth(); handleGetAvailable(); break;
+    case 'get_my_deliveries':  requireAuth(); handleGetMyDeliveries(); break;
+    case 'get_pickup_queue':   requireAuth(); handleGetPickupQueue(); break;
+    case 'get_activity':       requireAuth(); handleGetActivity(); break;
+    case 'get_upcoming':       requireAuth(); handleGetUpcoming(); break;
+    // Dispatch Actions
+    case 'accept_delivery':    requireAuth(); handleAcceptDelivery(); break;
+    case 'update_status':      requireAuth(); handleUpdateStatus(); break;
+    case 'scan_order':         requireAuth(); handleScanOrder(); break;
+    // Earnings
+    case 'get_earnings':       requireAuth(); handleGetEarnings(); break;
+    // Routes & Maps
+    case 'get_route_info':     requireAuth(); handleGetRouteInfo(); break;
+    case 'get_nearby_orders':  requireAuth(); handleGetNearbyOrders(); break;
+    case 'geocode_vendors':    requireAuth(); handleGeocodeVendors(); break;
+    // Weather
+    case 'get_weather':        requireAuth(); handleGetWeather(); break;
+    // Batch Orders
+    case 'accept_batch':       requireAuth(); handleAcceptBatch(); break;
+    case 'update_batch_stop':  requireAuth(); handleUpdateBatchStop(); break;
+    case 'get_batch_route':    requireAuth(); handleGetBatchRoute(); break;
+    case 'suggest_batches':    requireAuth(); handleSuggestBatches(); break;
+    case 'create_batch':       requireAuth(); handleCreateBatch(); break;
+    case 'disband_batch':      requireAuth(); handleDisbandBatch(); break;
+    case 'release_delivery':   requireAuth(); handleReleaseDelivery(); break;
+    case 'release_batch':      requireAuth(); handleReleaseBatch(); break;
+    case 'set_availability':   requireAuth(); handleSetAvailability(); break;
+    
+    default:
+        echo json_encode(['success' => false, 'error' => 'Unknown action: ' . $action]);
+        break;
+}
+
+// ============================================
+// Status Helpers (statuses.json is the source of truth)
+// ============================================
+
+function courier_loadStatuses() {
+    $file = COURIER_STATUSES_FILE;
+    if (!file_exists($file)) return [];
+    $data = json_decode(file_get_contents($file), true);
+    return is_array($data) ? $data : [];
+}
+
+function courier_saveStatuses($statuses) {
+    return file_put_contents(COURIER_STATUSES_FILE, json_encode($statuses, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), LOCK_EX);
+}
+
+function courier_getStatus($ref) {
+    $statuses = courier_loadStatuses();
+    return $statuses[$ref] ?? '';
+}
+
+function courier_setStatus($ref, $newStatus) {
+    $statuses = courier_loadStatuses();
+    $statuses[$ref] = $newStatus;
+    return courier_saveStatuses($statuses);
+}
+
+// ============================================
+// Order File Helpers (find/update by scanning directory)
+// ============================================
+
+/**
+ * Find the actual file path for an order by reference code.
+ * Orders are NOT always named {ref}.json — we must scan.
+ */
+function courier_findOrderFile($ref) {
+    $dir = DISPATCH_ORDERS_DIR;
+    
+    // Try direct filename first
+    $direct = $dir . $ref . '.json';
+    if (file_exists($direct)) {
+        return $direct;
+    }
+    
+    // Scan directory
+    if (!is_dir($dir)) return null;
+    $files = glob($dir . '*.json');
+    foreach ($files as $file) {
+        $data = json_decode(file_get_contents($file), true);
+        if ($data && isset($data['referenceCode']) && $data['referenceCode'] === $ref) {
+            return $file;
+        }
+    }
+    return null;
+}
+
+/**
+ * Load order data using dispatch-functions.php's proven loader
+ */
+function courier_loadOrder($ref) {
+    return dispatch_loadOrder($ref);
+}
+
+/**
+ * Save order data back to its file (finds file by ref, preserves filename)
+ */
+function courier_saveOrder($ref, $orderData) {
+    $file = courier_findOrderFile($ref);
+    if (!$file) return false;
+    return file_put_contents($file, json_encode($orderData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), LOCK_EX);
+}
+
+// ============================================
+// Auth Functions
+// ============================================
+
+function requireAuth() {
+    if (!isSessionValid()) {
+        echo json_encode(['success' => false, 'error' => 'Not authenticated', 'auth_required' => true]);
+        exit;
+    }
+}
+
+function isSessionValid() {
+    if (!isset($_SESSION['courier_user']) || !isset($_SESSION['courier_login_time'])) {
+        return false;
+    }
+    $loginDate = date('Y-m-d', $_SESSION['courier_login_time']);
+    if ($loginDate !== date('Y-m-d')) {
+        unset($_SESSION['courier_user']);
+        unset($_SESSION['courier_login_time']);
+        return false;
+    }
+    return true;
+}
+
+function getCurrentUser() {
+    return $_SESSION['courier_user'] ?? null;
+}
+
+function handleLogin() {
+    $pin = trim($_POST['pin'] ?? '');
+    if (!$pin) {
+        echo json_encode(['success' => false, 'error' => 'PIN required']);
+        return;
+    }
+    
+    // Load couriers data using dispatch-functions constant
+    $couriersFile = DISPATCH_COURIERS_FILE;
+    if (!file_exists($couriersFile)) {
+        echo json_encode(['success' => false, 'error' => 'System error: couriers file not found']);
+        return;
+    }
+    
+    $data = json_decode(file_get_contents($couriersFile), true);
+    if (!$data || !isset($data['users'][$pin])) {
+        echo json_encode(['success' => false, 'error' => 'Invalid PIN']);
+        return;
+    }
+    
+    $user = $data['users'][$pin];
+    if (!$user['active']) {
+        echo json_encode(['success' => false, 'error' => 'Account deactivated']);
+        return;
+    }
+    
+    $role = $user['role'];
+    $permissions = $data['roles'][$role] ?? [];
+    $tabs = getTabsForRole($role);
+    
+    $_SESSION['courier_user'] = [
+        'pin' => $pin,
+        'name' => $user['name'],
+        'role' => $role,
+        'role_label' => $permissions['label'] ?? ucfirst($role),
+        'allowed_statuses' => $permissions['allowed_statuses'] ?? [],
+        'tabs' => $tabs,
+    ];
+    $_SESSION['courier_login_time'] = time();
+    
+    // Update last_seen
+    $data['users'][$pin]['last_seen'] = date('Y-m-d H:i:s');
+    $data['users'][$pin]['availability'] = 'online';
+    file_put_contents($couriersFile, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), LOCK_EX);
+    
+    echo json_encode(['success' => true, 'user' => $_SESSION['courier_user']]);
+}
+
+function getTabsForRole($role) {
+    switch ($role) {
+        case 'courier':
+            return [
+                ['id' => 'deliveries', 'label' => 'My Deliveries', 'icon' => 'deliveries'],
+                ['id' => 'available', 'label' => 'Available', 'icon' => 'available'],
+                ['id' => 'scan', 'label' => 'Scan', 'icon' => 'scan'],
+                ['id' => 'nearby', 'label' => 'Nearby', 'icon' => 'nearby'],
+                ['id' => 'earnings', 'label' => 'Earnings', 'icon' => 'earnings'],
+            ];
+        case 'mtcc_staff':
+        case 'admin':
+            return [
+                ['id' => 'pickup', 'label' => 'Pickup Queue', 'icon' => 'pickup'],
+                ['id' => 'scan', 'label' => 'Scan', 'icon' => 'scan'],
+                ['id' => 'activity', 'label' => 'Activity', 'icon' => 'activity'],
+            ];
+        default:
+            return [['id' => 'scan', 'label' => 'Scan', 'icon' => 'scan']];
+    }
+}
+
+function handleLogout() {
+    $user = getCurrentUser();
+    if ($user) {
+        $couriersFile = DISPATCH_COURIERS_FILE;
+        if (file_exists($couriersFile)) {
+            $data = json_decode(file_get_contents($couriersFile), true);
+            if ($data && isset($data['users'][$user['pin']])) {
+                $data['users'][$user['pin']]['availability'] = 'offline';
+                file_put_contents($couriersFile, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), LOCK_EX);
+            }
+        }
+    }
+    unset($_SESSION['courier_user']);
+    unset($_SESSION['courier_login_time']);
+    echo json_encode(['success' => true]);
+}
+
+function handleSetAvailability() {
+    $user = getCurrentUser();
+    $status = trim($_POST['status'] ?? '');
+    if (!in_array($status, ['online', 'offline'])) {
+        echo json_encode(['success' => false, 'error' => 'Invalid status']);
+        return;
+    }
+    $couriersFile = DISPATCH_COURIERS_FILE;
+    if (file_exists($couriersFile)) {
+        $data = json_decode(file_get_contents($couriersFile), true);
+        if ($data && isset($data['users'][$user['pin']])) {
+            $data['users'][$user['pin']]['availability'] = $status;
+            $data['users'][$user['pin']]['last_seen'] = date('Y-m-d H:i:s');
+            file_put_contents($couriersFile, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), LOCK_EX);
+        }
+    }
+    echo json_encode(['success' => true, 'status' => $status]);
+}
+
+function handleSessionCheck() {
+    if (isSessionValid()) {
+        echo json_encode(['success' => true, 'authenticated' => true, 'user' => getCurrentUser()]);
+    } else {
+        echo json_encode(['success' => true, 'authenticated' => false]);
+    }
+}
+
+// ============================================
+// Order Query Handlers
+// ============================================
+
+function handleGetAvailable() {
+    $queueItems = dispatch_getReadyQueue();
+    $available = [];
+    
+    // Track which orders are in batches (so we don't double-show them)
+    $batchedRefs = [];
+    
+    // Include pending/suggested batches as single items
+    $pendingBatches = batch_getPending();
+    foreach ($pendingBatches as $batch) {
+        $available[] = batch_formatForApp($batch);
+        $refs = $batch['order_refs'] ?? [];
+        if (empty($refs) && !empty($batch['orders'])) {
+            foreach ($batch['orders'] as $o) {
+                $refs[] = is_array($o) ? ($o['ref'] ?? '') : $o;
+            }
+        }
+        foreach ($refs as $r) {
+            $batchedRefs[$r] = true;
+        }
+    }
+    
+    // Add individual (non-batched) orders
+    foreach ($queueItems as $item) {
+        $ref = $item['ref'];
+        if (isset($batchedRefs[$ref])) continue;
+        
+        $order = courier_loadOrder($ref);
+        if (!$order) continue;
+        
+        // Skip if already in a batch or assigned
+        $dispatch = $order['dispatch'] ?? [];
+        if (!empty($dispatch['batch_id'])) continue;
+        if (!empty($dispatch['courier_id']) || !empty($dispatch['courier_pin'])) continue;
+        
+        $formatted = formatOrderForApp($order, $ref);
+        $formatted['type'] = 'single';
+        $available[] = $formatted;
+    }
+    
+    echo json_encode(['success' => true, 'orders' => $available, 'count' => count($available)]);
+}
+
+function handleGetMyDeliveries() {
+    $user = getCurrentUser();
+    $pin = $user['pin'];
+    
+    $statuses = courier_loadStatuses();
+    $active = [];
+    $completedToday = [];
+    $today = date('Y-m-d');
+    
+    // Track which orders are in batches
+    $batchedRefs = [];
+    
+    // Include courier's batches
+    $courierBatches = batch_getForCourier($pin);
+    foreach ($courierBatches as $batch) {
+        $formatted = batch_formatForApp($batch);
+        
+        // Track all refs in this batch
+        $refs = $batch['order_refs'] ?? [];
+        if (empty($refs) && !empty($batch['orders'])) {
+            foreach ($batch['orders'] as $o) {
+                $refs[] = is_array($o) ? ($o['ref'] ?? '') : $o;
+            }
+        }
+        foreach ($refs as $r) {
+            $batchedRefs[$r] = true;
+        }
+        
+        if (in_array($batch['status'], ['accepted', 'dispatched', 'in_progress'])) {
+            $active[] = $formatted;
+        } elseif ($batch['status'] === 'completed') {
+            $ts = $batch['completed_at'] ?? '';
+            if ($ts && substr($ts, 0, 10) === $today) {
+                $completedToday[] = $formatted;
+            }
+        }
+    }
+    
+    // Add individual (non-batched) orders
+    foreach ($statuses as $ref => $status) {
+        if (empty($ref)) continue;
+        if (isset($batchedRefs[$ref])) continue;
+        if (!in_array($status, ['dispatched', 'shipped', 'delivered', 'pickedup'])) continue;
+        
+        $order = courier_loadOrder($ref);
+        if (!$order) continue;
+        
+        $dispatch = $order['dispatch'] ?? [];
+        $courierPin = $dispatch['courier_pin'] ?? $dispatch['courier_id'] ?? '';
+        if ($courierPin !== $pin) continue;
+        
+        $formatted = formatOrderForApp($order, $ref, $status);
+        $formatted['type'] = 'single';
+        
+        if (in_array($status, ['dispatched', 'shipped'])) {
+            $active[] = $formatted;
+        } elseif (in_array($status, ['delivered', 'pickedup'])) {
+            $ts = $dispatch['delivered_at'] ?? $dispatch['picked_up_at'] ?? $dispatch['shipped_at'] ?? '';
+            if ($ts && substr($ts, 0, 10) === $today) {
+                $completedToday[] = $formatted;
+            }
+        }
+    }
+    
+    echo json_encode([
+        'success' => true,
+        'active' => $active,
+        'completed_today' => $completedToday,
+        'active_count' => count($active),
+        'completed_count' => count($completedToday),
+    ]);
+}
+
+function handleGetPickupQueue() {
+    $statuses = courier_loadStatuses();
+    $queue = [];
+    
+    foreach ($statuses as $ref => $status) {
+        if (empty($ref) || $status !== 'delivered') continue;
+        
+        $order = courier_loadOrder($ref);
+        if (!$order) continue;
+        
+        // Only show orders delivered to MTCC
+        $deliveryOption = $order['deliveryOption'] ?? '';
+        $dest = dispatch_getDestination($order);
+        $destLabel = strtolower($dest['label'] ?? '');
+        $destType = $dest['type'] ?? '';
+        
+        if ($destType !== 'mtcc' && strpos($destLabel, 'mtcc') === false && $deliveryOption !== 'mtcc') {
+            continue;
+        }
+        
+        $queue[] = formatOrderForApp($order, $ref, $status);
+    }
+    
+    // Sort by delivered time (newest first)
+    usort($queue, function($a, $b) {
+        return strcmp($b['delivered_at'] ?? '', $a['delivered_at'] ?? '');
+    });
+    
+    echo json_encode(['success' => true, 'orders' => $queue, 'count' => count($queue)]);
+}
+
+function handleGetActivity() {
+    $logFile = __DIR__ . '/../dispatch/dispatch-log.json';
+    if (!file_exists($logFile)) {
+        $logFile = __DIR__ . '/../data/dispatch-log.json';
+    }
+    
+    $entries = [];
+    if (file_exists($logFile)) {
+        $data = json_decode(file_get_contents($logFile), true);
+        $entries = $data['entries'] ?? [];
+    }
+    
+    $today = date('Y-m-d');
+    $todayEntries = array_filter($entries, function($e) use ($today) {
+        return substr($e['timestamp'] ?? '', 0, 10) === $today;
+    });
+    usort($todayEntries, function($a, $b) {
+        return strcmp($b['timestamp'], $a['timestamp']);
+    });
+    
+    echo json_encode(['success' => true, 'entries' => array_slice(array_values($todayEntries), 0, 50)]);
+}
+
+
+// ============================================
+// Upcoming Orders (printing / ready_to_ship)
+// ============================================
+
+function handleGetUpcoming() {
+    $statuses = courier_loadStatuses();
+    $upcoming = [];
+    
+    foreach ($statuses as $ref => $status) {
+        if (empty($ref)) continue;
+        if (!in_array($status, ['printing', 'ready_to_ship'])) continue;
+        
+        $order = courier_loadOrder($ref);
+        if (!$order) continue;
+        
+        $formatted = formatOrderForApp($order, $ref, $status);
+        
+        // Calculate pipeline emphasis tier
+        $hr = $formatted['hours_remaining'];
+        if ($hr !== null && $hr > 0) {
+            if ($hr <= 24) $formatted['pipeline_tier'] = '24h';
+            elseif ($hr <= 48) $formatted['pipeline_tier'] = '48h';
+            elseif ($hr <= 72) $formatted['pipeline_tier'] = '72h';
+            else $formatted['pipeline_tier'] = 'later';
+        } else {
+            $formatted['pipeline_tier'] = 'later';
+        }
+        
+        $upcoming[] = $formatted;
+    }
+    
+    // Sort by hours_remaining ascending (soonest first)
+    usort($upcoming, function($a, $b) {
+        $aH = $a['hours_remaining'] ?? 9999;
+        $bH = $b['hours_remaining'] ?? 9999;
+        return $aH <=> $bH;
+    });
+    
+    echo json_encode([
+        'success' => true,
+        'orders' => $upcoming,
+        'count' => count($upcoming),
+    ]);
+}
+
+// ============================================
+// Dispatch Action Handlers
+// ============================================
+
+function handleAcceptDelivery() {
+    $user = getCurrentUser();
+    $ref = trim($_POST['ref'] ?? '');
+    if (!$ref) {
+        echo json_encode(['success' => false, 'error' => 'Reference code required']);
+        return;
+    }
+    if ($user['role'] !== 'courier') {
+        echo json_encode(['success' => false, 'error' => 'Only couriers can accept deliveries']);
+        return;
+    }
+    
+    // Load order using dispatch-functions proven loader
+    $order = courier_loadOrder($ref);
+    if (!$order) {
+        echo json_encode(['success' => false, 'error' => 'Order not found: ' . $ref]);
+        return;
+    }
+    
+    // Check status from statuses.json (source of truth)
+    $currentStatus = courier_getStatus($ref);
+    if ($currentStatus !== 'ready') {
+        echo json_encode(['success' => false, 'error' => 'Order not available (status: ' . ($currentStatus ?: 'unknown') . ')']);
+        return;
+    }
+    
+    // Check not already assigned
+    $dispatch = $order['dispatch'] ?? [];
+    if (!empty($dispatch['courier_pin']) || !empty($dispatch['courier_id'])) {
+        echo json_encode(['success' => false, 'error' => 'Already assigned to another courier']);
+        return;
+    }
+    
+    // Update status in statuses.json
+    courier_setStatus($ref, 'dispatched');
+    
+    // Update dispatch metadata in order file
+    $order['dispatch'] = array_merge($order['dispatch'] ?? [], [
+        'courier_type' => 'internal',
+        'courier_id' => $user['pin'],
+        'courier_pin' => $user['pin'],
+        'courier_name' => $user['name'],
+        'dispatched_at' => date('c'),
+        'dispatched_by' => $user['name'] . ' (self-assigned)',
+    ]);
+    courier_saveOrder($ref, $order);
+    
+    // Log activity
+    logCourierActivity($ref, 'ready', 'dispatched', $user);
+    
+    // Dispatch notification
+    if (function_exists('dispatch_notifyOrderDispatched')) {
+        dispatch_notifyOrderDispatched($ref, $user['name']);
+    }
+    
+    echo json_encode(['success' => true, 'message' => 'Delivery accepted', 'order' => formatOrderForApp($order, $ref, 'dispatched')]);
+}
+
+function handleUpdateStatus() {
+    $user = getCurrentUser();
+    $ref = trim($_POST['ref'] ?? '');
+    $newStatus = trim($_POST['status'] ?? '');
+    $photoData = $_POST['photo'] ?? '';
+    
+    if (!$ref || !$newStatus) {
+        echo json_encode(['success' => false, 'error' => 'Reference and status required']);
+        return;
+    }
+    if (!in_array($newStatus, $user['allowed_statuses'])) {
+        echo json_encode(['success' => false, 'error' => 'Permission denied for status: ' . $newStatus]);
+        return;
+    }
+    
+    // Load order
+    $order = courier_loadOrder($ref);
+    if (!$order) {
+        echo json_encode(['success' => false, 'error' => 'Order not found: ' . $ref]);
+        return;
+    }
+    
+    // Get current status from statuses.json
+    $oldStatus = courier_getStatus($ref);
+    
+    // Update status in statuses.json (source of truth)
+    courier_setStatus($ref, $newStatus);
+    
+    // Update dispatch metadata in order file
+    $order['dispatch'] = $order['dispatch'] ?? [];
+    
+    // Photo
+    $photoPath = null;
+    if ($photoData && strpos($photoData, 'data:image') === 0) {
+        $photoPath = saveDeliveryPhoto($ref, $photoData);
+        if ($photoPath) {
+            $order['dispatch']['delivery_photo'] = $photoPath;
+            $order['dispatch']['photo_taken_at'] = date('c');
+        }
+    }
+    
+    // Timestamps
+    if ($newStatus === 'shipped') {
+        $order['dispatch']['shipped_at'] = date('c');
+        $order['dispatch']['shipped_by'] = $user['name'];
+    } elseif ($newStatus === 'delivered') {
+        $order['dispatch']['delivered_at'] = date('c');
+        $order['dispatch']['delivered_by'] = $user['name'];
+        if ($user['role'] === 'courier') {
+            recordCourierEarning($user['pin'], $ref, $order);
+        }
+    } elseif ($newStatus === 'pickedup') {
+        $order['dispatch']['pickedup_at'] = date('c');
+        $order['dispatch']['pickedup_by'] = $user['name'];
+    }
+    
+    courier_saveOrder($ref, $order);
+    
+    // Log
+    logCourierActivity($ref, $oldStatus, $newStatus, $user, $photoPath);
+    
+    // Email notification
+    if (function_exists('sendDispatchEmail')) {
+        sendDispatchEmail($order, $oldStatus, $newStatus);
+    }
+    // Dispatch notification
+    if (function_exists('dispatch_notifyStatusChange')) {
+        dispatch_notifyStatusChange($ref, $oldStatus, $newStatus, $user['name']);
+    }
+    
+    echo json_encode(['success' => true, 'message' => 'Status updated to ' . $newStatus, 'order' => formatOrderForApp($order, $ref, $newStatus)]);
+}
+
+function handleScanOrder() {
+    $user = getCurrentUser();
+    $tracking = trim($_POST['tracking'] ?? '');
+    if (!$tracking) {
+        echo json_encode(['success' => false, 'error' => 'Tracking number required']);
+        return;
+    }
+    
+    // Try to find order by tracking number or reference code
+    $result = findOrderByTrackingOrRef($tracking);
+    if (!$result) {
+        echo json_encode(['success' => false, 'error' => 'Order not found for: ' . $tracking]);
+        return;
+    }
+    
+    $order = $result['order'];
+    $ref = $result['ref'];
+    
+    // Get status from statuses.json (source of truth)
+    $currentStatus = courier_getStatus($ref);
+    $nextStatuses = getAvailableStatusTransitions($currentStatus, $user['role'], $user['allowed_statuses']);
+    $receiveMode = in_array($user['role'], ['mtcc_staff', 'admin']) && $currentStatus === 'shipped';
+    
+    echo json_encode([
+        'success' => true,
+        'order' => formatOrderForApp($order, $ref, $currentStatus),
+        'current_status' => $currentStatus,
+        'available_statuses' => $nextStatuses,
+        'receive_mode' => $receiveMode,
+    ]);
+}
+
+// ============================================
+// Earnings
+// ============================================
+
+function handleGetEarnings() {
+    $user = getCurrentUser();
+    $pin = $user['pin'];
+    
+    $earningsFile = DISPATCH_EARNINGS_FILE;
+    $data = [];
+    if (file_exists($earningsFile)) {
+        $data = json_decode(file_get_contents($earningsFile), true) ?: [];
+    }
+    
+    $myEarnings = $data['earnings'][$pin] ?? [];
+    $today = date('Y-m-d');
+    $weekStart = date('Y-m-d', strtotime('monday this week'));
+    $monthStart = date('Y-m-01');
+    $todayTotal = $weekTotal = $monthTotal = $allTimeTotal = $deliveriesToday = 0;
+    
+    foreach ($myEarnings as $entry) {
+        $d = substr($entry['date'] ?? '', 0, 10);
+        $amt = floatval($entry['amount'] ?? 0);
+        $allTimeTotal += $amt;
+        if ($d === $today) { $todayTotal += $amt; $deliveriesToday++; }
+        if ($d >= $weekStart) $weekTotal += $amt;
+        if ($d >= $monthStart) $monthTotal += $amt;
+    }
+    
+    echo json_encode([
+        'success' => true,
+        'summary' => [
+            'today' => round($todayTotal, 2),
+            'week' => round($weekTotal, 2),
+            'month' => round($monthTotal, 2),
+            'all_time' => round($allTimeTotal, 2),
+            'deliveries_today' => $deliveriesToday,
+        ],
+        'recent' => array_slice(array_reverse($myEarnings), 0, 20),
+    ]);
+}
+
+function recordCourierEarning($pin, $ref, $order) {
+    $earningsFile = DISPATCH_EARNINGS_FILE;
+    $data = ['earnings' => [], 'metadata' => ['last_updated' => null, 'version' => '1.0']];
+    if (file_exists($earningsFile)) {
+        $data = json_decode(file_get_contents($earningsFile), true) ?: $data;
+    }
+    
+    $amount = calculateDeliveryEarning($order);
+    if (!isset($data['earnings'][$pin])) $data['earnings'][$pin] = [];
+    $data['earnings'][$pin][] = [
+        'ref' => $ref,
+        'amount' => $amount,
+        'date' => date('c'),
+        'breakdown' => getEarningBreakdown($order),
+    ];
+    $data['metadata']['last_updated'] = date('c');
+    
+    // Update courier totals
+    $couriersFile = DISPATCH_COURIERS_FILE;
+    if (file_exists($couriersFile)) {
+        $couriers = json_decode(file_get_contents($couriersFile), true);
+        if ($couriers && isset($couriers['users'][$pin])) {
+            $couriers['users'][$pin]['total_deliveries'] = ($couriers['users'][$pin]['total_deliveries'] ?? 0) + 1;
+            $couriers['users'][$pin]['total_earned'] = ($couriers['users'][$pin]['total_earned'] ?? 0) + $amount;
+            file_put_contents($couriersFile, json_encode($couriers, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), LOCK_EX);
+        }
+    }
+    file_put_contents($earningsFile, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), LOCK_EX);
+}
+
+function calculateDeliveryEarning($order) {
+    $settings = dispatch_loadSettings();
+    $pricing = $settings['pricing'] ?? [];
+    $amount = $pricing['base_rate'] ?? 30;
+    
+    if (!empty($settings['weather']['bad_weather_active'])) {
+        $amount += $pricing['modifiers']['bad_weather'] ?? 5;
+    }
+    
+    $hour = (int)date('H');
+    foreach ($pricing['time_windows'] ?? [] as $window) {
+        $amt = $window['amount'] ?? 0;
+        if ($amt <= 0) continue;
+        $match = false;
+        if (isset($window['before']) && $hour < (int)substr($window['before'], 0, 2)) $match = true;
+        if (isset($window['after']) && $hour >= (int)substr($window['after'], 0, 2)) $match = true;
+        if (isset($window['start']) && isset($window['end'])) {
+            if ($hour >= (int)substr($window['start'], 0, 2) && $hour < (int)substr($window['end'], 0, 2)) $match = true;
+        }
+        if ($match) { $amount += $amt; break; }
+    }
+    
+    // Distance modifier (if route info available on order)
+    if (!empty($order['route_distance_km'])) {
+        $routes = new RoutesAPI();
+        $distMod = $routes->calculateDistanceModifier($order['route_distance_km']);
+        $amount += $distMod;
+    }
+    
+    return round($amount, 2);
+}
+
+function getEarningBreakdown($order) {
+    $settings = dispatch_loadSettings();
+    $pricing = $settings['pricing'] ?? [];
+    $breakdown = [['label' => 'Base rate', 'amount' => $pricing['base_rate'] ?? 30]];
+    if (!empty($settings['weather']['bad_weather_active'])) {
+        $breakdown[] = ['label' => 'Weather bonus', 'amount' => $pricing['modifiers']['bad_weather'] ?? 5];
+    }
+    $hour = (int)date('H');
+    foreach ($pricing['time_windows'] ?? [] as $name => $window) {
+        $amt = $window['amount'] ?? 0;
+        if ($amt <= 0) continue;
+        $match = false;
+        if (isset($window['before']) && $hour < (int)substr($window['before'], 0, 2)) $match = true;
+        if (isset($window['after']) && $hour >= (int)substr($window['after'], 0, 2)) $match = true;
+        if (isset($window['start']) && isset($window['end'])) {
+            if ($hour >= (int)substr($window['start'], 0, 2) && $hour < (int)substr($window['end'], 0, 2)) $match = true;
+        }
+        if ($match) {
+            $breakdown[] = ['label' => ucfirst(str_replace('_', ' ', $name)) . ' bonus', 'amount' => $amt];
+            break;
+        }
+    }
+    
+    // Distance modifier
+    if (!empty($order['route_distance_km'])) {
+        $routes = new RoutesAPI();
+        $distMod = $routes->calculateDistanceModifier($order['route_distance_km']);
+        if ($distMod > 0) {
+            $breakdown[] = ['label' => 'Distance (' . $order['route_distance_km'] . ' km)', 'amount' => $distMod];
+        }
+    }
+    
+    return $breakdown;
+}
+
+// ============================================
+// Helpers
+// ============================================
+
+/**
+ * Format order data for the mobile app.
+ * Uses correct field names from the actual order JSON structure:
+ *   customerInfo.name, dimensions.width/height, pricing.total/tier, event.name/acronym
+ * Status comes from statuses.json, NOT from the order file.
+ */
+function formatOrderForApp($order, $ref = null, $statusOverride = null) {
+    if (!$ref) $ref = $order['referenceCode'] ?? '';
+    
+    // Status from statuses.json (passed in or looked up)
+    $status = $statusOverride ?: courier_getStatus($ref);
+    
+    $dispatch = $order['dispatch'] ?? [];
+    $customerInfo = $order['customerInfo'] ?? [];
+    $dimensions = $order['dimensions'] ?? [];
+    $pricing = $order['pricing'] ?? [];
+    $event = $order['event'] ?? [];
+    
+    // Build tracking number
+    $eventPrefix = $event['acronym'] ?? '';
+    $orderNum = '001';
+    if (preg_match('/(\d+)$/', $ref, $m)) $orderNum = $m[1];
+    $dateStr = $order['selectedDate'] ?? date('Y-m-d');
+    try { $d = new DateTime($dateStr); } catch (Exception $e) { $d = new DateTime(); }
+    $tracking = $eventPrefix
+        ? 'MTCC' . strtoupper($eventPrefix) . str_pad($orderNum, 3, '0', STR_PAD_LEFT) . $d->format('ymd')
+        : 'MTCC' . $d->format('ymd') . str_pad($orderNum, 3, '0', STR_PAD_LEFT);
+    
+    // Destination from dispatch-functions helper (includes address, instructions, building)
+    $dest = dispatch_getDestination($order);
+    
+    // Vendor info from preflight-log + vendors.json
+    $vendorInfo = dispatch_getVendorInfo($ref);
+    $vendorName = $vendorInfo ? ($vendorInfo['vendor_name'] ?? 'Unknown Vendor') : 'Unknown Vendor';
+    $vendorAddress = '';
+    if ($vendorInfo && !empty($vendorInfo['vendor_id'])) {
+        $vendorAddress = courier_getVendorAddress($vendorInfo['vendor_id']);
+    }
+    // If dispatch_summary has vendor info cached, use that
+    if (isset($order['dispatch_summary']['vendor_name'])) {
+        $vendorName = $order['dispatch_summary']['vendor_name'];
+    }
+    
+    // Estimated courier payout from dispatch-settings
+    $payoutInfo = courier_calculatePayout();
+    
+    // Urgency / due info from dispatch-functions
+    $dueInfo = courier_getDueInfo($order);
+    $hoursRemaining = $dueInfo['hours_remaining'];
+    $urgencyLevel = 'normal'; // normal, orange (<4hr), red (<2hr)
+    if ($hoursRemaining !== null && $hoursRemaining > 0) {
+        if ($hoursRemaining <= 2) $urgencyLevel = 'red';
+        elseif ($hoursRemaining <= 4) $urgencyLevel = 'orange';
+    }
+    
+    // Vendor phone from vendors.json
+    $vendorPhone = '';
+    if ($vendorInfo && !empty($vendorInfo['vendor_id'])) {
+        $vendorPhone = courier_getVendorPhone($vendorInfo['vendor_id']);
+    }
+    
+    return [
+        'ref' => $ref,
+        'tracking' => $tracking,
+        'status' => $status,
+        'customer_name' => $customerInfo['name'] ?? '',
+        'customer_phone' => $customerInfo['phone'] ?? '',
+        'material' => $order['material'] ?? '',
+        'size' => ($dimensions['width'] ?? '') . '" x ' . ($dimensions['height'] ?? '') . '"',
+        'quantity' => $order['quantity'] ?? 1,
+        'event' => $event['name'] ?? '',
+        'event_acronym' => $event['acronym'] ?? '',
+        'building' => $event['building'] ?? '',
+        // Destination details
+        'destination' => $dest['label'] ?? '',
+        'destination_type' => $dest['type'] ?? '',
+        'destination_address' => $dest['address'] ?? '',
+        'destination_instructions' => $dest['instructions'] ?? '',
+        'destination_building' => $dest['building'] ?? '',
+        // Vendor / Pickup details
+        'vendor_name' => $vendorName,
+        'vendor_address' => $vendorAddress,
+        'vendor_phone' => $vendorPhone,
+        // Due date / urgency
+        'due_date' => $order['selectedDate'] ?? '',
+        'due_time' => $dueInfo['time'] ?? 'anytime',
+        'due_time_formatted' => $dueInfo['time_formatted'] ?? 'Anytime',
+        'due_date_formatted' => $dueInfo['date_formatted'] ?? '',
+        'hours_remaining' => $hoursRemaining,
+        'urgency' => $urgencyLevel,
+        'is_today' => $dueInfo['is_today'] ?? false,
+        // Pricing
+        'delivery_tier' => $pricing['tier'] ?? '',
+        'total' => $pricing['total'] ?? 0,
+        // Courier payout
+        'est_payout' => $payoutInfo['total'],
+        'est_payout_breakdown' => $payoutInfo['breakdown'],
+        // Dispatch details
+        'courier_name' => $dispatch['courier_name'] ?? '',
+        'courier_pin' => $dispatch['courier_pin'] ?? $dispatch['courier_id'] ?? '',
+        'dispatched_at' => $dispatch['dispatched_at'] ?? '',
+        'shipped_at' => $dispatch['shipped_at'] ?? '',
+        'delivered_at' => $dispatch['delivered_at'] ?? '',
+        'delivery_photo' => $dispatch['delivery_photo'] ?? '',
+        'notes' => $order['specialInstructions'] ?? '',
+        // Vendor fulfillment details
+        'vendor_order_number' => $vendorInfo ? ($vendorInfo['vendor_order_number'] ?? '') : '',
+        'packing' => $vendorInfo ? ($vendorInfo['packing'] ?? 'none') : 'none',
+        'packing_details' => $vendorInfo ? ($vendorInfo['packing_details'] ?? []) : [],
+    ];
+}
+
+
+/**
+ * Get vendor address from vendors.json by vendor_id
+ */
+function courier_getVendorAddress($vendorId) {
+    $vendorsFile = __DIR__ . '/../data/vendors.json';
+    if (!file_exists($vendorsFile)) return '';
+    $data = json_decode(file_get_contents($vendorsFile), true);
+    if (!$data || !isset($data['vendors'])) return '';
+    foreach ($data['vendors'] as $v) {
+        if (($v['id'] ?? '') === $vendorId) {
+            return $v['address'] ?? '';
+        }
+    }
+    return '';
+}
+
+/**
+ * Get vendor phone from vendors.json by vendor_id
+ */
+function courier_getVendorPhone($vendorId) {
+    $vendorsFile = __DIR__ . '/../data/vendors.json';
+    if (!file_exists($vendorsFile)) return '';
+    $data = json_decode(file_get_contents($vendorsFile), true);
+    if (!$data || !isset($data['vendors'])) return '';
+    foreach ($data['vendors'] as $v) {
+        if (($v['id'] ?? '') === $vendorId) {
+            return $v['phone'] ?? '';
+        }
+    }
+    return '';
+}
+
+
+/**
+ * Calculate due date/time info and urgency for an order.
+ */
+function courier_getDueInfo($order) {
+    $selectedDate = $order['selectedDate'] ?? '';
+    $deliveryTime = $order['deliveryTime'] ?? 'anytime';
+    
+    $timeLabels = [
+        'anytime' => 'Anytime', '9am' => '9:00 AM',
+        '12pm' => '12:00 PM', '3pm' => '3:00 PM', '6pm' => '6:00 PM',
+    ];
+    $timeHours = [
+        'anytime' => 18, '9am' => 9, '12pm' => 12, '3pm' => 15, '6pm' => 18,
+    ];
+    
+    $timeFormatted = $timeLabels[$deliveryTime] ?? 'Anytime';
+    $dateFormatted = '';
+    $hoursRemaining = null;
+    $isToday = false;
+    
+    if ($selectedDate) {
+        try {
+            $dueDate = new DateTime($selectedDate);
+            $dateFormatted = $dueDate->format('l, M j, Y');
+            $today = new DateTime();
+            $isToday = ($dueDate->format('Y-m-d') === $today->format('Y-m-d'));
+            
+            $dueHour = $timeHours[$deliveryTime] ?? 18;
+            $dueDateTime = clone $dueDate;
+            $dueDateTime->setTime($dueHour, 0, 0);
+            $now = new DateTime();
+            if ($dueDateTime > $now) {
+                $diff = $now->diff($dueDateTime);
+                $hoursRemaining = ($diff->days * 24) + $diff->h + ($diff->i / 60);
+            } else {
+                $diff = $dueDateTime->diff($now);
+                $hoursRemaining = -(($diff->days * 24) + $diff->h + ($diff->i / 60));
+            }
+            $hoursRemaining = round($hoursRemaining, 2);
+        } catch (Exception $e) {}
+    }
+    
+    return [
+        'time' => $deliveryTime,
+        'time_formatted' => $timeFormatted,
+        'date_formatted' => $dateFormatted,
+        'hours_remaining' => $hoursRemaining,
+        'is_today' => $isToday,
+    ];
+}
+/**
+ * Calculate estimated courier payout from current dispatch-settings pricing
+ */
+function courier_calculatePayout() {
+    $settings = dispatch_loadSettings();
+    $pricing = $settings['pricing'] ?? [];
+    $base = $pricing['base_rate'] ?? 30;
+    $breakdown = [['label' => 'Base rate', 'amount' => $base]];
+    $total = $base;
+    
+    // Weather bonus
+    if (!empty($settings['weather']['bad_weather_active'])) {
+        $bonus = $pricing['modifiers']['bad_weather'] ?? 5;
+        $breakdown[] = ['label' => 'Weather bonus', 'amount' => $bonus];
+        $total += $bonus;
+    }
+    
+    // Time-of-day bonus
+    $hour = (int)date('H');
+    foreach ($pricing['time_windows'] ?? [] as $name => $window) {
+        $amt = $window['amount'] ?? 0;
+        if ($amt <= 0) continue;
+        $match = false;
+        if (isset($window['before']) && $hour < (int)substr($window['before'], 0, 2)) $match = true;
+        if (isset($window['after']) && $hour >= (int)substr($window['after'], 0, 2)) $match = true;
+        if (isset($window['start']) && isset($window['end'])) {
+            if ($hour >= (int)substr($window['start'], 0, 2) && $hour < (int)substr($window['end'], 0, 2)) $match = true;
+        }
+        if ($match) {
+            $label = ucfirst(str_replace('_', ' ', $name)) . ' bonus';
+            $breakdown[] = ['label' => $label, 'amount' => $amt];
+            $total += $amt;
+            break;
+        }
+    }
+    
+    return ['total' => round($total, 2), 'breakdown' => $breakdown];
+}
+
+/**
+ * Find an order by tracking number or reference code.
+ * Returns ['order' => ..., 'ref' => ...] or null.
+ */
+function findOrderByTrackingOrRef($tracking) {
+    $tracking = strtoupper(trim($tracking));
+    $dir = DISPATCH_ORDERS_DIR;
+    if (!is_dir($dir)) return null;
+    
+    $files = glob($dir . '*.json');
+    if (empty($files)) return null;
+    
+    foreach ($files as $file) {
+        $order = json_decode(file_get_contents($file), true);
+        if (!$order) continue;
+        
+        $ref = $order['referenceCode'] ?? '';
+        
+        // Check reference code directly
+        if (strtoupper($ref) === $tracking) {
+            return ['order' => $order, 'ref' => $ref];
+        }
+        
+        // Generate tracking number and compare
+        $ep = $order['event']['acronym'] ?? '';
+        $num = '001';
+        if (preg_match('/(\d+)$/', $ref, $m)) $num = $m[1];
+        $ds = $order['selectedDate'] ?? date('Y-m-d');
+        try { $dt = new DateTime($ds); } catch (Exception $e) { $dt = new DateTime(); }
+        $gen = $ep
+            ? 'MTCC' . strtoupper($ep) . str_pad($num, 3, '0', STR_PAD_LEFT) . $dt->format('ymd')
+            : 'MTCC' . $dt->format('ymd') . str_pad($num, 3, '0', STR_PAD_LEFT);
+        
+        if (strtoupper($gen) === $tracking) {
+            return ['order' => $order, 'ref' => $ref];
+        }
+    }
+    return null;
+}
+
+function getAvailableStatusTransitions($currentStatus, $role, $allowedStatuses) {
+    // Couriers follow strict flow: accept -> pickup -> deliver
+    // Admin/Staff can skip dispatched for 3rd-party courier scenarios
+    if ($role === 'courier') {
+        $transitions = [
+            'ready' => ['dispatched'],
+            'dispatched' => ['shipped'],
+            'shipped' => ['delivered'],
+        ];
+    } else {
+        $transitions = [
+            'ready' => ['dispatched', 'shipped'],
+            'dispatched' => ['shipped'],
+            'shipped' => ['delivered'],
+            'delivered' => ['pickedup'],
+        ];
+    }
+    return array_values(array_intersect($transitions[$currentStatus] ?? [], $allowedStatuses));
+}
+
+function saveDeliveryPhoto($ref, $base64Data) {
+    if (!preg_match('/^data:image\/(jpeg|png|jpg);base64,(.+)$/', $base64Data, $m)) return null;
+    $ext = $m[1] === 'png' ? 'png' : 'jpg';
+    $decoded = base64_decode($m[2]);
+    if (!$decoded) return null;
+    $filename = $ref . '_' . date('Ymd_His') . '.' . $ext;
+    if (file_put_contents(COURIER_PHOTOS_DIR . $filename, $decoded, LOCK_EX)) {
+        return 'delivery-photos/' . $filename;
+    }
+    return null;
+}
+
+function logCourierActivity($ref, $from, $to, $user, $photo = null) {
+    $logFile = __DIR__ . '/../dispatch/dispatch-log.json';
+    if (!file_exists($logFile)) {
+        $logFile = __DIR__ . '/../data/dispatch-log.json';
+    }
+    $logData = ['entries' => []];
+    if (file_exists($logFile)) {
+        $logData = json_decode(file_get_contents($logFile), true) ?: ['entries' => []];
+    }
+    $logData['entries'][] = [
+        'timestamp' => date('Y-m-d H:i:s'),
+        'referenceCode' => $ref,
+        'fromStatus' => $from,
+        'toStatus' => $to,
+        'userName' => $user['name'],
+        'userRole' => $user['role'],
+        'roleLabel' => $user['role_label'],
+        'photo' => $photo,
+        'source' => 'courier_app',
+    ];
+    if (count($logData['entries']) > 500) {
+        $logData['entries'] = array_slice($logData['entries'], -500);
+    }
+    file_put_contents($logFile, json_encode($logData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), LOCK_EX);
+}
+
+
+// ============================================
+// Weather Handler
+// ============================================
+
+function handleGetWeather() {
+    $weather = new WeatherAPI();
+    $data = $weather->getWeather();
+    
+    if (!$data) {
+        echo json_encode(['success' => false, 'error' => 'Weather data unavailable']);
+        return;
+    }
+    
+    // Check bad weather thresholds and auto-toggle
+    $badWeather = $weather->checkBadWeather($data);
+    
+    echo json_encode([
+        'success' => true,
+        'weather' => $data,
+        'bad_weather' => $badWeather
+    ]);
+}
+
+// ============================================
+// Routes & Maps Handlers
+// ============================================
+
+/**
+ * Get route info between pickup and dropoff for a specific order.
+ * Returns distance, duration, and static map URL.
+ */
+function handleGetRouteInfo() {
+    $ref = $_POST['ref'] ?? '';
+    if (empty($ref)) {
+        echo json_encode(['success' => false, 'error' => 'Missing ref']);
+        return;
+    }
+    
+    $routes = new RoutesAPI();
+    
+    // Load order using dispatch system's file lookup
+    $order = courier_loadOrder($ref);
+    if (!$order) {
+        echo json_encode(['success' => false, 'error' => 'Order not found']);
+        return;
+    }
+    
+    $formatted = formatOrderForApp($order, $ref);
+    
+    // Get pickup coordinates
+    $pickupCoords = $routes->getOrderPickupCoords($formatted);
+    if (!$pickupCoords) {
+        echo json_encode(['success' => false, 'error' => 'Could not geocode pickup address']);
+        return;
+    }
+    
+    // Get dropoff coordinates  
+    $dropoffCoords = $routes->getOrderDropoffCoords($formatted);
+    if (!$dropoffCoords) {
+        echo json_encode(['success' => false, 'error' => 'Could not geocode dropoff address']);
+        return;
+    }
+    
+    // Calculate route
+    $routeInfo = $routes->getDistance($pickupCoords, $dropoffCoords);
+    if (!$routeInfo) {
+        echo json_encode(['success' => false, 'error' => 'Route calculation failed']);
+        return;
+    }
+    
+    // Generate static map URL
+    $stops = [$pickupCoords, $dropoffCoords];
+    $mapUrl = $routes->getStaticMapUrl($stops, 400, 200, $routeInfo['polyline'] ?? null);
+    
+    // Generate directions link
+    $directionsUrl = $routes->getDirectionsUrl($pickupCoords, $dropoffCoords);
+    
+    // Save route info to order for future payout calculations
+    $order['route_info'] = [
+        'distance_km' => $routeInfo['distance_km'],
+        'duration_min' => $routeInfo['duration_min'],
+        'calculated_at' => date('c'),
+        'pickup_coords' => $pickupCoords,
+        'dropoff_coords' => $dropoffCoords
+    ];
+    courier_saveOrder($ref, $order);
+    
+    echo json_encode([
+        'success' => true,
+        'route' => [
+            'distance_km' => $routeInfo['distance_km'],
+            'duration_min' => $routeInfo['duration_min'],
+            'polyline' => $routeInfo['polyline'],
+            'static_map_url' => $mapUrl,
+            'directions_url' => $directionsUrl,
+            'pickup' => $pickupCoords,
+            'dropoff' => $dropoffCoords
+        ]
+    ]);
+}
+
+/**
+ * Get nearby available orders with distances from courier's location.
+ * Courier sends their lat/lng, we return orders sorted by distance.
+ */
+function handleGetNearbyOrders() {
+    $courierLat = (float)($_POST['lat'] ?? 0);
+    $courierLng = (float)($_POST['lng'] ?? 0);
+    $radiusKm = (float)($_POST['radius'] ?? 15);
+    
+    if (!$courierLat || !$courierLng) {
+        echo json_encode(['success' => false, 'error' => 'Location required']);
+        return;
+    }
+    
+    $routes = new RoutesAPI();
+    
+    // Get all available orders (ready + dispatched unassigned)
+    $statusesFile = defined('COURIER_STATUSES_FILE') ? COURIER_STATUSES_FILE : __DIR__ . '/../data/statuses.json';
+    $statuses = file_exists($statusesFile) ? json_decode(file_get_contents($statusesFile), true) : [];
+    
+    $nearbyOrders = [];
+    
+    foreach ($statuses as $ref => $info) {
+        $status = is_array($info) ? ($info['status'] ?? '') : $info;
+        if (!in_array($status, ['ready', 'dispatched'])) continue;
+        
+        // Check not assigned to another courier
+        if ($status === 'dispatched' && !empty($info['assigned_courier'])) continue;
+        
+        $order = courier_loadOrder($ref);
+        if (!$order) continue;
+        
+        $formatted = formatOrderForApp($order, $ref, $status);
+        
+        // Get pickup coords
+        $pickupCoords = $routes->getOrderPickupCoords($formatted);
+        if (!$pickupCoords) continue;
+        
+        // Calculate straight-line distance
+        $straightLine = sqrt(
+            pow(($pickupCoords['lat'] - $courierLat) * 111, 2) +
+            pow(($pickupCoords['lng'] - $courierLng) * 111 * cos(deg2rad($courierLat)), 2)
+        );
+        
+        if ($straightLine > $radiusKm) continue;
+        
+        // Get dropoff coords
+        $dropoffCoords = $routes->getOrderDropoffCoords($formatted);
+        
+        $formatted['pickup_coords'] = $pickupCoords;
+        $formatted['dropoff_coords'] = $dropoffCoords;
+        $formatted['distance_from_courier_km'] = round($straightLine * 1.3, 1); // ~driving estimate
+        $formatted['est_pickup_min'] = max(5, round($straightLine * 1.3 * 2.5, 0));
+        
+        $nearbyOrders[] = $formatted;
+    }
+    
+    // Sort by distance from courier
+    usort($nearbyOrders, function($a, $b) {
+        return ($a['distance_from_courier_km'] ?? 999) <=> ($b['distance_from_courier_km'] ?? 999);
+    });
+    
+    echo json_encode([
+        'success' => true,
+        'orders' => $nearbyOrders,
+        'courier_location' => ['lat' => $courierLat, 'lng' => $courierLng],
+        'radius_km' => $radiusKm
+    ]);
+}
+
+/**
+ * Geocode all vendors that don't have coordinates yet.
+ * Returns array of vendor coords.
+ */
+function handleGeocodeVendors() {
+    $routes = new RoutesAPI();
+    
+    $vendorsFile = __DIR__ . '/../data/vendors.json';
+    if (!file_exists($vendorsFile)) {
+        echo json_encode(['success' => false, 'error' => 'Vendors file not found']);
+        return;
+    }
+    
+    $vendorData = json_decode(file_get_contents($vendorsFile), true);
+    $results = [];
+    
+    foreach ($vendorData['vendors'] as $vendor) {
+        if (!$vendor['active']) continue;
+        
+        $coords = $routes->geocodeVendor($vendor['id']);
+        $results[] = [
+            'id' => $vendor['id'],
+            'name' => $vendor['business_name'],
+            'coords' => $coords
+        ];
+    }
+    
+    echo json_encode(['success' => true, 'vendors' => $results]);
+}
+
+// ============================================
+// Batch Order Handlers
+// ============================================
+
+/**
+ * Courier accepts a batch
+ * POST: action=accept_batch, batch_id
+ */
+function handleAcceptBatch() {
+    $user = getCurrentUser();
+    $batchId = trim($_POST['batch_id'] ?? '');
+    
+    if (!$batchId) {
+        echo json_encode(['success' => false, 'error' => 'Batch ID required']);
+        return;
+    }
+    if ($user['role'] !== 'courier') {
+        echo json_encode(['success' => false, 'error' => 'Only couriers can accept batches']);
+        return;
+    }
+    
+    $result = batch_accept($batchId, $user);
+    echo json_encode($result);
+}
+
+/**
+ * Update a single stop within a batch
+ * POST: action=update_batch_stop, batch_id, stop_index, status (completed|skipped), photo (optional)
+ */
+function handleUpdateBatchStop() {
+    $user = getCurrentUser();
+    $batchId = trim($_POST['batch_id'] ?? '');
+    $stopIndex = intval($_POST['stop_index'] ?? -1);
+    $newStatus = trim($_POST['status'] ?? '');
+    $photoData = $_POST['photo'] ?? '';
+    
+    if (!$batchId || $stopIndex < 0 || !$newStatus) {
+        echo json_encode(['success' => false, 'error' => 'batch_id, stop_index, and status are required']);
+        return;
+    }
+    if (!in_array($newStatus, ['completed', 'skipped'])) {
+        echo json_encode(['success' => false, 'error' => 'Status must be completed or skipped']);
+        return;
+    }
+    
+    $result = batch_updateStop($batchId, $stopIndex, $newStatus, $user, $photoData);
+    echo json_encode($result);
+}
+
+/**
+ * Get optimized route from courier's current GPS position
+ * POST: action=get_batch_route, batch_id, lat, lng
+ */
+function handleGetBatchRoute() {
+    $batchId = trim($_POST['batch_id'] ?? '');
+    $lat = floatval($_POST['lat'] ?? 0);
+    $lng = floatval($_POST['lng'] ?? 0);
+    
+    if (!$batchId || !$lat || !$lng) {
+        echo json_encode(['success' => false, 'error' => 'batch_id, lat, and lng are required']);
+        return;
+    }
+    
+    $result = batch_recalculateRoute($batchId, $lat, $lng);
+    echo json_encode($result);
+}
+
+/**
+ * Run full batch auto-detection scan
+ * POST: action=suggest_batches
+ */
+function handleSuggestBatches() {
+    $suggestions = batch_autoDetect();
+    
+    echo json_encode([
+        'success' => true,
+        'suggestions' => $suggestions,
+        'count' => count($suggestions)
+    ]);
+}
+
+/**
+ * Create a batch from selected orders
+ * POST: action=create_batch, order_refs (comma-separated or JSON array)
+ */
+function handleCreateBatch() {
+    $user = getCurrentUser();
+    
+    $refsInput = $_POST['order_refs'] ?? '';
+    
+    if (is_string($refsInput)) {
+        $decoded = json_decode($refsInput, true);
+        if (is_array($decoded)) {
+            $refs = $decoded;
+        } else {
+            $refs = array_filter(array_map('trim', explode(',', $refsInput)));
+        }
+    } elseif (is_array($refsInput)) {
+        $refs = $refsInput;
+    } else {
+        echo json_encode(['success' => false, 'error' => 'order_refs required']);
+        return;
+    }
+    
+    if (count($refs) < 2) {
+        echo json_encode(['success' => false, 'error' => 'At least 2 order refs required']);
+        return;
+    }
+    
+    $createdBy = $user['name'] ?? 'courier';
+    $result = batch_create($refs, $createdBy, false);
+    echo json_encode($result);
+}
+
+/**
+ * Disband/cancel a batch
+ * POST: action=disband_batch, batch_id
+ */
+function handleDisbandBatch() {
+    $user = getCurrentUser();
+    $batchId = trim($_POST['batch_id'] ?? '');
+    
+    if (!$batchId) {
+        echo json_encode(['success' => false, 'error' => 'Batch ID required']);
+        return;
+    }
+    
+    $result = batch_disband($batchId, $user['name'] ?? 'admin');
+    echo json_encode($result);
+}
+
+// ============================================
+// Release / Unassign Handlers
+// ============================================
+
+/**
+ * Courier releases a single delivery back to the available queue
+ * POST: action=release_delivery, ref, reason (optional)
+ */
+function handleReleaseDelivery() {
+    $user = getCurrentUser();
+    $ref = trim($_POST['ref'] ?? '');
+    $reason = trim($_POST['reason'] ?? '');
+    
+    if (!$ref) {
+        echo json_encode(['success' => false, 'error' => 'Reference code required']);
+        return;
+    }
+    
+    // Load order and verify this courier owns it
+    $order = courier_loadOrder($ref);
+    if (!$order) {
+        echo json_encode(['success' => false, 'error' => 'Order not found']);
+        return;
+    }
+    
+    $dispatch = $order['dispatch'] ?? [];
+    $courierPin = $dispatch['courier_pin'] ?? $dispatch['courier_id'] ?? '';
+    
+    // Couriers can only release their own orders; admins can release any
+    if ($user['role'] === 'courier' && $courierPin !== $user['pin']) {
+        echo json_encode(['success' => false, 'error' => 'This order is not assigned to you']);
+        return;
+    }
+    
+    // Couriers cannot release shipped orders (already picked up)
+    $adminForce = in_array($user['role'], ['admin', 'mtcc_staff']);
+    
+    $result = batch_unassignOrder($ref, $user['name'], $reason, $adminForce);
+    echo json_encode($result);
+}
+
+/**
+ * Courier releases an entire batch back to available
+ * POST: action=release_batch, batch_id, reason (optional)
+ */
+function handleReleaseBatch() {
+    $user = getCurrentUser();
+    $batchId = trim($_POST['batch_id'] ?? '');
+    $reason = trim($_POST['reason'] ?? '');
+    
+    if (!$batchId) {
+        echo json_encode(['success' => false, 'error' => 'Batch ID required']);
+        return;
+    }
+    
+    $found = batch_find($batchId);
+    if (!$found || $found['list'] !== 'active') {
+        echo json_encode(['success' => false, 'error' => 'Batch not found or already completed']);
+        return;
+    }
+    $batch = $found['batch'];
+    
+    // Verify courier owns this batch (admins can release any)
+    $batchPin = $batch['courier']['pin'] ?? $batch['courier_id'] ?? '';
+    if ($user['role'] === 'courier' && $batchPin !== $user['pin']) {
+        echo json_encode(['success' => false, 'error' => 'This batch is not assigned to you']);
+        return;
+    }
+    
+    // Cannot release in_progress batches from courier side
+    if ($user['role'] === 'courier' && $batch['status'] === 'in_progress') {
+        echo json_encode(['success' => false, 'error' => 'Cannot release a batch that is in progress. Contact admin.']);
+        return;
+    }
+    
+    // Disband the batch (returns all orders to ready)
+    $result = batch_disband($batchId, $user['name'] . ' (' . ($reason ?: 'released') . ')');
+    echo json_encode($result);
+}

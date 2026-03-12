@@ -1,0 +1,83 @@
+{
+    "value": {
+        "current": {
+            "temp_c": 3,
+            "feels_like_c": -1,
+            "wind_kmh": 14,
+            "wind_gusts_kmh": 18,
+            "precipitation_mm": 0.1000000000000000055511151231257827021181583404541015625,
+            "rain_mm": 0.1000000000000000055511151231257827021181583404541015625,
+            "snow_mm": 0,
+            "humidity": 99,
+            "weather_code": 51,
+            "description": "Light drizzle",
+            "icon": "\ud83c\udf27\ufe0f",
+            "is_day": true
+        },
+        "forecast": [
+            {
+                "date": "2026-03-11",
+                "day_name": "Today",
+                "high_c": 6,
+                "low_c": 1,
+                "precip_mm": 14.300000000000000710542735760100185871124267578125,
+                "precip_prob": 97,
+                "wind_max_kmh": 30,
+                "weather_code": 71,
+                "description": "Light snow",
+                "icon": "\ud83c\udf28\ufe0f"
+            },
+            {
+                "date": "2026-03-12",
+                "day_name": "Thu",
+                "high_c": 2,
+                "low_c": -1,
+                "precip_mm": 0,
+                "precip_prob": 7,
+                "wind_max_kmh": 25,
+                "weather_code": 3,
+                "description": "Overcast",
+                "icon": "\u2601\ufe0f"
+            },
+            {
+                "date": "2026-03-13",
+                "day_name": "Fri",
+                "high_c": 3,
+                "low_c": -1,
+                "precip_mm": 13.4000000000000003552713678800500929355621337890625,
+                "precip_prob": 75,
+                "wind_max_kmh": 32,
+                "weather_code": 75,
+                "description": "Heavy snow",
+                "icon": "\ud83c\udf28\ufe0f"
+            },
+            {
+                "date": "2026-03-14",
+                "day_name": "Sat",
+                "high_c": 1,
+                "low_c": -5,
+                "precip_mm": 1.3000000000000000444089209850062616169452667236328125,
+                "precip_prob": 14,
+                "wind_max_kmh": 36,
+                "weather_code": 73,
+                "description": "Snow",
+                "icon": "\ud83c\udf28\ufe0f"
+            },
+            {
+                "date": "2026-03-15",
+                "day_name": "Sun",
+                "high_c": 5,
+                "low_c": -3,
+                "precip_mm": 12.4000000000000003552713678800500929355621337890625,
+                "precip_prob": 61,
+                "wind_max_kmh": 42,
+                "weather_code": 75,
+                "description": "Heavy snow",
+                "icon": "\ud83c\udf28\ufe0f"
+            }
+        ],
+        "fetched_at": "2026-03-11T13:39:03-05:00"
+    },
+    "cached_at": "2026-03-11T13:39:03-05:00",
+    "expires_at": 1773255243
+}

@@ -1,0 +1,29 @@
+{
+    "settings": {
+        "enabled": true,
+        "reminder_thresholds_hours": [2, 4, 8],
+        "max_reminders_per_order": 3,
+        "min_hours_between_reminders": 2,
+        "exclude_weekends": false,
+        "business_hours_only": false,
+        "business_hours_start": "08:00",
+        "business_hours_end": "18:00",
+        "timezone": "America/Toronto"
+    },
+    "email_settings": {
+        "from_name": "Print Stuff Orders",
+        "from_email": "orders@printstuff.ca",
+        "reply_to": "orders@printstuff.ca",
+        "cc_admin_on_final_reminder": true,
+        "admin_email": "admin@printstuff.ca"
+    },
+    "notifications": {
+        "slack_webhook": null,
+        "email_admin_daily_summary": false
+    },
+    "metadata": {
+        "created_at": null,
+        "updated_at": null,
+        "version": "1.0"
+    }
+}

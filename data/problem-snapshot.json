@@ -1,0 +1,541 @@
+{
+    "MST-014|confirmation_critical": {
+        "ref": "MST-014",
+        "type": "confirmation_critical",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "George Chatjaveridis",
+        "event": ""
+    },
+    "TECH-012|confirmation_critical": {
+        "ref": "TECH-012",
+        "type": "confirmation_critical",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "George Chatjaveridis",
+        "event": ""
+    },
+    "NFS-008|confirmation_critical": {
+        "ref": "NFS-008",
+        "type": "confirmation_critical",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "Peter Parker",
+        "event": ""
+    },
+    "TECH-006|file_issues": {
+        "ref": "TECH-006",
+        "type": "file_issues",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "Fibi Boufet",
+        "event": ""
+    },
+    "AAIC-0023|past_due": {
+        "ref": "AAIC-0023",
+        "type": "past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "Kenny",
+        "event": ""
+    },
+    "MST-001|past_due": {
+        "ref": "MST-001",
+        "type": "past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "Tim Whatley",
+        "event": ""
+    },
+    "AAIC-0022|past_due": {
+        "ref": "AAIC-0022",
+        "type": "past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "Postman Newman",
+        "event": ""
+    },
+    "TECH-001|past_due": {
+        "ref": "TECH-001",
+        "type": "past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "Babu Bot",
+        "event": ""
+    },
+    "AAIC-0019|past_due": {
+        "ref": "AAIC-0019",
+        "type": "past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "Jerry Seinfeld",
+        "event": ""
+    },
+    "AAIC-0020|past_due": {
+        "ref": "AAIC-0020",
+        "type": "past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "Elaine",
+        "event": ""
+    },
+    "AAIC-0021|past_due": {
+        "ref": "AAIC-0021",
+        "type": "past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "Cosmo Kramer",
+        "event": ""
+    },
+    "COMIC-001|past_due": {
+        "ref": "COMIC-001",
+        "type": "past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "George Chatjaveridis",
+        "event": ""
+    },
+    "AAIC-0017|past_due": {
+        "ref": "AAIC-0017",
+        "type": "past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "Newman",
+        "event": ""
+    },
+    "FANEXPO-001|past_due": {
+        "ref": "FANEXPO-001",
+        "type": "past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "David Puddy",
+        "event": ""
+    },
+    "TECH-004|past_due": {
+        "ref": "TECH-004",
+        "type": "past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "Chandler Bing",
+        "event": ""
+    },
+    "MST-008|past_due": {
+        "ref": "MST-008",
+        "type": "past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "Chrisopher Columbus",
+        "event": ""
+    },
+    "COMIC-009|past_due": {
+        "ref": "COMIC-009",
+        "type": "past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "Clark Kent",
+        "event": ""
+    },
+    "TECH-008|past_due": {
+        "ref": "TECH-008",
+        "type": "past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "John Travolta",
+        "event": ""
+    },
+    "COMIC-008|past_due": {
+        "ref": "COMIC-008",
+        "type": "past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "Steve jobs",
+        "event": ""
+    },
+    "TECH-002|past_due": {
+        "ref": "TECH-002",
+        "type": "past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "George Chatjaveridis",
+        "event": ""
+    },
+    "TECH-005|past_due": {
+        "ref": "TECH-005",
+        "type": "past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "Chandler Bing",
+        "event": ""
+    },
+    "TECH-007|past_due": {
+        "ref": "TECH-007",
+        "type": "past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "Morty Seinfeld",
+        "event": ""
+    },
+    "MST-005|past_due": {
+        "ref": "MST-005",
+        "type": "past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "Monica Gellar",
+        "event": ""
+    },
+    "COMIC-013|past_due": {
+        "ref": "COMIC-013",
+        "type": "past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "George Chatjaveridis",
+        "event": ""
+    },
+    "TECH-009|past_due": {
+        "ref": "TECH-009",
+        "type": "past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "George Chatjaveridis",
+        "event": ""
+    },
+    "MST-006|past_due": {
+        "ref": "MST-006",
+        "type": "past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "Rachel Green",
+        "event": ""
+    },
+    "COMIC-003|past_due": {
+        "ref": "COMIC-003",
+        "type": "past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "Albert Einstein",
+        "event": ""
+    },
+    "MST-003|past_due": {
+        "ref": "MST-003",
+        "type": "past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "George Uncorked",
+        "event": ""
+    },
+    "TECH-011|past_due": {
+        "ref": "TECH-011",
+        "type": "past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "George Chatjaveridis",
+        "event": ""
+    },
+    "COMIC-011|past_due": {
+        "ref": "COMIC-011",
+        "type": "past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "George Chatjaveridis",
+        "event": ""
+    },
+    "COMIC-006|past_due": {
+        "ref": "COMIC-006",
+        "type": "past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "Joey Tribiani",
+        "event": ""
+    },
+    "TECH-014|past_due": {
+        "ref": "TECH-014",
+        "type": "past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "George Chatjaveridis",
+        "event": ""
+    },
+    "COMIC-012|past_due": {
+        "ref": "COMIC-012",
+        "type": "past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "George Chatjaveridis",
+        "event": ""
+    },
+    "TECH-016|past_due": {
+        "ref": "TECH-016",
+        "type": "past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "George Chatjaveridis",
+        "event": ""
+    },
+    "CBSW-001|past_due": {
+        "ref": "CBSW-001",
+        "type": "past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "Lois Einhorn",
+        "event": ""
+    },
+    "IDS-002|past_due": {
+        "ref": "IDS-002",
+        "type": "past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "Zack Morris",
+        "event": ""
+    },
+    "CBSW-003|past_due": {
+        "ref": "CBSW-003",
+        "type": "past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "Samuel Powers",
+        "event": ""
+    },
+    "NFS-010|past_due": {
+        "ref": "NFS-010",
+        "type": "past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "Tony Stark",
+        "event": ""
+    },
+    "CBSW-004|past_due": {
+        "ref": "CBSW-004",
+        "type": "past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "Bruce Banner",
+        "event": ""
+    },
+    "IDS-004|past_due": {
+        "ref": "IDS-004",
+        "type": "past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "Steven Strange",
+        "event": ""
+    },
+    "NFS-005|past_due": {
+        "ref": "NFS-005",
+        "type": "past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "LIsa Turtle",
+        "event": ""
+    },
+    "NFS-007|past_due": {
+        "ref": "NFS-007",
+        "type": "past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": " Victor Von Doom",
+        "event": ""
+    },
+    "IDS-003|past_due": {
+        "ref": "IDS-003",
+        "type": "past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "John Wick",
+        "event": ""
+    },
+    "NFS-006|past_due": {
+        "ref": "NFS-006",
+        "type": "past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "Doug Gilmore",
+        "event": ""
+    },
+    "ASTMH-001|past_due": {
+        "ref": "ASTMH-001",
+        "type": "past_due",
+        "detected_at": "2026-03-06T09:56:33",
+        "customer": "Oscar Cortes Azuero",
+        "event": ""
+    },
+    "NFS-002|past_due": {
+        "ref": "NFS-002",
+        "type": "past_due",
+        "detected_at": "2026-03-06T09:56:33",
+        "customer": "Ace Ventura",
+        "event": ""
+    },
+    "NFS-004|past_due": {
+        "ref": "NFS-004",
+        "type": "past_due",
+        "detected_at": "2026-03-06T09:56:33",
+        "customer": "A.C. Slater",
+        "event": ""
+    },
+    "TECH-019|past_due": {
+        "ref": "TECH-019",
+        "type": "past_due",
+        "detected_at": "2026-03-06T09:56:33",
+        "customer": "George Chatjaveridis",
+        "event": ""
+    },
+    "CBSW-002|past_due": {
+        "ref": "CBSW-002",
+        "type": "past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "Howard Wallowitz",
+        "event": ""
+    },
+    "IDS-001|past_due": {
+        "ref": "IDS-001",
+        "type": "past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "Sheldon Cooper",
+        "event": ""
+    },
+    "MST-009|past_due": {
+        "ref": "MST-009",
+        "type": "past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "Darth Vader",
+        "event": ""
+    },
+    "NFS-008|past_due": {
+        "ref": "NFS-008",
+        "type": "past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "Peter Parker",
+        "event": ""
+    },
+    "MLA-002|past_due": {
+        "ref": "MLA-002",
+        "type": "past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "Richard Belding",
+        "event": ""
+    },
+    "TECH-006|past_due": {
+        "ref": "TECH-006",
+        "type": "past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "Fibi Boufet",
+        "event": ""
+    },
+    "TECH-012|past_due": {
+        "ref": "TECH-012",
+        "type": "past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "George Chatjaveridis",
+        "event": ""
+    },
+    "MST-014|past_due": {
+        "ref": "MST-014",
+        "type": "past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "George Chatjaveridis",
+        "event": ""
+    },
+    "CBSW-001|payment_pending": {
+        "ref": "CBSW-001",
+        "type": "payment_pending",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "Lois Einhorn",
+        "event": ""
+    },
+    "CBSW-004|payment_pending": {
+        "ref": "CBSW-004",
+        "type": "payment_pending",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "Bruce Banner",
+        "event": ""
+    },
+    "NFS-010|payment_pending": {
+        "ref": "NFS-010",
+        "type": "payment_pending",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "Tony Stark",
+        "event": ""
+    },
+    "MLA-001|dispatch_delivery_overdue": {
+        "ref": "MLA-001",
+        "type": "dispatch_delivery_overdue",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "Rajesh Kuthrapali",
+        "event": ""
+    },
+    "NFS-003|dispatch_delivery_overdue": {
+        "ref": "NFS-003",
+        "type": "dispatch_delivery_overdue",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "Leonards Hoffstader",
+        "event": ""
+    },
+    "COMIC-005|dispatch_delivery_overdue": {
+        "ref": "COMIC-005",
+        "type": "dispatch_delivery_overdue",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "Ross Gellar",
+        "event": ""
+    },
+    "TECH-003|dispatch_delivery_overdue": {
+        "ref": "TECH-003",
+        "type": "dispatch_delivery_overdue",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "Albert Einstein",
+        "event": ""
+    },
+    "MST-013|dispatch_delivery_overdue": {
+        "ref": "MST-013",
+        "type": "dispatch_delivery_overdue",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "George Chatjaveridis",
+        "event": ""
+    },
+    "TECH-020|dispatch_delivery_overdue": {
+        "ref": "TECH-020",
+        "type": "dispatch_delivery_overdue",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "George Chatjaveridis",
+        "event": ""
+    },
+    "TECH-021|dispatch_delivery_overdue": {
+        "ref": "TECH-021",
+        "type": "dispatch_delivery_overdue",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "George Chatjaveridis",
+        "event": ""
+    },
+    "MST-004|dispatch_delivery_overdue": {
+        "ref": "MST-004",
+        "type": "dispatch_delivery_overdue",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "Albert Einstein",
+        "event": ""
+    },
+    "MST-010|dispatch_delivery_overdue": {
+        "ref": "MST-010",
+        "type": "dispatch_delivery_overdue",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "Bruce Wayne",
+        "event": ""
+    },
+    "MLA-001|dispatch_past_due": {
+        "ref": "MLA-001",
+        "type": "dispatch_past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "Rajesh Kuthrapali",
+        "event": ""
+    },
+    "NFS-003|dispatch_past_due": {
+        "ref": "NFS-003",
+        "type": "dispatch_past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "Leonards Hoffstader",
+        "event": ""
+    },
+    "CBSW-006|dispatch_past_due": {
+        "ref": "CBSW-006",
+        "type": "dispatch_past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "George Chatjaveridis",
+        "event": ""
+    },
+    "NFS-009|dispatch_past_due": {
+        "ref": "NFS-009",
+        "type": "dispatch_past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "Steve Rogers",
+        "event": ""
+    },
+    "MST-013|dispatch_past_due": {
+        "ref": "MST-013",
+        "type": "dispatch_past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "George Chatjaveridis",
+        "event": ""
+    },
+    "TECH-018|dispatch_past_due": {
+        "ref": "TECH-018",
+        "type": "dispatch_past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "George Chatjaveridis",
+        "event": ""
+    },
+    "COMIC-004|dispatch_past_due": {
+        "ref": "COMIC-004",
+        "type": "dispatch_past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "Albert Einstein",
+        "event": ""
+    },
+    "TECH-017|dispatch_past_due": {
+        "ref": "TECH-017",
+        "type": "dispatch_past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "George Chatjaveridis",
+        "event": ""
+    },
+    "COMIC-010|dispatch_past_due": {
+        "ref": "COMIC-010",
+        "type": "dispatch_past_due",
+        "detected_at": "2026-02-28T12:55:14",
+        "customer": "George Chatjaveridis",
+        "event": ""
+    }
+}

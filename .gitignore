@@ -1,0 +1,16 @@
+# Uploaded files (too large for Git)
+uploads/orders/
+uploads/files/
+uploads/delivery-photos/
+uploads/temp/
+
+# Composer vendor folder (can be reinstalled)
+vendor/
+
+# Sensitive config
+stripe-config.php
+smtp-config.php
+
+# OS files
+Thumbs.db
+.DS_Store

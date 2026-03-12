@@ -1,0 +1,186 @@
+/**
+ * MTCC Timer Styles
+ * Shared CSS for countdown/countup timers across all views
+ * 
+ * Location: /css/timer-styles.css
+ * 
+ * Classes applied automatically by timer-utils.js:
+ *   .timer-safe     — Green: plenty of time
+ *   .timer-caution  — Amber: getting close
+ *   .timer-warning  — Orange: running low
+ *   .timer-critical — Red: urgent
+ *   .timer-overdue  — Pulsing red: past deadline
+ *   .timer-neutral  — Default for countup timers
+ */
+
+/* ============================================
+   BASE TIMER ELEMENT
+   ============================================ */
+
+[data-timer-type] {
+    font-family: 'SF Mono', 'Consolas', 'Monaco', 'Menlo', monospace;
+    font-size: 0.85em;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    padding: 3px 8px;
+    border-radius: 6px;
+    display: inline-block;
+    white-space: nowrap;
+    line-height: 1.4;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* ============================================
+   COUNTDOWN URGENCY CLASSES
+   ============================================ */
+
+.timer-safe {
+    background: rgba(22, 163, 74, 0.1);
+    color: #15803d;
+    border: 1px solid rgba(22, 163, 74, 0.2);
+}
+
+.timer-caution {
+    background: rgba(245, 158, 11, 0.1);
+    color: #b45309;
+    border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.timer-warning {
+    background: rgba(249, 115, 22, 0.12);
+    color: #c2410c;
+    border: 1px solid rgba(249, 115, 22, 0.25);
+}
+
+.timer-critical {
+    background: rgba(220, 38, 38, 0.1);
+    color: #dc2626;
+    border: 1px solid rgba(220, 38, 38, 0.25);
+    font-weight: 700;
+}
+
+.timer-overdue {
+    background: rgba(220, 38, 38, 0.15);
+    color: #dc2626;
+    border: 1px solid rgba(220, 38, 38, 0.3);
+    font-weight: 700;
+    animation: timerPulse 1.5s ease-in-out infinite;
+}
+
+/* ============================================
+   COUNTUP NEUTRAL CLASS
+   ============================================ */
+
+.timer-neutral {
+    background: rgba(107, 114, 128, 0.08);
+    color: #4b5563;
+    border: 1px solid rgba(107, 114, 128, 0.15);
+}
+
+/* ============================================
+   PULSE ANIMATION FOR OVERDUE
+   ============================================ */
+
+@keyframes timerPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.65; }
+}
+
+/* ============================================
+   COMPACT VARIANT (for inline use in tables)
+   ============================================ */
+
+[data-timer-type].timer-compact {
+    font-size: 0.75em;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+/* ============================================
+   LARGE VARIANT (for card headers)
+   ============================================ */
+
+[data-timer-type].timer-large {
+    font-size: 1.1em;
+    padding: 6px 14px;
+    border-radius: 8px;
+}
+
+/* ============================================
+   DARK MODE SUPPORT (if admin uses dark theme)
+   ============================================ */
+
+@media (prefers-color-scheme: dark) {
+    .timer-safe {
+        background: rgba(34, 197, 94, 0.15);
+        color: #4ade80;
+        border-color: rgba(34, 197, 94, 0.3);
+    }
+    .timer-caution {
+        background: rgba(251, 191, 36, 0.15);
+        color: #fbbf24;
+        border-color: rgba(251, 191, 36, 0.3);
+    }
+    .timer-warning {
+        background: rgba(251, 146, 60, 0.15);
+        color: #fb923c;
+        border-color: rgba(251, 146, 60, 0.3);
+    }
+    .timer-critical {
+        background: rgba(248, 113, 113, 0.15);
+        color: #f87171;
+        border-color: rgba(248, 113, 113, 0.3);
+    }
+    .timer-overdue {
+        background: rgba(248, 113, 113, 0.2);
+        color: #fca5a5;
+        border-color: rgba(248, 113, 113, 0.35);
+    }
+    .timer-neutral {
+        background: rgba(156, 163, 175, 0.12);
+        color: #9ca3af;
+        border-color: rgba(156, 163, 175, 0.2);
+    }
+}
+
+/* ============================================
+   TIMER LABEL STYLING (when used with prefix)
+   ============================================ */
+
+.timer-label {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 0.7em;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #6b7280;
+    display: block;
+    margin-bottom: 2px;
+}
+
+/* Timer inside a card row */
+.timer-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+}
+
+.timer-cell .timer-label {
+    margin-bottom: 0;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 768px) {
+    [data-timer-type] {
+        font-size: 0.78em;
+        padding: 2px 6px;
+    }
+    [data-timer-type].timer-large {
+        font-size: 0.95em;
+        padding: 4px 10px;
+    }
+}

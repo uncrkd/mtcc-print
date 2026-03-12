@@ -1,0 +1,359 @@
+/**
+ * Production Analytics - Page-Specific Styles
+ * MTCC Print Services
+ * 
+ * This file provides ONLY production-specific additions.
+ * Base styling comes from the shared admin CSS files:
+ *   - css/admin-base.css (variables, resets, animations)
+ *   - css/admin-components.css (buttons, badges, form elements)
+ *   - css/admin-layout.css (cards, sections, page structure, page-header)
+ *   - css/admin-tables.css (analytics cards, tables, charts, turnaround bars)
+ *   - css/admin-responsive.css (breakpoints)
+ *   - css/admin-print.css (print styles)
+ * 
+ * All classes use pf- prefix to avoid conflicts with shared styles.
+ */
+
+/* =====================================================
+   FILTER BAR
+   ===================================================== */
+.pf-filter-bar {
+    background: white;
+    padding: 16px 20px;
+    border-radius: 12px;
+    box-shadow: rgba(0, 0, 0, 0.12) 0px 1px 3px, rgba(0, 0, 0, 0.24) 0px 1px 2px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.pf-quick-periods {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.pf-periods-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #6b7280;
+    margin-right: 4px;
+}
+
+.pf-period-btn {
+    padding: 6px 14px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #4b5563;
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.pf-period-btn:hover {
+    background: #e5e7eb;
+    color: #374151;
+    border-color: #d1d5db;
+}
+
+.pf-period-btn.active {
+    background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%);
+    color: white;
+    border-color: #7c3aed;
+}
+
+.pf-custom-range {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.pf-filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.pf-filter-group label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.pf-filter-group input[type="date"] {
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.85rem;
+    color: #1e1b2e;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.pf-filter-group input[type="date"]:focus {
+    outline: none;
+    border-color: #7c3aed;
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+.pf-apply-btn {
+    padding: 8px 16px;
+    background: #7c3aed;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.pf-apply-btn:hover {
+    background: #5b21b6;
+}
+
+.pf-date-range-info {
+    margin-left: auto;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #6b7280;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* =====================================================
+   ANALYTICS ROW: 2-column chart layout
+   ===================================================== */
+.analytics-row.charts-row-2col {
+    display: grid;
+    grid-template-columns: 60% 1fr;
+    gap: 15px;
+    align-items: stretch;
+}
+
+/* =====================================================
+   SPEED SUMMARY ROW
+   ===================================================== */
+.pf-speed-summary {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid #f1f5f9;
+    font-size: 0.8rem;
+    color: #6b7280;
+}
+
+.pf-speed-summary strong {
+    color: #1e1b2e;
+}
+
+/* =====================================================
+   VENDOR TABLE (extends .orders-table from shared CSS)
+   ===================================================== */
+.pf-vendor-table th {
+    text-align: left;
+    padding: 12px 16px;
+    background: #f8fafc;
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #6b7280;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.pf-vendor-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 0.85rem;
+    color: #374151;
+}
+
+.pf-vendor-table tbody tr:hover td {
+    background: #f8fafc;
+}
+
+/* Card badge (vendor count) */
+.pf-card-badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    background: #ede9fe;
+    color: #7c3aed;
+    padding: 3px 10px;
+    border-radius: 12px;
+}
+
+/* Performance indicators */
+.pf-perf-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.pf-perf-excellent { color: #059669; }
+.pf-perf-good { color: #0284c7; }
+.pf-perf-poor { color: #dc2626; }
+.pf-perf-neutral { color: #6b7280; }
+
+/* =====================================================
+   REMINDER METRICS
+   ===================================================== */
+.pf-reminder-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.pf-reminder-metric {
+    text-align: center;
+    padding: 12px 8px;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #f1f5f9;
+}
+
+.pf-reminder-metric .primary-metric {
+    font-size: 1.5rem;
+}
+
+.pf-reminder-metric .secondary-metric {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.pf-reminder-rate {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-top: 12px;
+    border-top: 1px solid #f1f5f9;
+}
+
+.pf-rate-label {
+    font-size: 0.8rem;
+    color: #6b7280;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.pf-rate-value {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #1e1b2e;
+    min-width: 45px;
+    text-align: right;
+}
+
+/* =====================================================
+   RESPONSIVE
+   ===================================================== */
+@media (max-width: 1200px) {
+    .analytics-row.charts-row-2col {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 900px) {
+    .analytics-row.row-5 {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .pf-date-range-info {
+        margin-left: 0;
+    }
+}
+
+@media (max-width: 600px) {
+    .analytics-row.row-5 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .pf-reminder-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .pf-vendor-table {
+        font-size: 0.75rem;
+    }
+    
+    .pf-vendor-table th,
+    .pf-vendor-table td {
+        padding: 10px 8px;
+    }
+    
+    .pf-quick-periods {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .pf-period-btn {
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+}
+
+/* =====================================================
+   PRINT STYLES
+   ===================================================== */
+@media print {
+    .pf-filter-bar {
+        display: none !important;
+    }
+    
+    .analytics-card {
+        break-inside: avoid;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+}
+
+/* ============================================
+   EVENT FILTER
+   ============================================ */
+.pf-event-filter {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+}
+.pf-event-filter label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #6b7280;
+}
+.pf-event-filter select {
+    padding: 6px 10px;
+    border: 1.5px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-family: inherit;
+    background: #fff;
+    cursor: pointer;
+}
+
+/* 3-column row for timing cards */
+.row-3 {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 14px !important;
+}
+@media (max-width: 768px) {
+    .row-3 { grid-template-columns: 1fr !important; }
+}

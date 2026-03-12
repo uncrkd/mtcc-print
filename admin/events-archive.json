@@ -1,0 +1,20 @@
+{
+  "archived": [
+    {
+      "id": "sample2024",
+      "acronym": "SAMPLE2024",
+      "name": "Sample Event 2024",
+      "dates": "Dec 15-17, 2024",
+      "endDate": "2024-12-17",
+      "fullName": "SAMPLE2024 - Sample Event 2024 (Dec 15-17)",
+      "orderCount": 25,
+      "archivedDate": "2024-12-18",
+      "archivedReason": "Event completed"
+    }
+  ],
+  "metadata": {
+    "lastUpdated": "2025-01-27 10:00:00",
+    "version": "1.0",
+    "description": "Archived events data for MTCC Poster System"
+  }
+}

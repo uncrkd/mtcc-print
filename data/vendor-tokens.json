@@ -1,0 +1,223 @@
+{
+    "tokens": {
+        "ba1df3fcaa60d48cc4b71a52d0bbc318a1d88c685d27c0a65c4c48a36fc8fd65": {
+            "reference_code": "MLA-003",
+            "vendor_id": "vendor_cea71a7fad86",
+            "created_at": "2026-01-31T12:37:22-06:00",
+            "created_by": "Zeus",
+            "revoked": false,
+            "confirmed_at": null,
+            "downloads": [],
+            "portal_views": [
+                {
+                    "timestamp": "2026-01-31T12:37:45-06:00",
+                    "ip": "76.70.112.182"
+                },
+                {
+                    "timestamp": "2026-01-31T13:22:27-06:00",
+                    "ip": "76.70.112.182"
+                },
+                {
+                    "timestamp": "2026-01-31T13:34:43-06:00",
+                    "ip": "76.70.112.182"
+                },
+                {
+                    "timestamp": "2026-01-31T13:35:08-06:00",
+                    "ip": "76.70.112.182"
+                },
+                {
+                    "timestamp": "2026-01-31T13:44:43-06:00",
+                    "ip": "76.70.112.182"
+                },
+                {
+                    "timestamp": "2026-02-01T00:23:54-06:00",
+                    "ip": "76.70.112.182"
+                },
+                {
+                    "timestamp": "2026-02-01T18:02:11-06:00",
+                    "ip": "76.70.112.182"
+                },
+                {
+                    "timestamp": "2026-02-01T18:02:26-06:00",
+                    "ip": "76.70.112.182"
+                },
+                {
+                    "timestamp": "2026-02-01T19:41:19-06:00",
+                    "ip": "76.70.112.182"
+                },
+                {
+                    "timestamp": "2026-02-02T00:17:17-06:00",
+                    "ip": "76.70.112.182"
+                }
+            ],
+            "last_viewed": "2026-02-02T00:17:17-06:00"
+        },
+        "fd46a14b55e558053d28f619bde849117da88bd3f6dba64676d7f22d508f4651": {
+            "reference_code": "TECH-018",
+            "vendor_id": "vendor_49a5b7bff779",
+            "created_at": "2026-02-01T18:14:25-06:00",
+            "created_by": "Zeus",
+            "revoked": false,
+            "confirmed_at": null,
+            "downloads": []
+        },
+        "820178747d2bdf31933b4d2fbff8d464a23708b1033259d8f24df3a91a15a13d": {
+            "reference_code": "NFS-009",
+            "vendor_id": "vendor_49a5b7bff779",
+            "created_at": "2026-02-01T18:14:25-06:00",
+            "created_by": "Zeus",
+            "revoked": false,
+            "confirmed_at": null,
+            "downloads": []
+        },
+        "96807c59cdfee7ddd7dff8e2b088cc785d44ced7fbde67c87ef8080102147fcc": {
+            "reference_code": "MST-009",
+            "vendor_id": "vendor_49a5b7bff779",
+            "created_at": "2026-02-01T18:41:57-06:00",
+            "created_by": "Zeus",
+            "revoked": false,
+            "confirmed_at": null,
+            "downloads": []
+        },
+        "b8afc36714b5f4348f03996af31f89e2609026e0559e81bb1c2299c932555957": {
+            "reference_code": "NFS-008",
+            "vendor_id": "vendor_49a5b7bff779",
+            "created_at": "2026-02-05T00:00:17-06:00",
+            "created_by": "Zeus",
+            "revoked": false,
+            "confirmed_at": null,
+            "downloads": []
+        },
+        "3984612fff7ad2d06b954e8adffb305280ca6e71a7ffe993780dcb72e4cb5cf3": {
+            "reference_code": "CBSW-006",
+            "vendor_id": "vendor_cea71a7fad86",
+            "created_at": "2026-02-08T13:57:48-06:00",
+            "created_by": "Zeus",
+            "revoked": false,
+            "confirmed_at": null,
+            "downloads": []
+        },
+        "872ceb75ee943ab4860c0a680f334922e7b29fe7041df21122cdecddab6ac4f3": {
+            "reference_code": "TECH-020",
+            "vendor_id": "vendor_cea71a7fad86",
+            "created_at": "2026-02-08T13:57:48-06:00",
+            "created_by": "Zeus",
+            "revoked": false,
+            "confirmed_at": null,
+            "downloads": []
+        },
+        "aa98cabda1744f5718885de7891401bc6f0a053b2b89e89b934d7c38d8d24120": {
+            "reference_code": "COMIC-005",
+            "vendor_id": "vendor_cea71a7fad86",
+            "created_at": "2026-02-08T13:57:48-06:00",
+            "created_by": "Zeus",
+            "revoked": false,
+            "confirmed_at": null,
+            "downloads": []
+        },
+        "ce3a8ee20c5d9f2acf7c3bf19c733bb621adae48ea36b01f9beed8c412110618": {
+            "reference_code": "TECH-003",
+            "vendor_id": "vendor_cea71a7fad86",
+            "created_at": "2026-02-08T13:57:48-06:00",
+            "created_by": "Zeus",
+            "revoked": false,
+            "confirmed_at": null,
+            "downloads": []
+        },
+        "c82363a1a323330ba77a8367e0213b15e8da4e8de89666bc638772440c57bec0": {
+            "reference_code": "IDS-001",
+            "vendor_id": "vendor_cea71a7fad86",
+            "created_at": "2026-02-08T13:57:48-06:00",
+            "created_by": "Zeus",
+            "revoked": false,
+            "confirmed_at": null,
+            "downloads": []
+        },
+        "deadaaeb73233a277d8f9932bed75b4d5af4ae785ddce7148da9558dec23d457": {
+            "reference_code": "MST-004",
+            "vendor_id": "vendor_cea71a7fad86",
+            "created_at": "2026-02-09T00:42:19-06:00",
+            "created_by": "Zeus",
+            "revoked": false,
+            "confirmed_at": null,
+            "downloads": []
+        },
+        "0901768e725c9cd2f62970033c33b0b5d9e1a78fa8d5a3e3598e6977e7f8bd89": {
+            "reference_code": "MST-010",
+            "vendor_id": "vendor_cea71a7fad86",
+            "created_at": "2026-02-09T00:42:19-06:00",
+            "created_by": "Zeus",
+            "revoked": false,
+            "confirmed_at": null,
+            "downloads": []
+        },
+        "38e5e0fd05d76af6681d2d1a8e78215176b7f2a84225988a91756fd37c23da52": {
+            "reference_code": "COMIC-004",
+            "vendor_id": "vendor_cea71a7fad86",
+            "created_at": "2026-02-09T00:42:19-06:00",
+            "created_by": "Zeus",
+            "revoked": false,
+            "confirmed_at": null,
+            "downloads": []
+        },
+        "511d99b0e4a324fb04320090c5a30b54dea29a7eeaddfc90de995b6daed5f4a6": {
+            "reference_code": "TECH-017",
+            "vendor_id": "vendor_49a5b7bff779",
+            "created_at": "2026-02-09T00:42:27-06:00",
+            "created_by": "Zeus",
+            "revoked": false,
+            "confirmed_at": null,
+            "downloads": []
+        },
+        "eab594364961f4eebafd05145538ba85f5807c3a2f3bef0b970746fc829699f0": {
+            "reference_code": "COMIC-010",
+            "vendor_id": "vendor_49a5b7bff779",
+            "created_at": "2026-02-09T00:42:27-06:00",
+            "created_by": "Zeus",
+            "revoked": false,
+            "confirmed_at": null,
+            "downloads": []
+        },
+        "689c60c68511a1c66c374079f7c692af19a5f2d904f8ec2e58993f5e6ec9082f": {
+            "reference_code": "ASTMH-001",
+            "vendor_id": "vendor_cea71a7fad86",
+            "created_at": "2026-03-08T00:15:24-06:00",
+            "created_by": "Zeus",
+            "revoked": false,
+            "confirmed_at": null,
+            "downloads": []
+        },
+        "87ccc2c5eb3dda18528a307578b483e93ea4ce74c07694f2bdf224d76494c037": {
+            "reference_code": "NFS-002",
+            "vendor_id": "vendor_cea71a7fad86",
+            "created_at": "2026-03-08T00:15:24-06:00",
+            "created_by": "Zeus",
+            "revoked": false,
+            "confirmed_at": null,
+            "downloads": []
+        },
+        "040b0a7d0369202bf1ed3c35206d6e253635ff608f91b8180510b2c7d9aa0912": {
+            "reference_code": "COMIC-009",
+            "vendor_id": "vendor_cea71a7fad86",
+            "created_at": "2026-03-08T22:00:27-05:00",
+            "created_by": "Zeus",
+            "revoked": false,
+            "confirmed_at": null,
+            "downloads": []
+        },
+        "dc1c5002818c7ff18a9a235b1f307bd36b38511da8e301ddcc30f28c6aad2ffe": {
+            "reference_code": "TECH-019",
+            "vendor_id": "vendor_cea71a7fad86",
+            "created_at": "2026-03-08T22:00:27-05:00",
+            "created_by": "Zeus",
+            "revoked": false,
+            "confirmed_at": null,
+            "downloads": []
+        }
+    },
+    "metadata": {
+        "created_at": "2026-01-31T00:00:00Z",
+        "description": "Vendor portal access tokens for secure file download and order confirmation",
+        "updated_at": "2026-03-08T22:00:27-05:00"
+    }
+}

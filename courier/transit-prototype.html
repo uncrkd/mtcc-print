@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Transit View – Premium Prototype</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+    --primary: #7c3aed;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #0a0a0a;
+    color: #1a1a2e;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ============================================
+   TRANSIT VIEW – Uber/DoorDash Premium Design
+   ============================================ */
+
+.tv-shell {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    background: #0a0a0a;
+}
+
+/* ---- MAP AREA ---- */
+.tv-map {
+    flex: 0 0 52%;
+    min-height: 240px;
+    position: relative;
+    background: #1a1a2e;
+}
+.tv-map iframe {
+    width: 100%; height: 100%;
+    border: none;
+    filter: saturate(1.1);
+}
+.tv-map-empty {
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(160deg, #1a1a2e 0%, #0f172a 100%);
+}
+/* Gradient fade at bottom of map for seamless blend into sheet */
+.tv-map::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 40px;
+    background: linear-gradient(transparent, rgba(255,255,255,0.08));
+    pointer-events: none;
+}
+
+/* ---- FLOATING TOP BAR ---- */
+.tv-topbar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    padding-top: calc(env(safe-area-inset-top, 14px) + 8px);
+}
+
+.tv-back {
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0,0,0,0.45);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: transform 0.1s ease;
+}
+.tv-back:active { transform: scale(0.9); }
+
+.tv-live-pill {
+    display: flex; align-items: center; gap: 7px;
+    padding: 7px 14px;
+    border-radius: 100px;
+    background: rgba(0,0,0,0.45);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(52,211,153,0.25);
+}
+.tv-live-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #34d399;
+    box-shadow: 0 0 8px rgba(52,211,153,0.6);
+    animation: tv-pulse-glow 2s ease-in-out infinite;
+}
+@keyframes tv-pulse-glow {
+    0%, 100% { opacity: 1; box-shadow: 0 0 8px rgba(52,211,153,0.6); }
+    50% { opacity: 0.6; box-shadow: 0 0 4px rgba(52,211,153,0.3); }
+}
+.tv-live-text {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #34d399;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.tv-topbar-ref {
+    margin-left: auto;
+    padding: 6px 12px;
+    border-radius: 8px;
+    background: rgba(0,0,0,0.4);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: rgba(255,255,255,0.75);
+    letter-spacing: 0.03em;
+}
+
+/* ---- BOTTOM SHEET ---- */
+.tv-sheet {
+    flex: 1;
+    background: #ffffff;
+    border-radius: 24px 24px 0 0;
+    margin-top: -24px;
+    position: relative;
+    z-index: 10;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: calc(env(safe-area-inset-bottom, 20px) + 20px);
+    box-shadow: 0 -8px 40px rgba(0,0,0,0.12);
+}
+.tv-handle {
+    display: flex; justify-content: center;
+    padding: 12px 0 4px;
+}
+.tv-handle-bar {
+    width: 40px; height: 5px;
+    border-radius: 5px;
+    background: #e0e0e0;
+}
+
+/* -- Destination Header -- */
+.tv-destination {
+    padding: 8px 22px 18px;
+}
+.tv-dest-overline {
+    font-size: 0.6rem;
+    font-weight: 700;
+    color: #94a3b8;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+}
+.tv-dest-name {
+    font-size: 1.3rem;
+    font-weight: 900;
+    color: #0f172a;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+}
+.tv-dest-addr {
+    font-size: 0.78rem;
+    color: #64748b;
+    margin-top: 4px;
+    line-height: 1.35;
+    font-weight: 500;
+}
+.tv-dest-building {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 8px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    background: #f1f5f9;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: #475569;
+    letter-spacing: 0.02em;
+}
+
+/* -- Instructions callout -- */
+.tv-instructions {
+    margin: 0 22px 16px;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%);
+    border-radius: 12px;
+    border-left: 3px solid #3b82f6;
+    display: flex; align-items: flex-start; gap: 10px;
+    font-size: 0.78rem;
+    color: #1e40af;
+    line-height: 1.45;
+    font-weight: 500;
+}
+.tv-instructions svg { flex-shrink: 0; margin-top: 1px; }
+
+/* -- Due Time Bar -- */
+.tv-due-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0 22px 16px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+}
+.tv-due-info {
+    display: flex; align-items: center; gap: 10px;
+}
+.tv-due-icon {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    background: #dcfce7;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+}
+.tv-due-text {
+    font-size: 0.72rem; color: #166534; font-weight: 500;
+    line-height: 1.35;
+}
+.tv-due-text strong { font-weight: 800; display: block; font-size: 0.82rem; }
+.tv-due-countdown {
+    font-size: 0.88rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: #166534;
+    padding: 4px 10px;
+    background: #dcfce7;
+    border-radius: 8px;
+    flex-shrink: 0;
+}
+
+/* Urgency states */
+.tv-due-bar.urgency-orange {
+    background: #fff7ed; border-color: #fed7aa;
+}
+.tv-due-bar.urgency-orange .tv-due-icon { background: #ffedd5; }
+.tv-due-bar.urgency-orange .tv-due-icon svg { stroke: #ea580c; }
+.tv-due-bar.urgency-orange .tv-due-text { color: #9a3412; }
+.tv-due-bar.urgency-orange .tv-due-countdown { color: #9a3412; background: #ffedd5; }
+
+.tv-due-bar.urgency-red {
+    background: #fef2f2; border-color: #fecaca;
+    animation: tv-urgent-pulse 2s ease-in-out infinite;
+}
+.tv-due-bar.urgency-red .tv-due-icon { background: #fee2e2; }
+.tv-due-bar.urgency-red .tv-due-icon svg { stroke: #dc2626; }
+.tv-due-bar.urgency-red .tv-due-text { color: #991b1b; }
+.tv-due-bar.urgency-red .tv-due-countdown { color: #dc2626; background: #fee2e2; }
+@keyframes tv-urgent-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+    50% { box-shadow: 0 0 0 4px rgba(239,68,68,0.1); }
+}
+
+/* -- Route Summary -- */
+.tv-route {
+    margin: 0 22px 18px;
+    padding: 14px 16px;
+    background: #fafbfc;
+    border-radius: 14px;
+    border: 1px solid #f0f0f5;
+}
+.tv-route-stop {
+    display: flex; align-items: center; gap: 12px;
+}
+.tv-route-dot-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+    width: 16px;
+}
+.tv-route-dot {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    border: 3px solid;
+}
+.tv-route-dot.origin { border-color: var(--primary); background: white; }
+.tv-route-dot.dest { border-color: #ef4444; background: #ef4444; }
+.tv-route-connector {
+    width: 2px; height: 24px;
+    background: repeating-linear-gradient(
+        180deg, #cbd5e1 0, #cbd5e1 4px, transparent 4px, transparent 8px
+    );
+    margin: 2px 0;
+}
+.tv-route-info { flex: 1; min-width: 0; }
+.tv-route-label {
+    font-size: 0.55rem; font-weight: 700; color: #94a3b8;
+    letter-spacing: 0.1em; text-transform: uppercase;
+}
+.tv-route-value {
+    font-size: 0.82rem; font-weight: 700; color: #1e293b;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* ---- NAVIGATE BUTTON (Primary CTA) ---- */
+.tv-navigate {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin: 0 22px 12px;
+    padding: 17px 24px;
+    border-radius: 16px;
+    background: #1a73e8;
+    color: white;
+    font-size: 1rem;
+    font-weight: 800;
+    text-decoration: none;
+    font-family: inherit;
+    letter-spacing: 0.01em;
+    box-shadow:
+        0 4px 16px rgba(26,115,232,0.35),
+        0 1px 3px rgba(0,0,0,0.08);
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+    position: relative;
+    overflow: hidden;
+}
+.tv-navigate::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, transparent 50%);
+    pointer-events: none;
+}
+.tv-navigate:active {
+    transform: scale(0.975);
+    box-shadow: 0 2px 8px rgba(26,115,232,0.25);
+}
+
+/* ---- PAYOUT BADGE ---- */
+.tv-payout {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0 22px 16px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+    border: 1px solid #a7f3d0;
+}
+.tv-payout-label {
+    font-size: 0.68rem; font-weight: 600; color: #166534;
+    letter-spacing: 0.02em;
+}
+.tv-payout-amount {
+    font-size: 1.15rem; font-weight: 900; color: #166534;
+}
+
+/* ---- Quick Action Circles ---- */
+.tv-quick-actions {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    padding: 4px 22px 18px;
+}
+.tv-quick-action {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    cursor: pointer;
+    border: none;
+    background: none;
+    font-family: inherit;
+}
+.tv-qa-circle {
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s, transform 0.1s;
+}
+.tv-qa-circle:active { transform: scale(0.92); }
+.tv-qa-circle svg { stroke: #475569; }
+.tv-qa-label {
+    font-size: 0.6rem; font-weight: 600; color: #64748b;
+    letter-spacing: 0.02em;
+}
+
+/* ---- Divider ---- */
+.tv-divider {
+    height: 1px;
+    background: #f0f0f5;
+    margin: 0 22px 16px;
+}
+
+/* ---- Order Meta Tags ---- */
+.tv-meta-row {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    padding: 0 22px 14px;
+}
+.tv-meta-tag {
+    padding: 5px 10px;
+    border-radius: 8px;
+    background: #f8fafc;
+    border: 1px solid #f0f0f5;
+    font-size: 0.62rem;
+    font-weight: 600;
+    color: #64748b;
+    letter-spacing: 0.02em;
+}
+
+/* ---- Secondary Actions ---- */
+.tv-secondary {
+    padding: 4px 22px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.tv-btn-details {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px;
+    border-radius: 14px;
+    border: 1.5px solid #e2e8f0;
+    background: white;
+    color: #334155;
+    font-size: 0.82rem;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.tv-btn-details:active { background: #f8fafc; }
+
+.tv-btn-back {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 12px;
+    border: none;
+    background: transparent;
+    color: #94a3b8;
+    font-size: 0.72rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+}
+.tv-btn-back:active { color: #64748b; }
+
+/* ---- Transit Blink Animation ---- */
+@keyframes transit-blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+</style>
+</head>
+<body>
+
+<div class="tv-shell">
+    
+    <!-- MAP AREA (52% of viewport) -->
+    <div class="tv-map" style="background: linear-gradient(160deg, #1a1a2e 0%, #2d3561 40%, #1a1a2e 100%); display: flex; align-items: center; justify-content: center;">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+    </div>
+
+    <!-- FLOATING TOP BAR -->
+    <div class="tv-topbar">
+        <button class="tv-back">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="tv-live-pill">
+            <span class="tv-live-dot"></span>
+            <span class="tv-live-text">In Transit</span>
+        </div>
+        <div class="tv-topbar-ref">MST-013</div>
+    </div>
+
+    <!-- BOTTOM SHEET -->
+    <div class="tv-sheet">
+        <div class="tv-handle"><div class="tv-handle-bar"></div></div>
+
+        <!-- Destination -->
+        <div class="tv-destination">
+            <div class="tv-dest-overline">Delivering to</div>
+            <div class="tv-dest-name">Room 718A, North Building</div>
+            <div class="tv-dest-addr">Metro Toronto Convention Centre, 255 Front St W</div>
+            <div class="tv-dest-building">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+                North Building
+            </div>
+        </div>
+
+        <!-- Instructions -->
+        <div class="tv-instructions">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            Leave with security at registration desk on Level 700
+        </div>
+
+        <!-- Due Time -->
+        <div class="tv-due-bar">
+            <div class="tv-due-info">
+                <div class="tv-due-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                </div>
+                <div class="tv-due-text">
+                    Deliver by
+                    <strong>Today at 2:00 PM</strong>
+                </div>
+            </div>
+            <div class="tv-due-countdown">1:42:30</div>
+        </div>
+
+        <!-- Navigate Button -->
+        <a class="tv-navigate" href="#">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+            Start Navigation
+        </a>
+
+        <!-- Payout -->
+        <div class="tv-payout">
+            <span class="tv-payout-label">Estimated payout</span>
+            <span class="tv-payout-amount">$12.50</span>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="tv-quick-actions">
+            <a class="tv-quick-action" href="tel:+14165551234">
+                <div class="tv-qa-circle">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+                </div>
+                <span class="tv-qa-label">Customer</span>
+            </a>
+            <a class="tv-quick-action" href="tel:+14165555678">
+                <div class="tv-qa-circle">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                </div>
+                <span class="tv-qa-label">Print Stuff</span>
+            </a>
+            <a class="tv-quick-action" href="tel:+14165559012">
+                <div class="tv-qa-circle">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                </div>
+                <span class="tv-qa-label">MTCC</span>
+            </a>
+        </div>
+
+        <div class="tv-divider"></div>
+
+        <!-- Route -->
+        <div class="tv-route">
+            <div class="tv-route-stop">
+                <div class="tv-route-dot-wrap">
+                    <div class="tv-route-dot origin"></div>
+                </div>
+                <div class="tv-route-info">
+                    <span class="tv-route-label">Pickup</span>
+                    <span class="tv-route-value">SpeedPro Imaging Etobicoke</span>
+                </div>
+            </div>
+            <div class="tv-route-stop" style="margin-top: -2px;">
+                <div class="tv-route-dot-wrap">
+                    <div class="tv-route-connector"></div>
+                    <div class="tv-route-dot dest"></div>
+                </div>
+                <div class="tv-route-info">
+                    <span class="tv-route-label">Dropoff</span>
+                    <span class="tv-route-value">Room 718A, North Building</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Meta Tags -->
+        <div class="tv-meta-row">
+            <span class="tv-meta-tag">MST</span>
+            <span class="tv-meta-tag">1 pkg</span>
+            <span class="tv-meta-tag">36" × 48"</span>
+            <span class="tv-meta-tag">Poster Paper</span>
+        </div>
+
+        <!-- Secondary Actions -->
+        <div class="tv-secondary">
+            <button class="tv-btn-details">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+                Order Details & Actions
+            </button>
+            <button class="tv-btn-back">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                All Deliveries
+            </button>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

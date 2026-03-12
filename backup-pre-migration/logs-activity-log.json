@@ -1,0 +1,577 @@
+{
+    "entries": [
+        {
+            "timestamp": "2026-01-14T12:16:13-06:00",
+            "username": "george",
+            "name": "George",
+            "role": "Super Admin",
+            "action": "User Created",
+            "details": {
+                "new_user": "mtcc",
+                "role": "admin"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-01-15T14:44:51-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Password authentication",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/143.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-01-16T00:28:59-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Password authentication",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/143.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-01-16T01:57:40-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Password authentication",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/143.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-01-16T10:44:30-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Password authentication",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/143.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-01-16T12:40:59-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Password authentication",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/143.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-01-16T15:59:46-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Password authentication",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/143.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-01-16T17:09:38-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Password authentication",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/143.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-01-17T00:39:33-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Password authentication",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/143.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-01-17T10:06:16-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_failed",
+            "details": {
+                "success": false,
+                "reason": "Invalid password",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/143.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-01-17T10:06:24-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Password authentication",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/143.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-01-17T11:50:05-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Password authentication",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/143.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-01-17T13:37:58-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Password authentication",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/143.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-01-17T15:22:06-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Password authentication",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/143.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-01-18T21:52:36-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Password authentication",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/143.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-01-19T00:40:46-06:00",
+            "username": "george",
+            "name": "George",
+            "role": "Super Admin",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Password authentication",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/143.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-01-28T13:15:32-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Password authentication",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/144.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-01-30T20:27:09-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Password authentication",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/144.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "76.70.112.182"
+        },
+        {
+            "timestamp": "2026-01-30T23:17:17-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Password authentication",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/144.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "76.70.112.182"
+        },
+        {
+            "timestamp": "2026-01-31T08:31:35-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Auto-login via Remember Me",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/144.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "76.70.112.182"
+        },
+        {
+            "timestamp": "2026-01-31T11:38:40-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Auto-login via Remember Me",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/144.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "76.70.112.182"
+        },
+        {
+            "timestamp": "2026-01-31T17:02:02-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Password authentication",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/144.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "76.70.112.182"
+        },
+        {
+            "timestamp": "2026-02-01T01:02:44-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Auto-login via Remember Me",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/144.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "76.70.112.182"
+        },
+        {
+            "timestamp": "2026-02-01T01:03:44-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Auto-login via Remember Me",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/144.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "76.70.112.182"
+        },
+        {
+            "timestamp": "2026-02-01T13:49:42-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Password authentication",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/144.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "76.70.112.182"
+        },
+        {
+            "timestamp": "2026-02-01T19:41:57-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Password authentication",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/144.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "76.70.112.182"
+        },
+        {
+            "timestamp": "2026-02-02T08:29:04-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Password authentication",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/144.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "76.70.112.182"
+        },
+        {
+            "timestamp": "2026-02-03T00:49:52-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Password authentication",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/144.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-02-03T12:38:42-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Password authentication",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/144.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-02-04T22:48:55-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Password authentication",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/144.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-02-04T23:45:56-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Password authentication",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/144.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-02-05T07:46:20-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Auto-login via Remember Me",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/144.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-02-05T07:47:20-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Auto-login via Remember Me",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/144.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-02-05T15:48:20-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Auto-login via Remember Me",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/144.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-02-05T15:49:20-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Auto-login via Remember Me",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/144.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-02-05T23:50:21-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Auto-login via Remember Me",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/144.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-02-05T23:51:21-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Auto-login via Remember Me",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/144.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-02-06T07:52:21-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Auto-login via Remember Me",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/144.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-02-06T07:53:21-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Auto-login via Remember Me",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/144.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-02-06T15:54:21-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Auto-login via Remember Me",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/144.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        },
+        {
+            "timestamp": "2026-02-06T15:55:21-06:00",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "action": "login_success",
+            "details": {
+                "success": true,
+                "reason": "Auto-login via Remember Me",
+                "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/144.0.0.0 Safari\/537.36"
+            },
+            "order_ref": null,
+            "ip": "24.219.51.102"
+        }
+    ]
+}

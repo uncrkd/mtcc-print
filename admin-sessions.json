@@ -1,0 +1,15 @@
+{
+    "sessions": [
+        {
+            "session_id": "bab814bcffa440cf30f08c1b14039b93",
+            "username": "zeus",
+            "name": "Zeus",
+            "role": "God Mode",
+            "login_time": "2026-03-12T00:01:01-05:00",
+            "last_activity": "2026-03-12T00:21:21-05:00",
+            "current_page": "\/dispatch\/",
+            "ip": "108.160.197.16",
+            "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/145.0.0.0 Safari\/537.36"
+        }
+    ]
+}

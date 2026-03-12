@@ -1,0 +1,199 @@
+{
+    "users": {
+        "zeus": {
+            "name": "Zeus",
+            "password_hash": "$2y$10$f.Dwu6od5d5wlL3np7mHkOCzA4x8hhX1wOYoRjaapqkCtsnaCDTbe",
+            "role": "god_mode",
+            "custom_permissions": null,
+            "active": true,
+            "must_change_password": false,
+            "created_at": "2026-01-14T11:37:57-06:00",
+            "created_by": "system",
+            "last_login": "2026-02-06T15:55:21-06:00",
+            "login_count": 41,
+            "remember_token": "$2y$10$7rigb59G6Y9zksLtPai9Fe.xn0eMILnoRImmlDkbjGw7nFMuQJF7y",
+            "remember_expires": "2026-03-08T16:55:21-05:00"
+        },
+        "george": {
+            "name": "George",
+            "password_hash": "$2y$10$rELffm4d0vahJKygChxaPuylyFxgiGdp0f19yl1W0ZEaDseNWckDy",
+            "role": "super_admin",
+            "custom_permissions": null,
+            "active": true,
+            "must_change_password": false,
+            "created_at": "2026-01-14T11:37:57-06:00",
+            "created_by": "system",
+            "last_login": "2026-01-19T00:40:46-06:00",
+            "login_count": 2
+        },
+        "mtcc": {
+            "name": "MTCC",
+            "password_hash": "$2y$10$LnTEI6PFPrtV0yU8t\/7UxunOuH7JcuuTdZNlZhx4iQYV3Uymwwg.y",
+            "role": "admin",
+            "custom_permissions": null,
+            "active": true,
+            "must_change_password": true,
+            "created_at": "2026-01-14T12:16:13-06:00",
+            "created_by": "george",
+            "last_login": null,
+            "login_count": 0
+        }
+    },
+    "roles": {
+        "god_mode": {
+            "label": "God Mode",
+            "description": "Absolute control over everything. Not tracked in activity log.",
+            "tracked": false,
+            "is_system_role": true,
+            "permissions": [
+                "orders_edit",
+                "orders_view",
+                "orders_create",
+                "orders_delete",
+                "dashboard_analytics",
+                "events_edit",
+                "events_view",
+                "events_analytics",
+                "reports",
+                "dispatch",
+                "activity_log",
+                "user_management",
+                "role_management"
+            ]
+        },
+        "super_admin": {
+            "label": "Super Admin",
+            "description": "Full access except Activity Log. Tracked in activity log.",
+            "tracked": true,
+            "is_system_role": false,
+            "permissions": [
+                "orders_edit",
+                "orders_view",
+                "orders_create",
+                "orders_delete",
+                "dashboard_analytics",
+                "events_edit",
+                "events_view",
+                "events_analytics",
+                "reports",
+                "dispatch",
+                "user_management"
+            ]
+        },
+        "admin": {
+            "label": "Admin",
+            "description": "Orders, Events, and Analytics management.",
+            "tracked": true,
+            "is_system_role": false,
+            "permissions": [
+                "orders_edit",
+                "orders_view",
+                "orders_create",
+                "dashboard_analytics",
+                "events_edit",
+                "events_view",
+                "events_analytics"
+            ]
+        },
+        "staff": {
+            "label": "Staff",
+            "description": "View orders and events only. Can print and download.",
+            "tracked": true,
+            "is_system_role": false,
+            "permissions": [
+                "orders_view",
+                "events_view"
+            ]
+        },
+        "reports_only": {
+            "label": "Reports Only",
+            "description": "Access to Reports page only.",
+            "tracked": true,
+            "is_system_role": false,
+            "permissions": [
+                "reports"
+            ]
+        }
+    },
+    "permissions_catalog": {
+        "orders_edit": {
+            "label": "Orders (Full Edit)",
+            "description": "Edit orders, change status, update pricing",
+            "category": "orders"
+        },
+        "orders_view": {
+            "label": "Orders (View\/Print\/Download)",
+            "description": "View order details, print labels, download files",
+            "category": "orders"
+        },
+        "orders_create": {
+            "label": "Create Orders",
+            "description": "Create new orders from admin",
+            "category": "orders"
+        },
+        "orders_delete": {
+            "label": "Delete Orders",
+            "description": "Permanently delete orders",
+            "category": "orders"
+        },
+        "dashboard_analytics": {
+            "label": "Dashboard Analytics",
+            "description": "View analytics cards and charts on dashboard",
+            "category": "orders"
+        },
+        "events_edit": {
+            "label": "Events (Full Edit)",
+            "description": "Create, edit, archive, delete events",
+            "category": "events"
+        },
+        "events_view": {
+            "label": "Events (View Only)",
+            "description": "View event list without editing",
+            "category": "events"
+        },
+        "events_analytics": {
+            "label": "Events Analytics",
+            "description": "View event order counts and statistics",
+            "category": "events"
+        },
+        "reports": {
+            "label": "Reports",
+            "description": "Access revenue reports page",
+            "category": "reports"
+        },
+        "dispatch": {
+            "label": "Dispatch Manager",
+            "description": "Manage couriers and view scan activity",
+            "category": "dispatch"
+        },
+        "activity_log": {
+            "label": "Activity Log",
+            "description": "View system activity log",
+            "category": "system"
+        },
+        "user_management": {
+            "label": "User Management",
+            "description": "Add, edit, deactivate users",
+            "category": "system"
+        },
+        "role_management": {
+            "label": "Role Management",
+            "description": "Edit role definitions and permissions",
+            "category": "system"
+        }
+    },
+    "settings": {
+        "password_min_length": 8,
+        "password_require_uppercase": true,
+        "password_require_lowercase": true,
+        "password_require_number": true,
+        "session_timeout_hours": 8,
+        "max_login_attempts": 5,
+        "lockout_minutes": 15
+    },
+    "metadata": {
+        "version": "1.0",
+        "created_at": "2026-01-14T11:37:57-06:00",
+        "last_updated": "2026-02-06T15:55:21-06:00"
+    }
+}
