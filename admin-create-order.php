@@ -75,7 +75,7 @@ $statusConfig = [
 </head>
 <body>
 <?php require_once __DIR__ . '/includes/admin-sidebar.php'; renderSidebar('orders'); ?>
-<script src="admin-sidebar.js"></script>
+<script src="js/admin-sidebar.js"></script>
     <!-- SUCCESS/ERROR MESSAGES -->
     <?php if ($showSuccess): ?>
     <div class="success-message" style="background: linear-gradient(90deg, #10b981 0%, #059669 100%); color: white; padding: 20px; text-align: center; font-weight: 600; font-size: 1.1rem;">
@@ -443,7 +443,8 @@ $statusConfig = [
     </div><!-- End Container -->
 
 <!-- JavaScript -->
-<script src="admin-utilities.js"></script>
+<script src="js/shared/utils.js"></script>
+<script src="js/admin-utilities.js"></script>
 <script>
 // Status configuration for dynamic border colors
 const statusColors = {

@@ -842,9 +842,7 @@ html, body {
     margin-bottom: 12px;
 }
 
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
+/* NOTE: @keyframes spin is defined in css/admin-base.css */
 
 .loading-overlay p {
     color: var(--gray-600);

@@ -1738,9 +1738,10 @@ function displayOrderView( $order ) {
 <link rel="stylesheet" href="css/admin-print.css" media="print">
 
 <!-- MODULE 1: Core Utilities --> 
-<script src="admin-utilities.js"></script>
+<script src="js/shared/utils.js"></script>
+<script src="js/admin-utilities.js"></script>
 <!-- MODULE 2: Menu System -->
-<script src="admin-menu-system.js"></script>
+<script src="js/admin-menu-system.js"></script>
 <!-- Chart.js Library -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 	<script>
@@ -1748,13 +1749,13 @@ console.log('Chart.js loading attempt...');
 console.log('Chart available immediately:', typeof Chart !== 'undefined');
 </script>
 <!-- MODULE 3: Analytics (requires Chart.js) -->
-<script src="admin-analytics.js"></script>
+<script src="js/admin-analytics.js"></script>
 <!-- MODULE 4: Dashboard Controller (coordinates all modules) -->
-<script src="admin-dashboard.js"></script>
+<script src="js/admin-dashboard.js"></script>
 <!-- Gridstack Library for Dashboard -->
 <script src="https://cdn.jsdelivr.net/npm/gridstack@10.0.0/dist/gridstack-all.js"></script>
 <!-- MODULE 5: Drag-and-Drop Dashboard Cards -->
-<script src="admin-drag-drop.js"></script>
+<script src="js/admin-drag-drop.js"></script>
 
 
 	<style>
@@ -1861,7 +1862,7 @@ console.log('Chart available immediately:', typeof Chart !== 'undefined');
 </head>
 <body<?= $isEditMode ? ' class="edit-mode"' : '' ?>>
 <?php require_once __DIR__ . '/includes/admin-sidebar.php'; renderSidebar('orders'); ?>
-<script src="admin-sidebar.js"></script>
+<script src="js/admin-sidebar.js"></script>
 <script>
 // Pass PHP data to JavaScript modules
 window.adminUtilities.orderReferenceCode = '<?= htmlspecialchars($order['referenceCode']) ?>';
@@ -2781,7 +2782,7 @@ window.orderDueDate = '<?= htmlspecialchars($order['selectedDate']) ?>'; // Lega
 </div>
 
 <!-- Include external JavaScript file --> 
-<script src="order-detail.js"></script> 
+<script src="js/order-detail.js"></script> 
 
 <!-- Minimal inline initialization --> 
 <script>
@@ -3796,9 +3797,10 @@ if ( count( $paid_orders ) > 0 ) {
 <?= getOnlineIndicatorCSS() ?>
 </style>
 <!-- MODULE 1: Core Utilities --> 
-<script src="admin-utilities.js"></script>
+<script src="js/shared/utils.js"></script>
+<script src="js/admin-utilities.js"></script>
 <!-- MODULE 2: Menu System -->
-<script src="admin-menu-system.js"></script>
+<script src="js/admin-menu-system.js"></script>
 <!-- Chart.js Library -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 	<script>
@@ -3806,13 +3808,13 @@ console.log('Chart.js loading attempt...');
 console.log('Chart available immediately:', typeof Chart !== 'undefined');
 </script>
 <!-- MODULE 3: Analytics (requires Chart.js) -->
-<script src="admin-analytics.js"></script>
+<script src="js/admin-analytics.js"></script>
 <!-- MODULE 4: Dashboard Controller (coordinates all modules) -->
-<script src="admin-dashboard.js"></script>
+<script src="js/admin-dashboard.js"></script>
 <!-- Gridstack Library for Dashboard -->
 <script src="https://cdn.jsdelivr.net/npm/gridstack@10.0.0/dist/gridstack-all.js"></script>
 <!-- MODULE 5: Drag-and-Drop Dashboard Cards -->
-<script src="admin-drag-drop.js"></script>
+<script src="js/admin-drag-drop.js"></script>
 
 <!-- Icon Library for JavaScript -->
 <?php outputIconsScript(); ?>
@@ -3820,7 +3822,7 @@ console.log('Chart available immediately:', typeof Chart !== 'undefined');
 </head>
 <body>
 <?php require_once __DIR__ . '/includes/admin-sidebar.php'; renderSidebar('orders'); ?>
-<script src="admin-sidebar.js"></script>
+<script src="js/admin-sidebar.js"></script>
 <div style="margin: 0 auto!important; padding: 0 20px!important;">
 <!-- Page Header -->
 <div class="page-header">
@@ -4586,9 +4588,9 @@ document.addEventListener('DOMContentLoaded', function() {
 <?php endif; ?>
 	
 <!-- Remove the old scripts and use only this simple one -->
-<script src="simple-filters.js"></script>
-<script src="admin-bulk-selection.js"></script>
-<script src="admin-actions-menu.js"></script>
+<script src="js/simple-filters.js"></script>
+<script src="js/admin-bulk-selection.js"></script>
+<script src="js/admin-actions-menu.js"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
@@ -4950,7 +4952,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <!-- Payment Link Functions -->
-<script src="admin-payment-link.js"></script>
+<script src="js/admin-payment-link.js"></script>
 
 </body>
 </html>

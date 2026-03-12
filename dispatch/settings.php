@@ -301,7 +301,7 @@ $meta = $settings['metadata'] ?? [];
 </head>
 <body>
 <?php require_once __DIR__ . '/../includes/admin-sidebar.php'; renderSidebar('dispatch_settings'); ?>
-<script src="../admin-sidebar.js"></script>
+<script src="../js/admin-sidebar.js"></script>
 <div style="margin: 0 auto; padding: 0 20px;">
 
     <div class="settings-page-header">

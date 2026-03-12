@@ -693,7 +693,7 @@ foreach ($vendorOrders as $refCode => $order) {
 
 <?php if ($isAdmin): ?>
 <?php require_once __DIR__ . '/../includes/admin-sidebar.php'; renderSidebar('fulfillment'); ?>
-<script src="../admin-sidebar.js"></script>
+<script src="../js/admin-sidebar.js"></script>
 <div class="vp-admin-strip">
     <strong>Admin View</strong> &mdash; <?= htmlspecialchars($_SESSION['admin_name'] ?? 'Admin') ?> (<?= $isGodMode ? 'God Mode' : 'Super Admin - View Only' ?>)
 </div>

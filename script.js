@@ -289,7 +289,6 @@ function selectCountry(country) {
   if (elements.customerPhone) {
     elements.customerPhone.focus();
   }
-  console.log('Selected country:', country);
 }
 
 function updateSelectedCountry(country) {
@@ -325,7 +324,6 @@ function updatePhonePlaceholder(country) {
 
 // ===== EVENT LOADING =====
 async function loadEventsFromServer() {
-  console.log('Loading events from server...');
   
   try {
     const response = await fetch('admin/get-events.php?active_only=true', {
@@ -344,7 +342,6 @@ async function loadEventsFromServer() {
     
     if (data.success && Array.isArray(data.data) && data.data.length > 0) {
       state.availableEvents = data.data;
-      console.log('Successfully loaded ' + data.data.length + ' events from server');
       populateEventSelect();
       return true;
     } else {
@@ -376,12 +373,10 @@ function populateEventSelect() {
     elements.eventSelect.appendChild(option);
   });
   
-  console.log('Event selector populated with ' + state.availableEvents.length + ' events');
 }
 
 // ===== PRICING DATA LOADING =====
 async function loadPricingFromServer() {
-  console.log('Loading pricing from server...');
   
   try {
     const response = await fetch('get-pricing.php?material=both', {
@@ -401,9 +396,6 @@ async function loadPricingFromServer() {
     if (data.success && data.data) {
       state.pricingData = data.data;
       state.pricingLoaded = true;
-      console.log('Successfully loaded pricing from CSV files');
-      console.log('Poster pricing rows:', data.data.poster ? data.data.poster.length : 0);
-      console.log('Fabric pricing rows:', data.data.fabric ? data.data.fabric.length : 0);
       return true;
     } else {
       throw new Error('Invalid pricing data structure: ' + (data.error || 'Unknown error'));
@@ -464,12 +456,10 @@ function getCurrentPricingData(material) {
 // ===== EVENT HANDLING =====
 function handleEventSelection() {
   const selectedValue = elements.eventSelect.value;
-  console.log('Event selected:', selectedValue);
   
   if (selectedValue && selectedValue !== 'placeholder') {
     try {
       state.selectedEvent = JSON.parse(selectedValue);
-      console.log('Parsed event:', state.selectedEvent);
       
       // Update hidden fields
       const hiddenEventAcronym = document.getElementById('hiddenEventAcronym');
@@ -535,7 +525,6 @@ function updateDatePickerRestrictions() {
   elements.date.min = minDate;
   elements.date.max = maxDate;
   
-  console.log('Date picker restricted: min=' + minDate + ', max=' + maxDate);
   
   // If current selection is out of range, clear it
   if (state.selectedDate) {
@@ -554,14 +543,11 @@ function clearDatePickerRestrictions() {
 }
 
 function handleDateChange() {
-  console.log('handleDateChange called, new value:', elements.date?.value);
   
   state.selectedDate = elements.date?.value || null;
-  console.log('Date selected:', state.selectedDate);
   
   // Check if selected date is available (all delivery times might be disabled)
   if (state.selectedDate && !isDateAvailable(state.selectedDate)) {
-    console.log('Selected date has no available delivery times');
   }
   
   // Update delivery time options FIRST (affects pricing tier calculation)
@@ -576,7 +562,6 @@ function handleDateChange() {
 }
 
 function updateDateDisplay() {
-  console.log('updateDateDisplay called, selectedDate:', state.selectedDate);
   
   if (elements.dateDisplay) {
     if (state.selectedDate) {
@@ -601,7 +586,6 @@ function updateDateDisplay() {
         }
         
         elements.dateDisplay.classList.add('has-date');
-        console.log('Date display updated to:', formattedDate);
       } catch (error) {
         console.error('Error formatting date:', error);
         const placeholderSpan = elements.dateDisplay.querySelector('.date-placeholder');
@@ -622,7 +606,6 @@ function updateDateDisplay() {
         `;
       }
       elements.dateDisplay.classList.remove('has-date');
-      console.log('Date display reset to placeholder');
     }
   } else {
     console.error('dateDisplay element not found');
@@ -635,7 +618,6 @@ function handleDimensionChange() {
   state.dimensions.width = w ? parseFloat(w) : null;
   state.dimensions.height = h ? parseFloat(h) : null;
   
-  console.log('Dimensions changed:', state.dimensions);
   
   // Clear popular size selections when manually typing
   document.querySelectorAll('.popular-size-button-card').forEach(function(button) {
@@ -737,7 +719,6 @@ function updateStatusBadge(badgeId, isComplete) {
 
 // ===== POPULAR SIZES =====
 function selectPopularSize(width, height) {
-  console.log('selectPopularSize called:', width, height);
   
   document.querySelectorAll('.popular-size-button-card').forEach(function(button) {
     button.classList.remove('selected');
@@ -775,14 +756,12 @@ function generateAlternativeSizes() {
   const popularSizesContainer = document.getElementById('popularSizes');
   
   if (!width || !height || !popularSizesContainer) {
-    console.log('generateAlternativeSizes: Missing requirements', { width, height, container: !!popularSizesContainer });
     if (popularSizesContainer) {
       popularSizesContainer.innerHTML = '<div class="similar-placeholder">Select a size in step 2A to see proportionally scaled poster sizes</div>';
     }
     return;
   }
   
-  console.log('Generating proportional alternative sizes for:', width, '×', height);
   
   // Determine longer and shorter dimensions for proportional scaling
   const longerDim = Math.max(width, height);
@@ -843,7 +822,6 @@ function generateAlternativeSizes() {
     popularSizesContainer.innerHTML = '<div class="similar-placeholder">No proportional sizes available within constraints</div>';
   }
   
-  console.log('Generated', allSizes.length, 'proportional alternative sizes');
 }
 
 // ===== MATERIAL HANDLING =====
@@ -892,7 +870,6 @@ function handleFiles(files) {
   }
   
   state.uploadedFile = file;
-  console.log('File selected:', file.name, formatFileSize(file.size));
   
   checkConversionFee(file);
   updateFileDisplay(file);
@@ -952,7 +929,6 @@ function updateFileDisplay(file) {
 
 // Updated removeFile to NOT show quality check text before upload
 function removeFile() {
-  console.log('removeFile called');
   state.uploadedFile = null;
   
   // Clear the actual file input value
@@ -1055,7 +1031,6 @@ function formatFileSize(bytes) {
 
 // ===== DELIVERY OPTIONS =====
 function selectDeliveryOption(option) {
-  console.log('selectDeliveryOption called:', option);
   if (option === 'pickup') return;
   
   state.deliveryOption = option;
@@ -1865,7 +1840,6 @@ function updateDeliveryTimeOptions() {
 function handleDeliveryTimeChange() {
   if (elements.deliveryTime) {
     state.selectedDeliveryTime = elements.deliveryTime.value;
-    console.log('Delivery time changed to:', state.selectedDeliveryTime);
     // Delivery time affects which pricing tier applies, so update everything
     updatePricingVisibility();
     updateOrderSummary();
@@ -1906,33 +1880,28 @@ function update() {
 
 // ===== EVENT BINDING =====
 function bindEvents() {
-  console.log('Binding events...');
   
   // Main form elements
   if (elements.eventSelect) {
     elements.eventSelect.addEventListener('change', handleEventSelection);
-    console.log('âœ Event select bound');
   } else {
     console.error('âŒ Event select element not found');
   }
   
   if (elements.width) {
     elements.width.addEventListener('input', handleDimensionChange);
-    console.log('âœ Width input bound');
   } else {
     console.error('âŒ Width element not found');
   }
   
   if (elements.height) {
     elements.height.addEventListener('input', handleDimensionChange);
-    console.log('âœ Height input bound');
   } else {
     console.error('âŒ Height element not found');
   }
   
   if (elements.date) {
     elements.date.addEventListener('change', handleDateChange);
-    console.log('âœ Date input bound to element:', elements.date.id);
   } else {
     console.error('âŒ Date element not found - looking for ID "d"');
   }
@@ -1942,13 +1911,11 @@ function bindEvents() {
   if (dateContainer && elements.date) {
     dateContainer.addEventListener('click', function(e) {
       e.preventDefault();
-      console.log('Date container clicked');
       elements.date.focus();
       if (elements.date.showPicker) {
         elements.date.showPicker();
       }
     });
-    console.log('âœ Date container click bound');
   } else {
     console.error('âŒ Date container or date element not found', { 
       container: !!dateContainer, 
@@ -1960,7 +1927,6 @@ function bindEvents() {
     elements.dateDisplay.addEventListener('click', function(e) {
       e.stopPropagation();
       e.preventDefault();
-      console.log('Date display clicked');
       if (elements.date) {
         elements.date.focus();
         if (elements.date.showPicker) {
@@ -1968,7 +1934,6 @@ function bindEvents() {
         }
       }
     });
-    console.log('âœ Date display click bound');
   }
   
   // Make the entire date field container clickable
@@ -1978,21 +1943,18 @@ function bindEvents() {
       dateField.addEventListener('click', function(e) {
         if (e.target !== elements.date) {
           e.preventDefault();
-          console.log('Date field clicked');
           elements.date.focus();
           if (elements.date.showPicker) {
             elements.date.showPicker();
           }
         }
       });
-      console.log('âœ Date field container click bound');
     }
   }
   
   // Delivery time select
   if (elements.deliveryTime) {
     elements.deliveryTime.addEventListener('change', handleDeliveryTimeChange);
-    console.log('âœ Delivery time select bound');
   }
   
   // Popular size buttons
@@ -2000,11 +1962,9 @@ function bindEvents() {
     button.addEventListener('click', function() {
       const width = parseInt(this.dataset.width);
       const height = parseInt(this.dataset.height);
-      console.log('Popular size clicked:', width, 'x', height);
       selectPopularSize(width, height);
     });
   });
-  console.log('âœ Popular size buttons bound');
   
   // Delivery options
   document.querySelectorAll('.delivery-option:not(.disabled)').forEach(function(option) {
@@ -2015,7 +1975,6 @@ function bindEvents() {
       }
     });
   });
-  console.log('âœ Delivery options bound');
   
   // Customer info fields
   const customerName = document.getElementById('customerName');
@@ -2049,7 +2008,6 @@ function bindEvents() {
       validatePhoneNumber(true);
       updateSubmitButtonState();
     });
-    console.log('?? Phone validation bound');
   }
   
   // Address form fields
@@ -2064,7 +2022,6 @@ function bindEvents() {
   // Material toggle
   if (elements.materialToggle) {
     elements.materialToggle.addEventListener('click', toggleMaterial);
-    console.log('?? Material toggle bound');
   }
   
   // File upload
@@ -2094,10 +2051,8 @@ function bindEvents() {
       if (elements.fileInput && e.dataTransfer.files.length > 0) {
         try {
           elements.fileInput.files = e.dataTransfer.files;
-          console.log('Files set on input via drag-drop');
         } catch (err) {
           // Fallback for browsers that don't support setting files directly
-          console.log('Could not set files directly, using DataTransfer');
           const dt = new DataTransfer();
           dt.items.add(e.dataTransfer.files[0]);
           elements.fileInput.files = dt.files;
@@ -2106,7 +2061,6 @@ function bindEvents() {
       
       handleFiles(e.dataTransfer.files);
     });
-    console.log('?? File upload zone bound');
   }
   
   if (elements.fileInput) {
@@ -2114,7 +2068,6 @@ function bindEvents() {
     elements.fileInput.addEventListener('change', function(e) {
       handleFiles(e.target.files);
     });
-    console.log('?? File input bound');
   }
   
   // Form submission handler - Stripe Checkout Integration
@@ -2124,11 +2077,9 @@ function bindEvents() {
       // Always prevent default - we'll handle submission via fetch
       e.preventDefault();
       
-      console.log('Form submitting to Stripe Checkout...');
       
       // First check if form is valid
       if (elements.submitButton && elements.submitButton.disabled) {
-        console.log('Form submission prevented - button is disabled');
         return false;
       }
       
@@ -2167,7 +2118,6 @@ function bindEvents() {
         formData.set('height', state.dimensions.height || '');
         formData.set('material', state.selectedMaterial || 'paper');
         
-        console.log('Sending order to create checkout session...');
         
         // Send to create-checkout-session.php
         const response = await fetch('create-checkout-session.php', {
@@ -2178,7 +2128,6 @@ function bindEvents() {
         const result = await response.json();
         
         if (result.success && result.checkoutUrl) {
-          console.log('Checkout session created, redirecting to Stripe...');
           // Redirect to Stripe Checkout
           window.location.href = result.checkoutUrl;
         } else {
@@ -2198,15 +2147,12 @@ function bindEvents() {
         return false;
       }
     });
-    console.log('? Form submission handler bound (Stripe Checkout)');
   }
   
-  console.log('Events bound successfully');
 }
 
 // ===== INITIALIZATION =====
 function initializeElements() {
-  console.log('Initializing element references...');
   
   elements.eventSelect = document.getElementById('eventSelect');
   elements.width = document.getElementById('w');
@@ -2225,32 +2171,17 @@ function initializeElements() {
   elements.materialSlider = document.getElementById('materialSlider');
   elements.deliveryTime = document.getElementById('deliveryTime');
   
-  console.log('Element references initialized');
-  console.log('Date element found:', !!elements.date);
-  console.log('Date display found:', !!elements.dateDisplay);
-  console.log('Pricing element found:', !!elements.pricing);
 }
 
 // ===== DEBUG FUNCTIONS =====
 function debugFormState() {
-  console.log('=== FORM DEBUG INFO ===');
-  console.log('Submit button disabled:', elements.submitButton?.disabled);
-  console.log('Selected event:', state.selectedEvent);
-  console.log('Selected date:', state.selectedDate);
-  console.log('Dimensions:', state.dimensions);
-  console.log('Uploaded file:', state.uploadedFile);
-  console.log('Delivery option:', state.deliveryOption);
-  console.log('Form action:', document.getElementById('orderForm')?.action);
-  console.log('Form method:', document.getElementById('orderForm')?.method);
   
   // Check all required fields
   const requiredFields = ['customerName', 'customerEmail', 'customerPhone'];
   requiredFields.forEach(fieldId => {
     const field = document.getElementById(fieldId);
-    console.log(`${fieldId}:`, field?.value || 'EMPTY');
   });
   
-  console.log('========================');
 }
 
 function validateFormCompleteness() {
@@ -2288,8 +2219,6 @@ function validateFormCompleteness() {
 }
 
 function forceUpdateAll() {
-  console.log('=== FORCE UPDATE ALL ===');
-  console.log('Current state:', {
     event: !!state.selectedEvent,
     date: state.selectedDate,
     width: state.dimensions.width,
@@ -2303,30 +2232,21 @@ function forceUpdateAll() {
   update();
   updateSubmitButtonState();
   
-  console.log('=== FORCE UPDATE COMPLETE ===');
 }
 
 // DEBUGGING FUNCTION FOR PRICING
 function debugPricing() {
-  console.log('=== PRICING DEBUG ===');
-  console.log('Area:', state.dimensions.width * state.dimensions.height);
-  console.log('Material:', state.selectedMaterial);
-  console.log('Pricing data loaded:', state.pricingLoaded);
   
   const pricingData = getCurrentPricingData(state.selectedMaterial);
-  console.log('Available pricing rows:', pricingData.length);
   
   const area = state.dimensions.width * state.dimensions.height;
   const row = pricingData.find(r => area >= r.min && area <= r.max);
-  console.log('Found pricing row:', row);
   
   if (row) {
     config.tiers.forEach(tier => {
-      console.log(`${tier.label} (${tier.key}):`, row[tier.key]);
     });
   }
   
-  console.log('==================');
 }
 
 // ===== MAKE FUNCTIONS GLOBAL =====
@@ -2343,11 +2263,9 @@ window.updateDeliveryTimeOptions = updateDeliveryTimeOptions;
 
 // ===== APPLICATION STARTUP =====
 document.addEventListener('DOMContentLoaded', function() {
-  console.log('DOM Content Loaded - Starting App v33 Delivery Time Enforcement');
   
   async function init() {
     try {
-      console.log('Initializing app components...');
       
       // Initialize elements first
       initializeElements();
@@ -2362,15 +2280,11 @@ document.addEventListener('DOMContentLoaded', function() {
       ]);
       
       if (pricingLoaded) {
-        console.log('? Pricing loaded successfully from CSV');
       } else {
-        console.log('?? Using fallback pricing data');
       }
       
       if (eventsLoaded) {
-        console.log('? Events loaded successfully from server');
       } else {
-        console.log('?? Using fallback event data');
       }
       
       // Bind all events
@@ -2393,7 +2307,6 @@ document.addEventListener('DOMContentLoaded', function() {
         yearElement.textContent = new Date().getFullYear();
       }
       
-      console.log('App v33 Delivery Time Enforcement initialized successfully');
       
     } catch (error) {
       console.error('??  Error during initialization:', error);
@@ -2404,4 +2317,3 @@ document.addEventListener('DOMContentLoaded', function() {
   init();
 });
 
-console.log('MTCC Poster Order Form Script v33 loaded - Delivery Time Enforcement');

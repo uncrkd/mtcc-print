@@ -27,6 +27,7 @@ require_once '../includes/icons.php';
     <meta name="mobile-web-app-capable" content="yes">
     <title>Dispatch Scanner - MTCC Print Services</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/admin-base.css">
     <link rel="stylesheet" href="dispatch-styles.css?v=3">
     <!-- QuaggaJS for barcode scanning -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>

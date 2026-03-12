@@ -14,3 +14,10 @@ smtp-config.php
 # OS files
 Thumbs.db
 .DS_Store
+
+# Runtime logs
+error_log
+*/error_log
+
+# Backup files
+*.bak

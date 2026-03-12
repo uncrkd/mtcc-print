@@ -70,7 +70,7 @@ $activeVendors = array_filter($vendors, fn($v) => $v['active']);
 </head>
 <body>
 <?php require_once __DIR__ . '/../includes/admin-sidebar.php'; renderSidebar('production_vendors'); ?>
-<script src="../admin-sidebar.js"></script>
+<script src="../js/admin-sidebar.js"></script>
 <div class="production-content">
 
     <!-- Page Header -->

@@ -19,7 +19,6 @@ const haptic = {
         if (!this.audioCtx) {
             try {
                 this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                console.log('Audio context initialized');
             } catch (e) {
                 console.warn('Audio not supported:', e);
                 this.audioEnabled = false;
@@ -155,6 +154,3 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-console.log('Haptic + Audio feedback module loaded');
-console.log('- Vibration supported:', haptic.vibrateSupported);
-console.log('- Audio will initialize on first interaction');

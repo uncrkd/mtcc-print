@@ -311,7 +311,7 @@ $periodButtons = [
 </head>
 <body>
 <?php require_once __DIR__ . '/../includes/admin-sidebar.php'; renderSidebar('production_analytics'); ?>
-<script src="../admin-sidebar.js"></script>
+<script src="../js/admin-sidebar.js"></script>
 <div style="margin: 0 auto!important; padding: 0 20px!important;">
 
 <!-- Page Header -->

@@ -36,7 +36,7 @@
 .btn-small.secondary,
 .action-btn-large.cancel {
     background: transparent;
-    color: #6b7280;
+    color: var(--subtext);
     border-color: #d1d5db;
 }
 
@@ -57,7 +57,7 @@
 .btn-small.blue,
 .filter-btn:not(.active) {
     background: #f8fafc;
-    color: #7c3aed;
+    color: var(--primary);
     border-color: #e2e8f0;
 }
 
@@ -67,17 +67,17 @@
 .btn-small.primary:hover,
 .btn-small.blue:hover,
 .filter-btn:not(.active):hover {
-    background: #ede9fe;
-    border-color: #7c3aed;
+    background: var(--primary-light);
+    border-color: var(--primary);
     color: #6d28d9;
 }
 
 .btn-medium,
 .filter-btn.active,
 .header-input:focus {
-    /*background: #7c3aed;*/
-    color: #7c3aed;
-    border-color: #7c3aed;
+    /*background: var(--primary);*/
+    color: var(--primary);
+    border-color: var(--primary);
 }
 
 .btn-medium:hover,
@@ -89,9 +89,9 @@
 .btn-heavy,
 .action-btn-large:not(.cancel),
 .clear-filters-btn:not(:disabled) {
-    background: #7c3aed;
+    background: var(--primary);
     color: white;
-    border-color: #7c3aed;
+    border-color: var(--primary);
     padding: 8px 16px;
     min-height: 32px;
     font-weight: 600;
@@ -128,15 +128,15 @@
     padding: 0;
     border-radius: 4px;
     background: #f8fafc;
-    color: #6b7280;
+    color: var(--subtext);
     border: 1px solid #e2e8f0;
     font-size: 0.75rem;
 }
 
 .action-btn-table:hover {
-    background: #ede9fe;
-    color: #7c3aed;
-    border-color: #7c3aed;
+    background: var(--primary-light);
+    color: var(--primary);
+    border-color: var(--primary);
     transform: translateY(-1px);
 }
 
@@ -154,9 +154,9 @@
 
 .btn-danger,
 .logout-btn {
-    background: #dc2626;
+    background: var(--red);
     color: white;
-    border-color: #dc2626;
+    border-color: var(--red);
 }
 
 .btn-danger:hover,
@@ -250,28 +250,28 @@
 .status-badge.status-pickedup { background: #22c55e; color: #ffffff; border-color: #22c55e; }
 
 .status-badge-large.status-preflight,
-.status-badge.status-preflight { background: #f5f3ff; color: #7c3aed; border-color: #8b5cf6; }
+.status-badge.status-preflight { background: #f5f3ff; color: var(--primary); border-color: #8b5cf6; }
 
 .status-badge-large.status-ready,
 .status-badge.status-ready { background: #f0fdfa; color: #0d9488; border-color: #0d9488; }
 
 .status-badge-large.status-dispatched,
-.status-badge.status-dispatched { background: #ede9fe; color: #6d28d9; border-color: #7c3aed; }
+.status-badge.status-dispatched { background: var(--primary-light); color: #6d28d9; border-color: var(--primary); }
 
 .status-badge-large.status-unclaimed,
 .status-badge.status-unclaimed { background: #fdf2f8; color: #be185d; border-color: #ec4899; }
 
 .status-badge-large.status-missing,
-.status-badge.status-missing { background: #fef2f2; color: #dc2626; border-color: #dc2626; }
+.status-badge.status-missing { background: #fef2f2; color: var(--red); border-color: var(--red); }
 
 .status-badge-large.status-refunded,
-.status-badge.status-refunded { background: #fef2f2; color: #dc2626; border-color: #dc2626; }
+.status-badge.status-refunded { background: #fef2f2; color: var(--red); border-color: var(--red); }
 
 .status-badge-large.status-cancelled,
-.status-badge.status-cancelled { background: #f3f4f6; color: #6b7280; border-color: #6b7280; }
+.status-badge.status-cancelled { background: #f3f4f6; color: var(--subtext); border-color: var(--subtext); }
 
 .status-badge-large.status-damaged,
-.status-badge.status-damaged { background: #fef2f2; color: #991b1b; border-color: #dc2626; }
+.status-badge.status-damaged { background: #fef2f2; color: #991b1b; border-color: var(--red); }
 
 
 .priority-tier-badge {
@@ -286,12 +286,12 @@
     border: 1px solid;
 }
 
-.priority-tier-badge.priority-tier-early { background: #f0fdf4; color: #059669; border-color: #059669; }
-.priority-tier-badge.priority-tier-standard { background: #f0f9ff; color: #0284c7; border-color: #0284c7; }
-.priority-tier-badge.priority-tier-rush { background: #fefce8; color: #eab308; border-color: #eab308; }
-.priority-tier-badge.priority-tier-urgent { background: #fff7ed; color: #ea580c; border-color: #ea580c; }
-.priority-tier-badge.priority-tier-critical { background: #fef2f2; color: #dc2626; border-color: #dc2626; }
-.priority-tier-badge.priority-tier-lastminute { background: #faf5ff; color: #7c3aed; border-color: #7c3aed; animation: pulse 2s infinite; }
+.priority-tier-badge.priority-tier-early { background: #f0fdf4; color: var(--green); border-color: var(--green); }
+.priority-tier-badge.priority-tier-standard { background: #f0f9ff; color: var(--blue); border-color: var(--blue); }
+.priority-tier-badge.priority-tier-rush { background: #fefce8; color: var(--yellow); border-color: var(--yellow); }
+.priority-tier-badge.priority-tier-urgent { background: #fff7ed; color: var(--orange); border-color: var(--orange); }
+.priority-tier-badge.priority-tier-critical { background: #fef2f2; color: var(--red); border-color: var(--red); }
+.priority-tier-badge.priority-tier-lastminute { background: #faf5ff; color: var(--primary); border-color: var(--primary); animation: pulse 2s infinite; }
 
 /* ===== FORM COMPONENTS ===== */
 .field { 
@@ -381,7 +381,7 @@ textarea.field-control {
 }
 
 .header.status-dispatched {
-    border-left-color: #7c3aed;
+    border-left-color: var(--primary);
 }
 
 
@@ -408,18 +408,18 @@ textarea.field-control {
 }
 
 /* Status Colors for Input */
-.header-input.status-file_issue { background: #f3f4f6; color: #374151; border-color: #6b7280; }
-.header-input.status-shipped { background: #fff7ed; color: #ea580c; border-color: #ea580c; }
-.header-input.status-unpaid { background: #fefce8; color: #eab308; border-color: #eab308; }
-.header-input.status-paid { background: #f0fdf4; color: #059669; border-color: #059669; }
-.header-input.status-printing { background: #f0f9ff; color: #0284c7; border-color: #0284c7; }
+.header-input.status-file_issue { background: #f3f4f6; color: #374151; border-color: var(--subtext); }
+.header-input.status-shipped { background: #fff7ed; color: var(--orange); border-color: var(--orange); }
+.header-input.status-unpaid { background: #fefce8; color: var(--yellow); border-color: var(--yellow); }
+.header-input.status-paid { background: #f0fdf4; color: var(--green); border-color: var(--green); }
+.header-input.status-printing { background: #f0f9ff; color: var(--blue); border-color: var(--blue); }
 .header-input.status-delivered { background: #fef3c7; color: #92400e; border-color: #92400e; }
 .header-input.status-pickedup { background: #22c55e; color: #ffffff; border-color: #22c55e; }
-.header-input.status-preflight { background: #f5f3ff; color: #7c3aed; border-color: #8b5cf6; }
+.header-input.status-preflight { background: #f5f3ff; color: var(--primary); border-color: #8b5cf6; }
 .header-input.status-ready { background: #f0fdfa; color: #0d9488; border-color: #0d9488; }
-.header-input.status-dispatched { background: #ede9fe; color: #6d28d9; border-color: #7c3aed; }
-.header-input.status-cancelled { background: #f3f4f6; color: #6b7280; border-color: #6b7280; }
-.header-input.status-damaged { background: #fef2f2; color: #dc2626; border-color: #dc2626; }
+.header-input.status-dispatched { background: var(--primary-light); color: #6d28d9; border-color: var(--primary); }
+.header-input.status-cancelled { background: #f3f4f6; color: var(--subtext); border-color: var(--subtext); }
+.header-input.status-damaged { background: #fef2f2; color: var(--red); border-color: var(--red); }
 
 /* ===== FILE UPLOAD COMPONENTS ===== */
 .file-details {
@@ -757,11 +757,11 @@ textarea.field-control {
 
 .error-message {
     background: #fef2f2;
-    border: 2px solid #dc2626;
+    border: 2px solid var(--red);
     border-radius: var(--radius);
     padding: var(--space-lg);
     margin-bottom: var(--space-lg);
-    color: #dc2626;
+    color: var(--red);
     font-weight: 600;
     text-align: center;
     box-shadow: var(--shadow-md);
@@ -793,7 +793,7 @@ textarea.field-control {
     position: fixed;
     top: 20px;
     right: 20px;
-    background: #7c3aed;
+    background: var(--primary);
     color: white;
     padding: 12px 20px;
     border-radius: 8px;
@@ -834,7 +834,7 @@ textarea.field-control {
 }
 
 .login-form h2 { 
-    color: #7c3aed; 
+    color: var(--primary); 
     margin-bottom: 30px; 
     text-align: center; 
 }
@@ -855,7 +855,7 @@ textarea.field-control {
     font-weight: 500; 
     padding: 8px 16px; 
     min-height: 32px;
-    background: #7c3aed;
+    background: var(--primary);
     color: white;
     border: none;
     border-radius: 6px;
@@ -867,7 +867,7 @@ textarea.field-control {
 }
 
 .login-form .error { 
-    color: #dc2626; 
+    color: var(--red); 
     margin: 10px 0; 
     text-align: center; 
 }
@@ -928,7 +928,7 @@ textarea.field-control {
 }
 
 .events-segmented-control .segment-btn.active {
-    background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+    background: linear-gradient(135deg, var(--primary) 0%, #6d28d9 100%);
     color: white;
     box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3);
 }
@@ -967,23 +967,23 @@ textarea.field-control {
 
 
 /* Cancelled and Refunded Row Styling */
-.orders-table tr.cancelled td:first-child { border-left-color: #6b7280 !important; }
-.orders-table tr.cancelled td { background-color: #f3f4f6 !important; color: #6b7280 !important; }
-.orders-table tr.cancelled td a { color: #6b7280 !important; }
-.orders-table tr.cancelled td .cell-main { color: #6b7280 !important; }
+.orders-table tr.cancelled td:first-child { border-left-color: var(--subtext) !important; }
+.orders-table tr.cancelled td { background-color: #f3f4f6 !important; color: var(--subtext) !important; }
+.orders-table tr.cancelled td a { color: var(--subtext) !important; }
+.orders-table tr.cancelled td .cell-main { color: var(--subtext) !important; }
 .orders-table tr.cancelled td .cell-micro { color: #9ca3af !important; }
 .orders-table tr.cancelled td .priority-indicator { opacity: 0.5; }
-.orders-table tr.cancelled td .status-badge { background-color: #e5e7eb !important; color: #6b7280 !important; }
+.orders-table tr.cancelled td .status-badge { background-color: #e5e7eb !important; color: var(--subtext) !important; }
 
 /* Refunded rows - soft red like old cancelled */
-.orders-table tr.refunded td:first-child { border-left-color: #dc2626 !important; }
+.orders-table tr.refunded td:first-child { border-left-color: var(--red) !important; }
 .orders-table tr.refunded td { background-color: #fef2f2 !important; }
 
 /* Status badge colors */
-.status-badge.status-cancelled { background-color: #e5e7eb !important; color: #6b7280 !important; border-color: #6b7280 !important; }
-.status-badge.status-refunded { background-color: #fef2f2 !important; color: #dc2626 !important; }
-.status-dot.status-cancelled { background-color: #6b7280 !important; }
-.status-dot.status-refunded { background-color: #dc2626 !important; }
+.status-badge.status-cancelled { background-color: #e5e7eb !important; color: var(--subtext) !important; border-color: var(--subtext) !important; }
+.status-badge.status-refunded { background-color: #fef2f2 !important; color: var(--red) !important; }
+.status-dot.status-cancelled { background-color: var(--subtext) !important; }
+.status-dot.status-refunded { background-color: var(--red) !important; }
 
 /* Analytics row-5 support */
 .analytics-row.row-5 {
@@ -1095,10 +1095,7 @@ textarea.field-control {
     transition: transform 0.3s ease;
 }
 
-@keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-}
+/* NOTE: @keyframes spin is defined in css/admin-base.css */
 
 /* Auto-refresh indicator */
 .auto-refresh-indicator {
@@ -1348,7 +1345,7 @@ textarea.field-control {
 }
 
 .dashboard-settings-btn.active {
-    background: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%);
+    background: linear-gradient(135deg, var(--primary) 0%, #6366f1 100%);
     color: white;
     border-color: transparent;
     box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3);
@@ -1518,7 +1515,7 @@ textarea.field-control {
 }
 
 .toolbar-btn.done {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    background: linear-gradient(135deg, #10b981 0%, var(--green) 100%);
     color: white;
 }
 
@@ -1556,7 +1553,7 @@ textarea.field-control {
     bottom: 80px;
     right: 20px;
     padding: 12px 20px;
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    background: linear-gradient(135deg, #10b981 0%, var(--green) 100%);
     color: white;
     border-radius: 8px;
     font-size: 14px;
@@ -1691,7 +1688,7 @@ textarea.field-control {
 .status-badge.status-unclaimed { background: #fdf2f8; color: #be185d; border-color: #ec4899; }
 
 .status-badge-large.status-missing,
-.status-badge.status-missing { background: #fef2f2; color: #dc2626; border-color: #dc2626; animation: pulse-red 2s infinite; }
+.status-badge.status-missing { background: #fef2f2; color: var(--red); border-color: var(--red); animation: pulse-red 2s infinite; }
 
 @keyframes pulse-red {
     0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4); }
@@ -1700,20 +1697,20 @@ textarea.field-control {
 
 .header.status-shipped { background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%); border-color: #14b8a6; }
 .header.status-unclaimed { background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%); border-color: #ec4899; }
-.header.status-missing { background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border-color: #dc2626; }
-.header.status-preflight { background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%); border-color: #8b5cf6; }
+.header.status-missing { background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border-color: var(--red); }
+.header.status-preflight { background: linear-gradient(135deg, #f5f3ff 0%, var(--primary-light) 100%); border-color: #8b5cf6; }
 .header.status-ready { background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%); border-color: #0d9488; }
-.header.status-dispatched { background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%); border-color: #7c3aed; }
+.header.status-dispatched { background: linear-gradient(135deg, var(--primary-light) 0%, #ddd6fe 100%); border-color: var(--primary); }
 
 .header-input.status-shipped { background: #f0fdfa; color: #14b8a6; border-color: #14b8a6; }
 .header-input.status-unclaimed { background: #fdf2f8; color: #ec4899; border-color: #ec4899; }
-.header-input.status-missing { background: #fef2f2; color: #dc2626; border-color: #dc2626; }
+.header-input.status-missing { background: #fef2f2; color: var(--red); border-color: var(--red); }
 
 /* ===== PREFLIGHT STATUS (Purple) ===== */
 .status-badge-large.status-preflight,
-.status-badge.status-preflight { background: #f5f3ff; color: #7c3aed; border-color: #8b5cf6; }
+.status-badge.status-preflight { background: #f5f3ff; color: var(--primary); border-color: #8b5cf6; }
 
-.header.status-preflight { background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%); border-color: #8b5cf6; }
+.header.status-preflight { background: linear-gradient(135deg, #f5f3ff 0%, var(--primary-light) 100%); border-color: #8b5cf6; }
 
 .header-input.status-preflight { background: #f5f3ff; color: #8b5cf6; border-color: #8b5cf6; }
 
@@ -1736,7 +1733,7 @@ textarea.field-control {
 
 /* ===== SANDWICH MENU - Push to Preflight Action ===== */
 .menu-item.preflight-action {
-    color: #7c3aed;
+    color: var(--primary);
     font-weight: 600;
 }
 

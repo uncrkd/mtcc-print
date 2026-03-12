@@ -12,6 +12,22 @@ RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME}.php -f
 RewriteRule ^(.*)$ $1.php [L]
 
+# Redirect moved CSS files (Phase 2 restructuring)
+RewriteRule ^admin-orders\.css$ css/admin-orders.css [L]
+
+# Redirect moved JS files (Phase 3 restructuring)
+RewriteRule ^admin-actions-menu\.js$ js/admin-actions-menu.js [L]
+RewriteRule ^admin-analytics\.js$ js/admin-analytics.js [L]
+RewriteRule ^admin-bulk-selection\.js$ js/admin-bulk-selection.js [L]
+RewriteRule ^admin-dashboard\.js$ js/admin-dashboard.js [L]
+RewriteRule ^admin-drag-drop\.js$ js/admin-drag-drop.js [L]
+RewriteRule ^admin-menu-system\.js$ js/admin-menu-system.js [L]
+RewriteRule ^admin-payment-link\.js$ js/admin-payment-link.js [L]
+RewriteRule ^admin-sidebar\.js$ js/admin-sidebar.js [L]
+RewriteRule ^admin-utilities\.js$ js/admin-utilities.js [L]
+RewriteRule ^order-detail\.js$ js/order-detail.js [L]
+RewriteRule ^simple-filters\.js$ js/simple-filters.js [L]
+
 # Prevent directory listing
 Options -Indexes
 

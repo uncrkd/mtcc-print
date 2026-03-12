@@ -29,7 +29,7 @@ require_once __DIR__ . '/../includes/problem-data.php';
 </head>
 <body>
 <?php require_once __DIR__ . '/../includes/admin-sidebar.php'; renderSidebar('dispatch_problems'); ?>
-<script src="../admin-sidebar.js"></script>
+<script src="../js/admin-sidebar.js"></script>
 <div style="margin: 0 auto!important; padding: 0 20px!important;">
 
 <div class="page-header">

@@ -17,8 +17,8 @@
 // ============================================
 // Configuration
 // ============================================
-define('ADMIN_USERS_FILE', __DIR__ . '/admin-users.json');
-define('ADMIN_SESSIONS_FILE', __DIR__ . '/admin-sessions.json');
+define('ADMIN_USERS_FILE', __DIR__ . '/data/admin-users.json');
+define('ADMIN_SESSIONS_FILE', __DIR__ . '/data/admin-sessions.json');
 define('REMEMBER_ME_COOKIE', 'mtcc_admin_remember');
 define('REMEMBER_ME_DAYS', 30);
 define('SESSION_ACTIVE_MINUTES', 15); // Consider user "online" if active within this time

@@ -1865,7 +1865,7 @@ function getTimeSince($datetime) {
 </head>
 <body>
 <?php require_once __DIR__ . '/../includes/admin-sidebar.php'; renderSidebar('production'); ?>
-<script src="../admin-sidebar.js"></script>
+<script src="../js/admin-sidebar.js"></script>
 <div class="production-content">
 
 

@@ -19,7 +19,7 @@
     --sidebar-text-bright: #ffffff;
     --sidebar-hover: rgba(124, 58, 237, 0.12);
     --sidebar-active: rgba(124, 58, 237, 0.2);
-    --sidebar-active-border: #7c3aed;
+    --sidebar-active-border: var(--primary);
     --sidebar-divider: rgba(255, 255, 255, 0.06);
     --sidebar-transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     --topbar-height: 52px;
@@ -96,7 +96,7 @@
 
 .topbar-date {
     font-size: 0.8rem;
-    color: #6b7280;
+    color: var(--subtext);
     white-space: nowrap;
 }
 
@@ -116,7 +116,7 @@
     width: 30px;
     height: 30px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #7c3aed, #6d28d9);
+    background: linear-gradient(135deg, var(--primary), #6d28d9);
     color: white;
     font-size: 0.75rem;
     font-weight: 700;
@@ -412,7 +412,7 @@ body.sidebar-collapsed .sidebar-item[title]:hover::after {
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #7c3aed, #6d28d9);
+    background: linear-gradient(135deg, var(--primary), #6d28d9);
     color: white;
     font-size: 0.8rem;
     font-weight: 700;
@@ -532,7 +532,7 @@ body.sidebar-collapsed .sidebar-logout {
     flex-shrink: 0;
 }
 .sidebar-badge-danger {
-    background: #dc2626;
+    background: var(--red);
     color: #fff;
 }
 .sidebar-badge-warning {

@@ -483,8 +483,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bulk Order Upload - MTCC Poster System</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/admin-base.css">
+    <link rel="stylesheet" href="css/admin-components.css">
     <link rel="stylesheet" href="css/admin-layout.css">
-    <link rel="stylesheet" href="admin-orders.css">
+    <link rel="stylesheet" href="css/admin-orders.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         * { box-sizing: border-box; }
@@ -614,7 +616,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
 <?php require_once __DIR__ . '/includes/admin-sidebar.php'; renderSidebar('orders'); ?>
-<script src="admin-sidebar.js"></script>
+<script src="js/admin-sidebar.js"></script>
 
 <div class="admin-container" style="max-width: 1400px; margin: 0 auto; padding: 20px 0;">
     <!-- Page Header -->

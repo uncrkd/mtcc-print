@@ -38,7 +38,7 @@
 .pf-periods-label {
     font-size: 0.85rem;
     font-weight: 600;
-    color: #6b7280;
+    color: var(--subtext);
     margin-right: 4px;
 }
 
@@ -62,9 +62,9 @@
 }
 
 .pf-period-btn.active {
-    background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
     color: white;
-    border-color: #7c3aed;
+    border-color: var(--primary);
 }
 
 .pf-custom-range {
@@ -83,7 +83,7 @@
 .pf-filter-group label {
     font-size: 0.7rem;
     font-weight: 600;
-    color: #6b7280;
+    color: var(--subtext);
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -100,13 +100,13 @@
 
 .pf-filter-group input[type="date"]:focus {
     outline: none;
-    border-color: #7c3aed;
+    border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
 }
 
 .pf-apply-btn {
     padding: 8px 16px;
-    background: #7c3aed;
+    background: var(--primary);
     color: white;
     border: none;
     border-radius: 8px;
@@ -118,14 +118,14 @@
 }
 
 .pf-apply-btn:hover {
-    background: #5b21b6;
+    background: var(--primary-dark);
 }
 
 .pf-date-range-info {
     margin-left: auto;
     font-size: 0.85rem;
     font-weight: 500;
-    color: #6b7280;
+    color: var(--subtext);
     display: flex;
     align-items: center;
     gap: 6px;
@@ -151,7 +151,7 @@
     padding-top: 12px;
     border-top: 1px solid #f1f5f9;
     font-size: 0.8rem;
-    color: #6b7280;
+    color: var(--subtext);
 }
 
 .pf-speed-summary strong {
@@ -169,7 +169,7 @@
     font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    color: #6b7280;
+    color: var(--subtext);
     border-bottom: 2px solid #e2e8f0;
 }
 
@@ -188,8 +188,8 @@
 .pf-card-badge {
     font-size: 0.7rem;
     font-weight: 600;
-    background: #ede9fe;
-    color: #7c3aed;
+    background: var(--primary-light);
+    color: var(--primary);
     padding: 3px 10px;
     border-radius: 12px;
 }
@@ -204,10 +204,10 @@
     white-space: nowrap;
 }
 
-.pf-perf-excellent { color: #059669; }
-.pf-perf-good { color: #0284c7; }
-.pf-perf-poor { color: #dc2626; }
-.pf-perf-neutral { color: #6b7280; }
+.pf-perf-excellent { color: var(--green); }
+.pf-perf-good { color: var(--blue); }
+.pf-perf-poor { color: var(--red); }
+.pf-perf-neutral { color: var(--subtext); }
 
 /* =====================================================
    REMINDER METRICS
@@ -247,7 +247,7 @@
 
 .pf-rate-label {
     font-size: 0.8rem;
-    color: #6b7280;
+    color: var(--subtext);
     font-weight: 500;
     white-space: nowrap;
 }
@@ -336,7 +336,7 @@
 .pf-event-filter label {
     font-size: 0.82rem;
     font-weight: 600;
-    color: #6b7280;
+    color: var(--subtext);
 }
 .pf-event-filter select {
     padding: 6px 10px;

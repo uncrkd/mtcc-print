@@ -85,22 +85,22 @@
 
 /* Progress bar colors with high specificity */
 .analytics-card #turnaroundList .priority-early { 
-    background: #059669 !important; 
+    background: var(--green) !important; 
 }
 .analytics-card #turnaroundList .priority-standard { 
-    background: #0284c7 !important; 
+    background: var(--blue) !important; 
 }
 .analytics-card #turnaroundList .priority-rush { 
-    background: #eab308 !important; 
+    background: var(--yellow) !important; 
 }
 .analytics-card #turnaroundList .priority-urgent { 
-    background: #ea580c !important; 
+    background: var(--orange) !important; 
 }
 .analytics-card #turnaroundList .priority-critical { 
-    background: #dc2626 !important; 
+    background: var(--red) !important; 
 }
 .analytics-card #turnaroundList .priority-lastminute { 
-    background: #7c3aed !important; 
+    background: var(--primary) !important; 
 }
 
 /* Turnaround List Styling - Simplified */
@@ -152,12 +152,12 @@
 }
 
 /* Progress bar colors */
-.priority-early { background: #059669; }
-.priority-standard { background: #0284c7; }
-.priority-rush { background: #eab308; }
-.priority-urgent { background: #ea580c; }
-.priority-critical { background: #dc2626; }
-.priority-lastminute { background: #7c3aed; }
+.priority-early { background: var(--green); }
+.priority-standard { background: var(--blue); }
+.priority-rush { background: var(--yellow); }
+.priority-urgent { background: var(--orange); }
+.priority-critical { background: var(--red); }
+.priority-lastminute { background: var(--primary); }
 
 /* Force turnaround list styling with higher specificity */
 .analytics-card .turnaround-list {
@@ -211,27 +211,27 @@
 
 /* Priority Colors for Progress Bars */
 .turnaround-progress-bar.priority-early {
-    background: linear-gradient(90deg, #059669 0%, #10b981 100%);
+    background: linear-gradient(90deg, var(--green) 0%, #10b981 100%);
 }
 
 .turnaround-progress-bar.priority-standard {
-    background: linear-gradient(90deg, #0284c7 0%, #0ea5e9 100%);
+    background: linear-gradient(90deg, var(--blue) 0%, #0ea5e9 100%);
 }
 
 .turnaround-progress-bar.priority-rush {
-    background: linear-gradient(90deg, #eab308 0%, #facc15 100%);
+    background: linear-gradient(90deg, var(--yellow) 0%, #facc15 100%);
 }
 
 .turnaround-progress-bar.priority-urgent {
-    background: linear-gradient(90deg, #ea580c 0%, #f97316 100%);
+    background: linear-gradient(90deg, var(--orange) 0%, #f97316 100%);
 }
 
 .turnaround-progress-bar.priority-critical {
-    background: linear-gradient(90deg, #dc2626 0%, #ef4444 100%);
+    background: linear-gradient(90deg, var(--red) 0%, #ef4444 100%);
 }
 
 .turnaround-progress-bar.priority-lastminute {
-    background: linear-gradient(90deg, #7c3aed 0%, #a855f7 100%);
+    background: linear-gradient(90deg, var(--primary) 0%, #a855f7 100%);
 }
 
 /* Ensure the nested container works properly */
@@ -245,7 +245,7 @@
 /* Make cards take their proper height */
 .analytics-card.chart-large,
 .analytics-card.chart-compact {
-    border-top: 4px solid #7c3aed;
+    border-top: 4px solid var(--primary);
     flex-direction: column;
 }
 
@@ -361,7 +361,7 @@
 
 .legend-value {
     font-weight: 600;
-    color: #6b7280;
+    color: var(--subtext);
 }
 
 /* Compact Turnaround Chart */
@@ -389,18 +389,18 @@
 }
 
 .analytics-card.compact {
-    border-top: 4px solid #7c3aed;
+    border-top: 4px solid var(--primary);
 }
 
 .analytics-card.chart-large {
-    border-top: 4px solid #7c3aed;
+    border-top: 4px solid var(--primary);
     height: 100%;
     display: flex;
     flex-direction: column;
 }
 
 .analytics-card.chart-small {
-    border-top: 4px solid #7c3aed;
+    border-top: 4px solid var(--primary);
 }
 
 .card-header {
@@ -436,7 +436,7 @@
 .primary-metric {
     font-size: 1.8rem;
     font-weight: 700;
-    color: #7c3aed;
+    color: var(--primary);
     line-height: 1;
     margin-bottom: 4px;
 }
@@ -447,7 +447,7 @@
 
 .secondary-metric {
     font-size: 0.75rem;
-    color: #6b7280;
+    color: var(--subtext);
     font-weight: 500;
 }
 
@@ -526,7 +526,7 @@
 }
 
 .percentage-fill.primary {
-    background: linear-gradient(90deg, #7c3aed 0%, #a855f7 100%);
+    background: linear-gradient(90deg, var(--primary) 0%, #a855f7 100%);
 }
 
 .percentage-fill.secondary {
@@ -538,7 +538,7 @@
     justify-content: space-between;
     font-size: 0.7rem;
     font-weight: 600;
-    color: #6b7280;
+    color: var(--subtext);
 }
 
 /* Chart Controls */
@@ -557,7 +557,7 @@
     padding: 4px 8px;
     font-size: 0.7rem;
     font-weight: 500;
-    color: #6b7280;
+    color: var(--subtext);
     border-radius: 4px;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -569,7 +569,7 @@
 }
 
 .timeline-period-btn.active {
-    background: #7c3aed;
+    background: var(--primary);
     color: white;
 }
 
@@ -579,16 +579,16 @@
     padding: 2px 6px;
     font-size: 0.65rem;
     font-weight: 500;
-    color: #6b7280;
+    color: var(--subtext);
     border-radius: 4px;
     cursor: pointer;
     transition: all 0.2s ease;
 }
 
 .chart-toggle-btn:hover {
-    background: #7c3aed;
+    background: var(--primary);
     color: white;
-    border-color: #7c3aed;
+    border-color: var(--primary);
 }
 
 /* Chart Containers */
@@ -708,7 +708,7 @@
 }
 
 .active-filters-count {
-    background: #7c3aed;
+    background: var(--primary);
     color: white;
     padding: 2px 8px;
     border-radius: 12px;
@@ -737,7 +737,7 @@
 
 .search-box:focus {
     outline: none;
-    border-color: #7c3aed;
+    border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
 }
 
@@ -760,43 +760,43 @@
 
 .filter-btn:not(.active) .filter-count {
     background: #f3f4f6;
-    color: #6b7280;
+    color: var(--subtext);
 }
 
 /* Priority and Status Filter Colors */
-.filter-btn.priority-early.active { background: #059669; border-color: #059669; }
-.filter-btn.priority-standard.active { background: #0284c7; border-color: #0284c7; }
-.filter-btn.priority-rush.active { background: #eab308; border-color: #eab308; color: #374151; }
-.filter-btn.priority-urgent.active { background: #ea580c; border-color: #ea580c; }
-.filter-btn.priority-critical.active { background: #dc2626; border-color: #dc2626; }
+.filter-btn.priority-early.active { background: var(--green); border-color: var(--green); }
+.filter-btn.priority-standard.active { background: var(--blue); border-color: var(--blue); }
+.filter-btn.priority-rush.active { background: var(--yellow); border-color: var(--yellow); color: #374151; }
+.filter-btn.priority-urgent.active { background: var(--orange); border-color: var(--orange); }
+.filter-btn.priority-critical.active { background: var(--red); border-color: var(--red); }
 .filter-btn.priority-lastminute.active { 
-    background: #7c3aed; 
-    border-color: #7c3aed; 
+    background: var(--primary); 
+    border-color: var(--primary); 
     animation: pulseAlert 2s ease-in-out infinite;
 }
 
-.filter-btn.status-submitted.active { background: #6b7280; border-color: #6b7280; }
-.filter-btn.status-checking.active { background: #ea580c; border-color: #ea580c; }
-.filter-btn.status-unpaid.active { background: #eab308; border-color: #eab308; color: #374151; }
-.filter-btn.status-paid.active { background: #059669; border-color: #059669; }
+.filter-btn.status-submitted.active { background: var(--subtext); border-color: var(--subtext); }
+.filter-btn.status-checking.active { background: var(--orange); border-color: var(--orange); }
+.filter-btn.status-unpaid.active { background: var(--yellow); border-color: var(--yellow); color: #374151; }
+.filter-btn.status-paid.active { background: var(--green); border-color: var(--green); }
 .filter-btn.status-preflight.active { background: #8b5cf6; border-color: #8b5cf6; }
-.filter-btn.status-printing.active { background: #0284c7; border-color: #0284c7; }
+.filter-btn.status-printing.active { background: var(--blue); border-color: var(--blue); }
 .filter-btn.status-ready_to_ship.active { background: #06b6d4; border-color: #06b6d4; }
 .filter-btn.status-shipped.active { background: #14b8a6; border-color: #14b8a6; }
 .filter-btn.status-delivered.active { background: #92400e; border-color: #92400e; }
 .filter-btn.status-pickedup.active { background: #22c55e; border-color: #22c55e; }
 .filter-btn.status-unclaimed.active { background: #ec4899; border-color: #ec4899; }
-.filter-btn.status-missing.active { background: #dc2626; border-color: #dc2626; }
-.filter-btn.status-cancelled.active { background: #6b7280; border-color: #6b7280; }
-.filter-btn.status-refunded.active { background: #dc2626; border-color: #dc2626; }
+.filter-btn.status-missing.active { background: var(--red); border-color: var(--red); }
+.filter-btn.status-cancelled.active { background: var(--subtext); border-color: var(--subtext); }
+.filter-btn.status-refunded.active { background: var(--red); border-color: var(--red); }
 
-.filter-btn.due-today.active { background: #dc2626; border-color: #dc2626; }
-.filter-btn.due-tomorrow.active { background: #ea580c; border-color: #ea580c; }
-.filter-btn.due-this-week.active { background: #eab308; border-color: #eab308; color: #374151; }
+.filter-btn.due-today.active { background: var(--red); border-color: var(--red); }
+.filter-btn.due-tomorrow.active { background: var(--orange); border-color: var(--orange); }
+.filter-btn.due-this-week.active { background: var(--yellow); border-color: var(--yellow); color: #374151; }
 
 .results-summary {
-    background: linear-gradient(135deg, #f0f9ff 0%, #ede9fe 100%);
-    border: 2px solid #7c3aed;
+    background: linear-gradient(135deg, #f0f9ff 0%, var(--primary-light) 100%);
+    border: 2px solid var(--primary);
     border-radius: 8px;
     padding: 12px 16px;
     margin-bottom: 20px;
@@ -953,33 +953,33 @@
 
 /* Row background colors for specific statuses */
 .orders-table tr.pickedup td { background-color: #c0ffd7; }
-.orders-table tr.cancelled td { background-color: #f3f4f6; color: #6b7280; }
-.orders-table tr.cancelled td a { color: #6b7280; }
+.orders-table tr.cancelled td { background-color: #f3f4f6; color: var(--subtext); }
+.orders-table tr.cancelled td a { color: var(--subtext); }
 .orders-table tr.refunded td { background-color: #fef2f2; }
-.orders-table tr.refunded td:first-child { border-left-color: #dc2626; }
+.orders-table tr.refunded td:first-child { border-left-color: var(--red); }
 
 .order-number {
     font-weight: 700;
     font-size: 1rem;
     text-decoration: none;
-    color: #7c3aed;
+    color: var(--primary);
     transition: all 0.2s;
     cursor: pointer;
     display: inline-block;
 }
 
 .order-number:hover {
-    color: #5b21b6;
+    color: var(--primary-dark);
     transform: translateX(2px);
     text-decoration: underline;
 }
 
 .order-number:visited {
-    color: #7c3aed;
+    color: var(--primary);
 }
 
 .order-number:active {
-    color: #5b21b6;
+    color: var(--primary-dark);
 }
 
 .order-number::before {
@@ -1002,7 +1002,7 @@
 .new-badge::before {
     content: 'NEW';
     margin-right: 4px;
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    background: linear-gradient(135deg, #10b981 0%, var(--green) 100%);
     color: white;
     padding: 2px 6px;
     font-size: 0.6rem;
@@ -1028,37 +1028,37 @@
 
 .priority-indicator.early {
     background: rgba(16, 185, 129, 0.1);
-    color: #059669;
+    color: var(--green);
     border-color: rgba(16, 185, 129, 0.3);
 }
 
 .priority-indicator.standard {
     background: rgba(14, 165, 233, 0.1);
-    color: #0284c7;
+    color: var(--blue);
     border-color: rgba(14, 165, 233, 0.3);
 }
 
 .priority-indicator.rush {
     background: rgba(245, 158, 11, 0.1);
-    color: #eab308;
+    color: var(--yellow);
     border-color: rgba(245, 158, 11, 0.3);
 }
 
 .priority-indicator.urgent {
     background: rgba(249, 115, 22, 0.1);
-    color: #ea580c;
+    color: var(--orange);
     border-color: rgba(249, 115, 22, 0.3);
 }
 
 .priority-indicator.critical {
     background: rgba(239, 68, 68, 0.1);
-    color: #dc2626;
+    color: var(--red);
     border-color: rgba(239, 68, 68, 0.3);
 }
 
 .priority-indicator.lastminute {
     background: rgba(124, 58, 237, 0.1);
-    color: #7c3aed;
+    color: var(--primary);
     border-color: rgba(124, 58, 237, 0.3);
     font-weight: 700;
     animation: pulseAlert 2s ease-in-out infinite;
@@ -1067,7 +1067,7 @@
 .no-orders {
     text-align: center;
     padding: 60px 20px;
-    color: #6b7280;
+    color: var(--subtext);
     background: white;
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
@@ -1188,7 +1188,7 @@
 
 .menu-item.danger:hover {
     background: #fef2f2;
-    color: #dc2626;
+    color: var(--red);
 }
 
 .menu-item.disabled {
@@ -1279,20 +1279,20 @@
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-.status-dot.status-submitted { background: #6b7280; }
-.status-dot.status-checking { background: #ea580c; }
-.status-dot.status-unpaid { background: #eab308; }
-.status-dot.status-paid { background: #059669; }
+.status-dot.status-submitted { background: var(--subtext); }
+.status-dot.status-checking { background: var(--orange); }
+.status-dot.status-unpaid { background: var(--yellow); }
+.status-dot.status-paid { background: var(--green); }
 .status-dot.status-preflight { background: #8b5cf6; }
-.status-dot.status-printing { background: #0284c7; }
+.status-dot.status-printing { background: var(--blue); }
 .status-dot.status-ready_to_ship { background: #06b6d4; }
 .status-dot.status-shipped { background: #14b8a6; }
 .status-dot.status-delivered { background: #92400e; }
 .status-dot.status-pickedup { background: #22c55e; }
 .status-dot.status-unclaimed { background: #ec4899; }
-.status-dot.status-missing { background: #dc2626; }
-.status-dot.status-cancelled { background: #6b7280; }
-.status-dot.status-refunded { background: #dc2626; }
+.status-dot.status-missing { background: var(--red); }
+.status-dot.status-cancelled { background: var(--subtext); }
+.status-dot.status-refunded { background: var(--red); }
 
 /* Horizontal Bar Layouts */
 .thin-percentage-bar-container {
@@ -1332,7 +1332,7 @@
 }
 
 .thin-fill.primary {
-  background: linear-gradient(90deg, #7c3aed 0%, #a855f7 100%);
+  background: linear-gradient(90deg, var(--primary) 0%, #a855f7 100%);
 }
 
 .thin-fill.secondary {
@@ -1344,7 +1344,7 @@
   justify-content: space-between;
   font-size: 0.7rem;
   font-weight: 600;
-  color: #6b7280;
+  color: var(--subtext);
 }
 
 .horizontal-bar-layout {
@@ -1380,7 +1380,7 @@
 .side-percentage {
   font-size: 0.9rem;
   font-weight: 700;
-  color: #6b7280;
+  color: var(--subtext);
 }
 
 .center-bar-wrapper {
@@ -1408,11 +1408,11 @@
 }
 
 .center-bar-fill.primary {
-  background: linear-gradient(90deg, #7c3aed 0%, #a855f7 100%);
+  background: linear-gradient(90deg, var(--primary) 0%, #a855f7 100%);
 }
 
 .center-bar-fill.secondary {
-  background: linear-gradient(90deg, #0284c7 0%, #0ea5e9 100%);
+  background: linear-gradient(90deg, var(--blue) 0%, #0ea5e9 100%);
 }
 
 .bar-divider {
@@ -1420,7 +1420,7 @@
   top: 0;
   bottom: 0;
   width: 2px;
-  background: linear-gradient(to bottom, transparent, #7c3aed 30%, #7c3aed 80%, transparent);
+  background: linear-gradient(to bottom, transparent, var(--primary) 30%, var(--primary) 80%, transparent);
   border-radius: 1px;
   transition: left 0.8s ease;
   z-index: 1;
@@ -1571,7 +1571,7 @@
 }
 
 .quick-status-dropdown-item.current {
-    background: #ede9fe;
+    background: var(--primary-light);
 }
 
 .quick-status-dropdown-item .status-badge {
@@ -1586,7 +1586,7 @@
 }
 
 .quick-status-dropdown-item.current .status-badge {
-    box-shadow: 0 0 0 2px #7c3aed;
+    box-shadow: 0 0 0 2px var(--primary);
 }
 
 .quick-status-dropdown-divider {
@@ -1609,7 +1609,7 @@
     width: 18px;
     height: 18px;
     cursor: pointer;
-    accent-color: #7c3aed;
+    accent-color: var(--primary);
     margin: 0;
     vertical-align: middle;
 }
@@ -1638,7 +1638,7 @@
 }
 
 .orders-table tbody tr.selected td:first-child {
-    border-left: 3px solid #7c3aed;
+    border-left: 3px solid var(--primary);
 }
 
 /* Selection count badge in table header */
@@ -1646,7 +1646,7 @@
     display: none;
     align-items: center;
     gap: 6px;
-    background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+    background: linear-gradient(135deg, var(--primary) 0%, #6d28d9 100%);
     color: white;
     padding: 4px 12px;
     border-radius: 20px;
@@ -1771,7 +1771,7 @@
 
 .actions-menu-item.action-danger .menu-icon,
 .actions-menu-item.action-danger .menu-label {
-    color: #dc2626;
+    color: var(--red);
 }
 
 .menu-icon {
@@ -1790,7 +1790,7 @@
 
 .selection-count-inline {
     font-weight: 600;
-    color: #7c3aed;
+    color: var(--primary);
 }
 
 .actions-menu-divider {

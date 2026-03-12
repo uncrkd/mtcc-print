@@ -177,7 +177,7 @@ foreach ($earningsSummary as $c) {
 </head>
 <body>
 <?php require_once __DIR__ . '/../includes/admin-sidebar.php'; renderSidebar('earnings'); ?>
-<script src="../admin-sidebar.js"></script>
+<script src="../js/admin-sidebar.js"></script>
 
 <div class="earnings-container">
 

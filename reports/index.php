@@ -501,7 +501,7 @@ function getFilterLabel($type, $value) {
 </head>
 <body>
 <?php require_once __DIR__ . '/../includes/admin-sidebar.php'; renderSidebar('reports'); ?>
-<script src="../admin-sidebar.js"></script>
+<script src="../js/admin-sidebar.js"></script>
     <div class="container">
         
         <!-- Page Header -->

@@ -43,4 +43,4 @@ $_sidebarPage = isset($SIDEBAR_CURRENT_PAGE) ? $SIDEBAR_CURRENT_PAGE : '';
 renderSidebar($_sidebarPage);
 
 // Output JS include
-echo '<script src="' . $_sidebarPrefix . 'admin-sidebar.js"></script>';
+echo '<script src="' . $_sidebarPrefix . 'js/admin-sidebar.js"></script>';
