@@ -117,14 +117,15 @@ Always use `LOCK_EX` flag when writing JSON data files to prevent corruption und
 │   └── transit-prototype.html        Transit routing prototype
 │
 ├── css/                            ← Shared admin CSS (modular)
-│   ├── admin-base.css                Variables, resets
+│   ├── admin-base.css                Variables, resets, shared animations
 │   ├── admin-layout.css              Sidebar, content grid
 │   ├── admin-components.css          Buttons, badges, modals
 │   ├── admin-tables.css              Table styles
-│   ├── admin-header.css              Top bar
+│   ├── admin-orders.css              Order dashboard styles
 │   ├── admin-sidebar.css             Sidebar navigation
 │   ├── admin-responsive.css          Media queries
-│   └── admin-print.css               Print stylesheet
+│   ├── admin-print.css               Print stylesheet
+│   └── timer-styles.css              Timer system styles
 │
 ├── data/                           ← JSON data files
 │   ├── activity-log.json             System activity log
@@ -212,7 +213,25 @@ Always use `LOCK_EX` flag when writing JSON data files to prevent corruption und
     ├── composer/ and stripe/
 ```
 
-**Root-level files** include 40+ PHP files, 15+ JS files, 5+ CSS files, 2 CSV pricing files, and config/data files. See the full listing in the project folder.
+├── js/                             ← Admin JavaScript (organized)
+│   ├── shared/
+│   │   └── utils.js                  Shared utilities (formatFileSize, escapeHtml, showNotification)
+│   ├── admin-actions-menu.js         Context menu actions
+│   ├── admin-analytics.js            Analytics dashboard
+│   ├── admin-bulk-selection.js       Bulk order selection
+│   ├── admin-bulk-upload.js          Bulk upload form (extracted from PHP)
+│   ├── admin-create-order.js         Create order form (extracted from PHP)
+│   ├── admin-dashboard.js            Dashboard interactions
+│   ├── admin-drag-drop.js            Drag-and-drop functionality
+│   ├── admin-menu-system.js          Menu system
+│   ├── admin-payment-link.js         Payment link generation
+│   ├── admin-sidebar.js              Sidebar navigation
+│   ├── admin-utilities.js            Admin utility functions
+│   ├── order-detail.js               Order detail view
+│   ├── simple-filters.js             Filter system
+│   └── timer-utils.js                Timer engine
+
+**Root-level files** include 40+ PHP files, `script.js` (customer-facing), `styles.css` (customer-facing), 2 CSV pricing files, and config files.
 
 ---
 
@@ -352,7 +371,11 @@ Web Audio API tones: triple beep (800Hz, same-day), double beep (600Hz, next-day
 
 **Design tokens:** Primary `#7c3aed`, Success `#059669`, Error `#dc2626`, Font `Montserrat`, Radius `0.75rem`
 
-**Modular admin CSS** in `css/`: base, layout, components, tables, header, sidebar, responsive, print. **Page-specific CSS** at root and in subdirectories. **Gotcha:** page CSS sometimes duplicates nav styles from `admin-layout.css`.
+**Modular admin CSS** in `css/`: base (canonical variables + animations), layout, components, tables, orders, sidebar, responsive, print. **Page-specific CSS** in subdirectories. All hardcoded design-token colors replaced with CSS variables. `css/admin-base.css` is the single source of truth for `:root` variables and shared `@keyframes`.
+
+**Admin JS** in `js/`: All admin JavaScript organized here. `js/shared/utils.js` provides canonical `formatFileSize`, `escapeHtml`, `showNotification` — load it before page-specific JS. PHP-injected data passed via small inline `<script>` config objects (e.g., `BULK_UPLOAD_CONFIG`, `CREATE_ORDER_CONFIG`).
+
+**Customer-facing** files (`script.js`, `styles.css`, `index.php`) remain at root — intentionally separate from admin.
 
 ### .htaccess
 Clean URLs (removes `.php`), protects JSON files and order data, disables directory listing, caches assets, security headers.
@@ -389,12 +412,15 @@ Clean URLs (removes `.php`), protects JSON files and order data, disables direct
 
 ---
 
-## Backup Files (Flag for Review)
+## Cleanup Completed (March 2026)
 
-These files exist in the project but need review to determine if still referenced:
-- `dashboard-backup-expandable.php`
-- `fulfillment-backup-expandable.css`
-- `events-backup-2026-02-01-08-12-14.json`
+Pre-launch codebase restructuring completed:
+- Dead code removed: `backup-pre-migration/`, fulfillment backups, orphaned JS/CSS files (~10.3MB freed)
+- CSS consolidated: variables and animations canonicalized in `css/admin-base.css`, 321 hardcoded colors replaced with CSS variables
+- JS organized: 11 admin JS files moved from root to `js/`, shared utilities extracted to `js/shared/utils.js`, inline JS extracted from `admin-bulk-upload.php` and `admin-create-order.php`
+- 231 `console.log` statements removed from production files
+- JSON data files consolidated in `data/` (admin-auth.php paths updated)
+- `.htaccess` redirects in place for all moved files (backwards compatibility)
 
 ---
 
@@ -406,4 +432,5 @@ Full customer order form with Stripe (3 flows), admin dashboard (216KB) with fil
 
 - Dispatch Phase 2A expansion
 - File path migration (migrate.php exists)
+- **Deferred: PHP monolith splitting** — Split `admin-orders.php` (4,956 lines) and `admin/production.php` (4,093 lines) into page + API files. Create `includes/data-access.php`, eliminate duplicate `logOrderHistory()`. High-risk, recommended post-launch.
 - Potential planned features TBD
