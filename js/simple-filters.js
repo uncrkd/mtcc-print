@@ -405,22 +405,6 @@ class SimpleFilterManager {
     }
     
     applyFilters() {
-            priority: Array.from(this.filters.priority),
-            status: Array.from(this.filters.status),
-            duedate: Array.from(this.filters.duedate),
-            prefix: Array.from(this.filters.prefix),
-            search: this.filters.search,
-            eventsMode: this.eventsMode
-        });
-        
-        // Debug: count rows by event status
-        const allRowsDebug = document.querySelectorAll('#ordersTableBody tr');
-        let activeCount = 0, archivedCount = 0;
-        allRowsDebug.forEach(r => {
-            if (r.dataset.eventStatus === 'active') activeCount++;
-            else archivedCount++;
-        });
-        
         const allRows = document.querySelectorAll('#ordersTableBody tr');
         const filteredRows = [];
         

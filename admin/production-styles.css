@@ -1882,6 +1882,10 @@
 .batch-group-body {
     border-radius: 0 0 12px 12px;
     overflow-x: auto;
+    overflow-y: hidden;
+}
+.batch-group-body .batch-table {
+    min-width: 0;
 }
 
 .batch-group-header {
@@ -2033,6 +2037,35 @@
     opacity: 0.5;
 }
 .batch-group-delete:hover { opacity: 1; }
+
+/* Edit/Remove batch buttons */
+.btn-edit-batch,
+.btn-delete-batch {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 27px;
+    padding: 0 10px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    border-radius: 4px;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    color: #374151;
+    cursor: pointer;
+    transition: all 0.15s;
+    box-sizing: border-box;
+}
+.btn-edit-batch:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: #f5f3ff;
+}
+.btn-delete-batch:hover {
+    border-color: var(--red);
+    color: var(--red);
+    background: #fef2f2;
+}
 
 
 .batch-table {

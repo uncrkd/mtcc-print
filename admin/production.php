@@ -2190,7 +2190,6 @@ function getTimeSince($datetime) {
                     <div class="batch-group-actions" onclick="event.stopPropagation()">
                         <?php if ($bAny): ?>
                         <span class="batch-header-pricing">
-                            <span class="batch-header-price"><span class="batch-header-price-label">Batch Total</span> $<?= number_format($bGrand, 2) ?></span>
                             <?php if ($bStatus === 'accepted'): ?>
                             <span class="batch-header-status batch-status-approved">&#10003; Approved</span>
                             <?php elseif ($bStatus === 'submitted'): ?>
@@ -2198,6 +2197,8 @@ function getTimeSince($datetime) {
                             <?php elseif ($bStatus === 'partial'): ?>
                             <span class="batch-header-status batch-status-partial">Partial</span>
                             <?php endif; ?>
+                            <span class="batch-header-sep"></span>
+                            <span class="batch-header-price"><span class="batch-header-price-label">Batch Total</span> $<?= number_format($bGrand, 2) ?></span>
                         </span>
                         <?php if ($bStatus === 'submitted' && $canEditPreflight): ?>
                         <span class="batch-header-sep"></span>
@@ -2354,8 +2355,9 @@ function getTimeSince($datetime) {
                     <div class="batch-group-actions" onclick="event.stopPropagation()">
                         <?php if ($bAny): ?>
                         <span class="batch-header-pricing">
-                            <span class="batch-header-price"><span class="batch-header-price-label">Batch Total</span> $<?= number_format($bGrand, 2) ?></span>
                             <span class="batch-header-status <?= $bAllPaid ? 'batch-status-approved' : 'batch-status-pending' ?>"><?= $bAllPaid ? '&#10003; Paid' : 'Unpaid' ?></span>
+                            <span class="batch-header-sep"></span>
+                            <span class="batch-header-price"><span class="batch-header-price-label">Batch Total</span> $<?= number_format($bGrand, 2) ?></span>
                         </span>
                         <?php endif; ?>
                     </div>

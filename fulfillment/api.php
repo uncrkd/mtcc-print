@@ -1269,10 +1269,26 @@ function handleDownload() {
     $log['entries'][$refCode]['last_download_at'] = date('c');
     file_put_contents($preflightLogFile, json_encode($log, JSON_PRETTY_PRINT), LOCK_EX);
 
-    header('Content-Type: application/octet-stream');
-    header('Content-Disposition: attachment; filename="' . $downloadName . '"');
-    header('Content-Length: ' . filesize($filePath));
-    header('Cache-Control: no-store');
+    // Preview mode: serve inline with correct MIME type (for thumbnail hover)
+    $isPreview = isset($_GET['preview']);
+    if ($isPreview) {
+        $mimeTypes = [
+            'png' => 'image/png', 'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg',
+            'gif' => 'image/gif', 'webp' => 'image/webp', 'bmp' => 'image/bmp',
+            'tiff' => 'image/tiff', 'tif' => 'image/tiff', 'svg' => 'image/svg+xml',
+        ];
+        $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+        $mime = $mimeTypes[$ext] ?? 'application/octet-stream';
+        header('Content-Type: ' . $mime);
+        header('Content-Disposition: inline');
+        header('Content-Length: ' . filesize($filePath));
+        header('Cache-Control: public, max-age=3600');
+    } else {
+        header('Content-Type: application/octet-stream');
+        header('Content-Disposition: attachment; filename="' . $downloadName . '"');
+        header('Content-Length: ' . filesize($filePath));
+        header('Cache-Control: no-store');
+    }
     readfile($filePath);
     exit;
 }
