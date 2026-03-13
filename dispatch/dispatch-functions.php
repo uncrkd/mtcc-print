@@ -1207,8 +1207,126 @@ function dispatch_notifyStatusChange($ref, $oldStatus, $newStatus, $changedBy = 
 function dispatch_notifyWeatherAlert($condition, $active = true) {
     $title = $active ? 'Bad weather bonus activated' : 'Bad weather bonus deactivated';
     $msg = $condition;
-    
+
     return dispatch_createNotification('weather_alert', $title, $msg, [
         'active' => $active,
     ]);
+}
+
+// ============================================
+// Earnings Summary & Payment
+// ============================================
+
+/**
+ * Get earnings summary for all couriers, optionally filtered by period
+ * @param string $period - 'today', '7days', '30days', 'all'
+ * @return array keyed by courier PIN
+ */
+function dispatch_getEarningsSummary($period = 'all') {
+    if (!file_exists(DISPATCH_EARNINGS_FILE)) return [];
+    $data = json_decode(file_get_contents(DISPATCH_EARNINGS_FILE), true);
+    $allEarnings = $data['earnings'] ?? [];
+    $couriers = dispatch_loadCouriers();
+
+    $now = new DateTime('now', new DateTimeZone('America/Toronto'));
+    $summary = [];
+
+    foreach ($couriers as $pin => $courier) {
+        if (($courier['role'] ?? '') !== 'courier') continue;
+        if (!($courier['active'] ?? false)) continue;
+
+        $courierEarnings = $allEarnings[$pin] ?? [];
+        $deliveries = $courierEarnings['deliveries'] ?? [];
+
+        // Filter deliveries by period
+        $filtered = [];
+        foreach ($deliveries as $d) {
+            if ($period === 'all') {
+                $filtered[] = $d;
+                continue;
+            }
+            $deliveryDate = new DateTime($d['date'] ?? 'now', new DateTimeZone('America/Toronto'));
+            $diff = $now->diff($deliveryDate)->days;
+            if ($period === 'today' && $diff === 0) $filtered[] = $d;
+            elseif ($period === '7days' && $diff <= 7) $filtered[] = $d;
+            elseif ($period === '30days' && $diff <= 30) $filtered[] = $d;
+        }
+
+        $earned = 0;
+        $bonuses = 0;
+        foreach ($filtered as $d) {
+            $earned += floatval($d['amount'] ?? 0);
+            $bonuses += floatval($d['bonus'] ?? 0);
+        }
+
+        $paid = floatval($courierEarnings['total_paid'] ?? 0);
+        $pending = ($earned + $bonuses) - $paid;
+        if ($pending < 0) $pending = 0;
+
+        $summary[$pin] = [
+            'name' => $courier['name'] ?? 'Unknown',
+            'deliveries' => count($filtered),
+            'earned' => $earned,
+            'bonuses' => $bonuses,
+            'pending' => $pending,
+            'paid' => $paid,
+            'recent_deliveries' => array_slice($filtered, 0, 10),
+        ];
+    }
+
+    return $summary;
+}
+
+/**
+ * Mark courier earnings as paid
+ * @param string $pin - courier PIN
+ * @param array $indices - specific delivery indices to mark paid (empty = all pending)
+ * @param string $method - 'cash', 'etransfer', 'cheque'
+ * @return array ['success' => bool, 'error' => string]
+ */
+function dispatch_markPaid($pin, $indices = [], $method = 'cash') {
+    if (!file_exists(DISPATCH_EARNINGS_FILE)) {
+        return ['success' => false, 'error' => 'No earnings data found'];
+    }
+
+    $data = json_decode(file_get_contents(DISPATCH_EARNINGS_FILE), true);
+    $allEarnings = $data['earnings'] ?? [];
+
+    if (!isset($allEarnings[$pin])) {
+        return ['success' => false, 'error' => 'No earnings for this courier'];
+    }
+
+    $deliveries = $allEarnings[$pin]['deliveries'] ?? [];
+    $paidAmount = 0;
+
+    if (empty($indices)) {
+        // Mark all unpaid as paid
+        foreach ($deliveries as &$d) {
+            if (!($d['paid'] ?? false)) {
+                $d['paid'] = true;
+                $d['paid_method'] = $method;
+                $d['paid_date'] = date('c');
+                $paidAmount += floatval($d['amount'] ?? 0) + floatval($d['bonus'] ?? 0);
+            }
+        }
+        unset($d);
+    } else {
+        foreach ($indices as $idx) {
+            if (isset($deliveries[$idx]) && !($deliveries[$idx]['paid'] ?? false)) {
+                $deliveries[$idx]['paid'] = true;
+                $deliveries[$idx]['paid_method'] = $method;
+                $deliveries[$idx]['paid_date'] = date('c');
+                $paidAmount += floatval($deliveries[$idx]['amount'] ?? 0) + floatval($deliveries[$idx]['bonus'] ?? 0);
+            }
+        }
+    }
+
+    $allEarnings[$pin]['deliveries'] = $deliveries;
+    $allEarnings[$pin]['total_paid'] = floatval($allEarnings[$pin]['total_paid'] ?? 0) + $paidAmount;
+
+    $data['earnings'] = $allEarnings;
+    $data['metadata']['last_updated'] = date('c');
+    file_put_contents(DISPATCH_EARNINGS_FILE, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), LOCK_EX);
+
+    return ['success' => true, 'paid_amount' => $paidAmount, 'method' => $method];
 }

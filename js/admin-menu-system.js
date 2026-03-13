@@ -497,13 +497,6 @@ function initializeMenuSystem() {
     // Make debug function available globally
     window.debugMenuSystem = debugMenuSystem;
     
-        toggleActionMenu: typeof toggleActionMenu,
-        printOrderFromMenu: typeof printOrderFromMenu,
-        printLabelFromMenu: typeof printLabelFromMenu,
-        deleteOrderFromMenu: typeof deleteOrderFromMenu,
-        changeStatusFromMenu: typeof changeStatusFromMenu
-    });
-    
     // Test the first menu after page loads
     setTimeout(() => {
         const firstTrigger = document.querySelector('.action-menu-trigger');

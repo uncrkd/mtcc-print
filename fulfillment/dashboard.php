@@ -355,25 +355,30 @@ function renderBatchGroups($batchedGroups, $canAct, $isAdmin, $isGodMode, $compa
             $html .= '</span>';
             $html .= '<span class="vp-batch-header-sep"></span>';
         }
-        // Vendor batch actions (only for vendor, not admin)
-        if ($canAct && !$isAdmin) {
+        // Batch actions (vendor or admin god mode)
+        if (($canAct && !$isAdmin) || ($isAdmin && $isGodMode)) {
             $html .= '<span class="vp-batch-actions" onclick="event.stopPropagation()">';
             if ($tabType === 'new') {
                 // Check if any order in batch still needs pricing
                 $needsPrice = false;
+                $hasPrice = false;
                 foreach ($group['orders'] as $o) {
                     $vs = $o['vendor_pricing']['status'] ?? 'none';
-                    if ($vs === 'none' || $vs === 'rejected') { $needsPrice = true; break; }
+                    if ($vs === 'none' || $vs === 'rejected') { $needsPrice = true; }
+                    if ($vs === 'submitted' || $vs === 'accepted') { $hasPrice = true; }
                 }
                 if ($needsPrice) {
                     $html .= '<button class="vp-btn vp-btn-accent vp-btn-sm" onclick="openBatchPriceModal(\'' . $bid . '\')">Price Batch</button>';
                 }
-                if ($allConfirmable) {
+                if ($hasPrice) {
+                    $html .= '<button class="vp-btn vp-btn-outline vp-btn-sm" onclick="openBatchPriceModal(\'' . $bid . '\', true)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 3a2.83 2.83 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg> Edit Prices</button>';
+                }
+                if ($allConfirmable && ($canAct && !$isAdmin)) {
                     $refs = array_map(function($o) { return $o['reference_code']; }, $group['orders']);
                     $html .= '<button class="vp-btn vp-btn-confirm vp-btn-sm" onclick="batchConfirmAll(\'' . $bid . '\',' . htmlspecialchars(json_encode($refs)) . ')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Confirm All</button>';
                 }
             }
-            if ($tabType === 'printing' && $allReadyable) {
+            if ($tabType === 'printing' && $allReadyable && ($canAct && !$isAdmin)) {
                 $refs = array_map(function($o) { return $o['reference_code']; }, $group['orders']);
                 $html .= '<button class="vp-btn vp-btn-confirm vp-btn-sm" onclick="batchReadyAll(\'' . $bid . '\',' . htmlspecialchars(json_encode($refs)) . ')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Ready All</button>';
             }
@@ -388,7 +393,7 @@ function renderBatchGroups($batchedGroups, $canAct, $isAdmin, $isGodMode, $compa
             if ($anyPending) {
                 $html .= '<span class="vp-batch-actions" onclick="event.stopPropagation()">';
                 $refs = array_map(function($o) { return $o['reference_code']; }, $group['orders']);
-                $html .= '<button class="vp-btn vp-btn-primary vp-btn-sm" onclick="batchApprovePrice(\'' . $bid . '\',' . htmlspecialchars(json_encode($refs)) . ')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Approve All</button>';
+                $html .= '<button class="vp-btn vp-btn-confirm vp-btn-sm" onclick="batchApprovePrice(\'' . $bid . '\',' . htmlspecialchars(json_encode($refs)) . ')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Approve All</button>';
                 $html .= '</span>';
             }
         }
@@ -473,7 +478,7 @@ function renderOrderRow($order, $canAct, $isAdmin, $isGodMode, $compactCols, $ta
     $html .= '<svg class="vp-dl-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>';
     $html .= ' <span class="vp-file-name">' . htmlspecialchars($fileName) . '</span>';
     $html .= '<span class="vp-file-tooltip">';
-    if ($isImage) $html .= '<img class="vp-file-thumb" src="' . $dlUrl . '" alt="">';
+    if ($isImage) $html .= '<img class="vp-file-thumb" src="' . $dlUrl . '&amp;preview=1" alt="" loading="lazy">';
     $html .= '<span class="vp-file-tooltip-name">' . htmlspecialchars($fileName) . '</span>';
     $html .= '<span class="vp-file-tooltip-ext">' . strtoupper($fileExt ?: '?') . ($order['file_size'] ? ' &middot; ' . formatFileSize($order['file_size'] ?? 0) : '') . '</span>';
     $html .= '</span>';
@@ -518,10 +523,11 @@ function renderOrderRow($order, $canAct, $isAdmin, $isGodMode, $compactCols, $ta
     }
     $html .= '</td>';
     
-    // Vendor Ref (editable by vendor)
+    // Vendor Ref (editable by vendor or admin god mode)
     $vendorRef = $order['vendor_order_number'] ?? '';
     $html .= '<td class="vp-col-vendorref">';
-    if ($canAct && !$isAdmin) {
+    $canEditRef = ($canAct && !$isAdmin) || ($isAdmin && $isGodMode);
+    if ($canEditRef) {
         if ($vendorRef) {
             $html .= '<span class="vp-vendorref-display" data-ref="' . $ref . '">' . htmlspecialchars($vendorRef) . ' <span class="vp-vendorref-edit" onclick="editVendorRef(\'' . $ref . '\')" title="Edit"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 3a2.83 2.83 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></span></span>';
             $html .= '<input type="text" class="vp-vendorref-input" value="' . htmlspecialchars($vendorRef) . '" data-ref="' . $ref . '" style="display:none" onblur="saveVendorRef(this)">';
@@ -549,35 +555,50 @@ function renderOrderRow($order, $canAct, $isAdmin, $isGodMode, $compactCols, $ta
             }
         } elseif ($isAdmin) {
             if ($vpStatus === 'rejected') {
+                $reason = htmlspecialchars($vp['rejection_reason'] ?? '');
                 $html .= '<span class="vp-price-badge vp-badge-rejected">Rejected</span>';
+                if ($isGodMode) {
+                    $html .= '<button class="vp-price-add" onclick="openPriceForm(\'' . $ref . '\', this)">+ Add Price</button>';
+                }
             } else {
-                $html .= '<span class="vp-muted">Awaiting vendor</span>';
+                if ($isGodMode) {
+                    $html .= '<button class="vp-price-add" onclick="openPriceForm(\'' . $ref . '\', this)">+ Add Price</button>';
+                } else {
+                    $html .= '<span class="vp-muted">Awaiting vendor</span>';
+                }
             }
         } else {
             $html .= '<span class="vp-muted">&mdash;</span>';
         }
     } elseif ($vpStatus === 'submitted') {
-        $html .= '<span class="vp-price-val">$' . number_format($vpTotal, 2) . '</span>';
         if ($isAdmin && $isGodMode) {
-            $html .= '<div class="vp-price-review">';
-            $html .= '<button class="vp-pr-btn vp-pr-accept" onclick="approvePrice(\'' . $ref . '\')">&#10003;</button>';
-            $html .= '<button class="vp-pr-btn vp-pr-reject" onclick="showRejectPriceModal(\'' . $ref . '\')">&#10007;</button>';
+            $html .= '<div class="vp-price-review-box">';
+            $html .= '<span class="vp-prb-amount">$' . number_format($vpTotal, 2) . '</span>';
+            $html .= '<span class="vp-prb-divider"></span>';
+            $html .= '<button class="vp-prb-btn vp-prb-approve" onclick="approvePrice(\'' . $ref . '\')">&#10003;</button>';
+            $html .= '<span class="vp-prb-divider-dash"></span>';
+            $html .= '<button class="vp-prb-btn vp-prb-reject" onclick="showRejectPriceModal(\'' . $ref . '\')">&#10007;</button>';
             $html .= '</div>';
+            $html .= '<a href="#" class="vp-price-edit" onclick="event.preventDefault();openPriceForm(\'' . $ref . '\', this.closest(\'td\'))" title="Edit price"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 3a2.83 2.83 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></a>';
             $vpPacking = $vp['packing_price'] ?? 0;
             if ($vpPacking > 0) {
                 $html .= '<div class="vp-price-breakdown">$' . number_format($vpPacking, 2) . ' packing</div>';
             }
         } elseif ($canAct && !$isAdmin) {
             $html .= '<a href="#" class="vp-price-edit" onclick="event.preventDefault();openPriceForm(\'' . $ref . '\', this.closest(\'td\').querySelector(\'.vp-price-val\') || this)">' . '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 3a2.83 2.83 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>' . '</a>';
-        } else {
         }
-        // Packing fee breakdown
-        $vpPacking = $vp['packing_price'] ?? 0;
-        if ($vpPacking > 0) {
-            $html .= '<div class="vp-price-breakdown">$' . number_format($vpPacking, 2) . ' packing</div>';
+        // Packing fee breakdown (only for non-admin — admin already got it above)
+        if (!($isAdmin && $isGodMode)) {
+            $vpPacking = $vp['packing_price'] ?? 0;
+            if ($vpPacking > 0) {
+                $html .= '<div class="vp-price-breakdown">$' . number_format($vpPacking, 2) . ' packing</div>';
+            }
         }
     } elseif ($vpStatus === 'accepted') {
         $html .= '<span class="vp-price-val">$' . number_format($vpTotal, 2) . '</span>';
+        if ($isAdmin && $isGodMode) {
+            $html .= '<a href="#" class="vp-price-edit" onclick="event.preventDefault();openPriceForm(\'' . $ref . '\', this.closest(\'td\'))" title="Edit price"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 3a2.83 2.83 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></a>';
+        }
         $vpPacking = $vp['packing_price'] ?? 0;
         if ($vpPacking > 0) {
             $html .= '<div class="vp-price-breakdown">$' . number_format($vpPacking, 2) . ' packing</div>';
@@ -2631,9 +2652,9 @@ async function batchReadyAll(batchId, refs) {
 var bpActiveBatch = null;
 var bpItems = []; // {ref, width, height, area, weight, price, locked}
 
-function openBatchPriceModal(batchId) {
+function openBatchPriceModal(batchId, editMode) {
     bpActiveBatch = batchId;
-    document.getElementById('bpBatchId').textContent = batchId;
+    document.getElementById('bpBatchId').textContent = batchId + (editMode ? ' (Edit)' : '');
     
     // Find all orders in this batch from orderData
     var group = document.querySelector('.vp-batch-group[data-batch-id="' + batchId + '"]');

@@ -1108,6 +1108,49 @@ input, select, textarea, button { font-family: var(--vp-font); }
 .vp-pr-reject { color: var(--vp-red); }
 .vp-pr-reject:hover { background: var(--vp-red); color: white; border-color: var(--vp-red); }
 
+/* Admin price review box (production-style) */
+.vp-price-review-box {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid #fde68a;
+    border-radius: 6px;
+    background: #fffef5;
+    overflow: hidden;
+    white-space: nowrap;
+}
+.vp-prb-amount {
+    padding: 3px 10px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: #92400e;
+}
+.vp-prb-divider {
+    width: 1px;
+    height: 20px;
+    background: #fde68a;
+    flex-shrink: 0;
+}
+.vp-prb-divider-dash {
+    width: 1px;
+    height: 20px;
+    flex-shrink: 0;
+    border-left: 1px dashed #e5e7eb;
+}
+.vp-prb-btn {
+    padding: 3px 8px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 0.78rem;
+    font-weight: 700;
+    transition: background 0.15s;
+    line-height: 1;
+}
+.vp-prb-approve { color: #059669; }
+.vp-prb-approve:hover { background: #ecfdf5; }
+.vp-prb-reject { color: #dc2626; }
+.vp-prb-reject:hover { background: #fef2f2; }
+
 /* Panel price action buttons */
 .vp-ps-price-actions {
     display: flex;
@@ -2409,6 +2452,16 @@ body.panel-open { overflow: hidden; }
     background: #7c3aed;
     color: white;
     border: 1.5px solid #7c3aed;
+}
+.vp-btn-outline {
+    background: white;
+    color: #374151;
+    border: 1px solid #e2e8f0;
+}
+.vp-btn-outline:hover {
+    border-color: #7c3aed;
+    color: #7c3aed;
+    background: #f5f3ff;
 }
 
 @media (max-width: 640px) {
