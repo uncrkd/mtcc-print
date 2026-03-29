@@ -13,7 +13,7 @@ requirePermission('reports');
 require_once __DIR__ . '/../includes/analytics-calculations.php';
 
 // Load events for filter dropdown
-$eventsFile = '../events.json';
+$eventsFile = '../admin/events.json';
 $eventsData = [];
 if (file_exists($eventsFile)) {
  $eventsData = json_decode(file_get_contents($eventsFile), true) ?: [];

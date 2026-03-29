@@ -20,7 +20,7 @@ requireAnyPermission(['orders_edit', 'orders_create']);
 $canCreateOrders = hasPermission('orders_create') || hasPermission('orders_edit');
 
 // Load events for validation
-$eventsFile = __DIR__ . '/events.json';
+$eventsFile = __DIR__ . '/admin/events.json';
 $events = file_exists($eventsFile) ? json_decode(file_get_contents($eventsFile), true) : [];
 $activeEvents = array_filter($events, fn($e) => ($e['status'] ?? '') === 'active');
 $eventPrefixes = array_column($events, 'prefix');

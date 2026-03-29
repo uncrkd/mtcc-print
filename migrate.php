@@ -503,16 +503,16 @@ safeReplace("$webroot/includes/admin-order-handlers.php",
     "order_counter → data/", $dryRun);
 
 // production-order-card.php — uses $basePath
-safeReplace("$webroot/includes/production-order-card.php",
+safeReplace("$webroot/admin/production-order-card.php",
     "\$basePath . 'preflight-log.json'", "\$basePath . 'data/preflight-log.json'",
     "preflight-log → data/", $dryRun);
-safeReplace("$webroot/includes/production-order-card.php",
+safeReplace("$webroot/admin/production-order-card.php",
     "\$basePath . 'reminder-log.json'", "\$basePath . 'data/reminder-log.json'",
     "reminder-log → data/", $dryRun);
-safeReplace("$webroot/includes/production-order-card.php",
+safeReplace("$webroot/admin/production-order-card.php",
     "\$basePath . 'vendors.json'", "\$basePath . 'data/vendors.json'",
     "vendors → data/", $dryRun);
-safeReplace("$webroot/includes/production-order-card.php",
+safeReplace("$webroot/admin/production-order-card.php",
     "\$basePath . 'vendor-tokens.json'", "\$basePath . 'data/vendor-tokens.json'",
     "vendor-tokens → data/", $dryRun);
 

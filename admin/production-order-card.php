@@ -3,7 +3,7 @@
  * Preflight/Vendor Information Card
  * Include in admin-orders.php order detail view
  * 
- * Location: /includes/production-order-card.php
+ * Location: /admin/production-order-card.php
  * 
  * Required variables (set before including):
  *   $order - Order data array
@@ -30,7 +30,7 @@ if (file_exists($vendorDeadlinePath)) {
 }
 
 // Load preflight log
-$preflightLogFile = $basePath . 'preflight-log.json';
+$preflightLogFile = $basePath . 'data/preflight-log.json';
 $preflightLog = [];
 if (file_exists($preflightLogFile)) {
     $preflightLog = json_decode(file_get_contents($preflightLogFile), true) ?: [];
@@ -40,7 +40,7 @@ $pfEntry = $preflightLog['entries'][$refCode] ?? null;
 // Load vendor data if order was sent
 $vendor = null;
 if ($pfEntry && !empty($pfEntry['vendor_id'])) {
-    $vendorsFile = $basePath . 'vendors.json';
+    $vendorsFile = $basePath . 'data/vendors.json';
     if (file_exists($vendorsFile)) {
         $vendorData = json_decode(file_get_contents($vendorsFile), true) ?: [];
         foreach ($vendorData['vendors'] ?? [] as $v) {
@@ -55,7 +55,7 @@ if ($pfEntry && !empty($pfEntry['vendor_id'])) {
 // Load token data
 $tokenData = null;
 $activeToken = null;
-$tokensFile = $basePath . 'vendor-tokens.json';
+$tokensFile = $basePath . 'data/vendor-tokens.json';
 if (file_exists($tokensFile)) {
     $tokens = json_decode(file_get_contents($tokensFile), true) ?: [];
     foreach ($tokens['tokens'] ?? [] as $t => $data) {
@@ -74,7 +74,7 @@ if (file_exists($tokensFile)) {
 // Load reminder history
 $reminderCount = 0;
 $lastReminder = null;
-$reminderLogFile = $basePath . 'reminder-log.json';
+$reminderLogFile = $basePath . 'data/reminder-log.json';
 if (file_exists($reminderLogFile)) {
     $reminderLog = json_decode(file_get_contents($reminderLogFile), true) ?: [];
     foreach ($reminderLog['reminders'] ?? [] as $reminder) {

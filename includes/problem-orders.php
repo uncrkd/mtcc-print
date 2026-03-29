@@ -16,7 +16,7 @@ $preflightLogFile = $basePath . 'data/preflight-log.json';
 $vendorsFile = $basePath . 'data/vendors.json';
 $tokensFile = $basePath . 'data/vendor-tokens.json';
 $reminderLogFile = $basePath . 'data/reminder-log.json';
-$eventsFile = $basePath . 'events.json';
+$eventsFile = $basePath . 'admin/events.json';
 
 require_once $basePath . 'includes/icons.php';
 

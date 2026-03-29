@@ -253,8 +253,8 @@ function normalizeAdminFormData($postData) {
 
 function validateEventExists($eventAcronym) {
     try {
-        // Check active events
-        $eventsFile = __DIR__ . '/../events.json';
+        // Check admin events (canonical location)
+        $eventsFile = __DIR__ . '/../admin/events.json';
         if (file_exists($eventsFile)) {
             $eventsData = json_decode(file_get_contents($eventsFile), true);
             if (isset($eventsData['active']) && is_array($eventsData['active'])) {
@@ -267,8 +267,8 @@ function validateEventExists($eventAcronym) {
             }
         }
 
-        // Check admin events
-        $adminEventsFile = __DIR__ . '/../admin/events.json';
+        // Fallback: check root events.json (pre-migration)
+        $adminEventsFile = __DIR__ . '/../events.json';
         if (file_exists($adminEventsFile)) {
             $eventsData = json_decode(file_get_contents($adminEventsFile), true);
             if (isset($eventsData['active']) && is_array($eventsData['active'])) {
@@ -544,8 +544,8 @@ function saveAdminOrder($orderData) {
 
 function getEventNameByAcronym($acronym) {
     try {
-        // Check events.json first
-        $eventsFile = __DIR__ . '/../events.json';
+        // Check admin events (canonical location)
+        $eventsFile = __DIR__ . '/../admin/events.json';
         if (file_exists($eventsFile)) {
             $eventsData = json_decode(file_get_contents($eventsFile), true);
             if (isset($eventsData['active']) && is_array($eventsData['active'])) {
@@ -557,8 +557,8 @@ function getEventNameByAcronym($acronym) {
             }
         }
 
-        // Check admin events second
-        $adminEventsFile = __DIR__ . '/../admin/events.json';
+        // Fallback: check root events.json (pre-migration)
+        $adminEventsFile = __DIR__ . '/../events.json';
         if (file_exists($adminEventsFile)) {
             $eventsData = json_decode(file_get_contents($adminEventsFile), true);
             if (isset($eventsData['active']) && is_array($eventsData['active'])) {

@@ -13,8 +13,8 @@
 // Paths
 $tokensFile = 'data/vendor-tokens.json';
 $vendorsFile = 'data/vendors.json';
-$preflightLogFile = 'preflight-log.json';
-$statusesFile = 'statuses.json';
+$preflightLogFile = 'data/preflight-log.json';
+$statusesFile = 'data/statuses.json';
 $ordersDir = 'uploads/orders/';
 
 // Include utilities for shared helper functions
