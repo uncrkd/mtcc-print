@@ -20,7 +20,7 @@
  *   // For full-width pages:
  *   renderAdminHeader([
  *       'title' => 'Order Dashboard',
- *       'subtitle' => 'Welcome Zeus! 👋',
+ *       'subtitle' => 'Welcome Zeus! &#128075;',
  *       'subtitleDate' => true,
  *       'currentPage' => 'orders',
  *       'containerWidth' => 'full',

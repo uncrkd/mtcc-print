@@ -39,7 +39,7 @@ if (empty($_SESSION['migrate_auth'])) {
     </style>
     </head><body>
     <div class="login-box">
-        <h2>🔒 Migration Tool</h2>
+        <h2>&#128274; Migration Tool</h2>
         <p>Enter the migration password to continue.</p>
         <form method="POST">
             <input type="password" name="password" placeholder="Password" autofocus><br>
@@ -181,7 +181,7 @@ logMsg("");
 logMsg("--- Pre-Flight Checks ---", 'header');
 
 $canWrite = is_writable($webroot);
-logMsg("Root directory writable: " . ($canWrite ? "YES ✓" : "NO ✗"), $canWrite ? 'success' : 'error');
+logMsg("Root directory writable: " . ($canWrite ? "YES &#10003;" : "NO &#10007;"), $canWrite ? 'success' : 'error');
 
 if (!$canWrite && !$dryRun) {
     logMsg("Cannot proceed — web root is not writable!", 'error');
@@ -680,7 +680,7 @@ if (!$dryRun) {
         logMsg("Files in /data/: " . count($dataFiles));
         foreach ($dataFiles as $f) {
             $size = filesize("$webroot/data/$f");
-            logMsg("  ✓ $f (" . number_format($size) . " bytes)", 'success');
+            logMsg("  &#10003; $f (" . number_format($size) . " bytes)", 'success');
         }
     }
     
@@ -716,10 +716,10 @@ if (!$dryRun) {
     }
     
     if (empty($leftover)) {
-        logMsg("✓ No leftover old references found!", 'success');
+        logMsg("&#10003; No leftover old references found!", 'success');
     } else {
         foreach ($leftover as $l) {
-            logMsg("⚠ $l", 'warning');
+            logMsg("&#9888; $l", 'warning');
         }
     }
 } else {
@@ -791,7 +791,7 @@ render:
 <body>
 
 <div class="container">
-    <h1>🔧 MTCC Data Migration Tool</h1>
+    <h1>&#128295; MTCC Data Migration Tool</h1>
     <div class="subtitle">Email renames + JSON consolidation to /data/ folder</div>
     
     <!-- Summary Cards -->
@@ -813,26 +813,26 @@ render:
     <!-- Status -->
     <?php if ($dryRun): ?>
         <div class="status-bar status-dryrun">
-            👁️ DRY RUN — Preview mode. No files were changed.
+            &#128065;️ DRY RUN — Preview mode. No files were changed.
         </div>
     <?php elseif (count($errors) === 0): ?>
         <div class="status-bar status-success">
-            ✅ Migration completed successfully!
+            &#9989; Migration completed successfully!
         </div>
     <?php else: ?>
         <div class="status-bar status-error">
-            ❌ Migration completed with <?= count($errors) ?> error(s). Check the log below.
+            &#10060; Migration completed with <?= count($errors) ?> error(s). Check the log below.
         </div>
     <?php endif; ?>
     
     <!-- Controls -->
     <div class="controls">
-        <a href="?mode=preview" class="btn btn-preview">👁️ Run Dry Run</a>
+        <a href="?mode=preview" class="btn btn-preview">&#128065;️ Run Dry Run</a>
         
         <?php if ($dryRun): ?>
             <a href="?mode=execute" class="btn btn-execute" 
                onclick="return confirm('This will move files and update paths. A backup will be created first. Continue?')">
-                🚀 Run Migration For Real
+                &#128640; Run Migration For Real
             </a>
         <?php endif; ?>
         
@@ -844,7 +844,7 @@ render:
     
     <?php if (!$dryRun && count($errors) === 0): ?>
     <div class="warning-box">
-        <h3>⚠️ Important Next Steps</h3>
+        <h3>&#9888;️ Important Next Steps</h3>
         <p>
             1. <strong>Test these pages now:</strong> Order form, Admin dashboard, Production page, Dispatch scanner, Vendor portal, Payment flow, Status check<br>
             2. <strong>Delete this file</strong> (migrate.php) — it's a security risk if left on the server<br>

@@ -622,36 +622,36 @@ function dispatch_parseWeather($raw) {
     
     // Map weather codes to icons and descriptions
     $weatherMap = [
-        0 => ['icon' => '☀️', 'desc' => 'Clear'],
-        1 => ['icon' => '🌤️', 'desc' => 'Mainly Clear'],
-        2 => ['icon' => '⛅', 'desc' => 'Partly Cloudy'],
-        3 => ['icon' => '☁️', 'desc' => 'Overcast'],
-        45 => ['icon' => '🌫️', 'desc' => 'Fog'],
-        48 => ['icon' => '🌫️', 'desc' => 'Freezing Fog'],
-        51 => ['icon' => '🌦️', 'desc' => 'Light Drizzle'],
-        53 => ['icon' => '🌦️', 'desc' => 'Drizzle'],
-        55 => ['icon' => '🌧️', 'desc' => 'Heavy Drizzle'],
-        61 => ['icon' => '🌧️', 'desc' => 'Light Rain'],
-        63 => ['icon' => '🌧️', 'desc' => 'Rain'],
-        65 => ['icon' => '🌧️', 'desc' => 'Heavy Rain'],
-        66 => ['icon' => '🌧️', 'desc' => 'Freezing Rain'],
-        67 => ['icon' => '🌧️', 'desc' => 'Heavy Freezing Rain'],
-        71 => ['icon' => '❄️', 'desc' => 'Light Snow'],
-        73 => ['icon' => '❄️', 'desc' => 'Snow'],
-        75 => ['icon' => '❄️', 'desc' => 'Heavy Snow'],
-        77 => ['icon' => '❄️', 'desc' => 'Snow Grains'],
-        80 => ['icon' => '🌦️', 'desc' => 'Light Showers'],
-        81 => ['icon' => '🌧️', 'desc' => 'Showers'],
-        82 => ['icon' => '🌧️', 'desc' => 'Heavy Showers'],
-        85 => ['icon' => '🌨️', 'desc' => 'Light Snow Showers'],
-        86 => ['icon' => '🌨️', 'desc' => 'Heavy Snow Showers'],
-        95 => ['icon' => '⛈️', 'desc' => 'Thunderstorm'],
-        96 => ['icon' => '⛈️', 'desc' => 'Thunderstorm + Hail'],
-        99 => ['icon' => '⛈️', 'desc' => 'Thunderstorm + Heavy Hail'],
+        0 => ['icon' => '&#9728;&#65039;', 'desc' => 'Clear'],
+        1 => ['icon' => '&#127780;&#65039;', 'desc' => 'Mainly Clear'],
+        2 => ['icon' => '&#9925;', 'desc' => 'Partly Cloudy'],
+        3 => ['icon' => '&#9729;&#65039;', 'desc' => 'Overcast'],
+        45 => ['icon' => '&#127787;&#65039;', 'desc' => 'Fog'],
+        48 => ['icon' => '&#127787;&#65039;', 'desc' => 'Freezing Fog'],
+        51 => ['icon' => '&#127782;&#65039;', 'desc' => 'Light Drizzle'],
+        53 => ['icon' => '&#127782;&#65039;', 'desc' => 'Drizzle'],
+        55 => ['icon' => '&#127783;&#65039;', 'desc' => 'Heavy Drizzle'],
+        61 => ['icon' => '&#127783;&#65039;', 'desc' => 'Light Rain'],
+        63 => ['icon' => '&#127783;&#65039;', 'desc' => 'Rain'],
+        65 => ['icon' => '&#127783;&#65039;', 'desc' => 'Heavy Rain'],
+        66 => ['icon' => '&#127783;&#65039;', 'desc' => 'Freezing Rain'],
+        67 => ['icon' => '&#127783;&#65039;', 'desc' => 'Heavy Freezing Rain'],
+        71 => ['icon' => '&#10052;&#65039;', 'desc' => 'Light Snow'],
+        73 => ['icon' => '&#10052;&#65039;', 'desc' => 'Snow'],
+        75 => ['icon' => '&#10052;&#65039;', 'desc' => 'Heavy Snow'],
+        77 => ['icon' => '&#10052;&#65039;', 'desc' => 'Snow Grains'],
+        80 => ['icon' => '&#127782;&#65039;', 'desc' => 'Light Showers'],
+        81 => ['icon' => '&#127783;&#65039;', 'desc' => 'Showers'],
+        82 => ['icon' => '&#127783;&#65039;', 'desc' => 'Heavy Showers'],
+        85 => ['icon' => '&#127784;&#65039;', 'desc' => 'Light Snow Showers'],
+        86 => ['icon' => '&#127784;&#65039;', 'desc' => 'Heavy Snow Showers'],
+        95 => ['icon' => '&#9928;️', 'desc' => 'Thunderstorm'],
+        96 => ['icon' => '&#9928;️', 'desc' => 'Thunderstorm + Hail'],
+        99 => ['icon' => '&#9928;️', 'desc' => 'Thunderstorm + Heavy Hail'],
     ];
     
     $code = $current['weather_code'] ?? 0;
-    $weather = $weatherMap[$code] ?? ['icon' => '🌡️', 'desc' => 'Unknown'];
+    $weather = $weatherMap[$code] ?? ['icon' => '&#127777;️', 'desc' => 'Unknown'];
     
     // Check bad weather conditions
     $settings = dispatch_loadSettings();
@@ -690,7 +690,7 @@ function dispatch_parseWeather($raw) {
     
     for ($i = 0; $i < min(5, count($dailyDates)); $i++) {
         $dayCode = $dailyCodes[$i] ?? 0;
-        $dayWeather = $weatherMap[$dayCode] ?? ['icon' => '🌡️', 'desc' => 'Unknown'];
+        $dayWeather = $weatherMap[$dayCode] ?? ['icon' => '&#127777;️', 'desc' => 'Unknown'];
         $dayDate = new DateTime($dailyDates[$i]);
         
         $forecast[] = [
@@ -727,7 +727,7 @@ function dispatch_getWeatherFallback() {
     return [
         'current' => [
             'temp' => '--',
-            'icon' => '🌡️',
+            'icon' => '&#127777;️',
             'desc' => 'Weather unavailable',
             'wind' => '--',
             'rain' => 0,

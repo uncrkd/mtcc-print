@@ -210,17 +210,17 @@ class WeatherAPI {
      * WMO weather code → emoji icon.
      */
     private function weatherCodeToIcon($code) {
-        if ($code === 0) return "\u{2600}\u{FE0F}";            // ☀️
-        if ($code <= 2) return "\u{26C5}";                      // ⛅
-        if ($code === 3) return "\u{2601}\u{FE0F}";            // ☁️
-        if ($code <= 48) return "\u{1F32B}\u{FE0F}";           // 🌫️
-        if ($code <= 57) return "\u{1F327}\u{FE0F}";           // 🌧️
-        if ($code <= 65) return "\u{1F327}\u{FE0F}";           // 🌧️
-        if ($code <= 67) return "\u{1F9CA}";                    // 🧊
-        if ($code <= 77) return "\u{1F328}\u{FE0F}";           // 🌨️
-        if ($code <= 82) return "\u{1F326}\u{FE0F}";           // 🌦️
-        if ($code <= 86) return "\u{1F328}\u{FE0F}";           // 🌨️
-        return "\u{26A1}";                                       // ⚡
+        if ($code === 0) return "\u{2600}\u{FE0F}";            // &#9728;️
+        if ($code <= 2) return "\u{26C5}";                      // &#9925;
+        if ($code === 3) return "\u{2601}\u{FE0F}";            // &#9729;️
+        if ($code <= 48) return "\u{1F32B}\u{FE0F}";           // &#127787;️
+        if ($code <= 57) return "\u{1F327}\u{FE0F}";           // &#127783;️
+        if ($code <= 65) return "\u{1F327}\u{FE0F}";           // &#127783;️
+        if ($code <= 67) return "\u{1F9CA}";                    // &#129482;
+        if ($code <= 77) return "\u{1F328}\u{FE0F}";           // &#127784;️
+        if ($code <= 82) return "\u{1F326}\u{FE0F}";           // &#127782;️
+        if ($code <= 86) return "\u{1F328}\u{FE0F}";           // &#127784;️
+        return "\u{26A1}";                                       // &#9889;
     }
     
     /**

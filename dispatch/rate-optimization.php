@@ -160,7 +160,7 @@ if ($maxTier && $tierData[$maxTier]['pct_orders'] > 40) {
     $t = $tierData[$maxTier];
     $insights[] = [
         'type' => 'info',
-        'icon' => '📊',
+        'icon' => '&#128202;',
         'title' => $t['label'] . ' tier dominates at ' . $t['pct_orders'] . '% of orders',
         'detail' => 'This tier generates ' . $t['pct_revenue'] . '% of revenue with an average order of $' . number_format($t['avg_price'], 2) . '. ' .
             ($t['pct_revenue'] < $t['pct_orders'] 
@@ -176,7 +176,7 @@ foreach ($tierData as $key => $t) {
     if ($gap > 10) {
         $insights[] = [
             'type' => 'warning',
-            'icon' => '⚠️',
+            'icon' => '&#9888;&#65039;',
             'title' => $t['label'] . ' tier: ' . $t['pct_orders'] . '% of orders but only ' . $t['pct_revenue'] . '% of revenue',
             'detail' => 'This ' . round($gap, 1) . 'pp gap suggests the ' . $t['label'] . ' tier may be underpriced relative to demand. A 5–10% price increase could capture $' . 
                 number_format($t['avg_price'] * $t['count'] * 0.07, 0) . ' in additional revenue without significantly affecting order volume.'
@@ -192,7 +192,7 @@ if (isset($tierData['sameday']) && isset($tierData['standard'])) {
         $premium = round(($sd['avg_price'] / $st['avg_price'] - 1) * 100);
         $insights[] = [
             'type' => $premium < 150 ? 'warning' : 'success',
-            'icon' => $premium < 150 ? '💡' : '✅',
+            'icon' => $premium < 150 ? '&#128161;' : '&#9989;',
             'title' => 'Same-day premium is ' . $premium . '% over Standard',
             'detail' => $premium < 150
                 ? 'Industry convention print services typically charge 150–200% premium for same-day. Your current ' . $premium . '% premium may have room for adjustment.'
@@ -208,7 +208,7 @@ if ($materialData['fabric']['count'] > 0 && $materialData['poster']['count'] > 0
     $diff = round((($fabricAvg / max(1, $posterAvg)) - 1) * 100);
     $insights[] = [
         'type' => 'info',
-        'icon' => '🧵',
+        'icon' => '&#129525;',
         'title' => 'Fabric orders average $' . number_format($fabricAvg, 2) . ' vs poster paper at $' . number_format($posterAvg, 2),
         'detail' => 'Fabric carries a ' . $diff . '% price premium and represents ' . $materialData['fabric']['pct_orders'] . '% of orders. ' .
             ($materialData['fabric']['pct_orders'] < 20 
@@ -222,7 +222,7 @@ foreach ($tierData as $key => $t) {
     if ($t['count'] === 0 && $key !== 'early') {
         $insights[] = [
             'type' => 'info',
-            'icon' => '📭',
+            'icon' => '&#128237;',
             'title' => $t['label'] . ' tier has zero orders',
             'detail' => 'No orders have been placed in this tier. This could indicate the lead time window doesn\'t align with typical customer behaviour, or that adjacent tiers are more attractive at their current price points.'
         ];
@@ -235,7 +235,7 @@ if (!empty($eventRevenue)) {
     $topData = $eventRevenue[$topEvent];
     $insights[] = [
         'type' => 'success',
-        'icon' => '🎯',
+        'icon' => '&#127919;',
         'title' => $topEvent . ' is the top revenue event at $' . number_format($topData['revenue'], 0),
         'detail' => $topData['count'] . ' orders with an average of $' . number_format($topData['revenue'] / $topData['count'], 2) . ' per order. Consider event-specific pricing or promotions for high-volume events.'
     ];

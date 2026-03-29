@@ -938,7 +938,7 @@ background: var(--bg);
 }
 
 .message-success {
-  background: #22c55e;  /* Bold vibrant green background */
+  background: var(--green-dark);  /* Bold vibrant green background */
   border-color: #16a34a;  /* Darker green border */
   color: #ffffff;  /* White text for contrast */
 }

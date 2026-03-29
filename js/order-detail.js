@@ -109,7 +109,7 @@ function removeSelectedFile() {
     
     if (uploadZone) {
         uploadZone.classList.remove('has-file');
-        uploadZone.innerHTML = '<div class="upload-content"><div class="upload-icon">📤</div><div class="upload-text"><p><strong>Click to upload</strong> or drag and drop your design file</p><p class="upload-note">PDF, AI, EPS, PSD, PNG, JPG, TIFF, WebP, GIF, BMP, SVG, PPTX, INDD (Max file size: 100MB)</p></div></div>';
+        uploadZone.innerHTML = '<div class="upload-content"><div class="upload-icon">&#128228;</div><div class="upload-text"><p><strong>Click to upload</strong> or drag and drop your design file</p><p class="upload-note">PDF, AI, EPS, PSD, PNG, JPG, TIFF, WebP, GIF, BMP, SVG, PPTX, INDD (Max file size: 100MB)</p></div></div>';
     }
     
     if (fileInput) {
@@ -123,7 +123,7 @@ function removeExistingFile() {
     var uploadZone = document.getElementById('uploadZone');
     if (uploadZone) {
         uploadZone.classList.remove('has-file');
-        uploadZone.innerHTML = '<div class="upload-content"><div class="upload-icon">📤</div><div class="upload-text"><p><strong>Click to upload</strong> or drag and drop your design file</p><p class="upload-note">PDF, AI, EPS, PSD, PNG, JPG, TIFF, WebP, GIF, BMP, SVG, PPTX, INDD (Max file size: 100MB)</p></div></div>';
+        uploadZone.innerHTML = '<div class="upload-content"><div class="upload-icon">&#128228;</div><div class="upload-text"><p><strong>Click to upload</strong> or drag and drop your design file</p><p class="upload-note">PDF, AI, EPS, PSD, PNG, JPG, TIFF, WebP, GIF, BMP, SVG, PPTX, INDD (Max file size: 100MB)</p></div></div>';
         
         // Add hidden input to signal file removal
         var removeInput = document.createElement('input');

@@ -183,7 +183,7 @@
             
             const handle = document.createElement('div');
             handle.className = 'drag-handle';
-            handle.innerHTML = '⚙️';
+            handle.innerHTML = '&#9881;️';
             handle.title = 'Drag to move';
             header.insertBefore(handle, header.firstChild);
         });
@@ -207,7 +207,7 @@
         toolbar.className = 'edit-mode-toolbar';
         toolbar.innerHTML = `
             <div class="toolbar-message">
-                <span class="toolbar-icon">⚙️</span>
+                <span class="toolbar-icon">&#9881;️</span>
                 <span>Drag to move • Drag edges to resize</span>
             </div>
             <div class="toolbar-actions">
@@ -215,10 +215,10 @@
                     ⭐ Set as Default
                 </button>
                 <button class="toolbar-btn reset" onclick="resetDashboardLayout()" title="Reset to original layout">
-                    🔄 Reset
+                    &#128260; Reset
                 </button>
                 <button class="toolbar-btn done" onclick="toggleDashboardEditMode()">
-                    ✅ Done
+                    &#9989; Done
                 </button>
             </div>
         `;
@@ -272,10 +272,10 @@
                 savedAt: new Date().toISOString()
             };
             localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-            showSaveIndicator('✅ Saved as your default layout');
+            showSaveIndicator('&#9989; Saved as your default layout');
         } catch (e) {
             console.error('[Gridstack] Failed to save:', e);
-            showSaveIndicator('❌ Failed to save layout');
+            showSaveIndicator('&#10060; Failed to save layout');
         }
     };
     

@@ -712,10 +712,10 @@ function addUtilityStyles() {
 const quickStatusConfig = {
     'unpaid': { label: 'Unpaid', icon: '&#9203;' },      // â³
     'paid': { label: 'Paid', icon: '&#128176;' },        // ðŸ’°
-    'preflight': { label: 'Preflight', icon: '&#128640;' },  // 🚀
-    'file_issue': { label: 'File Issue', icon: '&#128269;' }, // 🔍
+    'preflight': { label: 'Preflight', icon: '&#128640;' },  // &#128640;
+    'file_issue': { label: 'File Issue', icon: '&#128269;' }, // &#128269;
     'printing': { label: 'Printing', icon: '&#128424;&#65039;' },  // ðŸ–¨ï¸
-    'ready': { label: 'Ready to Ship', icon: '&#9989;' },  // ✅
+    'ready': { label: 'Ready to Ship', icon: '&#9989;' },  // &#9989;
     'shipped': { label: 'Shipped', icon: '&#128666;' },   // ðŸšš
     'delivered': { label: 'Delivered', icon: '&#128230;' }, // ðŸ“¦
     'pickedup': { label: 'Picked Up', icon: '&#9989;' },  // âœ…

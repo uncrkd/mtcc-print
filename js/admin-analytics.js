@@ -97,7 +97,7 @@ init(analyticsData) {
                     const orderDate = new Date(order.submittedAt).toISOString().split('T')[0];
                     if(groupedData[orderDate]) {
                         groupedData[orderDate].orders++;
-                        groupedData[orderDate].revenue += parseFloat(order.pricing.total);
+                        groupedData[orderDate].revenue += parseFloat(order.pricing?.total || 0);
                     }
                 });
                 break;
@@ -119,7 +119,7 @@ init(analyticsData) {
                         const key = `${currentYear}-${String(orderDate.getMonth() + 1).padStart(2, '0')}`;
                         if(groupedData[key]) {
                             groupedData[key].orders++;
-                            groupedData[key].revenue += parseFloat(order.pricing.total);
+                            groupedData[key].revenue += parseFloat(order.pricing?.total || 0);
                         }
                     }
                 });
@@ -135,7 +135,7 @@ init(analyticsData) {
                         years[year] = { orders: 0, revenue: 0 };
                     }
                     years[year].orders++;
-                    years[year].revenue += parseFloat(order.pricing.total);
+                    years[year].revenue += parseFloat(order.pricing?.total || 0);
                 });
 
                 // Sort years and create labels
@@ -477,7 +477,7 @@ updateTurnaroundList() {
         }
         
         breakdown[priority].orders++;
-        breakdown[priority].revenue += parseFloat(order.pricing.total);
+        breakdown[priority].revenue += parseFloat(order.pricing?.total || 0);
     });
 
     // DEBUG: Now we can safely log breakdown
@@ -897,6 +897,35 @@ createCustomEventLegend(containerId, labels, data, colors, prefixData) {
             }
         });
         
+        // Calculate new performance metrics
+        let turnaroundTimes = [];
+        let onTimeCount = 0;
+        let deliveredCount = 0;
+        let fileIssueCount = 0;
+
+        orders.forEach(order => {
+            const status = order.status || '';
+            if (['delivered', 'pickedup'].includes(status) && order.submittedAt) {
+                const submitted = new Date(order.submittedAt).getTime();
+                const modified = (order.modified || 0) * 1000;
+                if (submitted && modified > submitted) {
+                    turnaroundTimes.push(modified - submitted);
+                }
+                deliveredCount++;
+                if (order.selectedDate) {
+                    const dueEnd = new Date(order.selectedDate + 'T23:59:59').getTime();
+                    if (modified <= dueEnd) onTimeCount++;
+                }
+            }
+            if (status === 'file_issue') fileIssueCount++;
+        });
+
+        const avgTurnaroundMs = turnaroundTimes.length > 0 ? turnaroundTimes.reduce((a, b) => a + b, 0) / turnaroundTimes.length : 0;
+        const avgTurnaroundHours = avgTurnaroundMs / 3600000;
+        const avgTurnaroundDisplay = avgTurnaroundHours >= 48 ? (avgTurnaroundHours / 24).toFixed(1) + 'd' : avgTurnaroundHours.toFixed(1) + 'h';
+        const onTimeRate = deliveredCount > 0 ? ((onTimeCount / deliveredCount) * 100).toFixed(1) : '0';
+        const fileIssueRate = orders.length > 0 ? ((fileIssueCount / orders.length) * 100).toFixed(1) : '0';
+
         // Calculate percentages based on total orders in current view
         const totalOrdersInView = orders.length;
         const cancelledPercentage = totalOrdersInView > 0 ? ((cancelledOrders / totalOrdersInView) * 100).toFixed(3) : '0.000';
@@ -941,14 +970,13 @@ createCustomEventLegend(containerId, labels, data, colors, prefixData) {
             'refundedRevenue': '-$' + fmt(refundedRevenue),
             'refundedOrdersCount': refundedOrders,
             'refundedPercentage': refundedPercentage + '%',
-            'totalOrderCount': paidOrderCount  // Now reflects paid+ orders only
+            'totalOrderCount': paidOrderCount,  // Now reflects paid+ orders only
+            'avgTurnaround': avgTurnaroundDisplay,
+            'onTimeRate': onTimeRate + '%',
+            'fileIssueRate': fileIssueRate + '%',
+            'fileIssueCount': fileIssueCount + ' order(s) with issues'
         };
-        
-            totalRevenue, todayRevenue, avgOrderValue, fileConversionRevenue, 
-            mtccVenueFee, pendingRevenue, pendingBaseRevenue, cancelledRevenue,
-            paidOrderCount, cancelledPercentage, refundedPercentage
-        });
-        
+
         for (const [id, value] of Object.entries(updates)) {
             const el = document.getElementById(id);
             if (el) {

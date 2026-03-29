@@ -696,7 +696,7 @@ class SimpleFilterManager {
         });
         
         // Previous button
-        const prevBtn = this.createPaginationButton('â—€ Prev', this.pagination.currentPage - 1, this.pagination.currentPage <= 1);
+        const prevBtn = this.createPaginationButton('\u25C0 Prev', this.pagination.currentPage - 1, this.pagination.currentPage <= 1);
         nav.appendChild(prevBtn);
         
         // Page numbers
@@ -744,7 +744,7 @@ class SimpleFilterManager {
         }
         
         // Next button
-        const nextBtn = this.createPaginationButton('Next â–¶', this.pagination.currentPage + 1, this.pagination.currentPage >= this.pagination.totalPages);
+        const nextBtn = this.createPaginationButton('Next ▶', this.pagination.currentPage + 1, this.pagination.currentPage >= this.pagination.totalPages);
         nav.appendChild(nextBtn);
         
         tableContainer.parentNode.insertBefore(nav, tableContainer.nextSibling);

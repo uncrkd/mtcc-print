@@ -49,7 +49,7 @@ class DashboardController {
         if (typeof initializeCommonUtilities === 'function') {
             this.modules.utilities = true;
         } else {
-            console.warn('🚫  Utilities module not found');
+            console.warn('&#128683;  Utilities module not found');
         }
     }
 
@@ -62,7 +62,7 @@ class DashboardController {
             this.modules.filtering = new SimpleFilterManager();
             window.simpleFilters = this.modules.filtering;
         } else {
-            console.warn('🚫  Simple filtering system not found');
+            console.warn('&#128683;  Simple filtering system not found');
         }
     } else {
     }
@@ -77,7 +77,7 @@ class DashboardController {
                 // Menu system auto-initializes via DOMContentLoaded
                 this.modules.menu = true;
             } else {
-                console.warn('🚫  Menu system not found');
+                console.warn('&#128683;  Menu system not found');
             }
         } else {
         }

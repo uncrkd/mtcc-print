@@ -149,6 +149,14 @@ function createActionsDropdown() {
             <span class="menu-icon">&#8599;&#65039;</span>
             <span class="menu-label">Export All (CSV)</span>
         </div>
+        <div class="actions-menu-item" onclick="exportFilteredOrders()">
+            <span class="menu-icon">&#128203;</span>
+            <span class="menu-label">Export Filtered (CSV)</span>
+        </div>
+        <div class="actions-menu-item" onclick="exportAsPDF()">
+            <span class="menu-icon">&#128196;</span>
+            <span class="menu-label">Export as PDF</span>
+        </div>
         <div class="actions-menu-item" onclick="printAllOrders()">
             <span class="menu-icon">&#128424;&#65039;</span>
             <span class="menu-label">Print All Orders</span>
@@ -441,6 +449,54 @@ function formatStatusForExport(status) {
 function formatPriorityForExport(priority) {
     const labels = { 'early': 'Early Bird', 'standard': 'Standard', '3day': '3-Day Rush', '2day': '2-Day Rush', 'nextday': 'Next Day', 'sameday': 'Same Day' };
     return labels[priority] || priority;
+}
+
+// Export only currently filtered/visible orders
+function exportFilteredOrders() {
+    closeActionsMenu();
+    var visibleRows = document.querySelectorAll('#ordersTableBody tr');
+    var references = [];
+    visibleRows.forEach(function(row) {
+        // Check if row is actually visible (not filtered out, not hidden by pagination)
+        if (row.offsetParent !== null && !row.classList.contains('filtered-out')) {
+            var ref = row.dataset.reference;
+            if (ref) references.push(ref);
+        }
+    });
+    if (references.length === 0) {
+        showNotification('No visible orders to export', 'warning');
+        return;
+    }
+    exportOrdersToCSV(references, false);
+    showNotification('Exported ' + references.length + ' filtered orders', 'success');
+}
+
+// Export current table view as PDF via print dialog
+function exportAsPDF() {
+    closeActionsMenu();
+
+    // Add a class to body for print-specific styling
+    document.body.classList.add('pdf-export-mode');
+
+    // Temporarily show all rows (remove pagination hiding)
+    var hiddenRows = document.querySelectorAll('#ordersTableBody tr[style*="display: none"]');
+    hiddenRows.forEach(function(row) { row.dataset.wasHidden = 'true'; row.style.display = ''; });
+
+    // Trigger print (user can choose "Save as PDF" in the dialog)
+    setTimeout(function() {
+        window.print();
+
+        // Restore hidden rows after print dialog closes
+        setTimeout(function() {
+            document.body.classList.remove('pdf-export-mode');
+            hiddenRows.forEach(function(row) {
+                if (row.dataset.wasHidden) {
+                    row.style.display = 'none';
+                    delete row.dataset.wasHidden;
+                }
+            });
+        }, 1000);
+    }, 100);
 }
 
 // ===== PRINT FUNCTIONS - Use existing pages exactly =====

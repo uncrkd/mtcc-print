@@ -295,19 +295,19 @@ function changeStatusFromMenu(referenceCode, newStatus) {
 // ===== HELPER FUNCTIONS =====
 function updateTableStatusBadge(referenceCode, newStatus) {
     const statusIcons = {
-    'submitted': '&#128203;',   // 📋
-    'checking': '&#128065;',    // 👁
+    'submitted': '&#128203;',   // &#128203;
+    'checking': '&#128065;',    // &#128065;
     'unpaid': '&#9203;',        // ⏳
-    'paid': '&#128176;',        // 💰
-    'file_issue': '&#128065;',  // 👁
-    'printing': '&#128424;',    // 🖨
-    'shipped': '&#128666;',     // 🚚
-    'delivered': '&#128230;',   // 📦
-    'pickedup': '&#9989;',      // ✅
-    'unclaimed': '&#128236;',   // 📬
-    'missing': '&#9888;',       // ⚠
-    'cancelled': '&#10006;',    // ✖
-    'refunded': '&#128683;'     // 🚫
+    'paid': '&#128176;',        // &#128176;
+    'file_issue': '&#128065;',  // &#128065;
+    'printing': '&#128424;',    // &#128424;
+    'shipped': '&#128666;',     // &#128666;
+    'delivered': '&#128230;',   // &#128230;
+    'pickedup': '&#9989;',      // &#9989;
+    'unclaimed': '&#128236;',   // &#128236;
+    'missing': '&#9888;',       // &#9888;
+    'cancelled': '&#10006;',    // &#10006;
+    'refunded': '&#128683;'     // &#128683;
     }
     
     const statusLabels = {

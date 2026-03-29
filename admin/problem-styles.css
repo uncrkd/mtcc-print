@@ -294,7 +294,7 @@
 
 .prob-timer.timer-warn {
     background: #fffbeb;
-    color: #92400e;
+    color: var(--brown);
 }
 
 .prob-timer.timer-crit {
@@ -355,7 +355,7 @@
 .prob-action-btn.reminder {
     border-color: #fbbf24;
     background: #fffbeb;
-    color: #92400e;
+    color: var(--brown);
 }
 
 .prob-action-btn.reminder:hover {

@@ -944,9 +944,9 @@ function getSuggestionLabel(type) {
 
 function getSuggestionIcon(type) {
     switch (type) {
-        case 'same_vendor_dest': return '&#127919;';  // 🎯
-        case 'same_vendor':     return '&#128230;';  // 📦
-        case 'same_dest':       return '&#128205;';  // 📍
+        case 'same_vendor_dest': return '&#127919;';  // &#127919;
+        case 'same_vendor':     return '&#128230;';  // &#128230;
+        case 'same_dest':       return '&#128205;';  // &#128205;
         case 'urgent_cluster':  return '&#9888;&#65039;';   // ⚠️
         default:                return '&#9889;';    // ⚡
     }
