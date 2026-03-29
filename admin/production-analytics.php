@@ -275,10 +275,11 @@ $avgTotal        = TimingCalculator::getAverages($allTimings, 'preflight_to_read
 $vendorTimingMetrics = TimingCalculator::getVendorMetrics($allTimings, $vendorMapTiming);
 
 // Load events for filter dropdown
-$eventsFile = '../data/events.json';
+$eventsFile = __DIR__ . '/events.json';
 $events = file_exists($eventsFile) ? json_decode(file_get_contents($eventsFile), true) : [];
 $eventNames = [];
-foreach ($events as $e) { if (!empty($e['acronym'])) $eventNames[$e['acronym']] = $e['name'] ?? $e['acronym']; }
+$allEvents = array_merge($events['active'] ?? [], $events['archived'] ?? []);
+foreach ($allEvents as $e) { if (!empty($e['acronym'])) $eventNames[$e['acronym']] = $e['name'] ?? $e['acronym']; }
 
 // Quick period buttons
 
@@ -358,6 +359,7 @@ $periodButtons = [
             <?php endforeach; ?>
         </select>
     </div>
+    <?php endif; ?>
     <div class="pf-date-range-info">
         <?= ICON_CALENDAR ?> <?= $startDate->format('M j, Y') ?> &mdash; <?= $endDate->format('M j, Y') ?>
     </div>

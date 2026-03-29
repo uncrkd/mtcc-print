@@ -116,7 +116,7 @@
 .alert-box.warning {
     background: #fef3c7;
     border: 1px solid #fcd34d;
-    color: #92400e;
+    color: var(--brown);
 }
 
 .alert-box .btn-link {
@@ -621,7 +621,7 @@
 
 .empty-state.success .icon {
     opacity: 1;
-    color: #22c55e;
+    color: var(--green-dark);
 }
 
 /* =====================================================
@@ -920,7 +920,7 @@
 }
 .issue-source.source-vendor {
     background: #fef3c7;
-    color: #92400e;
+    color: var(--brown);
 }
 .issue-source.source-admin {
     background: #dbeafe;
@@ -972,7 +972,7 @@
     white-space: nowrap;
 }
 .notes-row-label.vendor-label {
-    color: #92400e;
+    color: var(--brown);
 }
 .notes-row-label.admin-label {
     color: #1e40af;
@@ -1179,7 +1179,7 @@
 /* Status Badge Variants */
 .status-badge.status-overdue {
     background: #fef3c7;
-    color: #92400e;
+    color: var(--brown);
 }
 
 .status-badge.status-critical {
@@ -1354,7 +1354,7 @@
 }
 
 .details-section.alert-section.warning h4 {
-    color: #92400e;
+    color: var(--brown);
     border-bottom-color: #fcd34d;
 }
 
@@ -1501,7 +1501,7 @@
 
 .reminder-badge.has-reminders {
     background: #fef3c7;
-    color: #92400e;
+    color: var(--brown);
 }
 
 .reminder-badge.no-reminders {
@@ -1706,7 +1706,7 @@
 /* Packing type colors */
 .pack-none { background: #f3f4f6; color: var(--subtext); border-color: #e5e7eb; }
 .pack-tube { background: #dbeafe; color: #1d4ed8; border-color: #bfdbfe; }
-.pack-box { background: #fef3c7; color: #92400e; border-color: #fde68a; }
+.pack-box { background: #fef3c7; color: var(--brown); border-color: #fde68a; }
 .pack-custom { background: var(--primary-light); color: #6d28d9; border-color: #ddd6fe; }
 
 /* Dock trigger badge */
@@ -1764,7 +1764,7 @@
 
 .delivery-address {
     background: #fef3c7;
-    color: #92400e;
+    color: var(--brown);
 }
 
 
@@ -1881,11 +1881,7 @@
 }
 .batch-group-body {
     border-radius: 0 0 12px 12px;
-    overflow-x: auto;
-    overflow-y: hidden;
-}
-.batch-group-body .batch-table {
-    min-width: 0;
+    overflow: hidden;
 }
 
 .batch-group-header {
@@ -2151,7 +2147,7 @@
     border-radius: 4px;
     border: 1px solid #f59e0b !important;
     background: #fffbeb;
-    color: #92400e;
+    color: var(--brown);
     cursor: pointer;
     font-family: inherit;
     display: inline-flex;
@@ -2672,7 +2668,7 @@ th.col-actions, td.col-actions { min-width: 80px; padding: 4px 8px !important; b
 }
 .pack-none, .pack-flat { background: #f3f4f6; color: var(--subtext); }
 .pack-tube   { background: #dbeafe; color: #1e40af; }
-.pack-box    { background: #fef3c7; color: #92400e; }
+.pack-box    { background: #fef3c7; color: var(--brown); }
 .pack-custom { background: var(--primary-light); color: #6d28d9; }
 
 /* Price cells */
@@ -2698,7 +2694,7 @@ th.col-actions, td.col-actions { min-width: 80px; padding: 4px 8px !important; b
     padding: 3px 10px;
     font-weight: 600;
     font-size: 0.8rem;
-    color: #92400e;
+    color: var(--brown);
 }
 
 .prb-divider {

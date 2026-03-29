@@ -115,7 +115,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_action'])) {
             $result = getOrderPreflightDetails($_POST['reference_code'], $ordersDir, $preflightLogFile, $tokensFile, $vendorsFile, $reminderLogFile);
             echo json_encode($result);
             break;
-            
+
+        case 'add_order_note':
+            $refCode = $_POST['reference_code'] ?? '';
+            $text = trim($_POST['text'] ?? '');
+            $visibleToVendor = !empty($_POST['visible_to_vendor']);
+            if (empty($refCode) || empty($text)) {
+                echo json_encode(['success' => false, 'error' => 'Reference code and text required']);
+                break;
+            }
+            $order = findOrderByRef($refCode, $ordersDir);
+            if (!$order) {
+                echo json_encode(['success' => false, 'error' => 'Order not found']);
+                break;
+            }
+            if (!isset($order['internalNotes'])) $order['internalNotes'] = [];
+            $order['internalNotes'][] = [
+                'id' => uniqid(),
+                'username' => $currentUser['display_name'] ?? 'Admin',
+                'content' => $text,
+                'timestamp' => date('Y-m-d H:i:s'),
+                'visible_to_vendor' => $visibleToVendor
+            ];
+            $orderFile = findOrderFile($refCode, $ordersDir);
+            if ($orderFile) {
+                file_put_contents($orderFile, json_encode($order, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), LOCK_EX);
+            }
+            echo json_encode(['success' => true]);
+            break;
+
+        case 'delete_order_note':
+            $refCode = $_POST['reference_code'] ?? '';
+            $noteIndex = intval($_POST['note_index'] ?? -1);
+            if (empty($refCode) || $noteIndex < 0) {
+                echo json_encode(['success' => false, 'error' => 'Invalid parameters']);
+                break;
+            }
+            $order = findOrderByRef($refCode, $ordersDir);
+            if (!$order || !isset($order['internalNotes'][$noteIndex])) {
+                echo json_encode(['success' => false, 'error' => 'Note not found']);
+                break;
+            }
+            array_splice($order['internalNotes'], $noteIndex, 1);
+            $orderFile = findOrderFile($refCode, $ordersDir);
+            if ($orderFile) {
+                file_put_contents($orderFile, json_encode($order, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), LOCK_EX);
+            }
+            echo json_encode(['success' => true]);
+            break;
+
         case 'send_manual_reminder':
             $result = sendManualReminder($_POST, $vendorsFile, $ordersDir, $preflightLogFile, $tokensFile, $reminderLogFile, $basePath);
             echo json_encode($result);
@@ -1214,12 +1262,64 @@ function getOrderPreflightDetails($referenceCode, $ordersDir, $preflightLogFile,
         }
     }
     
+    // File info
+    $fileInfo = null;
+    $uploadedFile = $order['uploadedFile'] ?? null;
+    if ($uploadedFile) {
+        $filePath = $uploadedFile['path'] ?? '';
+        $fileSize = $uploadedFile['size'] ?? 0;
+        $fileInfo = [
+            'name' => $uploadedFile['originalName'] ?? basename($filePath),
+            'path' => $filePath,
+            'size' => $fileSize > 1048576 ? round($fileSize / 1048576, 1) . ' MB' : round($fileSize / 1024, 1) . ' KB'
+        ];
+    }
+
+    // Vendor pricing
+    $vendorPricing = [];
+    if ($pfEntry && !empty($pfEntry['vendor_pricing'])) {
+        $vendorPricing = $pfEntry['vendor_pricing'];
+    }
+
+    // Packing info
+    $packingInfo = [
+        'type' => $pfEntry['packing'] ?? 'none',
+        'qty' => $pfEntry['packing_qty'] ?? 1,
+        'custom' => $pfEntry['packing_custom'] ?? ''
+    ];
+
+    // Notes — merge internal notes (admin) + vendor notes + customer notes
+    $orderNotes = [];
+    // Customer notes first
+    if (!empty($order['notes'])) {
+        $orderNotes[] = ['type' => 'customer', 'text' => $order['notes'], 'by' => 'Customer'];
+    }
+    // Admin internal notes
+    if (!empty($order['internalNotes']) && is_array($order['internalNotes'])) {
+        foreach ($order['internalNotes'] as $note) {
+            $orderNotes[] = [
+                'type' => 'admin',
+                'text' => $note['content'] ?? '',
+                'by' => $note['username'] ?? 'Admin',
+                'time' => !empty($note['timestamp']) ? date('M j, g:ia', strtotime($note['timestamp'])) : '',
+                'visible_to_vendor' => !empty($note['visible_to_vendor'])
+            ];
+        }
+    }
+    // Vendor notes from preflight log
+    if (!empty($pfEntry['vendor_notes']) && is_array($pfEntry['vendor_notes'])) {
+        foreach ($pfEntry['vendor_notes'] as $vn) {
+            $orderNotes[] = array_merge($vn, ['type' => 'vendor']);
+        }
+    }
+
     return [
         'success' => true,
         'reference_code' => $referenceCode,
         'order' => [
             'customer_name' => $order['customerInfo']['name'] ?? '',
-            'dimensions' => ($order['dimensions']['width'] ?? 0) . '" × ' . ($order['dimensions']['height'] ?? 0) . '"',
+            'customer_email' => $order['customerInfo']['email'] ?? '',
+            'dimensions' => ($order['dimensions']['width'] ?? 0) . '" x ' . ($order['dimensions']['height'] ?? 0) . '"',
             'material' => $order['material'] ?? 'paper',
             'due_date' => $order['selectedDate'] ?? null,
             'delivery_time' => $order['deliveryTime'] ?? 'anytime',
@@ -1238,7 +1338,11 @@ function getOrderPreflightDetails($referenceCode, $ordersDir, $preflightLogFile,
         'vendor' => $vendor,
         'token' => $tokenInfo,
         'time_metrics' => $timeMetrics,
-        'reminders' => $reminderInfo
+        'reminders' => $reminderInfo,
+        'file_info' => $fileInfo,
+        'vendor_pricing' => $vendorPricing,
+        'packing' => $packingInfo,
+        'notes' => $orderNotes
     ];
 }
 
@@ -1544,6 +1648,17 @@ function findOrderByRef($referenceCode, $ordersDir) {
         $data = json_decode(file_get_contents($file), true);
         if ($data && isset($data['referenceCode']) && $data['referenceCode'] === $referenceCode) {
             return $data;
+        }
+    }
+    return null;
+}
+
+function findOrderFile($referenceCode, $ordersDir) {
+    $files = glob($ordersDir . '*-order.json');
+    foreach ($files as $file) {
+        $data = json_decode(file_get_contents($file), true);
+        if ($data && isset($data['referenceCode']) && $data['referenceCode'] === $referenceCode) {
+            return $file;
         }
     }
     return null;
@@ -1862,6 +1977,7 @@ function getTimeSince($datetime) {
     <link rel="stylesheet" href="../css/admin-tables.css">
     <link rel="stylesheet" href="production-styles.css">
 <link rel="stylesheet" href="../css/admin-sidebar.css">
+<link rel="stylesheet" href="production-panel.css">
 </head>
 <body>
 <?php require_once __DIR__ . '/../includes/admin-sidebar.php'; renderSidebar('production'); ?>
@@ -2017,7 +2133,7 @@ function getTimeSince($datetime) {
                         ?>
                         <tr class="<?= $isUrgent ? 'urgent' : '' ?>" data-ref="<?= htmlspecialchars($refCode) ?>">
                             <td><input type="checkbox" class="order-checkbox" value="<?= htmlspecialchars($refCode) ?>"></td>
-                            <td><a href="../admin-orders.php?view=<?= urlencode($refCode) ?>" class="order-link" target="_blank"><?= htmlspecialchars($refCode) ?></a></td>
+                            <td><a href="#" class="order-link" onclick="event.preventDefault();openProductionPanel('<?= htmlspecialchars($refCode) ?>')"><?= htmlspecialchars($refCode) ?></a></td>
                             <td><?= getTierBadge($order['pricing']['tier'] ?? 'standard') ?></td>
                             <td><?= htmlspecialchars($order['customerInfo']['name'] ?? '-') ?></td>
                             <td><?= ($order['dimensions']['width'] ?? 0) ?>" × <?= ($order['dimensions']['height'] ?? 0) ?>"</td>
@@ -2066,7 +2182,7 @@ function getTimeSince($datetime) {
                     ?>
                     <tr class="<?= $isUrgent ? 'urgent' : '' ?>" data-ref="<?= htmlspecialchars($refCode) ?>">
                         <td><input type="checkbox" class="order-checkbox" value="<?= htmlspecialchars($refCode) ?>"></td>
-                        <td><a href="../admin-orders.php?view=<?= urlencode($refCode) ?>" class="order-link" target="_blank"><?= htmlspecialchars($refCode) ?></a></td>
+                        <td><a href="#" class="order-link" onclick="event.preventDefault();openProductionPanel('<?= htmlspecialchars($refCode) ?>')"><?= htmlspecialchars($refCode) ?></a></td>
                         <td><?= getTierBadge($order['pricing']['tier'] ?? 'standard') ?></td>
                         <td><?= htmlspecialchars($order['customerInfo']['name'] ?? '-') ?></td>
                         <td><?= ($order['dimensions']['width'] ?? 0) ?>" × <?= ($order['dimensions']['height'] ?? 0) ?>"</td>
@@ -2227,7 +2343,7 @@ function getTimeSince($datetime) {
                         ?>
                         <tr class="<?= $isCritical ? 'critical-row' : ($isOverdue ? 'overdue-row' : '') ?>" data-ref="<?= htmlspecialchars($refCode) ?>" data-status="<?= $status ?>">
                             <td><input type="checkbox" class="progress-checkbox" value="<?= htmlspecialchars($refCode) ?>" data-status="<?= $status ?>" onchange="updateProgressBulkBar()"></td>
-                            <td><a href="../admin-orders.php?view=<?= urlencode($refCode) ?>" class="order-link" target="_blank"><?= htmlspecialchars($refCode) ?></a></td>
+                            <td><a href="#" class="order-link" onclick="event.preventDefault();openProductionPanel('<?= htmlspecialchars($refCode) ?>')"><?= htmlspecialchars($refCode) ?></a></td>
                             <td><?= getTierBadge($order['pricing']['tier'] ?? 'standard') ?></td>
                             <td><?= htmlspecialchars($order['customerInfo']['name'] ?? '-') ?></td>
                             <td><?= ($order['dimensions']['width'] ?? 0) ?>" × <?= ($order['dimensions']['height'] ?? 0) ?>"</td>
@@ -2278,7 +2394,7 @@ function getTimeSince($datetime) {
                     ?>
                     <tr class="<?= $rowClass ?>" data-ref="<?= htmlspecialchars($refCode) ?>" data-status="<?= $status ?>">
                         <td><input type="checkbox" class="progress-checkbox" value="<?= htmlspecialchars($refCode) ?>" data-status="<?= $status ?>" onchange="updateProgressBulkBar()"></td>
-                        <td><a href="../admin-orders.php?view=<?= urlencode($refCode) ?>" class="order-link" target="_blank"><?= htmlspecialchars($refCode) ?></a></td>
+                        <td><a href="#" class="order-link" onclick="event.preventDefault();openProductionPanel('<?= htmlspecialchars($refCode) ?>')"><?= htmlspecialchars($refCode) ?></a></td>
                         <td><?= getTierBadge($order['pricing']['tier'] ?? 'standard') ?></td>
                         <td><?= htmlspecialchars($order['customerInfo']['name'] ?? '-') ?></td>
                         <td><?= ($order['dimensions']['width'] ?? 0) ?>" × <?= ($order['dimensions']['height'] ?? 0) ?>"</td>
@@ -2379,7 +2495,7 @@ function getTimeSince($datetime) {
                             $isPaid = !empty($pfInfo['vendor_paid']);
                         ?>
                         <tr data-ref="<?= htmlspecialchars($refCode) ?>">
-                            <td><a href="../admin-orders.php?view=<?= urlencode($refCode) ?>" class="order-link" target="_blank"><?= htmlspecialchars($refCode) ?></a></td>
+                            <td><a href="#" class="order-link" onclick="event.preventDefault();openProductionPanel('<?= htmlspecialchars($refCode) ?>')"><?= htmlspecialchars($refCode) ?></a></td>
                             <td><?= getTierBadge($order['pricing']['tier'] ?? 'standard') ?></td>
                             <td><?= htmlspecialchars($order['customerInfo']['name'] ?? '-') ?></td>
                             <td><?= ($order['dimensions']['width'] ?? 0) ?>" × <?= ($order['dimensions']['height'] ?? 0) ?>"</td>
@@ -2419,7 +2535,7 @@ function getTimeSince($datetime) {
                         $isPaid = !empty($pfInfo['vendor_paid']);
                     ?>
                     <tr data-ref="<?= htmlspecialchars($refCode) ?>">
-                        <td><a href="../admin-orders.php?view=<?= urlencode($refCode) ?>" class="order-link" target="_blank"><?= htmlspecialchars($refCode) ?></a></td>
+                        <td><a href="#" class="order-link" onclick="event.preventDefault();openProductionPanel('<?= htmlspecialchars($refCode) ?>')"><?= htmlspecialchars($refCode) ?></a></td>
                         <td><?= getTierBadge($order['pricing']['tier'] ?? 'standard') ?></td>
                         <td><?= htmlspecialchars($order['customerInfo']['name'] ?? '-') ?></td>
                         <td><?= ($order['dimensions']['width'] ?? 0) ?>" × <?= ($order['dimensions']['height'] ?? 0) ?>"</td>
@@ -2483,7 +2599,7 @@ function getTimeSince($datetime) {
                             $issueCols = 11;
                         ?>
                         <tr class="issue-row" data-ref="<?= htmlspecialchars($refCode) ?>">
-                            <td><a href="../admin-orders.php?view=<?= urlencode($refCode) ?>" class="order-link" target="_blank"><?= htmlspecialchars($refCode) ?></a></td>
+                            <td><a href="#" class="order-link" onclick="event.preventDefault();openProductionPanel('<?= htmlspecialchars($refCode) ?>')"><?= htmlspecialchars($refCode) ?></a></td>
                             <td><?= getTierBadge($order['pricing']['tier'] ?? 'standard') ?></td>
                             <td><?= htmlspecialchars($order['customerInfo']['name'] ?? '-') ?></td>
                             <td><?= ($order['dimensions']['width'] ?? 0) ?>" &times; <?= ($order['dimensions']['height'] ?? 0) ?>"</td>
@@ -2508,6 +2624,7 @@ function getTimeSince($datetime) {
                                     <?php
                                     $ext = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
                                     $isImage = in_array($ext, ['jpg','jpeg','png','gif','webp']);
+                                    $isPdf = ($ext === 'pdf');
                                     $dlUrl = '../fulfillment/api.php?action=download&ref=' . urlencode($refCode) . '&admin=1';
                                     ?>
                                     <div class="fm-file-link" onmouseenter="showFilePreview(event, this)" onmouseleave="hideFilePreview()">
@@ -2516,6 +2633,8 @@ function getTimeSince($datetime) {
                                         </a>
                                         <?php if ($isImage): ?>
                                         <img class="fm-preview-src" src="<?= $dlUrl ?>" alt="" style="display:none">
+                                        <?php elseif ($isPdf): ?>
+                                        <span class="fm-preview-src fm-preview-pdf" data-type="pdf" style="display:none"></span>
                                         <?php endif; ?>
                                     </div>
                                     <div class="fm-btns">
@@ -2575,9 +2694,40 @@ function getTimeSince($datetime) {
         </div>
         
         <!-- Vendors Tab (same as Phase 2) -->
-        
+
     </div>
-    
+
+    <!-- Slide-Out Panel Overlay -->
+    <div class="pp-overlay" id="prodPanelOverlay"></div>
+
+    <!-- Slide-Out Panel -->
+    <aside class="pp-panel" id="prodPanel">
+        <div class="pp-header">
+            <div class="pp-ref" id="prodPanelRef"></div>
+            <button class="pp-close" id="prodPanelClose">&#215;</button>
+        </div>
+        <div class="pp-body" id="prodPanelBody"></div>
+        <div class="pp-footer" id="prodPanelFooter"></div>
+    </aside>
+
+    <!-- Note Modal -->
+    <div class="pp-note-modal" id="ppNoteModal" style="display:none;">
+        <div class="pp-note-modal-inner">
+            <div class="pp-note-modal-head">
+                <h3>Add Note</h3>
+                <button class="pp-note-modal-close" onclick="document.getElementById('ppNoteModal').style.display='none'">&#215;</button>
+            </div>
+            <div class="pp-note-modal-body">
+                <textarea id="ppNoteText" rows="3" placeholder="Enter your note..."></textarea>
+                <label class="pp-note-visibility"><input type="checkbox" id="ppNoteVisible"> Make visible to vendor</label>
+            </div>
+            <div class="pp-note-modal-foot">
+                <button class="pp-btn pp-btn-ghost" onclick="document.getElementById('ppNoteModal').style.display='none'">Cancel</button>
+                <button class="pp-btn pp-btn-primary" id="ppNoteSubmit">Save Note</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Queue Bulk Action Dock (floating bottom) -->
     <?php if ($canEditPreflight && count($activeVendors) > 0): ?>
     <div class="queue-bulk-dock" id="queueBulkDock">
@@ -3670,7 +3820,7 @@ function getTimeSince($datetime) {
                             <span class="label">Portal Link:</span>
                             <span class="value">
                                 <a href="${token.portal_url}" target="_blank" class="portal-link">Open Portal</a>
-                                <button class="btn-copy" onclick="copyToClipboard('${token.portal_url}')">📋</button>
+                                <button class="btn-copy" onclick="copyToClipboard('${token.portal_url}')">&#128203;</button>
                             </span>
                         </div>
                         ` : '<p class="no-data">No token generated</p>'}
@@ -3716,7 +3866,7 @@ function getTimeSince($datetime) {
                     
                     ${time && time.is_overdue ? `
                     <div class="details-section alert-section ${time.is_critical ? 'critical' : 'warning'}">
-                        <h4>${time.is_critical ? '🚨 Critical Alert' : '⚠️ Overdue Warning'}</h4>
+                        <h4>${time.is_critical ? '&#128680; Critical Alert' : '&#9888;&#65039; Overdue Warning'}</h4>
                         <p>This order has been awaiting vendor confirmation for <strong>${time.elapsed_human}</strong>.</p>
                         <p>Consider resending the vendor email or contacting them directly.</p>
                     </div>
@@ -4072,15 +4222,25 @@ function getTimeSince($datetime) {
 </div>
     
 
+<script src="production-panel.js"></script>
+
 <!-- File hover preview (shared, position:fixed) -->
-<div class="fm-hover-preview" id="fmHoverPreview"><img id="fmHoverImg" src="" alt=""></div>
+<div class="fm-hover-preview" id="fmHoverPreview"><img id="fmHoverImg" src="" alt=""><div id="fmHoverPdf" style="display:none;padding:16px 24px;text-align:center;"><svg width="40" height="48" viewBox="0 0 40 48" fill="none"><rect width="40" height="48" rx="4" fill="#dc2626"/><text x="20" y="30" text-anchor="middle" font-size="12" font-weight="700" fill="white">PDF</text></svg></div></div>
 <script>
 function showFilePreview(e, el) {
-    var img = el.querySelector('.fm-preview-src');
-    if (!img) return;
+    var src = el.querySelector('.fm-preview-src');
+    if (!src) return;
     var preview = document.getElementById('fmHoverPreview');
     var previewImg = document.getElementById('fmHoverImg');
-    previewImg.src = img.src;
+    var previewPdf = document.getElementById('fmHoverPdf');
+    if (src.dataset.type === 'pdf') {
+        previewImg.style.display = 'none';
+        previewPdf.style.display = 'block';
+    } else {
+        previewImg.src = src.src;
+        previewImg.style.display = 'block';
+        previewPdf.style.display = 'none';
+    }
     var rect = el.getBoundingClientRect();
     preview.style.left = rect.left + 'px';
     preview.style.top = (rect.top - 10) + 'px';
