@@ -778,7 +778,7 @@ if ($isAdminView && $token === 'ADMIN_BYPASS') {
         <!-- Admin Banner -->
         <div class="admin-banner">
             <div>
-                👁️ <strong>Admin View</strong> — Viewing as vendor (read-only)
+                &#128065;&#65039; <strong>Admin View</strong> — Viewing as vendor (read-only)
                 <?php if ($adminUser): ?>
                     | Logged in as: <?= htmlspecialchars($adminUser) ?>
                 <?php endif; ?>
@@ -792,7 +792,7 @@ if ($isAdminView && $token === 'ADMIN_BYPASS') {
         <?php if (!$validation['valid']): ?>
         <!-- Invalid Token -->
         <div class="error-card">
-            <div class="error-icon">🔒</div>
+            <div class="error-icon">&#128274;</div>
             <h1 class="error-title">Access Denied</h1>
             <p class="error-message"><?= htmlspecialchars($validation['error']) ?></p>
             <p style="color: #9ca3af; font-size: 14px;">
@@ -804,7 +804,7 @@ if ($isAdminView && $token === 'ADMIN_BYPASS') {
         <?php elseif (!$order): ?>
         <!-- Order Not Found -->
         <div class="error-card">
-            <div class="error-icon">📋</div>
+            <div class="error-icon">&#128203;</div>
             <h1 class="error-title">Order Not Found</h1>
             <p class="error-message">The order associated with this link could not be found.</p>
             <p style="color: #9ca3af; font-size: 14px;">
@@ -829,31 +829,31 @@ if ($isAdminView && $token === 'ADMIN_BYPASS') {
             
             <?php if ($confirmationMessage): ?>
             <div class="alert alert-success">
-                ✅ <?= htmlspecialchars($confirmationMessage) ?>
+                &#9989; <?= htmlspecialchars($confirmationMessage) ?>
             </div>
             <?php endif; ?>
             
             <?php if ($confirmationError): ?>
             <div class="alert alert-error">
-                ❌ <?= htmlspecialchars($confirmationError) ?>
+                &#10060; <?= htmlspecialchars($confirmationError) ?>
             </div>
             <?php endif; ?>
             
             <?php if ($isPrinted): ?>
             <div class="confirmed-banner" style="background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border-color: #10b981;">
-                <h3>✅ Printing Complete</h3>
+                <h3>&#9989; Printing Complete</h3>
                 <p>Marked as printed on <?= isset($tokenData['printed_at']) ? date('l, F j, Y \a\t g:i A', strtotime($tokenData['printed_at'])) : 'Previously marked' ?></p>
             </div>
             <?php elseif ($isConfirmed): ?>
             <div class="confirmed-banner">
-                <h3>🖨️ Printing In Progress</h3>
+                <h3>&#128424;️ Printing In Progress</h3>
                 <p>Confirmed on <?= isset($tokenData['confirmed_at']) ? date('l, F j, Y \a\t g:i A', strtotime($tokenData['confirmed_at'])) : 'Previously confirmed' ?></p>
             </div>
             <?php endif; ?>
             
             <?php if ($hasIssue): ?>
             <div class="alert alert-warning" style="margin: 0; border-radius: 0;">
-                ⚠️ <strong>File Issue Reported</strong> - Our team will contact you shortly.
+                &#9888;&#65039; <strong>File Issue Reported</strong> - Our team will contact you shortly.
             </div>
             <?php endif; ?>
             
@@ -932,7 +932,7 @@ if ($isAdminView && $token === 'ADMIN_BYPASS') {
             ?>
             <div class="section">
                 <div class="notes-box">
-                    <strong>📝 Special Instructions</strong>
+                    <strong>&#128221; Special Instructions</strong>
                     <p><?= nl2br(htmlspecialchars($notes)) ?></p>
                 </div>
             </div>
@@ -999,12 +999,12 @@ if ($isAdminView && $token === 'ADMIN_BYPASS') {
                 <form method="POST" style="display: inline;">
                     <input type="hidden" name="action" value="confirm">
                     <button type="submit" class="btn btn-success">
-                        ✅ Confirm Order Received
+                        &#9989; Confirm Order Received
                     </button>
                 </form>
                 
                 <button type="button" class="btn btn-danger-outline" onclick="toggleIssueForm()">
-                    ⚠️ Report File Issue
+                    &#9888;&#65039; Report File Issue
                 </button>
             </div>
             
@@ -1042,7 +1042,7 @@ if ($isAdminView && $token === 'ADMIN_BYPASS') {
                 <form method="POST" style="display: inline;">
                     <input type="hidden" name="action" value="mark_printed">
                     <button type="submit" class="btn btn-success" onclick="return confirm('Mark this order as printed? This will notify the customer that their order is ready.')">
-                        ✅ Mark as Printed
+                        &#9989; Mark as Printed
                     </button>
                 </form>
                 <a href="vendor-download.php?token=<?= urlencode($token) ?>" class="btn btn-primary">
@@ -1051,7 +1051,7 @@ if ($isAdminView && $token === 'ADMIN_BYPASS') {
             </div>
             <?php elseif (!$isAdminView && $isPrinted): ?>
             <div class="actions" style="background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);">
-                <p style="color: #059669; font-weight: 600; text-align: center; width: 100%;">🎉 This order is complete. Thank you!</p>
+                <p style="color: #059669; font-weight: 600; text-align: center; width: 100%;">&#127881; This order is complete. Thank you!</p>
             </div>
             <?php elseif ($isAdminView): ?>
             <div class="actions" style="background: #f1f5f9;">

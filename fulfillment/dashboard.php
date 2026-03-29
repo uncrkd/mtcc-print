@@ -403,19 +403,19 @@ function renderBatchGroups($batchedGroups, $canAct, $isAdmin, $isGodMode, $compa
         $html .= '<table class="vp-table vp-batch-table vp-sortable" data-tab="' . $tabType . '">';
         $html .= '<thead><tr>';
         $html .= '<th class="vp-col-check"><input type="checkbox" class="vp-checkbox vp-select-all" data-tab="' . $tabType . '_' . $bid . '"></th>';
-        $html .= '<th class="sortable" data-sort="ref">Order</th>';
-        $html .= '<th class="sortable" data-sort="file">File</th>';
-        $html .= '<th class="sortable" data-sort="size">Size</th>';
-        $html .= '<th class="sortable" data-sort="material">Material</th>';
-        $html .= '<th class="sortable" data-sort="due">Due</th>';
-        $html .= '<th class="sortable" data-sort="timer">Timer</th>';
-        $html .= '<th class="sortable" data-sort="packing">Packing</th>';
-        $html .= '<th>Vendor Ref</th>';
-        if ($isAdmin) $html .= '<th class="sortable" data-sort="vendor">Vendor</th>';
-        $html .= '<th class="sortable" data-sort="price">Price</th>';
-        $html .= '<th class="sortable" data-sort="status">Status</th>';
-        $html .= '<th class="sortable" data-sort="paid">Paid</th>';
-        $html .= '<th>Action</th>';
+        $html .= '<th class="vp-col-ref sortable" data-sort="ref">Order</th>';
+        $html .= '<th class="vp-col-file sortable" data-sort="file">File</th>';
+        $html .= '<th class="vp-col-size sortable" data-sort="size">Size</th>';
+        $html .= '<th class="vp-col-mat sortable" data-sort="material">Material</th>';
+        $html .= '<th class="vp-col-due sortable" data-sort="due">Due</th>';
+        $html .= '<th class="vp-col-timer sortable" data-sort="timer">Timer</th>';
+        $html .= '<th class="vp-col-pack sortable" data-sort="packing">Packing</th>';
+        $html .= '<th class="vp-col-vendorref">Vendor Ref</th>';
+        if ($isAdmin) $html .= '<th class="vp-col-vendor sortable" data-sort="vendor">Vendor</th>';
+        $html .= '<th class="vp-col-price sortable" data-sort="price">Price</th>';
+        $html .= '<th class="vp-col-status sortable" data-sort="status">Status</th>';
+        $html .= '<th class="vp-col-paid sortable" data-sort="paid">Paid</th>';
+        $html .= '<th class="vp-col-act">Action</th>';
         $html .= '</tr></thead>';
         $html .= '<tbody>';
         foreach ($group['orders'] as $order) {
@@ -473,12 +473,17 @@ function renderOrderRow($order, $canAct, $isAdmin, $isGodMode, $compactCols, $ta
     $fileName = $order['file_name'] ?? 'No file';
     $fileExt = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
     $isImage = in_array($fileExt, ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'tiff', 'tif']);
+    $isPdf = ($fileExt === 'pdf');
     $dlUrl = 'api.php?action=download&amp;ref=' . urlencode($order['reference_code']);
     $html .= '<td class="vp-col-file"><a href="' . $dlUrl . '" class="vp-file-dl" title="Download file">';
     $html .= '<svg class="vp-dl-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>';
     $html .= ' <span class="vp-file-name">' . htmlspecialchars($fileName) . '</span>';
     $html .= '<span class="vp-file-tooltip">';
-    if ($isImage) $html .= '<img class="vp-file-thumb" src="' . $dlUrl . '&amp;preview=1" alt="" loading="lazy">';
+    if ($isImage) {
+        $html .= '<img class="vp-file-thumb" src="' . $dlUrl . '&amp;preview=1" alt="" loading="lazy">';
+    } elseif ($isPdf) {
+        $html .= '<div class="vp-file-thumb-pdf"><svg width="40" height="48" viewBox="0 0 40 48" fill="none"><rect width="40" height="48" rx="4" fill="#dc2626"/><text x="20" y="30" text-anchor="middle" font-size="12" font-weight="700" fill="white">PDF</text></svg></div>';
+    }
     $html .= '<span class="vp-file-tooltip-name">' . htmlspecialchars($fileName) . '</span>';
     $html .= '<span class="vp-file-tooltip-ext">' . strtoupper($fileExt ?: '?') . ($order['file_size'] ? ' &middot; ' . formatFileSize($order['file_size'] ?? 0) : '') . '</span>';
     $html .= '</span>';
@@ -572,6 +577,7 @@ function renderOrderRow($order, $canAct, $isAdmin, $isGodMode, $compactCols, $ta
         }
     } elseif ($vpStatus === 'submitted') {
         if ($isAdmin && $isGodMode) {
+            // Admin god mode: production-style review box with price inside
             $html .= '<div class="vp-price-review-box">';
             $html .= '<span class="vp-prb-amount">$' . number_format($vpTotal, 2) . '</span>';
             $html .= '<span class="vp-prb-divider"></span>';
@@ -584,11 +590,13 @@ function renderOrderRow($order, $canAct, $isAdmin, $isGodMode, $compactCols, $ta
             if ($vpPacking > 0) {
                 $html .= '<div class="vp-price-breakdown">$' . number_format($vpPacking, 2) . ' packing</div>';
             }
-        } elseif ($canAct && !$isAdmin) {
-            $html .= '<a href="#" class="vp-price-edit" onclick="event.preventDefault();openPriceForm(\'' . $ref . '\', this.closest(\'td\').querySelector(\'.vp-price-val\') || this)">' . '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 3a2.83 2.83 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>' . '</a>';
-        }
-        // Packing fee breakdown (only for non-admin — admin already got it above)
-        if (!($isAdmin && $isGodMode)) {
+        } else {
+            // Vendor view and non-god admin: show price value
+            $html .= '<span class="vp-price-val">$' . number_format($vpTotal, 2) . '</span>';
+            if ($canAct && !$isAdmin) {
+                // Vendor: add edit pencil
+                $html .= '<a href="#" class="vp-price-edit" onclick="event.preventDefault();openPriceForm(\'' . $ref . '\', this.closest(\'td\').querySelector(\'.vp-price-val\') || this)">' . '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 3a2.83 2.83 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>' . '</a>';
+            }
             $vpPacking = $vp['packing_price'] ?? 0;
             if ($vpPacking > 0) {
                 $html .= '<div class="vp-price-breakdown">$' . number_format($vpPacking, 2) . ' packing</div>';
@@ -677,9 +685,17 @@ foreach ($vendorOrders as $refCode => $order) {
         'shipped_at' => !empty($order['shipped_at']) ? date('M j, g:ia', strtotime($order['shipped_at'])) : null,
         'downloads' => $order['vendor_downloads'] ?? 0,
         'customer_notes' => $order['notes'] ?? '',
-        'vendor_notes' => array_map(function($n) {
-            return ['by' => $n['by'] ?? 'Vendor', 'text' => $n['text'] ?? '', 'time' => !empty($n['timestamp']) ? date('M j, g:ia', strtotime($n['timestamp'])) : ''];
-        }, $order['vendor_notes_list'] ?? []),
+        'vendor_notes' => array_merge(
+            array_map(function($n) {
+                return ['by' => $n['by'] ?? 'Vendor', 'text' => $n['text'] ?? '', 'time' => !empty($n['timestamp']) ? date('M j, g:ia', strtotime($n['timestamp'])) : ''];
+            }, $order['vendor_notes_list'] ?? []),
+            array_values(array_filter(array_map(function($n) {
+                if (!empty($n['visible_to_vendor'])) {
+                    return ['by' => $n['username'] ?? 'Admin', 'text' => $n['content'] ?? '', 'time' => !empty($n['timestamp']) ? date('M j, g:ia', strtotime($n['timestamp'])) : ''];
+                }
+                return null;
+            }, $order['internalNotes'] ?? [])))
+        ),
         'issue_reason' => $order['file_issue_reason'] ?? '',
         'packing' => $order['packing'] ?? 'none',
         'packing_custom' => $order['packing_custom'] ?? '',

@@ -122,15 +122,15 @@ function renderProblemWidget($counts, $linkUrl = 'problem-orders.php') {
     $html = '<a href="' . htmlspecialchars($linkUrl) . '" class="problem-widget has-problems">';
     
     if ($criticalTotal > 0) {
-        $html .= '<span class="widget-badge critical">🚨 ' . $criticalTotal . ' Critical</span>';
+        $html .= '<span class="widget-badge critical">&#128680; ' . $criticalTotal . ' Critical</span>';
     }
-    
+
     if ($warningTotal > 0) {
-        $html .= '<span class="widget-badge warning">⚠️ ' . $warningTotal . ' Warning</span>';
+        $html .= '<span class="widget-badge warning">&#9888;&#65039; ' . $warningTotal . ' Warning</span>';
     }
-    
+
     if ($counts['stuck'] > 0) {
-        $html .= '<span class="widget-badge info">🔄 ' . $counts['stuck'] . ' Stuck</span>';
+        $html .= '<span class="widget-badge info">&#128260; ' . $counts['stuck'] . ' Stuck</span>';
     }
     
     $html .= '</a>';

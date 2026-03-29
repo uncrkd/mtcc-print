@@ -18,12 +18,12 @@ return [
     // ===== PRICING TIERS =====
     // Ordered cheapest to most expensive
     'tiers' => [
-        ['key' => 'early',    'cls' => 'early',      'icon' => '👍', 'label' => 'Early',       'days' => '10+ Days',  'lead' => 10, 'cutoffHour' => 17],
-        ['key' => 'standard', 'cls' => 'standard',   'icon' => '📅', 'label' => 'Standard',    'days' => '5 Days',    'lead' => 5,  'cutoffHour' => 17],
-        ['key' => '3days',    'cls' => 'rush',        'icon' => '🏃', 'label' => 'Rush',        'days' => '3 Days',    'lead' => 3,  'cutoffHour' => 17],
-        ['key' => '2days',    'cls' => 'urgent',      'icon' => '🔥', 'label' => 'Urgent',      'days' => '2 Days',    'lead' => 2,  'cutoffHour' => 17],
-        ['key' => 'nextday',  'cls' => 'critical',    'icon' => '🚨', 'label' => 'Critical',    'days' => 'Next Day',  'lead' => 1,  'cutoffHour' => 15],
-        ['key' => 'sameday',  'cls' => 'lastminute',  'icon' => '💀', 'label' => 'Last Minute',  'days' => 'Same Day',  'lead' => 0,  'cutoffHour' => 15],
+        ['key' => 'early',    'cls' => 'early',      'icon' => '&#128077;', 'label' => 'Early',       'days' => '10+ Days',  'lead' => 10, 'cutoffHour' => 17],
+        ['key' => 'standard', 'cls' => 'standard',   'icon' => '&#128197;', 'label' => 'Standard',    'days' => '5 Days',    'lead' => 5,  'cutoffHour' => 17],
+        ['key' => '3days',    'cls' => 'rush',        'icon' => '&#127939;', 'label' => 'Rush',        'days' => '3 Days',    'lead' => 3,  'cutoffHour' => 17],
+        ['key' => '2days',    'cls' => 'urgent',      'icon' => '&#128293;', 'label' => 'Urgent',      'days' => '2 Days',    'lead' => 2,  'cutoffHour' => 17],
+        ['key' => 'nextday',  'cls' => 'critical',    'icon' => '&#128680;', 'label' => 'Critical',    'days' => 'Next Day',  'lead' => 1,  'cutoffHour' => 15],
+        ['key' => 'sameday',  'cls' => 'lastminute',  'icon' => '&#128128;', 'label' => 'Last Minute',  'days' => 'Same Day',  'lead' => 0,  'cutoffHour' => 15],
     ],
 
     // ===== DELIVERY TIME OPTIONS =====

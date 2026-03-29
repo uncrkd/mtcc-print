@@ -590,13 +590,13 @@ if ($activeFilter === 'production') {
         <?php $productionTotal = count($problems['confirmation_critical']) + count($problems['confirmation_overdue']) + count($problems['file_issues']) + count($problems['past_due']) + count($problems['uncollected']) + count($problems['stuck_status']); ?>
         <div class="summary-grid">
             <div class="summary-card <?= $activeFilter === 'all' ? 'active' : '' ?>" onclick="filterProblems('all')">
-                <div class="card-icon">📋</div>
+                <div class="card-icon">&#128203;</div>
                 <div class="card-count"><?= $totalProblems ?></div>
                 <div class="card-label">Total Issues</div>
             </div>
             
             <div class="summary-card critical <?= $activeFilter === 'critical' ? 'active' : '' ?>" onclick="filterProblems('critical')">
-                <div class="card-icon">🚨</div>
+                <div class="card-icon">&#128680;</div>
                 <div class="card-count"><?= count($problems['confirmation_critical']) ?></div>
                 <div class="card-label">Critical (8h+)</div>
             </div>
@@ -614,19 +614,19 @@ if ($activeFilter === 'production') {
             </div>
             
             <div class="summary-card critical <?= $activeFilter === 'past_due' ? 'active' : '' ?>" onclick="filterProblems('past_due')">
-                <div class="card-icon">📅</div>
+                <div class="card-icon">&#128197;</div>
                 <div class="card-count"><?= count($problems['past_due']) ?></div>
                 <div class="card-label">Past Due</div>
             </div>
             
             <div class="summary-card warning <?= $activeFilter === 'uncollected' ? 'active' : '' ?>" onclick="filterProblems('uncollected')">
-                <div class="card-icon">📦</div>
+                <div class="card-icon">&#128230;</div>
                 <div class="card-count"><?= count($problems['uncollected']) ?></div>
                 <div class="card-label">Uncollected</div>
             </div>
             
             <div class="summary-card info <?= $activeFilter === 'stuck' ? 'active' : '' ?>" onclick="filterProblems('stuck')">
-                <div class="card-icon">🔄</div>
+                <div class="card-icon">&#128260;</div>
                 <div class="card-count"><?= count($problems['stuck_status']) ?></div>
                 <div class="card-label">Stuck Status</div>
             </div>
@@ -653,7 +653,7 @@ if ($activeFilter === 'production') {
         <div class="problem-section" data-type="critical">
             <div class="section-header" onclick="toggleSection(this)">
                 <div class="section-title">
-                    🚨 Critical - Awaiting Confirmation 8+ Hours
+                    &#128680; Critical - Awaiting Confirmation 8+ Hours
                     <span class="section-badge critical"><?= count($problems['confirmation_critical']) ?></span>
                 </div>
                 <span class="section-toggle">▼</span>
@@ -780,7 +780,7 @@ if ($activeFilter === 'production') {
         <div class="problem-section" data-type="past_due">
             <div class="section-header" onclick="toggleSection(this)">
                 <div class="section-title">
-                    📅 Past Due Date
+                    &#128197; Past Due Date
                     <span class="section-badge critical"><?= count($problems['past_due']) ?></span>
                 </div>
                 <span class="section-toggle">▼</span>
@@ -823,7 +823,7 @@ if ($activeFilter === 'production') {
         <div class="problem-section" data-type="uncollected">
             <div class="section-header" onclick="toggleSection(this)">
                 <div class="section-title">
-                    📦 Uncollected (Event Ended)
+                    &#128230; Uncollected (Event Ended)
                     <span class="section-badge warning"><?= count($problems['uncollected']) ?></span>
                 </div>
                 <span class="section-toggle">▼</span>
@@ -866,7 +866,7 @@ if ($activeFilter === 'production') {
         <div class="problem-section" data-type="stuck">
             <div class="section-header collapsed" onclick="toggleSection(this)">
                 <div class="section-title">
-                    🔄 Stuck in Status (<?= $problemConfig['stuck_status_days'] ?>+ days)
+                    &#128260; Stuck in Status (<?= $problemConfig['stuck_status_days'] ?>+ days)
                     <span class="section-badge"><?= count($problems['stuck_status']) ?></span>
                 </div>
                 <span class="section-toggle">▼</span>

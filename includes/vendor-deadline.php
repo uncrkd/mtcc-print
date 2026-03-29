@@ -299,14 +299,14 @@ function getVendorDeadlineForOrder($orderData) {
  */
 function formatVendorDeadlineNotification($deadlineInfo) {
     $icons = [
-        'urgent'   => '🚨',
-        'rush'     => '⚡',
-        'standard' => '📋',
-        'normal'   => '📦',
+        'urgent'   => '&#128680;',
+        'rush'     => '&#9889;',
+        'standard' => '&#128203;',
+        'normal'   => '&#128230;',
     ];
     
     $urgency = $deadlineInfo['urgency'];
-    $icon = $icons[$urgency['level']] ?? '📦';
+    $icon = $icons[$urgency['level']] ?? '&#128230;';
     $label = $urgency['label'];
     $deadline = $deadlineInfo['deadline_formatted'];
     $hours = $deadlineInfo['production_hours'];
