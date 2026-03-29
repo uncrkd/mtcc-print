@@ -11,12 +11,12 @@ const config = {
   taxRate: 0.13,
   // SIMPLIFIED: Removed timezone objects, using simple hour values
   tiers: [
-    { key: 'early', cls: 'early', icon: '👍', label: 'Early', days: '10+ Days', lead: 10, cutoffHour: 17 }, // 5:00pm
-    { key: 'standard', cls: 'standard', icon: '📅', label: 'Standard', days: '5 Days', lead: 5, cutoffHour: 17 }, // 5:00pm
-    { key: '3days', cls: 'rush', icon: '🏃', label: 'Rush', days: '3 Days', lead: 3, cutoffHour: 17 }, // 5:00pm
-    { key: '2days', cls: 'urgent', icon: '🔥', label: 'Urgent', days: '2 Days', lead: 2, cutoffHour: 17 }, // 5:00pm
-    { key: 'nextday', cls: 'critical', icon: '🚨', label: 'Critical', days: 'Next Day', lead: 1, cutoffHour: 15 }, // 3:00pm
-    { key: 'sameday', cls: 'lastminute', icon: '💀', label: 'Last Minute', days: 'Same Day', lead: 0, cutoffHour: 15 } // 3:00pm
+    { key: 'early', cls: 'early', icon: '&#128077;', label: 'Early', days: '10+ Days', lead: 10, cutoffHour: 17 }, // 5:00pm
+    { key: 'standard', cls: 'standard', icon: '&#128197;', label: 'Standard', days: '5 Days', lead: 5, cutoffHour: 17 }, // 5:00pm
+    { key: '3days', cls: 'rush', icon: '&#127939;', label: 'Rush', days: '3 Days', lead: 3, cutoffHour: 17 }, // 5:00pm
+    { key: '2days', cls: 'urgent', icon: '&#128293;', label: 'Urgent', days: '2 Days', lead: 2, cutoffHour: 17 }, // 5:00pm
+    { key: 'nextday', cls: 'critical', icon: '&#128680;', label: 'Critical', days: 'Next Day', lead: 1, cutoffHour: 15 }, // 3:00pm
+    { key: 'sameday', cls: 'lastminute', icon: '&#128128;', label: 'Last Minute', days: 'Same Day', lead: 0, cutoffHour: 15 } // 3:00pm
   ],
   // Updated fallback data to match CSV column names exactly
   fallbackPricingData: {
@@ -170,7 +170,7 @@ function updatePhoneValidationUI(status, message) {
     
     const validMessage = document.createElement('div');
     validMessage.className = 'phone-validation-message success show';
-    validMessage.innerHTML = '<span style="margin-right: 4px;">✔</span>' + message;
+    validMessage.innerHTML = '<span style="margin-right: 4px;">&#10004;</span>' + message;
     phoneContainer.parentNode.appendChild(validMessage);
     
   } else if (status === 'error') {
@@ -352,9 +352,13 @@ async function loadEventsFromServer() {
     console.error('Event loading failed:', error);
     console.warn('Using fallback event data');
     
-    // Fallback to hardcoded events
+    // Fallback to hardcoded events (use dynamic dates so form stays usable)
+    const fallbackStart = new Date();
+    const fallbackEnd = new Date();
+    fallbackEnd.setDate(fallbackEnd.getDate() + 30);
+    const fmtDate = (d) => d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
     state.availableEvents = [
-      { id: 1, acronym: 'DEMO2024', name: 'Demo Conference 2024', startDate: '2024-12-01', endDate: '2024-12-03' }
+      { id: 1, acronym: 'GENERAL', name: 'General Order', startDate: fmtDate(fallbackStart), endDate: fmtDate(fallbackEnd) }
     ];
     populateEventSelect();
     return false;
@@ -388,7 +392,7 @@ async function loadPricingFromServer() {
     });
     
     if (!response.ok) {
-      throw new Error('HTTP ' + response.status + '✖' + response.statusText);
+      throw new Error('HTTP ' + response.status + '&#10006;' + response.statusText);
     }
     
     const data = await response.json();
@@ -433,7 +437,7 @@ function showPricingFallbackNotification() {
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     border-left: 4px solid #f59e0b;
   `;
-  notification.innerHTML = '⚠️ Using backup pricing - current rates may vary';
+  notification.innerHTML = '&#9888;️ Using backup pricing - current rates may vary';
   document.body.appendChild(notification);
   
   // Remove after 5 seconds
@@ -474,7 +478,10 @@ function handleEventSelection() {
       
       // Set date picker max to event end date
       updateDatePickerRestrictions();
-      
+
+      // Update MTCC delivery details based on event building
+      updateMTCCDeliveryDetails(state.selectedEvent.building);
+
     } catch (e) {
       console.error('Error parsing event data:', e);
       state.selectedEvent = null;
@@ -507,6 +514,39 @@ function handleEventSelection() {
   
   update();
   updateSubmitButtonState();
+}
+
+// Update MTCC delivery details based on event building (north/south)
+function updateMTCCDeliveryDetails(building) {
+  var locations = window.MTCC_LOCATIONS;
+  if (!locations || !building) return;
+
+  var loc = locations[building];
+  if (!loc) return;
+
+  // Parse address components: "255 Front Street West, Toronto, ON M5V 2W6"
+  var addressParts = loc.address.split(',');
+  var street = (addressParts[0] || '').trim();
+  var postalMatch = loc.address.match(/[A-Z]\d[A-Z]\s?\d[A-Z]\d/);
+  var postal = postalMatch ? postalMatch[0] : '';
+
+  // Parse pickup instructions: "Business Centre, 300 Level, outside Hall C"
+  var pickupParts = loc.pickup_instructions.split(',');
+  var levelMatch = loc.pickup_instructions.match(/(\d+)\s*Level/i);
+  var level = levelMatch ? 'Level ' + levelMatch[1] : '';
+
+  var buildingName = building === 'south' ? 'South Building' : 'North Building';
+
+  // Update the DOM elements
+  var nameEl = document.getElementById('mtccBuildingName');
+  var levelEl = document.getElementById('mtccBuildingLevel');
+  var streetEl = document.getElementById('mtccStreetAddress');
+  var postalEl = document.getElementById('mtccPostalCode');
+
+  if (nameEl) nameEl.textContent = buildingName;
+  if (levelEl) levelEl.textContent = level;
+  if (streetEl) streetEl.textContent = street;
+  if (postalEl) postalEl.textContent = postal;
 }
 
 // Set date picker min (today) and max (event end date)
@@ -676,6 +716,15 @@ function updateSubmitButtonState() {
   updateStatusBadge('step3Status', hasFile);
   updateStatusBadge('step4Status', hasDeliveryOption && hasValidAddress);
   updateStatusBadge('step5Status', hasValidCustomerInfo);
+
+  // Sync progress bar
+  updateProgressBar([
+    hasValidEvent && hasValidDate,
+    hasValidDimensions,
+    hasFile,
+    hasDeliveryOption && hasValidAddress,
+    hasValidCustomerInfo
+  ]);
   
   const submitButton = elements.submitButton;
   const formStatus = document.getElementById('formStatus');
@@ -690,7 +739,7 @@ function updateSubmitButtonState() {
     submitButton.disabled = false;
     submitButton.innerHTML = '<div class="submit-button-content"><span class="submit-button-title">Proceed to Payment</span><span class="submit-button-subtitle">Ready to checkout!</span></div>';
     if (formStatus) {
-      formStatus.innerHTML = '<span style="color: var(--green);">✔</span><span style="color: var(--green); font-weight: 600;">Form is complete - proceed to secure payment</span>';
+      formStatus.innerHTML = '<span style="color: var(--green);">&#10004;</span><span style="color: var(--green); font-weight: 600;">Form is complete - proceed to secure payment</span>';
     }
   } else {
     submitButton.disabled = true;
@@ -708,7 +757,7 @@ function updateStatusBadge(badgeId, isComplete) {
     badge.classList.add('completed');
     badge.classList.remove('incomplete');
     const icon = badge.querySelector('.status-icon-modern');
-    if (icon) icon.textContent = '✔';
+    if (icon) icon.textContent = '&#10004;';
   } else {
     badge.classList.add('incomplete');
     badge.classList.remove('completed');
@@ -716,6 +765,81 @@ function updateStatusBadge(badgeId, isComplete) {
     if (icon) icon.textContent = '!';
   }
 }
+
+// ===== PROGRESS BAR =====
+
+// Track previous completion state for auto-scroll
+var _prevStepStates = [false, false, false, false, false];
+
+function updateProgressBar(stepStates) {
+  // Update dots and connectors
+  for (var i = 0; i < stepStates.length; i++) {
+    var step = document.getElementById('progStep' + (i + 1));
+    if (!step) continue;
+
+    if (stepStates[i]) {
+      step.classList.add('completed');
+      step.classList.remove('active');
+    } else {
+      step.classList.remove('completed');
+    }
+
+    // Update connector before this step (connector between step i-1 and i)
+    if (i > 0) {
+      var connectors = document.querySelectorAll('.progress-connector');
+      if (connectors[i - 1]) {
+        if (stepStates[i - 1]) {
+          connectors[i - 1].classList.add('completed');
+        } else {
+          connectors[i - 1].classList.remove('completed');
+        }
+      }
+    }
+  }
+
+  // Find first incomplete step and mark as active
+  for (var j = 0; j < stepStates.length; j++) {
+    var activeStep = document.getElementById('progStep' + (j + 1));
+    if (!stepStates[j] && activeStep) {
+      activeStep.classList.add('active');
+      break;
+    }
+  }
+
+  // Auto-scroll: if a step just became complete, scroll to next incomplete section
+  var sectionTargets = ['eventSelect', 'w', 'uploadZone', 'mtccOption', 'customerName'];
+  for (var k = 0; k < stepStates.length; k++) {
+    if (stepStates[k] && !_prevStepStates[k]) {
+      // Step k just completed — find next incomplete step
+      for (var n = k + 1; n < stepStates.length; n++) {
+        if (!stepStates[n]) {
+          var targetEl = document.getElementById(sectionTargets[n]);
+          if (targetEl) {
+            setTimeout(function(el) {
+              el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }.bind(null, targetEl), 300);
+          }
+          break;
+        }
+      }
+      break;
+    }
+  }
+
+  _prevStepStates = stepStates.slice();
+}
+
+// Progress dot click — scroll to section
+document.addEventListener('click', function(e) {
+  var step = e.target.closest('.progress-step');
+  if (!step) return;
+  var stepNum = parseInt(step.dataset.step);
+  var targets = ['eventSelect', 'w', 'uploadZone', 'mtccOption', 'customerName'];
+  if (targets[stepNum - 1]) {
+    var el = document.getElementById(targets[stepNum - 1]);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+});
 
 // ===== POPULAR SIZES =====
 function selectPopularSize(width, height) {
@@ -827,28 +951,112 @@ function generateAlternativeSizes() {
 // ===== MATERIAL HANDLING =====
 function toggleMaterial() {
   state.selectedMaterial = state.selectedMaterial === 'poster' ? 'fabric' : 'poster';
-  const hiddenMaterial = document.getElementById('hiddenMaterial');
+  var hiddenMaterial = document.getElementById('hiddenMaterial');
   if (hiddenMaterial) {
     hiddenMaterial.value = state.selectedMaterial;
   }
   updateMaterialDisplay();
   update();
   generateAlternativeSizes();
+  updateMaterialDelta();
 }
 
 function updateMaterialDisplay() {
-  const isFabric = state.selectedMaterial === 'fabric';
-  
+  var isFabric = state.selectedMaterial === 'fabric';
+
+  // Size section toggle
   if (elements.posterOption) {
     elements.posterOption.classList.toggle('active', !isFabric);
   }
-  
   if (elements.fabricOption) {
     elements.fabricOption.classList.toggle('active', isFabric);
   }
-  
   if (elements.materialSlider) {
     elements.materialSlider.classList.toggle('fabric', isFabric);
+  }
+
+  // Pricing header toggle (synced duplicate)
+  var posterOptP = document.getElementById('posterOptionPricing');
+  var fabricOptP = document.getElementById('fabricOptionPricing');
+  var sliderP = document.getElementById('materialSliderPricing');
+  if (posterOptP) posterOptP.classList.toggle('active', !isFabric);
+  if (fabricOptP) fabricOptP.classList.toggle('active', isFabric);
+  if (sliderP) sliderP.classList.toggle('fabric', isFabric);
+}
+
+// Calculate and display the price difference on the inactive material option
+function updateMaterialDelta() {
+  var fabricBadge = document.getElementById('fabricDeltaBadge');
+  var posterBadge = document.getElementById('posterDeltaBadge');
+  if (!fabricBadge || !posterBadge) return;
+
+  var width = state.dimensions.width;
+  var height = state.dimensions.height;
+  var fabricBadgeP = document.getElementById('fabricDeltaBadgePricing');
+  var posterBadgeP = document.getElementById('posterDeltaBadgePricing');
+
+  if (!width || !height || !state.pricingLoaded) {
+    [fabricBadge, posterBadge, fabricBadgeP, posterBadgeP].forEach(function(b) { if (b) b.classList.remove('visible'); });
+    return;
+  }
+
+  var area = width * height;
+  var posterData = getCurrentPricingData('poster');
+  var fabricData = getCurrentPricingData('fabric');
+
+  var posterRow = posterData.find(function(r) { return area >= r.min && area <= r.max; });
+  var fabricRow = fabricData.find(function(r) { return area >= r.min && area <= r.max; });
+
+  if (!posterRow || !fabricRow) {
+    [fabricBadge, posterBadge, fabricBadgeP, posterBadgeP].forEach(function(b) { if (b) b.classList.remove('visible'); });
+    return;
+  }
+
+  // Use the best available tier for the delta, or fall back to 'standard'
+  var tierKey = 'standard';
+  if (state.selectedDate) {
+    var inDate = parseSelectedDate(state.selectedDate);
+    var deliveryTimeValue = state.selectedDeliveryTime || 'anytime';
+    var now = new Date();
+    for (var i = 0; i < config.tiers.length; i++) {
+      var t = config.tiers[i];
+      var cutoff = getCutoffDate(inDate, t.lead, t.cutoffHour, deliveryTimeValue);
+      var isBlocked = isTierBlockedByDeliveryTime(t.key, inDate, deliveryTimeValue);
+      if (cutoff > now && !isBlocked && posterRow[t.key] > 0) {
+        tierKey = t.key;
+        break;
+      }
+    }
+  }
+
+  var posterPrice = posterRow[tierKey] || 0;
+  var fabricPrice = fabricRow[tierKey] || 0;
+
+  if (posterPrice <= 0 || fabricPrice <= 0 || fabricPrice === posterPrice) {
+    [fabricBadge, posterBadge, fabricBadgeP, posterBadgeP].forEach(function(b) { if (b) b.classList.remove('visible'); });
+    return;
+  }
+
+  var diff = fabricPrice - posterPrice;
+
+  // Apply to both size-section and pricing-header badges
+  var allFabricBadges = [fabricBadge, fabricBadgeP];
+  var allPosterBadges = [posterBadge, posterBadgeP];
+
+  if (state.selectedMaterial === 'poster') {
+    allFabricBadges.forEach(function(b) {
+      if (b) { b.textContent = '+$' + diff.toFixed(0); b.classList.remove('delta-savings'); b.classList.add('visible'); }
+    });
+    allPosterBadges.forEach(function(b) {
+      if (b) { b.classList.remove('visible', 'delta-savings'); }
+    });
+  } else {
+    allPosterBadges.forEach(function(b) {
+      if (b) { b.textContent = '-$' + diff.toFixed(0); b.classList.add('visible', 'delta-savings'); }
+    });
+    allFabricBadges.forEach(function(b) {
+      if (b) { b.classList.remove('visible'); }
+    });
   }
 }
 
@@ -879,94 +1087,474 @@ function handleFiles(files) {
   return true;
 }
 
-// FIXED: Updated file display to put "File Uploaded Successfully" beside check mark
+// ===== FILE DISPLAY WITH DIMENSION DETECTION =====
+
+// Vector file types (resolution-independent)
+var VECTOR_TYPES = ['pdf', 'ai', 'eps', 'svg'];
+var IMAGE_TYPES = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'tiff', 'tif'];
+
+// Status-led upload preview with dimension detection
 function updateFileDisplay(file) {
-  const fileExt = file.name.split('.').pop().toLowerCase();
-  const needsConversion = !config.freeConversionTypes.includes('.' + fileExt);
-  
-  // Build conversion fee message if needed
-  const conversionFeeMessage = needsConversion ? 
-    `<div class="conversion-note-card">File conversion fee for non PDF files: +${config.conversionFee.toFixed(2)}</div>` : '';
-  
-  // CRITICAL FIX: Don't replace the file input, just hide it and show preview
-  // Hide the original upload zone content
-  const uploadContent = elements.uploadZone.querySelector('.upload-content-card-compressed');
-  if (uploadContent) {
-    uploadContent.style.display = 'none';
-  }
-  
-  // Create preview element (don't replace the whole zone)
-  let previewElement = elements.uploadZone.querySelector('.file-preview-display');
+  if (window.uploadProgressRunning) return;
+
+  var fileExt = file.name.split('.').pop().toLowerCase();
+  var needsConversion = !config.freeConversionTypes.includes('.' + fileExt);
+  var canPreview = IMAGE_TYPES.indexOf(fileExt) !== -1 || fileExt === 'pdf';
+
+  // Hide original upload zone content
+  var uploadContent = elements.uploadZone.querySelector('.upload-content-preload');
+  if (uploadContent) uploadContent.style.display = 'none';
+  var oldSuccess = elements.uploadZone.querySelector('.upload-content-success-compact');
+  if (oldSuccess) oldSuccess.style.display = 'none';
+
+  var previewElement = elements.uploadZone.querySelector('.file-preview-display');
   if (!previewElement) {
     previewElement = document.createElement('div');
     previewElement.className = 'file-preview-display';
     elements.uploadZone.appendChild(previewElement);
   }
-  
-  const fileIcon = getFileIcon(fileExt);
-  
-  previewElement.innerHTML = `
-    <div class="upload-content-card-compressed">
-      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-        <div class="upload-icon-card-compressed">??</div>
-        <div class="upload-main-text-card"><strong>File Uploaded Successfully</strong></div>
-      </div>
-      <div class="upload-text-card-compressed">
-        <div class="file-name-display">${file.name}</div>
-        <div class="file-size-display">File Type: ${fileIcon} ${fileExt.toUpperCase()} • Size: ${formatFileSize(file.size)}</div>
-        ${conversionFeeMessage}
-        <div class="file-quality-check-text">We'll review your file for print quality and contact you if any adjustments are needed</div>
-        <button type="button" onclick="removeFile()" class="remove-file-button-centered">X - Remove File</button>
-      </div>
-    </div>
-  `;
-  
+
+  // Thumbnail
+  var thumbnailHTML = canPreview
+    ? '<div class="file-thumb-container" id="fileThumbContainer"><div class="file-thumb-loading"><div class="file-thumb-spinner"></div></div></div>'
+    : '<div class="file-thumb-container file-thumb-icon-only"><div class="file-thumb-type-label">' + fileExt.toUpperCase() + '</div></div>';
+
+  // Conversion fee row
+  var convRow = needsConversion
+    ? '<div class="file-detail-row"><span class="file-detail-label">Note:</span><span class="file-detail-value file-detail-conversion">+$' + config.conversionFee.toFixed(2) + ' conversion fee (non-PDF)</span></div>'
+    : '';
+
+  previewElement.innerHTML =
+    '<div class="file-preview-card" id="filePreviewCard">' +
+      '<div class="file-preview-card-inner">' +
+        '<div class="file-thumb-column">' +
+          thumbnailHTML +
+          '<button type="button" class="file-change-btn" onclick="changeFile()">&#8635; Change file</button>' +
+        '</div>' +
+        '<div class="file-thumb-divider"></div>' +
+        '<div class="file-preview-right">' +
+          '<div class="file-preview-details">' +
+            '<div class="file-detail-row"><span class="file-detail-label">File:</span><span class="file-detail-value file-detail-name">' + file.name + '</span></div>' +
+            '<div class="file-detail-row"><span class="file-detail-label">Format:</span><span class="file-detail-value">' + fileExt.toUpperCase() + '</span></div>' +
+            '<div class="file-detail-row"><span class="file-detail-label">Size:</span><span class="file-detail-value">' + formatFileSize(file.size) + '</span></div>' +
+            '<div class="file-detail-row" id="fileDimsRow" style="display:none"><span class="file-detail-label">Dimensions:</span><span class="file-detail-value" id="fileDimsValue"></span></div>' +
+            convRow +
+          '</div>' +
+          '<div class="file-preview-status" id="filePreviewStatus">' +
+            '<div class="file-status-loading">Analysing file...</div>' +
+          '</div>' +
+          '<div id="filePreviewActions" class="file-preview-actions"></div>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+
   elements.uploadZone.classList.add('has-file');
-  
-  // IMPORTANT: Keep the original file input element - don't recreate it!
-  // The file data stays attached to the original input
+
+  if (IMAGE_TYPES.indexOf(fileExt) !== -1) {
+    detectImageDimensions(file);
+  } else if (fileExt === 'pdf') {
+    detectPDFDimensions(file);
+  } else if (fileExt === 'pptx') {
+    detectPPTXDimensions(file);
+  } else {
+    showFileStatus(null, null, null, VECTOR_TYPES.indexOf(fileExt) !== -1);
+  }
 }
 
-// Updated removeFile to NOT show quality check text before upload
+// Change file — clear and reopen picker
+function changeFile() {
+  removeFile();
+  if (elements.fileInput) {
+    elements.fileInput.click();
+  }
+}
+
+// ===== STATUS DISPLAY =====
+
+function showFileStatus(widthInches, heightInches, dpiInfo, isVector) {
+  var statusEl = document.getElementById('filePreviewStatus');
+  var actionsEl = document.getElementById('filePreviewActions');
+  var card = document.getElementById('filePreviewCard');
+  var dimsRow = document.getElementById('fileDimsRow');
+  var dimsValue = document.getElementById('fileDimsValue');
+  if (!statusEl || !card) return;
+
+  window._detectedFileDims = { w: widthInches, h: heightInches, dpi: dpiInfo, isVector: isVector };
+
+  var posterW = parseInt(document.getElementById('w') ? document.getElementById('w').value : 0) || 0;
+  var posterH = parseInt(document.getElementById('h') ? document.getElementById('h').value : 0) || 0;
+  var hasPosterSize = posterW >= 12 && posterH >= 12;
+
+  // Could not detect dimensions
+  if (widthInches === null) {
+    card.className = 'file-preview-card status-neutral';
+    statusEl.innerHTML = '<div class="file-status-msg status-msg-neutral">We will review your file for print compatibility</div>';
+    return;
+  }
+
+  // Show dimensions in the detail row
+  var dimsText = widthInches.toFixed(2) + '" \u00d7 ' + heightInches.toFixed(2) + '"';
+  if (dimsRow) dimsRow.style.display = '';
+  if (dimsValue) {
+    dimsValue.innerHTML = '<strong>' + dimsText + '</strong>' +
+      '';
+  }
+
+  var statusHTML = '';
+  var actionHTML = '';
+  var statusClass = '';
+
+  if (!hasPosterSize) {
+    statusClass = 'status-info';
+    statusHTML = '<div class="file-status-msg status-msg-info">Select a poster size above to check compatibility</div>';
+
+    var roundW = Math.round(widthInches);
+    var roundH = Math.round(heightInches);
+    if (roundW >= 12 && roundH >= 12 && roundW <= 96 && roundH <= 48) {
+      actionHTML = '<button type="button" class="file-autofill-btn" onclick="applyFileDimensions(' + roundW + ',' + roundH + ')">' +
+        'Use file size: ' + roundW + '" \u00d7 ' + roundH + '"</button>';
+    }
+
+  } else {
+    var dpiWarning = '';
+    if (dpiInfo && !isVector) {
+      var effectiveDPI = Math.min(dpiInfo.pixelW / posterW, dpiInfo.pixelH / posterH);
+      if (effectiveDPI < 100) {
+        dpiWarning = '<div class="file-status-msg status-msg-warn">Low resolution (' + Math.round(effectiveDPI) + ' DPI at print size) \u2014 text and details may appear blurry. We recommend uploading a higher resolution file (150+ DPI).</div>';
+      } else if (effectiveDPI < 150) {
+        dpiWarning = '<div class="file-status-msg status-msg-caution">Acceptable quality (' + Math.round(effectiveDPI) + ' DPI at print size) \u2014 may show slight softness in fine details</div>';
+      }
+    }
+
+    var fileRatio = widthInches / heightInches;
+    var posterRatio = posterW / posterH;
+    var ratioMatch = Math.abs(fileRatio - posterRatio) / posterRatio < 0.03;
+
+    if (ratioMatch && !dpiWarning) {
+      statusClass = 'status-good';
+      statusHTML = '<div class="file-status-msg status-msg-good">&#10004; Ready to print \u2014 matches your selected size</div>';
+
+    } else if (ratioMatch && dpiWarning) {
+      statusClass = 'status-warn';
+      statusHTML = dpiWarning;
+
+    } else {
+      statusClass = dpiWarning ? 'status-warn' : 'status-caution';
+      statusHTML = '<div class="file-status-msg status-msg-caution">&#9888; Your file is ' +
+        widthInches.toFixed(1) + '" \u00d7 ' + heightInches.toFixed(1) + '" but your selected poster size is ' +
+        posterW + '" \u00d7 ' + posterH + '". Printing at a different aspect ratio may stretch or crop your design.</div>';
+      if (dpiWarning) statusHTML += dpiWarning;
+
+      // Generate proportional size options, favouring larger sizes
+      var options = [];
+      var seen = {};
+      var posterArea = posterW * posterH;
+
+      // Strategy: generate candidates by anchoring to common widths AND heights
+      // then sort by area descending (largest first), filtering valid range
+      var anchorWidths = [96, 72, 60, 54, 48, 42, 36, 30, 24, 18];
+      var anchorHeights = [48, 44, 42, 40, 36, 33, 30, 24, 18];
+
+      // From anchor widths: calculate proportional height
+      for (var aw = 0; aw < anchorWidths.length; aw++) {
+        var cw = anchorWidths[aw];
+        var ch = Math.round(cw / fileRatio);
+        if (ch >= 12 && ch <= 48 && cw >= 12 && cw <= 96) {
+          var key = cw + 'x' + ch;
+          if (!seen[key]) { seen[key] = true; options.push({ w: cw, h: ch, area: cw * ch }); }
+        }
+      }
+      // From anchor heights: calculate proportional width
+      for (var ah = 0; ah < anchorHeights.length; ah++) {
+        var ch2 = anchorHeights[ah];
+        var cw2 = Math.round(ch2 * fileRatio);
+        if (cw2 >= 12 && cw2 <= 96 && ch2 >= 12 && ch2 <= 48) {
+          var key2 = cw2 + 'x' + ch2;
+          if (!seen[key2]) { seen[key2] = true; options.push({ w: cw2, h: ch2, area: cw2 * ch2 }); }
+        }
+      }
+
+      // Remove the exact selected size if it appears
+      options = options.filter(function(o) { return !(o.w === posterW && o.h === posterH); });
+
+      // Sort: larger sizes first
+      options.sort(function(a, b) { return b.area - a.area; });
+
+      // Pick up to 3 options: prefer sizes >= selected area, then fill with smaller
+      var larger = options.filter(function(o) { return o.area >= posterArea; });
+      var smaller = options.filter(function(o) { return o.area < posterArea; });
+
+      // Reverse larger so closest-to-selected is first among the large ones
+      larger.sort(function(a, b) { return a.area - b.area; });
+
+      var finalOptions = [];
+      // Add up to 2 larger options (closest first)
+      for (var li = 0; li < Math.min(2, larger.length); li++) {
+        finalOptions.push(larger[li]);
+      }
+      // Add 1 smaller option if we have room
+      if (finalOptions.length < 3 && smaller.length > 0) {
+        finalOptions.push(smaller[0]);
+      }
+      // If no larger options at all, show top 2 smaller
+      if (finalOptions.length === 0) {
+        finalOptions = smaller.slice(0, 2);
+      }
+
+      if (finalOptions.length > 0) {
+        var suggestHTML = '<div class="file-size-suggest">To avoid stretching, use one of these sizes that match your file\u2019s proportions: ';
+        for (var fi = 0; fi < finalOptions.length; fi++) {
+          suggestHTML += '<button type="button" class="file-suggest-btn" onclick="applyFileDimensions(' +
+            finalOptions[fi].w + ',' + finalOptions[fi].h + ')">' +
+            finalOptions[fi].w + '" \u00d7 ' + finalOptions[fi].h + '"</button>';
+        }
+        suggestHTML += '</div>';
+        statusHTML += suggestHTML;
+      }
+    }
+  }
+
+  card.className = 'file-preview-card ' + statusClass;
+  statusEl.innerHTML = statusHTML;
+  if (actionsEl) actionsEl.innerHTML = actionHTML;
+}
+
+function applyFileDimensions(w, h) {
+  var widthInput = document.getElementById('w');
+  var heightInput = document.getElementById('h');
+  if (widthInput) {
+    widthInput.value = w;
+    widthInput.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+  if (heightInput) {
+    heightInput.value = h;
+    heightInput.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+  if (typeof update === 'function') update();
+  if (typeof generateAlternativeSizes === 'function') generateAlternativeSizes();
+  if (window._detectedFileDims) {
+    var d = window._detectedFileDims;
+    showFileStatus(d.w, d.h, d.dpi, d.isVector);
+  }
+}
+
+function refreshFileDimensionDisplay() {
+  if (window._detectedFileDims) {
+    var d = window._detectedFileDims;
+    showFileStatus(d.w, d.h, d.dpi, d.isVector);
+  }
+}
+
+// Update the poster preview board with the uploaded file thumbnail
+function updatePosterPreviewWithFile(sourceElement) {
+  var posterPreview = document.getElementById('posterPreview');
+  if (!posterPreview) return;
+
+  // Store the preview source for later (when size changes)
+  if (sourceElement) {
+    if (sourceElement.tagName === 'IMG') {
+      window._filePreviewDataUrl = sourceElement.src;
+    }
+    // For canvas (PDF), render a high-res version separately
+    // The thumbnail canvas is too small — don't use it for the board preview
+  }
+
+  if (!window._filePreviewDataUrl) return;
+
+  // Only show file preview when not in placeholder state
+  if (posterPreview.classList.contains('poster-preview-placeholder')) return;
+
+  posterPreview.style.backgroundImage = 'url(' + window._filePreviewDataUrl + ')';
+  posterPreview.style.backgroundSize = 'cover';
+  posterPreview.style.backgroundPosition = 'center';
+  posterPreview.classList.add('has-file-preview');
+}
+
+// Render a high-resolution PDF preview for the poster board (separate from thumbnail)
+function renderHighResPDFPreview(file) {
+  if (typeof pdfjsLib === 'undefined') return;
+
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var typedArray = new Uint8Array(e.target.result);
+    pdfjsLib.getDocument({ data: typedArray }).promise.then(function(pdf) {
+      return pdf.getPage(1);
+    }).then(function(page) {
+      var viewport = page.getViewport({ scale: 1 });
+      // Render at a scale that produces ~600px wide canvas (good for poster preview)
+      var hiresScale = Math.min(600 / viewport.width, 800 / viewport.height);
+      var hiresViewport = page.getViewport({ scale: hiresScale });
+
+      var canvas = document.createElement('canvas');
+      canvas.width = hiresViewport.width;
+      canvas.height = hiresViewport.height;
+
+      page.render({ canvasContext: canvas.getContext('2d'), viewport: hiresViewport }).promise.then(function() {
+        window._filePreviewDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+        updatePosterPreviewWithFile(null);
+      });
+    }).catch(function() {});
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// Clear the file preview from the poster board
+function clearPosterFilePreview() {
+  var posterPreview = document.getElementById('posterPreview');
+  if (posterPreview) {
+    posterPreview.style.backgroundImage = '';
+    posterPreview.style.backgroundSize = '';
+    posterPreview.style.backgroundPosition = '';
+    posterPreview.classList.remove('has-file-preview');
+  }
+  window._filePreviewDataUrl = null;
+}
+
+// ===== DIMENSION DETECTION BY FILE TYPE =====
+
+function detectImageDimensions(file) {
+  var fileExt = file.name.split('.').pop().toLowerCase();
+  var container = document.getElementById('fileThumbContainer');
+
+  if (container) {
+    var objectUrl = URL.createObjectURL(file);
+    var img = new Image();
+    img.onload = function() {
+      container.innerHTML = '';
+      var thumbImg = document.createElement('img');
+      thumbImg.src = objectUrl;
+      thumbImg.className = 'file-thumb-image';
+      thumbImg.alt = 'File preview';
+      container.appendChild(thumbImg);
+
+      var pixelW = img.naturalWidth;
+      var pixelH = img.naturalHeight;
+      var assumedDPI = 150;
+      showFileStatus(pixelW / assumedDPI, pixelH / assumedDPI, { pixelW: pixelW, pixelH: pixelH }, false);
+      updatePosterPreviewWithFile(thumbImg);
+    };
+    img.onerror = function() {
+      URL.revokeObjectURL(objectUrl);
+      if (container) container.innerHTML = '<div class="file-thumb-type-label">' + fileExt.toUpperCase() + '</div>';
+      showFileStatus(null, null, null, false);
+    };
+    img.src = objectUrl;
+  }
+}
+
+function detectPDFDimensions(file) {
+  var container = document.getElementById('fileThumbContainer');
+
+  if (typeof pdfjsLib === 'undefined') {
+    if (container) container.innerHTML = '<div class="file-thumb-type-label">PDF</div>';
+    showFileStatus(null, null, null, true);
+    return;
+  }
+
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+  var thumbTimeout = setTimeout(function() {
+    if (container) container.innerHTML = '<div class="file-thumb-type-label">PDF</div>';
+  }, 8000);
+
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var typedArray = new Uint8Array(e.target.result);
+
+    pdfjsLib.getDocument({ data: typedArray }).promise.then(function(pdf) {
+      return pdf.getPage(1);
+    }).then(function(page) {
+      var viewport = page.getViewport({ scale: 1 });
+      var widthInches = viewport.width / 72;
+      var heightInches = viewport.height / 72;
+
+      var thumbScale = Math.min(120 / viewport.width, 160 / viewport.height);
+      var scaledViewport = page.getViewport({ scale: thumbScale });
+      var canvas = document.createElement('canvas');
+      canvas.width = scaledViewport.width;
+      canvas.height = scaledViewport.height;
+      canvas.className = 'file-thumb-canvas';
+
+      page.render({ canvasContext: canvas.getContext('2d'), viewport: scaledViewport }).promise.then(function() {
+        clearTimeout(thumbTimeout);
+        if (container) { container.innerHTML = ''; container.appendChild(canvas); }
+      });
+
+      showFileStatus(widthInches, heightInches, null, true);
+
+      // Kick off high-res render for poster board preview (separate from thumbnail)
+      renderHighResPDFPreview(file);
+
+    }).catch(function() {
+      clearTimeout(thumbTimeout);
+      if (container) container.innerHTML = '<div class="file-thumb-type-label">PDF</div>';
+      showFileStatus(null, null, null, true);
+    });
+  };
+  reader.onerror = function() {
+    clearTimeout(thumbTimeout);
+    if (container) container.innerHTML = '<div class="file-thumb-type-label">PDF</div>';
+    showFileStatus(null, null, null, true);
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function detectPPTXDimensions(file) {
+  if (typeof JSZip === 'undefined') {
+    showFileStatus(13.333, 7.5, null, true);
+    return;
+  }
+
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    JSZip.loadAsync(e.target.result).then(function(zip) {
+      return zip.file('ppt/presentation.xml').async('text');
+    }).then(function(xml) {
+      var parser = new DOMParser();
+      var doc = parser.parseFromString(xml, 'text/xml');
+      var sldSz = doc.getElementsByTagName('p:sldSz')[0];
+      if (sldSz) {
+        var cx = parseInt(sldSz.getAttribute('cx')) || 0;
+        var cy = parseInt(sldSz.getAttribute('cy')) || 0;
+        showFileStatus(cx / 914400, cy / 914400, null, true);
+      } else {
+        showFileStatus(13.333, 7.5, null, true);
+      }
+    }).catch(function() {
+      showFileStatus(13.333, 7.5, null, true);
+    });
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// Expose for inline JS override in index.php
+window._thumbnailFileDisplay = updateFileDisplay;
+
+// Remove uploaded file and restore upload zone
 function removeFile() {
   state.uploadedFile = null;
-  
+  window._detectedFileDims = null;
+
   // Clear the actual file input value
   if (elements.fileInput) {
     elements.fileInput.value = '';
   }
-  
+
   elements.uploadZone.classList.remove('has-file');
-  
+  clearPosterFilePreview();
+
   // Remove preview element
-  const previewElement = elements.uploadZone.querySelector('.file-preview-display');
+  var previewElement = elements.uploadZone.querySelector('.file-preview-display');
   if (previewElement) {
     previewElement.remove();
   }
-  
+
   // Show the original upload content again
-  const uploadContent = elements.uploadZone.querySelector('.upload-content-card-compressed');
+  var uploadContent = elements.uploadZone.querySelector('.upload-content-preload');
   if (uploadContent) {
-    uploadContent.style.display = 'block';
-  } else {
-    // If for some reason the original content is gone, recreate it
-    // But keep the original file input!
-    const newContent = document.createElement('div');
-    newContent.className = 'upload-content-card-compressed';
-    newContent.innerHTML = `
-      <div class="upload-icon-card-compressed">📂</div>
-      <div class="upload-text-card-compressed">
-        <div class="upload-main-text-card"><strong>Click to upload</strong></div>
-        <div class="upload-subtitle-card">or drag your file here</div>
-        <div class="upload-note-card">PDF preferred</div>
-        <div class="conversion-note-card">PDF, JPG, PNG, AI, EPS, PSD, TIFF, SVG, PPTX (+$5 fee)</div>
-        <div class="upload-size-note-card">Max file size: 100MB</div>
-      </div>
-    `;
-    
-    elements.uploadZone.insertBefore(newContent, elements.uploadZone.firstChild);
+    uploadContent.style.display = 'flex';
   }
-  
+
   checkConversionFee(null);
   updateOrderSummary();
   updateSubmitButtonState();
@@ -1012,13 +1600,13 @@ function checkConversionFee(file) {
 }
 
 function getFileIcon(extension) {
-  const icons = {
-    'pdf': 'ðŸ“‚', 'ai': 'ðŸŽ¨', 'eps': 'ðŸŽ¨', 'psd': 'ðŸ–¼ï¸',
-    'png': 'ðŸ–¼ï¸', 'jpg': 'ðŸ–¼ï¸', 'jpeg': 'ðŸ–¼ï¸', 'tiff': 'ðŸ–¼ï¸',
-    'webp': 'ðŸ–¼ï¸', 'gif': 'ðŸ–¼ï¸', 'bmp': 'ðŸ–¼ï¸', 'svg': 'ðŸŽ¨',
-    'pptx': 'ðŸ“', 'indd': 'ðŸ–¼ï¸'
+  var icons = {
+    'pdf': '&#128196;', 'ai': '&#127912;', 'eps': '&#127912;', 'psd': '&#128444;',
+    'png': '&#128444;', 'jpg': '&#128444;', 'jpeg': '&#128444;', 'tiff': '&#128444;',
+    'tif': '&#128444;', 'webp': '&#128444;', 'gif': '&#128444;', 'bmp': '&#128444;',
+    'svg': '&#127912;', 'pptx': '&#128196;', 'indd': '&#128444;'
   };
-  return icons[extension.toLowerCase()] || 'ðŸ“‚';
+  return icons[extension.toLowerCase()] || '&#128196;';
 }
 
 function formatFileSize(bytes) {
@@ -1362,9 +1950,14 @@ function updateOrderSummary() {
   
   const summaryPosterDetails = document.getElementById('summaryPosterDetails');
   if (summaryPosterDetails) {
-    if (posterDetails.length >= 3 && width && height && costData) {
-      summaryPosterDetails.textContent = posterDetails.join(' • ');
+    // Show progressively — display whatever details are available
+    var displayParts = posterDetails.filter(function(p) { return p && p.length > 0; });
+    if (displayParts.length > 1) {
+      summaryPosterDetails.textContent = displayParts.join(' \u2022 ');
       summaryPosterDetails.style.color = 'var(--text)';
+    } else if (displayParts.length === 1) {
+      summaryPosterDetails.textContent = displayParts[0];
+      summaryPosterDetails.style.color = 'var(--subtext)';
     } else {
       summaryPosterDetails.textContent = 'Select event, size and date above';
       summaryPosterDetails.style.color = 'var(--subtext)';
@@ -1387,7 +1980,7 @@ function updateOrderSummary() {
       }
     } else {
       summaryDeliveryDetails.textContent = 'Select delivery method and date';
-      summaryDeliveryFee.textContent = '$';
+      summaryDeliveryFee.textContent = '$ -';
     }
   }
 
@@ -1425,11 +2018,11 @@ function updatePricingVisibility() {
     updatePricing();
   } else if (!state.pricingLoaded) {
     if (elements.pricing) {
-      elements.pricing.innerHTML = '<div class="pricing-placeholder"><div class="placeholder-icon">💰</div><div class="placeholder-title">Loading pricing data...</div><div class="placeholder-subtitle">Please wait while we fetch current rates</div></div>';
+      elements.pricing.innerHTML = '<div class="pricing-placeholder"><div class="placeholder-icon">&#128176;</div><div class="placeholder-title">Loading pricing data...</div><div class="placeholder-subtitle">Please wait while we fetch current rates</div></div>';
     }
   } else {
     if (elements.pricing) {
-      elements.pricing.innerHTML = '<div class="pricing-placeholder"><div class="placeholder-icon">💰</div><div class="placeholder-title">Select your event, delivery date, annd poster size to see pricing</div><div class="placeholder-subtitle">Pricing varies based on how quickly you need your poster</div></div>';
+      elements.pricing.innerHTML = '<div class="pricing-placeholder"><div class="placeholder-icon">&#128176;</div><div class="placeholder-title">Select your event, delivery date, and poster size to see pricing</div><div class="placeholder-subtitle">Pricing varies based on how quickly you need your poster</div></div>';
     }
   }
 }
@@ -1448,7 +2041,7 @@ function updatePricing() {
   
   if (!width || !height || !inDate || !state.pricingLoaded) {
     if (elements.pricing) {
-      elements.pricing.innerHTML = '<div class="pricing-placeholder"><div class="placeholder-icon">💰</div><div class="placeholder-title">Select your event, delivery date, and poster size to see pricing</div></div>';
+      elements.pricing.innerHTML = '<div class="pricing-placeholder"><div class="placeholder-icon">&#128176;</div><div class="placeholder-title">Select your event, delivery date, and poster size to see pricing</div></div>';
     }
     return;
   }
@@ -1462,7 +2055,7 @@ function updatePricing() {
   
   if (!row) {
     if (elements.pricing) {
-      elements.pricing.innerHTML = '<div class="pricing-placeholder"><div class="placeholder-icon">⚠️</div><div class="placeholder-title">Size not available for selected material</div><div class="placeholder-subtitle">Please try a different size or material</div></div>';
+      elements.pricing.innerHTML = '<div class="pricing-placeholder"><div class="placeholder-icon">&#9888;️</div><div class="placeholder-title">Size not available for selected material</div><div class="placeholder-subtitle">Please try a different size or material</div></div>';
     }
     return;
   }
@@ -1497,13 +2090,30 @@ function updatePricing() {
   state.tierExpiredByCountdown = false;
   state.previousBestTierKey = newBestKey;
   
-  // Generate pricing HTML
+  // Generate pricing HTML — unified calendar cards
+  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   let pricingHTML = '';
-  
-  // Desktop pricing
-  pricingHTML += '<div class="desktop-pricing">';
-  
-  config.tiers.forEach(function(tier) {
+
+  // Delivery date anchor header — full format, plain text
+  const fullMonthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const deliveryMonth = monthNames[inDate.getMonth()];
+  const deliveryFullMonth = fullMonthNames[inDate.getMonth()];
+  const deliveryDay = inDate.getDate();
+  const deliveryYear = inDate.getFullYear();
+  const deliveryWeekday = dayNames[inDate.getDay()];
+  var deliveryTimeDisplay = deliveryTimeValue === 'anytime' ? '' : ' @ ' + deliveryTimeValue.replace(/^(\d+)(am|pm)$/i, '$1:00 $2');
+  // Shortened delivery anchor
+  var deliveryShortDisplay = deliveryWeekday.substring(0, 3) + ', ' + deliveryMonth + ' ' + deliveryDay + deliveryTimeDisplay;
+  pricingHTML += '<div class="pricing-delivery-anchor">';
+  pricingHTML += 'Prices for <strong>' + deliveryShortDisplay + '</strong> delivery &mdash; order earlier for a lower price';
+  pricingHTML += ' <span class="pricing-anchor-info" tabindex="0" role="button" aria-label="Pricing info">?</span>';
+  pricingHTML += '<div class="pricing-anchor-tooltip">All options deliver on the same date &mdash; the only difference is when you order.</div>';
+  pricingHTML += '</div>';
+
+  pricingHTML += '<div class="pricing-cards-row">';
+
+  config.tiers.forEach(function(tier, tierIndex) {
     const cutoff = getCutoffDate(inDate, tier.lead, tier.cutoffHour, deliveryTimeValue);
     const isExpired = cutoff <= now;
     const priceValue = row[tier.key] || 0;
@@ -1511,94 +2121,75 @@ function updatePricing() {
     const isUnavailable = isExpired || priceValue === 0 || isBlocked;
     const priceText = priceValue > 0 ? '$' + priceValue.toFixed(2) : 'N/A';
     const isBest = bestAvailableTier && tier.key === bestAvailableTier.key;
-    const cutoffDateTimeStr = formatESTDateTime(cutoff);
-    
-    const tierClasses = ['tier', tier.cls];
-    if (isUnavailable) {
-      tierClasses.push('not-available');
-    }
-    if (isBest) {
-      tierClasses.push('best-available');
-    }
-    
-    pricingHTML += '<div class="tier-wrapper">';
-    pricingHTML += '<div class="' + tierClasses.join(' ') + '">';
-    pricingHTML += '<div class="tier-label">';
-    pricingHTML += '<span class="tier-icon">' + tier.icon + '</span>';
-    pricingHTML += '<span class="tier-name">' + tier.label + '</span>';
-    pricingHTML += '<span class="tier-divider">|</span>';
-    pricingHTML += '<span class="tier-turnaround">' + tier.days + '</span>';
+
+    // Extract date components for calendar card
+    const cutoffMonth = monthNames[cutoff.getMonth()];
+    const cutoffDay = cutoff.getDate();
+    const cutoffWeekday = dayNames[cutoff.getDay()];
+    const cutoffTimeStr = cutoff.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+
+    const cardClasses = ['pricing-card', tier.cls];
+    if (isUnavailable) cardClasses.push('not-available');
+    if (isBest) cardClasses.push('best-available');
+    if (!isUnavailable && !isBest) cardClasses.push('future-available');
+
+    pricingHTML += '<div class="' + cardClasses.join(' ') + '">';
+
+    // Header — two lines: tier name + turnaround
+    pricingHTML += '<div class="pricing-card-header ' + tier.cls + '">';
+    pricingHTML += '<div class="pricing-card-header-label">' + tier.label + '</div>';
+    pricingHTML += '<div class="pricing-card-header-turnaround">' + tier.days + '</div>';
     pricingHTML += '</div>';
-    pricingHTML += '<div class="tier-info">';
-    pricingHTML += '<div class="tier-cutoff">';
+
+    pricingHTML += '<div class="pricing-card-body">';
+
     if (isUnavailable) {
-      pricingHTML += '<span class="not-available-text">Not Available</span>';
+      // Expired card — "Expired" centered in date area, price in grey action section with strikethrough
+      pricingHTML += '<div class="pricing-card-date-section pricing-card-expired-date">';
+      pricingHTML += '<div class="pricing-card-expired-label">Expired</div>';
+      pricingHTML += '</div>';
+      pricingHTML += '<div class="pricing-card-divider"></div>';
+      pricingHTML += '<div class="pricing-card-action-section pricing-card-action-expired">';
+      pricingHTML += '<div class="pricing-card-price pricing-card-price-expired">' + priceText + '</div>';
+      pricingHTML += '</div>';
     } else {
-      pricingHTML += '<div class="cutoff-datetime">Cut-off: ' + cutoffDateTimeStr + '</div>';
+      // Active card — date section + price-only action + submit-by footer
+      pricingHTML += '<div class="pricing-card-date-section">';
+      pricingHTML += '<div class="pricing-card-month">' + cutoffMonth + '</div>';
+      pricingHTML += '<div class="pricing-card-day">' + cutoffDay + '</div>';
+      pricingHTML += '<div class="pricing-card-weekday">' + cutoffWeekday + '</div>';
+      pricingHTML += '</div>';
+      pricingHTML += '<div class="pricing-card-divider"></div>';
+      pricingHTML += '<div class="pricing-card-action-section">';
+      pricingHTML += '<div class="pricing-card-price ' + tier.cls + '">' + priceText + '</div>';
+      pricingHTML += '</div>';
     }
-    pricingHTML += '</div>';
-    pricingHTML += '<div class="tier-price tier-price-' + tier.cls + '">' + priceText + '</div>';
-    pricingHTML += '</div>';
-    pricingHTML += '</div>';
-    if (isBest) {
-      pricingHTML += '<div class="countdown" id="desktopCountdown">Price expires in: calculating...</div>';
-    }
-    pricingHTML += '</div>';
-  });
-  
-  pricingHTML += '</div>';
-  
-  // Mobile pricing
-  pricingHTML += '<div class="mobile-pricing">';
-  
-  config.tiers.forEach(function(tier) {
-    const cutoff = getCutoffDate(inDate, tier.lead, tier.cutoffHour, deliveryTimeValue);
-    const isExpired = cutoff <= now;
-    const priceValue = row[tier.key] || 0;
-    const isBlocked = isTierBlockedByDeliveryTime(tier.key, inDate, deliveryTimeValue);
-    const isUnavailable = isExpired || priceValue === 0 || isBlocked;
-    const priceText = priceValue > 0 ? '$' + priceValue.toFixed(2) : 'N/A';
-    const isBest = bestAvailableTier && tier.key === bestAvailableTier.key;
-    const cutoffDateTimeStr = formatESTDateTime(cutoff);
-    
-    const tierClasses = ['mobile-tier', tier.cls];
+
+    pricingHTML += '</div>'; // close .pricing-card-body
+
+    // Footer — submit-by for active, empty for expired
     if (isUnavailable) {
-      tierClasses.push('not-available');
-    }
-    if (isBest) {
-      tierClasses.push('best-available');
-    }
-    
-    pricingHTML += '<div class="' + tierClasses.join(' ') + '">';
-    pricingHTML += '<div class="mobile-tier-row1">';
-    pricingHTML += '<div class="mobile-tier-name">';
-    pricingHTML += '<span class="tier-icon">' + tier.icon + '</span>';
-    pricingHTML += '<span class="tier-name">' + tier.label + '</span>';
-    pricingHTML += '<span class="tier-divider">|</span>';
-    pricingHTML += '<span class="tier-turnaround">' + tier.days + '</span>';
-    pricingHTML += '</div>';
-    pricingHTML += '<div class="mobile-price-divider"></div>';
-    pricingHTML += '<div class="mobile-price mobile-price-' + tier.cls + '">' + priceText + '</div>';
-    pricingHTML += '</div>';
-    pricingHTML += '<div class="mobile-cutoff">';
-    if (isUnavailable) {
-      pricingHTML += 'Not Available';
+      pricingHTML += '<div class="pricing-card-footer pricing-card-footer-expired"><div class="pricing-card-cutoff">&nbsp;</div></div>';
     } else {
-      pricingHTML += 'Cut-off: ' + cutoffDateTimeStr;
+      pricingHTML += '<div class="pricing-card-footer">';
+      pricingHTML += '<div class="pricing-card-cutoff">Submit by ' + cutoffTimeStr + ' (EST)</div>';
+      pricingHTML += '</div>';
     }
-    pricingHTML += '</div>';
-    if (isBest) {
-      pricingHTML += '<div class="mobile-countdown" id="mobileCountdown">Price expires in: calculating...</div>';
-    }
-    pricingHTML += '</div>';
+
+    pricingHTML += '</div>'; // close .pricing-card
   });
-  
+
   pricingHTML += '</div>';
-  
+
+  // Unified countdown timer (below all cards) — tier name + color matched
+  if (bestAvailableTier) {
+    pricingHTML += '<div class="pricing-countdown ' + bestAvailableTier.cls + '" id="pricingCountdown"><strong>' + bestAvailableTier.label + '</strong> price expires in: calculating...</div>';
+  }
+
   if (elements.pricing) {
     elements.pricing.innerHTML = pricingHTML;
   }
-  
+
   if (bestAvailableTier) {
     startCountdown(bestAvailableTier, inDate);
   }
@@ -1629,19 +2220,17 @@ function showPricingToast(expiredTierLabel, newTierLabel) {
 }
 
 function startCountdown(tier, inDate) {
-  const desktopCountdown = document.getElementById('desktopCountdown');
-  const mobileCountdown = document.getElementById('mobileCountdown');
+  const countdown = document.getElementById('pricingCountdown');
   const deliveryTimeValue = state.selectedDeliveryTime || 'anytime';
-  
-  if (desktopCountdown || mobileCountdown) {
-    if (desktopCountdown) desktopCountdown.classList.add('show');
-    if (mobileCountdown) mobileCountdown.classList.add('show');
-    
+
+  if (countdown) {
+    countdown.classList.add('show');
+
     function updateCountdownDisplay() {
       const targetTime = getCutoffDate(inDate, tier.lead, tier.cutoffHour, deliveryTimeValue).getTime();
       const now = new Date().getTime();
       const timeLeft = targetTime - now;
-      
+
       if (timeLeft <= 0) {
         clearInterval(state.countdownInterval);
         state.tierExpiredByCountdown = true;
@@ -1649,25 +2238,22 @@ function startCountdown(tier, inDate) {
         setTimeout(updatePricing, 100);
         return;
       }
-      
-      const countdownText = 'Price expires in: ' + formatCountdown(timeLeft);
+
+      const countdownText = '<strong>' + tier.label + '</strong> price expires in: ' + formatCountdown(timeLeft);
       const minutesLeft = timeLeft / (1000 * 60);
-      
+
       var colorClass = '';
       if (minutesLeft <= config.countdownCriticalMin) {
         colorClass = 'countdown-critical';
       } else if (minutesLeft <= config.countdownWarningMin) {
         colorClass = 'countdown-warning';
       }
-      
-      [desktopCountdown, mobileCountdown].forEach(function(el) {
-        if (!el) return;
-        el.textContent = countdownText;
-        el.classList.remove('countdown-warning', 'countdown-critical');
-        if (colorClass) el.classList.add(colorClass);
-      });
+
+      countdown.innerHTML = countdownText;
+      countdown.classList.remove('countdown-warning', 'countdown-critical');
+      if (colorClass) countdown.classList.add(colorClass);
     }
-    
+
     updateCountdownDisplay();
     state.countdownInterval = setInterval(updateCountdownDisplay, 1000);
   }
@@ -1876,6 +2462,8 @@ function update() {
   updateOrderSummary();
   updatePricingVisibility();
   updatePricingSizeDisplay();
+  updateMaterialDelta();
+  refreshFileDimensionDisplay();
 }
 
 // ===== EVENT BINDING =====
@@ -2023,7 +2611,13 @@ function bindEvents() {
   if (elements.materialToggle) {
     elements.materialToggle.addEventListener('click', toggleMaterial);
   }
-  
+
+  // Pricing header material toggle (synced duplicate)
+  var pricingMatToggle = document.getElementById('materialTogglePricing');
+  if (pricingMatToggle) {
+    pricingMatToggle.addEventListener('click', toggleMaterial);
+  }
+
   // File upload
  // File upload - IMPROVED binding
   if (elements.uploadZone) {
@@ -2219,13 +2813,6 @@ function validateFormCompleteness() {
 }
 
 function forceUpdateAll() {
-    event: !!state.selectedEvent,
-    date: state.selectedDate,
-    width: state.dimensions.width,
-    height: state.dimensions.height,
-    pricingLoaded: state.pricingLoaded
-  });
-  
   updateDateDisplay();
   generateAlternativeSizes();
   updatePricingVisibility();

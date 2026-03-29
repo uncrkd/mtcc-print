@@ -20,7 +20,9 @@ require_once 'includes/icons.php';
   <title>MTCC Poster Pricing | Print Stuff</title>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet" />
   <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
-  <link rel="stylesheet" href="styles.css?v=20260106">
+  <link rel="stylesheet" href="styles.css?v=20260318">
+  <!-- PDF.js for file thumbnail previews -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <!-- Icon Library for JavaScript -->
   <?php outputIconsScript(); ?>
 </head>
@@ -37,9 +39,9 @@ require_once 'includes/icons.php';
           <h1>Convention Poster Printing</h1>
           <p>For Researchers, Presenters, Exhibitors, and more!</p>
           <div class="hero-features">
-            <span class="hero-badge">High-quality printing</span>
-            <span class="hero-badge">Same-day printing available</span>
-            <span class="hero-badge">Free delivery to MTCC</span>
+            <span class="hero-badge"><span class="hero-badge-icon">&#x2728;</span> High-quality printing</span>
+            <span class="hero-badge"><span class="hero-badge-icon">&#x23F1;</span> Same-day printing available</span>
+            <span class="hero-badge"><span class="hero-badge-icon">&#x1F69A;</span> Free delivery to MTCC</span>
           </div>
         </div>
       </div>
@@ -58,7 +60,7 @@ require_once 'includes/icons.php';
     <!-- ZONE 1: Event, Sizing & Pricing -->
     <div class="card card--spaced">
       <div class="step-header">
-        <span class="card-icon">🎪</span>
+        <span class="card-icon">&#127914;</span>
         <div class="step-header-content">
           <span class="step-title">Event, Sizing & Pricing</span>
           <div class="step-tooltip">
@@ -75,31 +77,31 @@ require_once 'includes/icons.php';
           <label for="eventSelect">Event <span class="required-field">*</span></label>
           <div class="select-wrapper">
             <select id="eventSelect" name="eventSelect" class="field-control" required>
-              <option value="">Loading events...</option>
+              <option value="">Select your event...</option>
             </select>
             <span class="select-arrow">⏷</span>
           </div>
         </div>
         <div class="vertical-divider-mini"></div>
         <div class="field">
-          <label for="d">Delivery Date <span class="required-field">*</span></label>
+          <label for="d">In-Hand Date <span class="required-field">*</span> <span class="delivery-time-note">(earlier times may affect pricing)</span></label>
           <div class="date-time-row">
             <div class="date-input-container date-input-clickable">
               <input id="d" name="selectedDate" type="date" class="field-control date-input-hidden">
               <div id="dateDisplay" class="field-control date-display">
-                <span class="date-icon">📅</span>
-                <span class="date-placeholder">Select in-hand date</span>
+                <span class="date-icon">&#128197;</span>
+                <span class="date-placeholder">When do you need it?</span>
                 <span class="date-arrow">⏷</span>
               </div>
             </div>
             <div class="time-select-wrapper">
-              <span class="time-icon">🕐</span>
+              <span class="time-icon">&#128336;</span>
               <select id="deliveryTime" name="deliveryTime" class="field-control time-select">
                 <option value="anytime">Anytime</option>
-                <option value="9am">By 9:00am</option>
-                <option value="12pm">By 12:00pm</option>
-                <option value="3pm">By 3:00pm</option>
-                <option value="6pm">By 6:00pm</option>
+                <option value="9am">By 9:00 AM</option>
+                <option value="12pm">By 12:00 PM</option>
+                <option value="3pm">By 3:00 PM</option>
+                <option value="6pm">By 6:00 PM</option>
               </select>
               <span class="select-arrow">⏷</span>
             </div>
@@ -116,7 +118,7 @@ require_once 'includes/icons.php';
           <!-- Left Column (60%) - Size Selection -->
           <div class="size-upload-left">
             <div class="size-upload-header">
-              <span class="size-upload-icon">📐</span>
+              <span class="size-upload-icon">&#128208;</span>
               <span class="size-upload-title">Poster Size</span>
             </div>
             
@@ -143,24 +145,20 @@ require_once 'includes/icons.php';
                 <div class="size-divider-v"></div>
                 
                 <div class="size-group-custom">
-                  <div class="size-group-label">Custom Size</div>
+                  <div class="size-group-label">Custom Size (W &times; H)</div>
                   <div class="size-custom-row">
                     <div class="size-input-wrapper">
-                      <input id="w" name="width" type="number" min="12" max="360" placeholder="48" class="field-control-card size-custom-input" data-max="360">
-                      <label for="w" class="size-input-label-below">Width</label>
+                      <input id="w" name="width" type="number" min="12" max="96" placeholder="48" class="field-control-card size-custom-input" data-max="96">
+                      <label for="w" class="size-input-label-below">12&ndash;96&quot;</label>
                     </div>
                     <span class="multiply-symbol-card">×</span>
                     <div class="size-input-wrapper">
-                      <input id="h" name="height" type="number" min="12" max="52" placeholder="36" class="field-control-card size-custom-input" data-max="52">
-                      <label for="h" class="size-input-label-below">Height</label>
+                      <input id="h" name="height" type="number" min="12" max="48" placeholder="36" class="field-control-card size-custom-input" data-max="48">
+                      <label for="h" class="size-input-label-below">12&ndash;48&quot;</label>
                     </div>
-                    <button type="button" class="board-preview-btn" id="boardPreviewToggle">
-                      <span class="btn-icon">🖼️</span>
-                      <span class="btn-text">Preview</span>
-                    </button>
                   </div>
                   <div id="sizeErrorMessage" class="size-error-message" style="display: none;">
-                    <span class="error-icon">⚠ ️</span>
+                    <span class="error-icon">&#9888;️</span>
                     <span class="error-text">Size exceeds maximum dimensions</span>
                   </div>
                 </div>
@@ -183,27 +181,77 @@ require_once 'includes/icons.php';
                 </div>
               </div>
 
-              <!-- Presentation Board Preview (positioned for mobile proximity) -->
-              <div class="board-preview-section" id="boardPreviewSection" style="display: none;">
-                <div class="board-preview-header">
-                  <span class="board-preview-title">📐 Presentation Board Preview</span>
-                  <button type="button" class="board-preview-close" id="boardPreviewClose">✖️</button>
+              <!-- Material Selection (moved from pricing) -->
+              <div class="material-selection-inline" id="materialToggleInline">
+                <div class="material-inline-label">Print Material</div>
+                <div class="material-toggle-pricing" id="materialToggle">
+                  <div class="material-slider-pricing" id="materialSlider"></div>
+                  <div class="material-option-pricing tooltip-container" id="posterOption" data-material="poster">
+                    <span class="material-text-pricing">Poster</span>
+                    <span class="material-delta-badge" id="posterDeltaBadge"></span>
+                    <div class="material-tooltip-pricing">100 lb paper, UV printing, glossy finish</div>
+                  </div>
+                  <div class="material-option-pricing tooltip-container" id="fabricOption" data-material="fabric">
+                    <span class="material-text-pricing">Fabric</span>
+                    <span class="material-delta-badge" id="fabricDeltaBadge"></span>
+                    <div class="material-tooltip-pricing">7 oz wrinkle-free fabric with hemmed edges</div>
+                  </div>
                 </div>
-                <div class="board-mockup-container">
-                  <div class="board-label-top">MTCC Presentation Board (96" × 48")</div>
-                  <div class="board-frame">
-                    <div class="board-surface" id="boardSurface">
-                      <div class="poster-preview" id="posterPreview">
-                        <span class="poster-preview-size" id="posterPreviewSize">48" × 36"</span>
+              </div>
+
+              <!-- Upload Design (moved from right column) -->
+              <div class="upload-section-inline">
+                <div class="size-upload-header upload-header-inline">
+                  <span class="size-upload-icon">&#128194;</span>
+                  <span class="size-upload-title">Upload Design</span>
+                  <div class="step-tooltip">
+                    ?
+                    <span class="tooltiptext">Ensure your design file matches your selected poster size for best results.</span>
+                  </div>
+                </div>
+
+                <div class="upload-zone-compact" id="uploadZone">
+                  <!-- Pre-upload content -->
+                  <div class="upload-content-preload" id="uploadPreload">
+                    <div class="upload-icon-compact">&#128194;</div>
+                    <div class="upload-text-compact">
+                      <div class="upload-main-line"><strong>Click to upload</strong> or drag file</div>
+                      <div class="upload-formats-compact"><span class="pdf-preferred">PDF preferred</span> <span class="conversion-fee-small">(+$5 non-PDF)</span></div>
+                      <div class="upload-formats-small">JPG, PNG, AI, EPS, PSD, TIFF, SVG, PPTX • Max 100MB</div>
+                    </div>
+                  </div>
+
+                  <!-- Upload progress (hidden by default) -->
+                  <div class="upload-content-progress" id="uploadProgress" style="display: none;">
+                    <div class="upload-progress-icon">&#128194;</div>
+                    <div class="upload-progress-details">
+                      <div class="upload-progress-filename" id="uploadProgressFilename">filename.pdf</div>
+                      <div class="upload-progress-bar-container">
+                        <div class="upload-progress-bar" id="uploadProgressBar"></div>
+                      </div>
+                      <div class="upload-progress-status">
+                        <span id="uploadProgressPercent">0%</span>
+                        <span id="uploadProgressSize">0 MB / 2.5 MB</span>
                       </div>
                     </div>
                   </div>
-                  <div class="board-legs">
-                    <div class="board-leg left"></div>
-                    <div class="board-leg right"></div>
+
+                  <!-- Success content (hidden by default) -->
+                  <div class="upload-content-success-compact" id="uploadSuccess" style="display: none;">
+                    <div class="upload-success-icon-compact">&#10004;️</div>
+                    <div class="upload-success-details-compact">
+                      <div class="upload-success-title-compact">File Uploaded</div>
+                      <div class="upload-success-filename-compact" id="uploadedFileName">filename.pdf</div>
+                      <div class="upload-success-meta-compact">
+                        <span class="upload-file-type" id="uploadedFileType">PDF</span>
+                        <span class="meta-separator">•</span>
+                        <span id="uploadedFileSize">2.5 MB</span>
+                      </div>
+                      <button type="button" class="upload-remove-btn-compact" id="removeFileBtn">&#10006;️ Remove</button>
+                    </div>
                   </div>
                 </div>
-                <div class="board-coverage" id="boardCoverage">Your poster covers <strong>38%</strong> of the presentation board</div>
+                <input type="file" id="fileInput" name="artwork" accept=".pdf,.ai,.eps,.psd,.png,.jpg,.jpeg,.tiff,.tif,.webp,.gif,.bmp,.svg,.pptx,.indd" style="display: none;">
               </div>
             </div>
           </div>
@@ -211,59 +259,30 @@ require_once 'includes/icons.php';
           <!-- Vertical Divider between Size and Upload -->
           <div class="size-upload-divider"></div>
           
-          <!-- Right Column (40%) - Upload -->
+          <!-- Right Column (40%) - Poster Preview (always visible) -->
           <div class="size-upload-right">
             <div class="size-upload-header">
-              <span class="size-upload-icon">📂</span>
-              <span class="size-upload-title">Upload Design</span>
-              <div class="step-tooltip">
-                ?
-                <span class="tooltiptext">Ensure your design file matches your selected poster size for best results.</span>
-              </div>
+              <span class="size-upload-icon">&#128208;</span>
+              <span class="size-upload-title">Poster Preview</span>
             </div>
-            
-            <div class="upload-zone-compact" id="uploadZone">
-              <!-- Pre-upload content -->
-              <div class="upload-content-preload" id="uploadPreload">
-                <div class="upload-icon-compact">📂</div>
-                <div class="upload-text-compact">
-                  <div class="upload-main-line"><strong>Click to upload</strong> or drag file</div>
-                  <div class="upload-formats-compact"><span class="pdf-preferred">PDF preferred</span> <span class="conversion-fee-small">(+$5 non-PDF)</span></div>
-                  <div class="upload-formats-small">JPG, PNG, AI, EPS, PSD, TIFF, SVG, PPTX • Max 100MB</div>
-                </div>
-              </div>
-              
-              <!-- Upload progress (hidden by default) -->
-              <div class="upload-content-progress" id="uploadProgress" style="display: none;">
-                <div class="upload-progress-icon">📂</div>
-                <div class="upload-progress-details">
-                  <div class="upload-progress-filename" id="uploadProgressFilename">filename.pdf</div>
-                  <div class="upload-progress-bar-container">
-                    <div class="upload-progress-bar" id="uploadProgressBar"></div>
-                  </div>
-                  <div class="upload-progress-status">
-                    <span id="uploadProgressPercent">0%</span>
-                    <span id="uploadProgressSize">0 MB / 2.5 MB</span>
+
+            <div class="board-preview-section board-preview-always-visible" id="boardPreviewSection">
+              <div class="board-mockup-container">
+                <div class="board-label-top">MTCC Presentation Board (96" × 48")</div>
+                <div class="board-frame">
+                  <div class="board-surface" id="boardSurface">
+                    <div class="poster-preview poster-preview-placeholder" id="posterPreview">
+                      <span class="poster-preview-size" id="posterPreviewSize">Select a size to<br>see preview</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-              
-              <!-- Success content (hidden by default) -->
-              <div class="upload-content-success-compact" id="uploadSuccess" style="display: none;">
-                <div class="upload-success-icon-compact">✔️</div>
-                <div class="upload-success-details-compact">
-                  <div class="upload-success-title-compact">File Uploaded</div>
-                  <div class="upload-success-filename-compact" id="uploadedFileName">filename.pdf</div>
-                  <div class="upload-success-meta-compact">
-                    <span class="upload-file-type" id="uploadedFileType">PDF</span>
-                    <span class="meta-separator">•</span>
-                    <span id="uploadedFileSize">2.5 MB</span>
-                  </div>
-                  <button type="button" class="upload-remove-btn-compact" id="removeFileBtn">✖️ Remove</button>
+                <div class="board-legs">
+                  <div class="board-leg left"></div>
+                  <div class="board-leg right"></div>
                 </div>
               </div>
+              <div class="board-coverage" id="boardCoverage" style="display: none;">Your poster covers <strong>0%</strong> of the presentation board</div>
             </div>
-            <input type="file" id="fileInput" name="artwork" accept=".pdf,.ai,.eps,.psd,.png,.jpg,.jpeg,.tiff,.tif,.webp,.gif,.bmp,.svg,.pptx,.indd" style="display: none;">
           </div>
         </div>
         
@@ -273,17 +292,19 @@ require_once 'includes/icons.php';
       <div id="pricingSection" class="pricing-section">
         <div class="pricing-header-row">
           <div class="section-group-header">YOUR PRICING OPTIONS<span id="pricingSizeDisplay" class="pricing-size-display"></span></div>
-          <div class="material-selection-pricing">
-            <div class="material-label-pricing">Material</div>
-            <div class="material-toggle-pricing" id="materialToggle">
-              <div class="material-slider-pricing" id="materialSlider"></div>
-              <div class="material-option-pricing tooltip-container" id="posterOption" data-material="poster">
+          <div class="pricing-material-toggle" id="pricingMaterialToggle">
+            <div class="material-inline-label">Material</div>
+            <div class="material-toggle-pricing" id="materialTogglePricing">
+              <div class="material-slider-pricing" id="materialSliderPricing"></div>
+              <div class="material-option-pricing tooltip-container" id="posterOptionPricing" data-material="poster">
                 <span class="material-text-pricing">Poster</span>
-                <div class="material-tooltip-pricing">← • 100lbs paper, UV printing, glossy finish</div>
+                <span class="material-delta-badge" id="posterDeltaBadgePricing"></span>
+                <div class="material-tooltip-pricing">100 lb paper, UV printing, glossy finish</div>
               </div>
-              <div class="material-option-pricing tooltip-container" id="fabricOption" data-material="fabric">
+              <div class="material-option-pricing tooltip-container" id="fabricOptionPricing" data-material="fabric">
                 <span class="material-text-pricing">Fabric</span>
-                <div class="material-tooltip-pricing">← • 7oz wrinkle-free fabric with hemmed edges</div>
+                <span class="material-delta-badge" id="fabricDeltaBadgePricing"></span>
+                <div class="material-tooltip-pricing">7 oz wrinkle-free fabric with hemmed edges</div>
               </div>
             </div>
           </div>
@@ -292,7 +313,7 @@ require_once 'includes/icons.php';
 
         <div id="pricing" class="pricing-container">
           <div class="pricing-placeholder">
-            <div class="placeholder-icon">💰</div>
+            <div class="placeholder-icon">&#128176;</div>
             <div class="placeholder-text">
               <div class="placeholder-title">Select your event, delivery date, and poster size to see pricing</div>
               <div class="placeholder-subtitle">Pricing varies based on size and how soon you need your poster</div>
@@ -305,7 +326,7 @@ require_once 'includes/icons.php';
     <!-- Contact Information -->
     <div class="card card--spaced">
       <div class="step-header">
-        <span class="card-icon">👤</span>
+        <span class="card-icon">&#128100;</span>
         <div class="step-header-content">
           <span class="step-title">Contact Information</span>
         </div>
@@ -319,11 +340,11 @@ require_once 'includes/icons.php';
       <div class="contact-row-1">
         <div class="field">
           <label for="customerName">Full Name <span class="required-field">*</span></label>
-          <input id="customerName" name="customerName" type="text" placeholder="eg. John Smith" class="field-control" required>
+          <input id="customerName" name="customerName" type="text" placeholder="e.g. John Smith" class="field-control" required>
         </div>
         <div class="field">
           <label for="customerCompany">Company/Organization <span class="optional-field">(optional)</span></label>
-          <input id="customerCompany" name="customerCompany" type="text" placeholder="eg. University of Toronto" class="field-control">
+          <input id="customerCompany" name="customerCompany" type="text" placeholder="e.g. University of Toronto" class="field-control">
         </div>
         <div class="field">
           <label for="customerPhone">Phone Number <span class="required-field">*</span></label>
@@ -345,8 +366,8 @@ require_once 'includes/icons.php';
                 </div>
               </div>
             </div>
-            <input id="customerPhone" name="customerPhone" type="tel" placeholder="(000) 000-0000" class="phone-number-input" required>
-            <span class="phone-valid-icon" id="phoneValidIcon">✝</span>
+            <input id="customerPhone" name="customerPhone" type="tel" placeholder="(416) 555-0123" class="phone-number-input" required>
+            <span class="phone-valid-icon" id="phoneValidIcon">&#10013;</span>
           </div>
         </div>
       </div>
@@ -356,8 +377,8 @@ require_once 'includes/icons.php';
         <div class="field">
           <label for="customerEmail">Email Address <span class="required-field">*</span></label>
           <div class="email-input-wrapper">
-            <input id="customerEmail" name="customerEmail" type="email" placeholder="eg. johnsmith@gmail.com" class="field-control" required>
-            <span class="email-valid-icon" id="emailValidIcon">✝</span>
+            <input id="customerEmail" name="customerEmail" type="email" placeholder="e.g. john@university.ca" class="field-control" required>
+            <span class="email-valid-icon" id="emailValidIcon">&#10013;</span>
           </div>
         </div>
         <div class="field">
@@ -369,7 +390,7 @@ require_once 'includes/icons.php';
       <!-- Delivery Preference Sub-section -->
       <div class="delivery-subsection">
         <div class="subsection-header">
-          <span class="subsection-icon">🚚</span>
+          <span class="subsection-icon">&#128666;</span>
           <span class="subsection-title">Delivery Preference</span>
           <div class="step-tooltip">
             ?
@@ -377,7 +398,7 @@ require_once 'includes/icons.php';
           </div>
         </div>
         
-        <div class="grid-3 gap-md delivery-options">
+        <div class="grid-2 gap-md delivery-options">
           <div class="delivery-option" id="mtccOption" data-option="mtcc" tabindex="0" role="button">
             <div class="option-title">Deliver to MTCC</div>
             <div class="option-subtitle">
@@ -388,23 +409,19 @@ require_once 'includes/icons.php';
             <div class="option-title">Deliver to Address</div>
             <div class="option-subtitle">$10.00 flat rate</div>
           </div>
-          <div class="delivery-option disabled" aria-disabled="true">
-            <div class="option-title">In-Store Pick-up</div>
-            <div class="option-subtitle">Not available</div>
-          </div>
         </div>
         
         <div id="deliveryDetails" class="delivery-details">
           <div id="mtccMessage" class="delivery-message">
             <h4 class="delivery-title">MTCC Delivery Details</h4>
-            <p class="delivery-text">Your order will be ready for pickup on <strong id="d">your selected delivery date</strong> by <strong>4:00 PM</strong> at:</p>
+            <p class="delivery-text">Your order will be ready for pick-up on <strong id="d">your selected delivery date</strong> by <strong>4:00 PM</strong> at:</p>
             <div class="delivery-address" id="mtccAddressDisplay">
-              <strong>Exhibitor Services / Business Center Office</strong><br>
+              <strong>Exhibitor Services / Business Centre Office</strong><br>
               Metro Toronto Convention Centre<br>
               <span id="mtccBuildingName">North Building</span>, <span id="mtccBuildingLevel">Level 300</span><br>
               <span id="mtccStreetAddress">255 Front Street West</span>, Toronto, ON <span id="mtccPostalCode">M5V 2W6</span><br>
               <br/>
-              <p>Mon - Fri: 8am - 4pm   |   416-585-8387   |   <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="0b6e73636269627f647926786e797d62686e784b667f68686825686466">[email&#160;protected]</a><br/>
+              <p>Mon &ndash; Fri: 8:00 AM &ndash; 4:00 PM   |   416-585-8387   |   <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="0b6e73636269627f647926786e797d62686e784b667f68686825686466">[email&#160;protected]</a><br/>
                 </p>
             </div>
           </div>
@@ -449,119 +466,161 @@ require_once 'includes/icons.php';
       </div>
     </div>
     
-    <!-- Order Summary -->
+    <!-- Order Summary & Form Completion (combined card) -->
     <div class="card card--spaced">
-      <div class="step-header">
-        <span class="card-icon">📋</span>
-        <div class="step-header-content">
-          <span class="step-title">Order Summary</span>
-        </div>
-      </div>
-      <div class="step-divider"></div>
-      
-      <div class="order-summary">
-        <div class="summary-row">
-          <div class="summary-label">
-            <div class="summary-title">Event & Poster Details:</div>
-            <div class="summary-content" id="summaryPosterDetails">Select event, size and date above</div>
-          </div>
-          <span class="summary-price" id="summaryBasePrice">-</span>
-        </div>
-        
-        <div class="summary-row">
-          <div class="summary-label">
-            <div class="summary-title">Delivery Details:</div>
-            <div class="summary-content" id="summaryDeliveryDetails">Select delivery method and date</div>
-          </div>
-          <span class="summary-price" id="summaryDeliveryFee">-</span>
-        </div>
-        
-        <div id="conversionFeeRow" class="summary-row conversion-fee-row">
-          <div class="summary-label">
-            <div class="summary-title">File Conversion:</div>
-            <div class="summary-content">Non-PDF file conversion to print format</div>
-          </div>
-          <span class="summary-price conversion-fee">$5.00</span>
-        </div>
-        
-        <div class="summary-row subtotal-row">
-          <span class="subtotal-label">Subtotal</span>
-          <span class="subtotal-price" id="summarySubtotal">-</span>
-        </div>
-        
-        <div class="summary-row tax-row">
-          <span class="tax-label">HST (13%)</span>
-          <span class="tax-price" id="summaryTax">-</span>
-        </div>
-        
-        <div class="summary-row total-row">
-          <span class="total-label">Total (CAD)</span>
-          <span class="total-price" id="summaryTotal">-</span>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Submit Section -->
-    <div class="card card--spaced submit-section">
-      <div id="formValidation" class="form-validation">
-        <div class="validation-title">Form Completion Status</div>
-        <div class="status-badges-container">
-          <div id="step1Status" class="status-badge-modern">
-            <div class="status-indicator">
-              <span class="status-icon-modern">✖</span>
+      <div class="summary-completion-card">
+        <!-- Left: Order Summary -->
+        <div class="summary-completion-left">
+          <div class="step-header">
+            <span class="card-icon">&#128203;</span>
+            <div class="step-header-content">
+              <span class="step-title">Order Summary</span>
             </div>
-            <span class="status-text-modern">Event & Date</span>
           </div>
-          <div id="step2Status" class="status-badge-modern">
-            <div class="status-indicator">
-              <span class="status-icon-modern">✖</span>
-            </div>
-            <span class="status-text-modern">Poster Size</span>
-          </div>
-          <div id="step3Status" class="status-badge-modern">
-            <div class="status-indicator">
-              <span class="status-icon-modern">✖</span>
-            </div>
-            <span class="status-text-modern">File Upload</span>
-          </div>
-          <div id="step4Status" class="status-badge-modern">
-            <div class="status-indicator">
-              <span class="status-icon-modern">✖</span>
-            </div>
-            <span class="status-text-modern">Delivery</span>
-          </div>
-          <div id="step5Status" class="status-badge-modern">
-            <div class="status-indicator">
-              <span class="status-icon-modern">✖</span>
-            </div>
-            <span class="status-text-modern">Contact</span>
-          </div>
-        </div>
-      </div>
-      
-      <button type="submit" class="submit-button" id="submitButton" disabled>
-        <div class="submit-button-content" id="submitButtonContent">
-          <span class="submit-button-title">Submit Your Order Request</span>
-          <span class="submit-button-subtitle">Free quote - no payment required</span>
-        </div>
-        <div class="submit-button-loading" id="submitButtonLoading" style="display: none;">
-          <div class="submit-spinner"></div>
-          <span class="submit-loading-text">Submitting your order...</span>
-        </div>
-      </button>
-      <div class="order-confidence-note">
-        <strong>⚡ Fast Response:</strong> Get artwork confirmation within <strong>18 minutes.</strong><br/>
-        <strong>Artwork Notification</strong> - We will notify you if there are issues with your file.
-      </div>
-      <div class="order-policy-note">
-        Once your order moves to production, file changes cannot be accommodated. Please ensure your file is final before submitting.
-      </div>
+          <div class="step-divider"></div>
 
+          <div class="order-summary">
+            <div class="summary-row">
+              <div class="summary-label">
+                <div class="summary-title">Event & Poster Details:</div>
+                <div class="summary-content" id="summaryPosterDetails">Select event, size and date above</div>
+              </div>
+              <span class="summary-price" id="summaryBasePrice">-</span>
+            </div>
+
+            <div class="summary-row">
+              <div class="summary-label">
+                <div class="summary-title">Delivery Details:</div>
+                <div class="summary-content" id="summaryDeliveryDetails"></div>
+              </div>
+              <span class="summary-price" id="summaryDeliveryFee">-</span>
+            </div>
+
+            <div id="conversionFeeRow" class="summary-row conversion-fee-row">
+              <div class="summary-label">
+                <div class="summary-title">File Conversion:</div>
+                <div class="summary-content">Non-PDF file conversion to print format</div>
+              </div>
+              <span class="summary-price conversion-fee">$5.00</span>
+            </div>
+
+            <div class="summary-row subtotal-row">
+              <span class="subtotal-label">Subtotal</span>
+              <span class="subtotal-price" id="summarySubtotal">-</span>
+            </div>
+
+            <div class="summary-row tax-row">
+              <span class="tax-label">HST (13%)</span>
+              <span class="tax-price" id="summaryTax">-</span>
+            </div>
+
+            <div class="summary-row total-row">
+              <span class="total-label">Total (CAD)</span>
+              <span class="total-price" id="summaryTotal">-</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dashed Divider -->
+        <div class="summary-completion-divider"></div>
+
+        <!-- Right: Form Completion & Submit -->
+        <div class="summary-completion-right">
+          <div id="formValidation" class="form-validation">
+            <div class="step-header validation-header">
+              <span class="card-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span>
+              <div class="step-header-content">
+                <span class="step-title">Form Completion Status</span>
+              </div>
+            </div>
+            <div class="step-divider validation-divider"></div>
+            <div class="status-badges-container">
+              <div id="step1Status" class="status-badge-modern">
+                <div class="status-indicator">
+                  <span class="status-icon-modern">&#10006;</span>
+                </div>
+                <span class="status-text-modern">Event & Date</span>
+              </div>
+              <div id="step2Status" class="status-badge-modern">
+                <div class="status-indicator">
+                  <span class="status-icon-modern">&#10006;</span>
+                </div>
+                <span class="status-text-modern">Poster Size</span>
+              </div>
+              <div id="step3Status" class="status-badge-modern">
+                <div class="status-indicator">
+                  <span class="status-icon-modern">&#10006;</span>
+                </div>
+                <span class="status-text-modern">File Upload</span>
+              </div>
+              <div id="step4Status" class="status-badge-modern">
+                <div class="status-indicator">
+                  <span class="status-icon-modern">&#10006;</span>
+                </div>
+                <span class="status-text-modern">Delivery</span>
+              </div>
+              <div id="step5Status" class="status-badge-modern">
+                <div class="status-indicator">
+                  <span class="status-icon-modern">&#10006;</span>
+                </div>
+                <span class="status-text-modern">Contact</span>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="submit-button" id="submitButton" disabled>
+            <div class="submit-button-content" id="submitButtonContent">
+              <span class="submit-button-title">Proceed to Payment</span>
+              <span class="submit-button-subtitle">Free quote &ndash; no payment required</span>
+            </div>
+            <div class="submit-button-loading" id="submitButtonLoading" style="display: none;">
+              <div class="submit-spinner"></div>
+              <span class="submit-loading-text">Submitting your order...</span>
+            </div>
+          </button>
+        </div>
+      </div>
+      <div class="summary-completion-footer">
+        <div class="order-confidence-note">
+          <strong>&#9889; Fast Response:</strong> Get artwork confirmation within <strong>18 minutes.</strong>
+        </div>
+        <div class="order-policy-note">
+          Once your order moves to production, file changes cannot be accommodated. Please ensure your file is final before submitting.
+        </div>
+      </div>
     </div>
     
     </form>
- 
+
+    <!-- Sticky CTA Bar -->
+    <div class="sticky-cta-bar" id="stickyCta">
+      <div class="sticky-cta-inner">
+        <div class="sticky-cta-price">
+          <span class="sticky-cta-label">Total</span>
+          <span class="sticky-cta-total" id="stickyTotal">$-</span>
+        </div>
+        <button type="button" class="sticky-cta-button" id="stickySubmitBtn" disabled>
+          Proceed to Payment
+        </button>
+      </div>
+    </div>
+
 </div>
+
+  <!-- Tawk.to Live Chat Widget -->
+  <!--Start of Tawk.to Script-->
+  <script type="text/javascript">
+  var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+  (function(){
+  var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+  s1.async=true;
+  s1.src='https://embed.tawk.to/69bcadcf600a121c36fa7a4b/1jk4gdsmg';
+  s1.charset='UTF-8';
+  s1.setAttribute('crossorigin','*');
+  s0.parentNode.insertBefore(s1,s0);
+  })();
+  </script>
+  <!--End of Tawk.to Script-->
 
   <div class="footer">© <span id="yr"></span> Print Stuff</div>
 
@@ -569,6 +628,10 @@ require_once 'includes/icons.php';
     // Inject delivery configuration as inline JS (single source of truth)
     $deliveryConfig = require __DIR__ . '/delivery-config.php';
     echo '<script>window.DELIVERY_CONFIG = ' . json_encode($deliveryConfig) . ';</script>';
+
+    // Inject MTCC locations data for dynamic delivery details
+    $mtccLocations = json_decode(file_get_contents(__DIR__ . '/data/mtcc-locations.json'), true);
+    echo '<script>window.MTCC_LOCATIONS = ' . json_encode($mtccLocations) . ';</script>';
   ?>
 	<script src="script.js?v=20260226-delivery-enforcement"></script>
   <script>
@@ -644,70 +707,56 @@ require_once 'includes/icons.php';
         return filename.split('.').pop().toUpperCase();
       }
       
+      // Show file thumbnail preview (replaces old V15 success display)
       function showUploadSuccessV15(file) {
-        // Don't show success if progress is still running
         if (window.uploadProgressRunning) return;
-        
-        // Update file details
-        document.getElementById('uploadedFileName').textContent = file.name;
-        document.getElementById('uploadedFileType').textContent = getFileExtension(file.name);
-        document.getElementById('uploadedFileSize').textContent = formatFileSize(file.size);
-        
-        // Switch views
+
+        // Hide preload, progress, and old success content
         uploadPreload.style.display = 'none';
-        const uploadProgressEl = document.getElementById('uploadProgress');
+        var uploadProgressEl = document.getElementById('uploadProgress');
         if (uploadProgressEl) uploadProgressEl.style.display = 'none';
-        uploadSuccess.style.display = 'flex';
+        if (uploadSuccess) uploadSuccess.style.display = 'none';
+
+        // Use the thumbnail-based updateFileDisplay from script.js
+        if (typeof window._thumbnailFileDisplay === 'function') {
+          window._thumbnailFileDisplay(file);
+        }
         uploadZone.classList.add('upload-success');
-        
-        // Remove any duplicate content added by original script.js
-        const oldPreview = uploadZone.querySelector('.file-preview-display');
-        if (oldPreview) oldPreview.remove();
       }
-      
+
       function resetUploadV15() {
         uploadPreload.style.display = 'flex';
-        uploadSuccess.style.display = 'none';
-        const uploadProgressEl = document.getElementById('uploadProgress');
+        if (uploadSuccess) uploadSuccess.style.display = 'none';
+        var uploadProgressEl = document.getElementById('uploadProgress');
         if (uploadProgressEl) uploadProgressEl.style.display = 'none';
         uploadZone.classList.remove('upload-success');
         uploadZone.classList.remove('has-file');
         fileInput.value = '';
         window.uploadProgressRunning = false;
-        
-        // Remove any duplicate content added by original script.js
-        const oldPreview = uploadZone.querySelector('.file-preview-display');
+
+        // Remove thumbnail preview
+        var oldPreview = uploadZone.querySelector('.file-preview-display');
         if (oldPreview) oldPreview.remove();
       }
-      
-      // Override the original updateFileDisplay function
-      window.updateFileDisplay = function(file) {
-        // Store file for later use after progress completes
-        window.pendingUploadFile = file;
-        // Only show success if progress is not running
-        if (!window.uploadProgressRunning) {
-          showUploadSuccessV15(file);
-        }
-      };
-      
-      // Override the original removeFile function
+
+      // Override removeFile
       window.removeFile = function() {
         resetUploadV15();
-        // Also update state if it exists
         if (window.state) {
           window.state.uploadedFile = null;
         }
+        if (typeof checkConversionFee === 'function') checkConversionFee(null);
         if (typeof updateOrderSummary === 'function') updateOrderSummary();
         if (typeof updateSubmitButtonState === 'function') updateSubmitButtonState();
       };
-      
+
       if (removeFileBtn) {
         removeFileBtn.addEventListener('click', function(e) {
           e.stopPropagation();
           window.removeFile();
         });
       }
-      
+
       // Prevent upload zone click when file is uploaded
       if (uploadZone) {
         uploadZone.addEventListener('click', function(e) {
@@ -827,10 +876,8 @@ require_once 'includes/icons.php';
         });
       }
       
-      // Size visualization - Presentation Board Mockup (Toggle)
+      // Size visualization - Presentation Board Mockup (always visible)
       const boardPreviewSection = document.getElementById('boardPreviewSection');
-      const boardPreviewToggle = document.getElementById('boardPreviewToggle');
-      const boardPreviewClose = document.getElementById('boardPreviewClose');
       const posterPreview = document.getElementById('posterPreview');
       const posterPreviewSize = document.getElementById('posterPreviewSize');
       const boardCoverage = document.getElementById('boardCoverage');
@@ -841,55 +888,26 @@ require_once 'includes/icons.php';
       const BOARD_HEIGHT_INCHES = 48;
       const SCALE = 5; // pixels per inch
       
-      // Toggle preview panel
-      if (boardPreviewToggle && boardPreviewSection) {
-        boardPreviewToggle.addEventListener('click', function() {
-          const isVisible = boardPreviewSection.style.display !== 'none';
-          boardPreviewSection.style.display = isVisible ? 'none' : 'block';
-          boardPreviewToggle.classList.toggle('active', !isVisible);
-          if (!isVisible) {
-            updateSizeVisualization();
-          }
-        });
-      }
-      
-      // Close button
-      if (boardPreviewClose && boardPreviewSection) {
-        boardPreviewClose.addEventListener('click', function() {
-          boardPreviewSection.style.display = 'none';
-          if (boardPreviewToggle) {
-            boardPreviewToggle.classList.remove('active');
-          }
-        });
-      }
-      
       function updateSizeVisualization() {
         const width = parseInt(widthInput?.value) || 0;
         const height = parseInt(heightInput?.value) || 0;
-        
+
         if (width >= 12 && height >= 12 && posterPreview && posterPreviewSize && boardCoverage) {
-          // Calculate poster size in pixels (5px per inch)
-          let posterWidthPx = width * SCALE;
-          let posterHeightPx = height * SCALE;
-          
-          // Cap to board size (poster can't be larger than board in visualization)
-          const maxWidthPx = BOARD_WIDTH_INCHES * SCALE;
-          const maxHeightPx = BOARD_HEIGHT_INCHES * SCALE;
-          
-          posterWidthPx = Math.min(posterWidthPx, maxWidthPx);
-          posterHeightPx = Math.min(posterHeightPx, maxHeightPx);
-          
-          posterPreview.style.width = posterWidthPx + 'px';
-          posterPreview.style.height = posterHeightPx + 'px';
+          // Calculate poster size as percentage of board (fluid scaling)
+          const widthPercent = Math.min((width / BOARD_WIDTH_INCHES) * 100, 100);
+          const heightPercent = Math.min((height / BOARD_HEIGHT_INCHES) * 100, 100);
+
+          posterPreview.style.width = widthPercent + '%';
+          posterPreview.style.height = heightPercent + '%';
           posterPreviewSize.textContent = width + '" × ' + height + '"';
-          
-          // Adjust font size based on poster size
-          if (posterWidthPx < 100 || posterHeightPx < 80) {
-            posterPreviewSize.style.fontSize = '0.7rem';
-          } else if (posterWidthPx < 150 || posterHeightPx < 120) {
-            posterPreviewSize.style.fontSize = '0.85rem';
+
+          // Adjust font size based on poster coverage
+          if (widthPercent < 25 || heightPercent < 30) {
+            posterPreviewSize.style.fontSize = '0.6rem';
+          } else if (widthPercent < 40 || heightPercent < 50) {
+            posterPreviewSize.style.fontSize = '0.75rem';
           } else {
-            posterPreviewSize.style.fontSize = '1rem';
+            posterPreviewSize.style.fontSize = '0.9rem';
           }
           
           // Calculate coverage percentage
@@ -900,7 +918,7 @@ require_once 'includes/icons.php';
           // Update coverage text with context
           let coverageText = '';
           if (width > BOARD_WIDTH_INCHES || height > BOARD_HEIGHT_INCHES) {
-            coverageText = '⚠ ️ <strong style="color: #ef4444;">Poster exceeds board dimensions</strong> • will extend beyond presentation board';
+            coverageText = '&#9888;️ <strong style="color: #ef4444;">Poster exceeds board dimensions</strong> • will extend beyond presentation board';
           } else if (coveragePercent >= 80) {
             coverageText = 'Your poster covers <strong>' + coveragePercent + '%</strong> of the board • <span style="color: var(--green);">Great visibility!</span>';
           } else if (coveragePercent >= 50) {
@@ -909,21 +927,30 @@ require_once 'includes/icons.php';
             coverageText = 'Your poster covers <strong>' + coveragePercent + '%</strong> of the board • Compact display';
           }
           boardCoverage.innerHTML = coverageText;
+          boardCoverage.style.display = '';
+          posterPreview.classList.remove('poster-preview-placeholder');
+          // Show uploaded file in poster preview if available
+          if (typeof updatePosterPreviewWithFile === 'function') updatePosterPreviewWithFile(null);
+        } else if (posterPreview && posterPreviewSize && boardCoverage) {
+          // No valid size — show placeholder, hide coverage
+          posterPreview.style.width = '';
+          posterPreview.style.height = '';
+          posterPreview.classList.add('poster-preview-placeholder');
+          posterPreviewSize.innerHTML = 'Select a size to<br>see preview';
+          posterPreviewSize.style.fontSize = '';
+          boardCoverage.style.display = 'none';
         }
       }
       
+      // Always update preview on size input changes (preview is always visible)
       if (widthInput) {
         widthInput.addEventListener('input', function() {
-          if (boardPreviewSection && boardPreviewSection.style.display !== 'none') {
-            updateSizeVisualization();
-          }
+          updateSizeVisualization();
         });
       }
       if (heightInput) {
         heightInput.addEventListener('input', function() {
-          if (boardPreviewSection && boardPreviewSection.style.display !== 'none') {
-            updateSizeVisualization();
-          }
+          updateSizeVisualization();
         });
       }
       
@@ -931,9 +958,7 @@ require_once 'includes/icons.php';
       document.querySelectorAll('.popular-size-button-card').forEach(function(btn) {
         btn.addEventListener('click', function() {
           setTimeout(function() {
-            if (boardPreviewSection && boardPreviewSection.style.display !== 'none') {
-              updateSizeVisualization();
-            }
+            updateSizeVisualization();
           }, 50);
         });
         // Keyboard support
@@ -952,13 +977,14 @@ require_once 'includes/icons.php';
           const altBtn = e.target.closest('.alternative-size-button');
           if (altBtn) {
             setTimeout(function() {
-              if (boardPreviewSection && boardPreviewSection.style.display !== 'none') {
-                updateSizeVisualization();
-              }
+              updateSizeVisualization();
             }, 50);
           }
         });
       }
+
+      // Initialize preview with default dimensions on page load
+      updateSizeVisualization();
       
       // Keyboard support for delivery options
       document.querySelectorAll('.delivery-option:not(.disabled)').forEach(function(option) {
@@ -1065,6 +1091,63 @@ require_once 'includes/icons.php';
           }
         }, true);
       }
+      // Sticky CTA bar — show when user scrolls past pricing, sync total + disabled state
+      var stickyCta = document.getElementById('stickyCta');
+      var stickyTotal = document.getElementById('stickyTotal');
+      var stickySubmitBtn = document.getElementById('stickySubmitBtn');
+      var mainSubmitBtn = document.getElementById('submitButton');
+      var pricingSectionEl = document.getElementById('pricingSection');
+
+      if (stickyCta && pricingSectionEl) {
+        // Show/hide on scroll
+        function checkStickyVisibility() {
+          var rect = pricingSectionEl.getBoundingClientRect();
+          // Show sticky CTA once the top of pricing scrolls off viewport
+          if (rect.top < 0) {
+            stickyCta.classList.add('visible');
+          } else {
+            stickyCta.classList.remove('visible');
+          }
+        }
+        window.addEventListener('scroll', checkStickyVisibility, { passive: true });
+
+        // Sync total from order summary
+        var summaryTotalEl = document.getElementById('summaryTotal');
+        if (summaryTotalEl && stickyTotal) {
+          var totalObserver = new MutationObserver(function() {
+            stickyTotal.textContent = summaryTotalEl.textContent;
+          });
+          totalObserver.observe(summaryTotalEl, { childList: true, characterData: true, subtree: true });
+        }
+
+        // Sync disabled state from main submit button
+        if (mainSubmitBtn && stickySubmitBtn) {
+          var btnObserver = new MutationObserver(function() {
+            stickySubmitBtn.disabled = mainSubmitBtn.disabled;
+          });
+          btnObserver.observe(mainSubmitBtn, { attributes: true, attributeFilter: ['disabled'] });
+
+          // Click sticky button triggers main form submit
+          stickySubmitBtn.addEventListener('click', function() {
+            if (!mainSubmitBtn.disabled) {
+              mainSubmitBtn.click();
+            }
+          });
+        }
+      }
+
+      // Pricing header "switch to Fabric/Poster" link
+      var matSwitchLink = document.getElementById('pricingMaterialSwitch');
+      if (matSwitchLink) {
+        matSwitchLink.addEventListener('click', function(e) {
+          e.preventDefault();
+          if (typeof toggleMaterial === 'function') {
+            toggleMaterial();
+          }
+        });
+      }
+
+      // Help is now handled by Tawk.to live chat widget
     });
   </script>
 </body>
