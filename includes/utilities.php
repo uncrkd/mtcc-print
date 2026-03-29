@@ -1,66 +1,18 @@
 <?php
 /**
- * Basic utilities + tracking - testing phase
+ * Shared Utilities - MTCC Print Services
+ * General-purpose helper functions for admin operations.
+ *
+ * Location: /includes/utilities.php
  */
+
+// Load centralized data access layer (logOrderHistory, getOrderHistory, loadStatuses, etc.)
+require_once __DIR__ . '/data-access.php';
 
 // Include dispatch email functions if available (file is in root, not includes)
 $emailFuncPath = dirname(__DIR__) . '/email-status-notifications.php';
 if (file_exists($emailFuncPath)) {
     require_once $emailFuncPath;
-}
-
-/**
- * Log order history event
- * @param string $referenceCode Order reference code
- * @param string $action Type of action (status_change, edit, note_added, note_edited, note_removed, email_sent, order_created)
- * @param string $details Description of the change
- * @param string $user User who made the change
- * @return bool Success status
- */
-if (!function_exists('logOrderHistory')) {
-    function logOrderHistory($referenceCode, $action, $details = '', $user = 'System') {
-        $historyFile = 'uploads/orders/' . $referenceCode . '_history.json';
-        
-        $history = [];
-        if (file_exists($historyFile)) {
-            $history = json_decode(file_get_contents($historyFile), true) ?: [];
-        }
-        
-        $history[] = [
-            'id' => uniqid('hist_'),
-            'timestamp' => date('Y-m-d H:i:s'),
-            'action' => $action,
-            'details' => $details,
-            'user' => $user
-        ];
-        
-        file_put_contents($historyFile, json_encode($history, JSON_PRETTY_PRINT));
-        return true;
-    }
-}
-
-/**
- * Get order history
- * @param string $referenceCode Order reference code
- * @return array History entries sorted by timestamp (newest first)
- */
-if (!function_exists('getOrderHistory')) {
-    function getOrderHistory($referenceCode) {
-        $historyFile = 'uploads/orders/' . $referenceCode . '_history.json';
-        
-        if (!file_exists($historyFile)) {
-            return [];
-        }
-        
-        $history = json_decode(file_get_contents($historyFile), true) ?: [];
-        
-        // Sort by timestamp descending (newest first)
-        usort($history, function($a, $b) {
-            return strtotime($b['timestamp']) - strtotime($a['timestamp']);
-        });
-        
-        return $history;
-    }
 }
 
 function formatFileSize($bytes) {
@@ -88,13 +40,7 @@ function getDisplayFileName($refCode, $originalName, $itemNum = 1) {
     return $refCode . '-' . str_pad($itemNum, 2, '0', STR_PAD_LEFT) . '-' . $originalName;
 }
 
-function loadStatuses($statusFile = 'data/statuses.json') {
-    $statuses = [];
-    if (file_exists($statusFile)) {
-        $statuses = json_decode(file_get_contents($statusFile), true) ?: [];
-    }
-    return $statuses;
-}
+// loadStatuses() is now in data-access.php
 
 function generateMTCCTrackingNumber($order, $eventPrefix = null) {
     // Auto-determine event prefix if not provided
@@ -218,17 +164,7 @@ function handleStatusUpdate() {
     }
     exit;
 }
-function findOrderByReference($referenceCode, $orderDir = 'uploads/orders/') {
-    $orderFiles = glob($orderDir . '*-order.json');
-    
-    foreach ($orderFiles as $file) {
-        $data = json_decode(file_get_contents($file), true);
-        if ($data && $data['referenceCode'] === $referenceCode) {
-            return ['data' => $data, 'filepath' => $file];
-        }
-    }
-    return null;
-}
+// findOrderByReference() is now in data-access.php
 
 function handleOrderDeletion() {
     if (!isset($_POST['delete_order']) || !isset($_SESSION['admin_logged_in'])) {

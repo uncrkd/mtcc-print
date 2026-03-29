@@ -22,6 +22,9 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
     exit;
 }
 
+// Load shared data access layer
+require_once 'includes/data-access.php';
+
 // Load Stripe
 require_once 'vendor/autoload.php';
 require_once 'stripe-config.php';
@@ -260,14 +263,14 @@ try {
     file_put_contents($orderFile, json_encode($orderData, JSON_PRETTY_PRINT));
     
     // Log to order history
-    logOrderHistory($referenceCode, 'payment_link_created', 'Payment link generated');
-    
+    logOrderHistory($referenceCode, 'payment_link_created', 'Payment link generated', 'Admin');
+
     // Send email if requested
     $emailSent = false;
     if ($sendEmail) {
         $emailSent = sendPaymentLinkEmail($orderData, $paymentUrl, $referenceCode);
         if ($emailSent) {
-            logOrderHistory($referenceCode, 'payment_link_sent', "Payment link emailed to {$customerEmail}");
+            logOrderHistory($referenceCode, 'payment_link_sent', "Payment link emailed to {$customerEmail}", 'Admin');
         }
     }
     
@@ -299,27 +302,7 @@ try {
     error_log('Payment Link Error: ' . $e->getMessage());
 }
 
-/**
- * Log activity to order history
- */
-function logOrderHistory($referenceCode, $action, $details) {
-    $historyFile = __DIR__ . '/uploads/orders/' . $referenceCode . '_history.json';
-    
-    $history = [];
-    if (file_exists($historyFile)) {
-        $history = json_decode(file_get_contents($historyFile), true) ?: [];
-    }
-    
-    $history[] = [
-        'id' => uniqid('hist_'),
-        'timestamp' => date('Y-m-d H:i:s'),
-        'action' => $action,
-        'details' => $details,
-        'user' => 'Admin'
-    ];
-    
-    file_put_contents($historyFile, json_encode($history, JSON_PRETTY_PRINT));
-}
+// logOrderHistory() is now in includes/data-access.php
 
 /**
  * Send payment link email to customer
