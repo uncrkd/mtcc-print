@@ -244,10 +244,10 @@
 .status-badge.status-printing { background: #f0f9ff; color: #1e40af; border-color: var(--blue); }
 
 .status-badge-large.status-delivered,
-.status-badge.status-delivered { background: #fef3c7; color: #92400e; border-color: var(--brown); }
+.status-badge.status-delivered { background: #fef3c7; color: var(--brown); border-color: var(--brown); }
 
 .status-badge-large.status-pickedup,
-.status-badge.status-pickedup { background: #22c55e; color: #ffffff; border-color: #22c55e; }
+.status-badge.status-pickedup { background: var(--green-dark); color: #ffffff; border-color: var(--green-dark); }
 
 .status-badge-large.status-preflight,
 .status-badge.status-preflight { background: #f5f3ff; color: var(--primary); border-color: #8b5cf6; }
@@ -413,8 +413,8 @@ textarea.field-control {
 .header-input.status-unpaid { background: #fefce8; color: var(--yellow); border-color: var(--yellow); }
 .header-input.status-paid { background: #f0fdf4; color: var(--green); border-color: var(--green); }
 .header-input.status-printing { background: #f0f9ff; color: var(--blue); border-color: var(--blue); }
-.header-input.status-delivered { background: #fef3c7; color: #92400e; border-color: #92400e; }
-.header-input.status-pickedup { background: #22c55e; color: #ffffff; border-color: #22c55e; }
+.header-input.status-delivered { background: #fef3c7; color: var(--brown); border-color: var(--brown); }
+.header-input.status-pickedup { background: var(--green-dark); color: #ffffff; border-color: var(--green-dark); }
 .header-input.status-preflight { background: #f5f3ff; color: var(--primary); border-color: #8b5cf6; }
 .header-input.status-ready { background: #f0fdfa; color: #0d9488; border-color: #0d9488; }
 .header-input.status-dispatched { background: var(--primary-light); color: #6d28d9; border-color: var(--primary); }
@@ -939,7 +939,7 @@ textarea.field-control {
     gap: 4px;
     background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
     border: 1px solid #f59e0b;
-    color: #92400e;
+    color: var(--brown);
     padding: 6px 12px;
     border-radius: 20px;
     font-size: 0.8rem;
@@ -966,18 +966,11 @@ textarea.field-control {
 }
 
 
-/* Cancelled and Refunded Row Styling */
-.orders-table tr.cancelled td:first-child { border-left-color: var(--subtext) !important; }
-.orders-table tr.cancelled td { background-color: #f3f4f6 !important; color: var(--subtext) !important; }
-.orders-table tr.cancelled td a { color: var(--subtext) !important; }
-.orders-table tr.cancelled td .cell-main { color: var(--subtext) !important; }
-.orders-table tr.cancelled td .cell-micro { color: #9ca3af !important; }
+/* Cancelled and Refunded Row Styling — no background, no left border */
+.orders-table tr.cancelled td a { color: var(--subtext); }
+.orders-table tr.cancelled td .cell-main { color: var(--subtext); }
+.orders-table tr.cancelled td .cell-micro { color: #9ca3af; }
 .orders-table tr.cancelled td .priority-indicator { opacity: 0.5; }
-.orders-table tr.cancelled td .status-badge { background-color: #e5e7eb !important; color: var(--subtext) !important; }
-
-/* Refunded rows - soft red like old cancelled */
-.orders-table tr.refunded td:first-child { border-left-color: var(--red) !important; }
-.orders-table tr.refunded td { background-color: #fef2f2 !important; }
 
 /* Status badge colors */
 .status-badge.status-cancelled { background-color: #e5e7eb !important; color: var(--subtext) !important; border-color: var(--subtext) !important; }
@@ -1219,7 +1212,7 @@ textarea.field-control {
 }
 
 .history-user::after {
-    content: 'ðŸ‘¤';
+    content: 'F464';
     margin-left: var(--space-md);
 }
 
@@ -1746,12 +1739,5 @@ textarea.field-control {
     color: #8b5cf6;
 }
 
-/* ===== TABLE ROW HIGHLIGHT for preflight status ===== */
-tr.preflight {
-    border-left: 3px solid #8b5cf6;
-}
-
-tr.ready_to_ship {
-    border-left: 3px solid #06b6d4;
-}
+/* Row left borders removed */
 

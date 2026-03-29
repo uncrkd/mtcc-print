@@ -18,6 +18,7 @@ $canEditOrders = hasPermission('orders_edit');
 $canCreateOrders = hasPermission('orders_create');
 $canViewAnalytics = hasPermission('dashboard_analytics');
 $canDeleteOrders = hasPermission('orders_delete');
+$canViewVendor = in_array($_SESSION['admin_role'] ?? '', ['god_mode', 'super_admin']);
 
 // ============================================================
 // AJAX HANDLERS - Must be FIRST before any HTML output
@@ -169,11 +170,19 @@ if (isset($_GET['check_new_orders'])) {
             }
         }
         
+        // Also compute a hash of current statuses for change detection
+        $statusFile = 'data/statuses.json';
+        $statusHash = '';
+        if (file_exists($statusFile)) {
+            $statusHash = md5_file($statusFile);
+        }
+
         header('Content-Type: application/json');
         echo json_encode([
             'success' => true,
             'orderRefs' => $orderRefs,
-            'totalOrders' => count($orderRefs)
+            'totalOrders' => count($orderRefs),
+            'statusHash' => $statusHash
         ]);
         
     } catch (Exception $e) {
@@ -1653,6 +1662,7 @@ function displayOrderView( $order ) {
   // Permission check - use global permission variables
   $canEditOrders = hasPermission('orders_edit');
   $canDeleteOrders = hasPermission('orders_delete');
+$canViewVendor = in_array($_SESSION['admin_role'] ?? '', ['god_mode', 'super_admin']);
   
   // Load statuses for this order
   $statusFile = 'data/statuses.json';
@@ -1727,6 +1737,8 @@ function displayOrderView( $order ) {
 
 <!-- Page-specific (load as needed) -->
 <link rel="stylesheet" href="css/admin-tables.css">
+<link rel="stylesheet" href="css/admin-orders.css">
+<link rel="stylesheet" href="css/admin-slideout.css">
 
 <!-- Responsive (load last) -->
 <link rel="stylesheet" href="css/admin-responsive.css">
@@ -1744,10 +1756,6 @@ function displayOrderView( $order ) {
 <script src="js/admin-menu-system.js"></script>
 <!-- Chart.js Library -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-	<script>
-console.log('Chart.js loading attempt...');
-console.log('Chart available immediately:', typeof Chart !== 'undefined');
-</script>
 <!-- MODULE 3: Analytics (requires Chart.js) -->
 <script src="js/admin-analytics.js"></script>
 <!-- MODULE 4: Dashboard Controller (coordinates all modules) -->
@@ -1846,16 +1854,7 @@ console.log('Chart available immediately:', typeof Chart !== 'undefined');
     }
 }
 
-/* COGS Column Styles */
-.cogs-cell { white-space: nowrap; }
-.cogs-amount { font-weight: 700; color: #1a1625; font-size: 0.9rem; }
-.cogs-pending { font-weight: 600; color: #d97706; font-size: 0.85rem; }
-.cogs-rejected { font-size: 0.78rem; font-weight: 600; color: #dc2626; padding: 2px 8px; background: #fef2f2; border-radius: 10px; }
-.cogs-awaiting { font-size: 0.78rem; color: #9ca3af; font-style: italic; }
-.cogs-na { color: #d1d5db; }
-.cogs-review { color: #d97706 !important; font-weight: 600; }
-.margin-pos { color: #059669 !important; }
-.margin-neg { color: #dc2626 !important; font-weight: 600; }
+/* COGS column removed */
 </style>
 <!-- Icon Library for JavaScript -->
 <?php outputIconsScript(); ?>
@@ -1895,11 +1894,11 @@ window.orderDueDate = '<?= htmlspecialchars($order['selectedDate']) ?>'; // Lega
         </div>
       </div>
         <div class="page-header-right">
-        <a href="admin-orders.php" class="top-nav-btn" style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 6px;"><?= SYMBOL_ARROW_LEFT ?> Back to Orders</a>
+        <a href="admin-orders.php" class="top-nav-btn"><?= SYMBOL_ARROW_LEFT ?> Back to Orders</a>
       </div>
     </div>
     <?php else: ?>
-    <div class="page-header" style="margin: 0; box-shadow: var(--shadow-md);">
+    <div class="page-header" style="margin: 0;">
       <div class="page-header-left">
         <h1 class="page-title">Order Details</h1>
         <div class="page-welcome">
@@ -1908,14 +1907,14 @@ window.orderDueDate = '<?= htmlspecialchars($order['selectedDate']) ?>'; // Lega
         </div>
       </div>
       <div class="page-header-right">
-        <a href="admin-orders.php" class="top-nav-btn" style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 6px;"><?= SYMBOL_ARROW_LEFT ?> Back to Orders</a>
-          <button onclick="printOrderDetails()" class="top-nav-btn" style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 6px;"><?= ICON_PRINTER ?> Print</button>
-        <button onclick="printShippingLabel()" class="top-nav-btn" style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 6px;"><?= ICON_PACKAGE ?> Print Label</button>
+        <a href="admin-orders.php" class="top-nav-btn"><?= SYMBOL_ARROW_LEFT ?> Back to Orders</a>
+          <button onclick="printOrderDetails()" class="top-nav-btn"><?= ICON_PRINTER ?> Print</button>
+        <button onclick="printShippingLabel()" class="top-nav-btn"><?= ICON_PACKAGE ?> Print Label</button>
         <button onclick="resendConfirmationEmail('<?= htmlspecialchars($order['referenceCode']) ?>')" 
               class="top-nav-btn" 
               style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 6px;"
               title="Send to: <?= htmlspecialchars($order['customerInfo']['email']) ?>"><?= ICON_ENVELOPE ?> Send Details</button>
-        <?php if ($canEditOrders): ?><a href="?view=<?= urlencode($order['referenceCode']) ?>&edit=1" class="top-nav-btn" style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 6px;"><?= ICON_PENCIL ?> Edit</a><?php endif; ?>
+        <?php if ($canEditOrders): ?><a href="?view=<?= urlencode($order['referenceCode']) ?>&edit=1" class="top-nav-btn"><?= ICON_PENCIL ?> Edit</a><?php endif; ?>
       </div>
     </div>
     <?php endif; ?>
@@ -3760,6 +3759,142 @@ if ( count( $paid_orders ) > 0 ) {
   $analytics['avg_base_price'] = $total_base_price / count( $paid_orders );
 }
 
+// New Metrics: Average Turnaround Time, File Issue Rate, On-Time Delivery Rate
+$turnaroundTimes = [];
+$onTimeCount = 0;
+$deliveredCount = 0;
+$fileIssueCount = 0;
+$totalOrdersForMetrics = count($orders);
+
+foreach ($orders as $o) {
+    // Average turnaround: time from submittedAt to when it reached 'delivered' or 'pickedup'
+    if (in_array($o['status'] ?? '', ['delivered', 'pickedup']) && !empty($o['submittedAt'])) {
+        $submitted = strtotime($o['submittedAt']);
+        $modified = $o['modified'] ?? time();
+        if ($submitted && $modified > $submitted) {
+            $turnaroundTimes[] = $modified - $submitted;
+        }
+        $deliveredCount++;
+
+        // On-time: was it delivered before or on the due date?
+        if (!empty($o['selectedDate'])) {
+            $dueEnd = strtotime($o['selectedDate'] . ' 23:59:59');
+            if ($modified <= $dueEnd) $onTimeCount++;
+        }
+    }
+
+    // File issue rate
+    if (($o['status'] ?? '') === 'file_issue') $fileIssueCount++;
+}
+
+$avgTurnaroundSeconds = count($turnaroundTimes) > 0 ? array_sum($turnaroundTimes) / count($turnaroundTimes) : 0;
+$avgTurnaroundHours = round($avgTurnaroundSeconds / 3600, 1);
+// Format nicely: if > 48h show days, otherwise hours
+if ($avgTurnaroundHours >= 48) {
+    $analytics['avg_turnaround_display'] = round($avgTurnaroundHours / 24, 1) . 'd';
+} else {
+    $analytics['avg_turnaround_display'] = $avgTurnaroundHours . 'h';
+}
+$analytics['avg_turnaround_hours'] = $avgTurnaroundHours;
+$analytics['on_time_rate'] = $deliveredCount > 0 ? round(($onTimeCount / $deliveredCount) * 100, 1) : 0;
+$analytics['file_issue_rate'] = $totalOrdersForMetrics > 0 ? round(($fileIssueCount / $totalOrdersForMetrics) * 100, 1) : 0;
+$analytics['file_issue_count'] = $fileIssueCount;
+
+// ============================================================
+// SMART ALERTS — Actionable notifications
+// ============================================================
+$alerts = [];
+$today = date('Y-m-d');
+$now = time();
+$activeStatuses = ['paid', 'preflight', 'file_issue', 'printing', 'ready', 'shipped'];
+
+// 1. Orders past due (due date passed, still in active status)
+$pastDueOrders = array_filter($orders, function($o) use ($today, $activeStatuses) {
+    $dueDate = $o['selectedDate'] ?? '';
+    $status = $o['status'] ?? '';
+    return $dueDate && $dueDate < $today && in_array($status, $activeStatuses);
+});
+if (count($pastDueOrders) > 0) {
+    $alerts[] = [
+        'type' => 'danger',
+        'icon' => ICON_WARNING,
+        'text' => '<strong>' . count($pastDueOrders) . '</strong> order(s) past due date',
+        'filter' => 'pastdue',
+        'count' => count($pastDueOrders)
+    ];
+}
+
+// 2. Orders due today
+$dueTodayOrders = array_filter($orders, function($o) use ($today, $activeStatuses) {
+    return ($o['selectedDate'] ?? '') === $today && in_array($o['status'] ?? '', $activeStatuses);
+});
+if (count($dueTodayOrders) > 0) {
+    $alerts[] = [
+        'type' => 'warning',
+        'icon' => ICON_CALENDAR,
+        'text' => '<strong>' . count($dueTodayOrders) . '</strong> order(s) due today',
+        'filter' => 'duetoday',
+        'count' => count($dueTodayOrders)
+    ];
+}
+
+// 3. Unpaid orders older than 24 hours
+$unpaidStale = array_filter($orders, function($o) use ($now) {
+    if (($o['status'] ?? '') !== 'unpaid') return false;
+    $submitted = strtotime($o['submittedAt'] ?? '');
+    return $submitted && ($now - $submitted) > 86400;
+});
+if (count($unpaidStale) > 0) {
+    $alerts[] = [
+        'type' => 'warning',
+        'icon' => ICON_MONEY_BAG,
+        'text' => '<strong>' . count($unpaidStale) . '</strong> unpaid order(s) over 24 hours old',
+        'filter' => 'status-unpaid',
+        'count' => count($unpaidStale)
+    ];
+}
+
+// 4. Uncollected orders from past events
+if ($problemOrdersCount > 0) {
+    $alerts[] = [
+        'type' => 'warning',
+        'icon' => ICON_MAILBOX,
+        'text' => '<strong>' . $problemOrdersCount . '</strong> uncollected order(s) from past events',
+        'filter' => 'status-delivered',
+        'count' => $problemOrdersCount
+    ];
+}
+
+// 5. File issues (vendor flagged)
+$fileIssueOrders = array_filter($orders, function($o) {
+    return ($o['status'] ?? '') === 'file_issue';
+});
+if (count($fileIssueOrders) > 0) {
+    $alerts[] = [
+        'type' => 'danger',
+        'icon' => ICON_CROSS,
+        'text' => '<strong>' . count($fileIssueOrders) . '</strong> order(s) with file issues',
+        'filter' => 'status-file_issue',
+        'count' => count($fileIssueOrders)
+    ];
+}
+
+// 6. Paid but not assigned to vendor (sitting in 'paid' for 2+ hours)
+$paidUnassigned = array_filter($orders, function($o) use ($now) {
+    if (($o['status'] ?? '') !== 'paid') return false;
+    $paidAt = strtotime($o['paidAt'] ?? $o['submittedAt'] ?? '');
+    return $paidAt && ($now - $paidAt) > 7200;
+});
+if (count($paidUnassigned) > 0) {
+    $alerts[] = [
+        'type' => 'warning',
+        'icon' => ICON_CLOCK,
+        'text' => '<strong>' . count($paidUnassigned) . '</strong> paid order(s) not yet assigned to vendor',
+        'filter' => 'status-paid',
+        'count' => count($paidUnassigned)
+    ];
+}
+
 // Main orders list
 ?>
 <!DOCTYPE html>
@@ -3781,6 +3916,8 @@ if ( count( $paid_orders ) > 0 ) {
 
 <!-- Page-specific (load as needed) -->
 <link rel="stylesheet" href="css/admin-tables.css">
+<link rel="stylesheet" href="css/admin-orders.css">
+<link rel="stylesheet" href="css/admin-slideout.css">
 
 <!-- Responsive (load last) -->
 <link rel="stylesheet" href="css/admin-responsive.css">
@@ -3803,10 +3940,6 @@ if ( count( $paid_orders ) > 0 ) {
 <script src="js/admin-menu-system.js"></script>
 <!-- Chart.js Library -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-	<script>
-console.log('Chart.js loading attempt...');
-console.log('Chart available immediately:', typeof Chart !== 'undefined');
-</script>
 <!-- MODULE 3: Analytics (requires Chart.js) -->
 <script src="js/admin-analytics.js"></script>
 <!-- MODULE 4: Dashboard Controller (coordinates all modules) -->
@@ -3815,10 +3948,14 @@ console.log('Chart available immediately:', typeof Chart !== 'undefined');
 <script src="https://cdn.jsdelivr.net/npm/gridstack@10.0.0/dist/gridstack-all.js"></script>
 <!-- MODULE 5: Drag-and-Drop Dashboard Cards -->
 <script src="js/admin-drag-drop.js"></script>
+<!-- MODULE 6: Kanban Board View -->
+<script src="js/admin-kanban.js"></script>
+<!-- MODULE 7: Order Quick-View Slide-Out -->
+<script src="js/admin-slideout.js"></script>
 
 <!-- Icon Library for JavaScript -->
 <?php outputIconsScript(); ?>
-	
+
 </head>
 <body>
 <?php require_once __DIR__ . '/includes/admin-sidebar.php'; renderSidebar('orders'); ?>
@@ -3840,13 +3977,6 @@ console.log('Chart available immediately:', typeof Chart !== 'undefined');
       <span class="new-orders-count" id="newOrdersCount">0</span>
       <span class="new-orders-text">new</span>
     </span>
-    <?php if ($problemOrdersCount > 0): ?>
-    <span class="problem-badge" id="problemBadge" title="<?= $problemOrdersCount ?> uncollected order(s) from past events">
-      <span class="problem-icon"><?= ICON_WARNING ?></span>
-      <span class="problem-count"><?= $problemOrdersCount ?></span>
-      <span class="problem-text">Uncollected</span>
-    </span>
-    <?php endif; ?>
     <div class="events-segmented-control" id="eventsToggle">
       <button class="segment-btn active" data-mode="active">Active Events</button>
       <button class="segment-btn" data-mode="all">All Events</button>
@@ -3866,12 +3996,26 @@ console.log('Chart available immediately:', typeof Chart !== 'undefined');
 </div>
 
 </div>
-    
+
+<?php if (!empty($alerts)): ?>
+<div class="smart-alerts-bar" id="smartAlertsBar">
+  <div class="alerts-inner">
+    <?php foreach ($alerts as $alert): ?>
+    <button class="alert-chip alert-<?= $alert['type'] ?>" onclick="filterByAlert('<?= htmlspecialchars($alert['filter']) ?>')" title="Click to filter">
+      <span class="alert-chip-icon"><?= $alert['icon'] ?></span>
+      <span class="alert-chip-text"><?= $alert['text'] ?></span>
+    </button>
+    <?php endforeach; ?>
+    <button class="alert-dismiss-btn" onclick="dismissAlerts()" title="Dismiss">&#10005;</button>
+  </div>
+</div>
+<?php endif; ?>
+
 <?php if (isset($_GET['updated'])): ?>
 <div class="update-notice"> <?= ICON_CHECK_GREEN ?> Successfully updated
   <?= intval($_GET['updated']) ?>
   order(s) </div>
-	
+
 <?php endif; ?>
 
 <?php if ($canViewAnalytics): ?>
@@ -4176,23 +4320,40 @@ console.log('Chart available immediately:', typeof Chart !== 'undefined');
       </div>
     </div>
 
-    <!-- Order Statuses -->
-    <div class="grid-stack-item" gs-id="order-statuses" gs-x="18" gs-y="24" gs-w="6" gs-h="9" gs-min-w="4" gs-min-h="6">
+    <!-- Avg Turnaround Card -->
+    <div class="grid-stack-item" gs-id="avg-turnaround" gs-x="0" gs-y="12" gs-w="4" gs-h="6" gs-min-w="4" gs-min-h="3">
       <div class="grid-stack-item-content">
-        <div class="analytics-card chart-card">
-          <div class="card-header">
-            <span class="card-icon"><?= ICON_FLAG ?></span>
-            <span class="card-title">Order Statuses</span>
+        <div class="analytics-card compact">
+          <div class="card-header"><span class="card-icon"><?= ICON_CLOCK ?></span><span class="card-title">Avg Turnaround</span></div>
+          <div class="card-content">
+            <div class="primary-metric" id="avgTurnaround"><?= $analytics['avg_turnaround_display'] ?></div>
+            <div class="secondary-metric">Submit &#10142; Delivery</div>
           </div>
-          <div class="card-content status-grid" id="orderStatusesContent">
-            <?php foreach ($analytics['status_breakdown'] as $status => $count): ?>
-              <?php if ($count > 0): ?>
-                <div class="status-item status-<?= $status ?>">
-                  <span class="status-count"><?= $count ?></span>
-                  <span class="status-label"><?= ucfirst($status) ?></span>
-                </div>
-              <?php endif; ?>
-            <?php endforeach; ?>
+        </div>
+      </div>
+    </div>
+
+    <!-- On-Time Delivery Card -->
+    <div class="grid-stack-item" gs-id="on-time-delivery" gs-x="4" gs-y="12" gs-w="4" gs-h="6" gs-min-w="4" gs-min-h="3">
+      <div class="grid-stack-item-content">
+        <div class="analytics-card compact">
+          <div class="card-header"><span class="card-icon"><?= ICON_CHECK_GREEN ?></span><span class="card-title">On-Time Delivery</span></div>
+          <div class="card-content">
+            <div class="primary-metric" id="onTimeRate" style="color: #059669;"><?= $analytics['on_time_rate'] ?>%</div>
+            <div class="secondary-metric">Delivered before due date</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- File Issue Rate Card -->
+    <div class="grid-stack-item" gs-id="file-issue-rate" gs-x="8" gs-y="12" gs-w="4" gs-h="6" gs-min-w="4" gs-min-h="3">
+      <div class="grid-stack-item-content">
+        <div class="analytics-card compact">
+          <div class="card-header"><span class="card-icon"><?= ICON_WARNING ?></span><span class="card-title">File Issue Rate</span></div>
+          <div class="card-content">
+            <div class="primary-metric" id="fileIssueRate" <?= $analytics['file_issue_rate'] > 10 ? 'style="color: #dc2626;"' : '' ?>><?= $analytics['file_issue_rate'] ?>%</div>
+            <div class="secondary-metric" id="fileIssueCount"><?= $analytics['file_issue_count'] ?> order(s) with issues</div>
           </div>
         </div>
       </div>
@@ -4210,32 +4371,7 @@ window.dashboardData = {
   activeEventPrefixes: <?= json_encode(array_keys($activeEventPrefixes)) ?>
 };
 
-// Debug output
-console.log('[PHP] Events file found:', <?= json_encode($eventsFileFound) ?>);
-console.log('[PHP] Active events in JSON:', <?= json_encode(count($eventsData['active'] ?? [])) ?>);
-console.log('[PHP] Active event prefixes:', <?= json_encode(array_keys($activeEventPrefixes)) ?>);
-console.log('[PHP] Total orders:', <?= count($orders) ?>);
-
-// Initialize analytics when everything is loaded
-document.addEventListener('DOMContentLoaded', function() {
-  console.log('DOM loaded, checking for Chart.js...');
-  console.log('Chart available:', typeof Chart !== 'undefined');
-  console.log('initializeAnalytics available:', typeof initializeAnalytics === 'function');
-  console.log('dashboardData available:', !!window.dashboardData);
-  
-  // Wait a bit for all scripts to load
-  setTimeout(() => {
-    if (typeof Chart !== 'undefined' && typeof initializeAnalytics === 'function' && window.dashboardData) {
-      console.log('All requirements met, initializing analytics...');
-      initializeAnalytics(window.dashboardData);
-    } else {
-      console.error('Requirements not met for analytics initialization');
-      console.log('Chart:', typeof Chart);
-      console.log('initializeAnalytics:', typeof initializeAnalytics);
-      console.log('dashboardData:', !!window.dashboardData);
-    }
-  }, 2000);
-});
+// Analytics initialization is handled by admin-dashboard.js DashboardController.setupAnalyticsUpdates()
 	
 </script>
 	
@@ -4270,6 +4406,10 @@ document.addEventListener('DOMContentLoaded', function() {
       <option value="100">100 rows</option>
       <option value="all">All</option>
     </select>
+    <div class="view-toggle-group">
+      <button class="view-toggle-btn active" id="tableViewBtn" onclick="switchView('table')" title="Table View">&#9776; Table</button>
+      <button class="view-toggle-btn" id="boardViewBtn" onclick="switchView('board')" title="Board View">&#9638; Board</button>
+    </div>
     <button id="filtersToggleBtn" class="table-header-btn-soft" onclick="toggleFiltersPanel()">
       <span><?= ICON_LABEL ?></span> Filters <span id="filterCountBadge" class="filter-count-badge" style="display: none;">0</span> <span id="filtersToggleIcon"><?= SYMBOL_ARROW_UP ?></span>
     </button>
@@ -4284,6 +4424,13 @@ document.addEventListener('DOMContentLoaded', function() {
 <div id="filtersContainer" class="filters-container collapsed">
   <div class="filters-header-row">
     <span class="filters-title"><?= ICON_LABEL ?> Filter Orders</span>
+    <div class="filter-presets-group">
+      <select id="filterPresetSelect" class="filter-preset-select" onchange="loadFilterPreset(this.value)">
+        <option value="">Saved Presets...</option>
+      </select>
+      <button class="filter-preset-save-btn" onclick="saveFilterPreset()" title="Save current filters as preset"><?= ICON_SAVE ?> Save</button>
+      <button class="filter-preset-delete-btn" id="deletePresetBtn" onclick="deleteFilterPreset()" title="Delete selected preset" style="display:none"><?= ICON_CROSS ?></button>
+    </div>
     <button id="clearFiltersBtn" class="clear-filters-btn" disabled><?= ICON_CROSS ?> Clear All Filters</button>
   </div>
   
@@ -4366,6 +4513,9 @@ document.addEventListener('DOMContentLoaded', function() {
   <p>Orders will appear here once customers submit them.</p>
 </div>
 <?php else: ?>
+<!-- Kanban Board View (hidden by default) -->
+<div id="kanbanContainer" style="display: none;"></div>
+
 <div class="orders-table-container">
   <table class="orders-table" id="ordersTable">
     <thead>
@@ -4384,9 +4534,23 @@ document.addEventListener('DOMContentLoaded', function() {
         </th>
         <th class="sortable" data-sort="size">Size</th>
         <th class="sortable" data-sort="price">Price</th>
-        <th class="sortable" data-sort="cogs">COGS</th>
+        <?php if ($canViewVendor): ?><th class="sortable" data-sort="vendor">Vendor</th><?php endif; ?>
         <th class="sortable" data-sort="status">Status</th>
-        <th class="actions-column"></th>
+        <th class="actions-column">
+          <div class="column-config-wrapper">
+            <button class="col-config-btn" onclick="toggleColumnConfig()" title="Customize columns"><?= SYMBOL_DOTS_VERTICAL ?></button>
+            <div class="column-config-dropdown" id="columnConfigDropdown" style="display:none">
+              <div class="col-config-title">Show/Hide Columns</div>
+              <label class="col-config-item"><input type="checkbox" data-col="1" checked onchange="toggleColumn(1, this.checked)"> Order #</label>
+              <label class="col-config-item"><input type="checkbox" data-col="2" checked onchange="toggleColumn(2, this.checked)"> Priority</label>
+              <label class="col-config-item"><input type="checkbox" data-col="3" checked onchange="toggleColumn(3, this.checked)"> Customer</label>
+              <label class="col-config-item"><input type="checkbox" data-col="4" checked onchange="toggleColumn(4, this.checked)"> Due Date</label>
+              <label class="col-config-item"><input type="checkbox" data-col="5" checked onchange="toggleColumn(5, this.checked)"> Size</label>
+              <label class="col-config-item"><input type="checkbox" data-col="6" checked onchange="toggleColumn(6, this.checked)"> Price</label>
+              <label class="col-config-item"><input type="checkbox" data-col="7" checked onchange="toggleColumn(7, this.checked)"> Status</label>
+            </div>
+          </div>
+        </th>
       </tr>
     </thead>
     <tbody id="ordersTableBody">
@@ -4441,12 +4605,21 @@ document.addEventListener('DOMContentLoaded', function() {
         </td>
         
         <!-- Order Number Column -->
-        <td><?php if ($isNew): ?>
-          <div class="new-badge"> <a href="?view=<?= urlencode($order['referenceCode'] ?? '') ?>" class="order-number">
+        <td class="order-number-cell"><?php
+          $filePreviewPath = '';
+          if (!empty($order['uploadedFile']['path'])) {
+              $filePreviewPath = $order['uploadedFile']['path'];
+          } elseif (!empty($order['uploadedFile']['savedName'])) {
+              $filePreviewPath = 'uploads/files/' . $order['uploadedFile']['savedName'];
+          }
+          $hasPreview = $filePreviewPath && file_exists($filePreviewPath) && preg_match('/\.(jpg|jpeg|png|gif|webp)$/i', $filePreviewPath);
+          ?>
+          <?php if ($isNew): ?>
+          <div class="new-badge"> <a href="javascript:void(0)" class="order-number" onclick="OrderSlideout.open('<?= htmlspecialchars($order['referenceCode'] ?? '') ?>')"<?php if ($hasPreview): ?> data-preview="<?= htmlspecialchars($filePreviewPath) ?>"<?php endif; ?>>
             <?= htmlspecialchars($order['referenceCode'] ?? 'Unknown') ?>
             </a> </div>
           <?php else: ?>
-          <a href="?view=<?= urlencode($order['referenceCode'] ?? '') ?>" class="order-number">
+          <a href="javascript:void(0)" class="order-number" onclick="OrderSlideout.open('<?= htmlspecialchars($order['referenceCode'] ?? '') ?>')"<?php if ($hasPreview): ?> data-preview="<?= htmlspecialchars($filePreviewPath) ?>"<?php endif; ?>>
           <?= htmlspecialchars($order['referenceCode'] ?? 'Unknown') ?>
           </a>
           <?php endif; ?></td>
@@ -4490,33 +4663,13 @@ document.addEventListener('DOMContentLoaded', function() {
         <td>$
           <?= number_format($order['pricing']['total'] ?? 0, 2) ?></td>
         
-        <!-- COGS Column (Vendor Cost) -->
-        <td class="cogs-cell"><?php
-          $vp = $order['vendor_pricing'] ?? null;
-          $vpStatus = $vp['status'] ?? 'none';
-          if ($vpStatus === 'accepted') {
-              echo '<span class="cogs-amount">$' . number_format($vp['total'] ?? 0, 2) . '</span>';
-              // Show margin
-              $customerTotal = floatval($order['pricing']['total'] ?? 0);
-              $vendorTotal = floatval($vp['total'] ?? 0);
-              if ($customerTotal > 0 && $vendorTotal > 0) {
-                  $margin = $customerTotal - $vendorTotal;
-                  $marginPct = round(($margin / $customerTotal) * 100);
-                  $marginClass = $margin >= 0 ? 'margin-pos' : 'margin-neg';
-                  echo '<div class="cell-micro ' . $marginClass . '">$' . number_format($margin, 2) . ' (' . $marginPct . '%)</div>';
-              }
-          } elseif ($vpStatus === 'submitted') {
-              echo '<span class="cogs-pending">$' . number_format($vp['total'] ?? 0, 2) . '</span>';
-              echo '<div class="cell-micro cogs-review">Needs review</div>';
-          } elseif ($vpStatus === 'rejected') {
-              echo '<span class="cogs-rejected">Rejected</span>';
-          } elseif (in_array($order['status'] ?? '', ['preflight', 'printing', 'ready', 'shipped', 'delivered', 'pickedup'])) {
-              echo '<span class="cogs-awaiting">Awaiting</span>';
-          } else {
-              echo '<span class="cogs-na">&mdash;</span>';
-          }
-        ?></td>
-        
+        <!-- Vendor Column (god_mode/super_admin only) -->
+        <?php if ($canViewVendor): ?>
+        <td class="vendor-cell">
+          <div class="cell-main"><?= htmlspecialchars($order['vendor_name'] ?? '') ?: '<span class="vendor-unassigned">Unassigned</span>' ?></div>
+        </td>
+        <?php endif; ?>
+
         <!-- Status Column -->
         <td><?php
         $statusIcons = [
@@ -4539,9 +4692,15 @@ document.addEventListener('DOMContentLoaded', function() {
         $orderRefCode = $order['referenceCode'] ?? '';
         ?>
           <div class="status-badge-wrapper">
-            <span class="status-badge status-badge-clickable status-<?= $orderStatus ?>" 
+            <span class="status-badge status-badge-clickable status-<?= $orderStatus ?> status-has-tooltip"
                   data-current-status="<?= $orderStatus ?>"
-                  onclick="toggleQuickStatusDropdown(event, '<?= $orderRefCode ?>', '<?= $orderStatus ?>')">
+                  onclick="toggleQuickStatusDropdown(event, '<?= $orderRefCode ?>', '<?= $orderStatus ?>')"
+                  data-timeline="<?php
+                    $timeline = [];
+                    if (!empty($order['submittedAt'])) $timeline[] = 'Submitted: ' . date('M j, g:i A', strtotime($order['submittedAt']));
+                    if (!empty($order['paidAt'])) $timeline[] = 'Paid: ' . date('M j, g:i A', strtotime($order['paidAt']));
+                    echo htmlspecialchars(implode("\n", $timeline));
+                  ?>">
               <?= $statusIcons[$orderStatus] ?? '<?= ICON_MEMO ?>' ?>
               <?= $statusConfig[$orderStatus]['label'] ?? 'Unknown' ?>
             </span>
@@ -4587,33 +4746,374 @@ document.addEventListener('DOMContentLoaded', function() {
 </div> <!-- End table-card-wrapper -->
 <?php endif; ?>
 	
+<!-- Bulk Action Sticky Toolbar (matches Production dock style) -->
+<div class="queue-bulk-dock" id="bulkActionToolbar">
+  <div class="queue-bulk-inner">
+    <span class="queue-bulk-count" id="bulkToolbarCount">0</span>
+    <span class="queue-bulk-label">selected</span>
+    <button class="queue-bulk-btn queue-bulk-push" onclick="bulkChangeStatus()">Change Status</button>
+    <button class="queue-bulk-btn queue-bulk-batch" onclick="printSelectedOrders()">Print Labels</button>
+    <button class="queue-bulk-btn" onclick="exportSelectedOrders()" style="background: rgba(255,255,255,0.1); color: white;">Export CSV</button>
+    <button class="queue-bulk-btn" onclick="downloadSelectedFiles()" style="background: rgba(255,255,255,0.1); color: white;">Download Files</button>
+    <button class="queue-bulk-btn queue-bulk-issue" onclick="bulkDeleteOrders()">Delete</button>
+    <button class="queue-bulk-clear" onclick="clearAllSelections()">&#10005;</button>
+  </div>
+</div>
+
 <!-- Remove the old scripts and use only this simple one -->
 <script src="js/simple-filters.js"></script>
 <script src="js/admin-bulk-selection.js"></script>
 <script src="js/admin-actions-menu.js"></script>
 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('=== STARTING SIMPLE FILTERS ===');
-    
-    // Check if we have the required elements
-    const tableBody = document.getElementById('ordersTableBody');
-    const filterButtons = document.querySelectorAll('.filter-btn[data-filter-type]');
-    
-    console.log('Table body found:', !!tableBody);
-    console.log('Filter buttons found:', filterButtons.length);
-    
-    if (tableBody && filterButtons.length > 0) {
-        window.simpleFilters = new SimpleFilterManager();
-        console.log('Simple filters initialized');
-    } else {
-        console.log('Missing required elements');
-    }
-});
-</script>
+<!-- SimpleFilterManager is initialized by admin-dashboard.js DashboardController -->
 
 <script>
 // Filters panel toggle (standalone function)
+// Column Customization — show/hide table columns
+var COL_CONFIG_KEY = 'mtcc_column_config';
+
+function toggleColumnConfig() {
+  var dd = document.getElementById('columnConfigDropdown');
+  if (dd) dd.style.display = dd.style.display === 'none' ? '' : 'none';
+}
+
+// Close dropdown on outside click
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.column-config-wrapper')) {
+    var dd = document.getElementById('columnConfigDropdown');
+    if (dd) dd.style.display = 'none';
+  }
+});
+
+function toggleColumn(colIndex, visible) {
+  // colIndex is 1-based (skipping checkbox col 0 and actions col 9)
+  // Actual table column index: colIndex maps to nth-child(colIndex + 1) since checkbox is col 0
+  var actualIndex = colIndex + 1; // +1 because checkbox is first col
+  var table = document.getElementById('ordersTable');
+  if (!table) return;
+
+  var cells = table.querySelectorAll('th:nth-child(' + actualIndex + '), td:nth-child(' + actualIndex + ')');
+  cells.forEach(function(cell) {
+    cell.style.display = visible ? '' : 'none';
+  });
+
+  // Save to localStorage
+  var config = getColumnConfig();
+  config[colIndex] = visible;
+  localStorage.setItem(COL_CONFIG_KEY, JSON.stringify(config));
+}
+
+function getColumnConfig() {
+  try {
+    return JSON.parse(localStorage.getItem(COL_CONFIG_KEY)) || {};
+  } catch(e) { return {}; }
+}
+
+function applyColumnConfig() {
+  var config = getColumnConfig();
+  Object.keys(config).forEach(function(col) {
+    var colIndex = parseInt(col);
+    if (!config[colIndex]) {
+      toggleColumn(colIndex, false);
+      // Uncheck the checkbox
+      var checkbox = document.querySelector('.column-config-dropdown input[data-col="' + colIndex + '"]');
+      if (checkbox) checkbox.checked = false;
+    }
+  });
+}
+
+// Apply saved column config on load
+document.addEventListener('DOMContentLoaded', applyColumnConfig);
+
+// Bulk action toolbar — show/hide based on selection count
+(function() {
+  var toolbar = document.getElementById('bulkActionToolbar');
+  var countEl = document.getElementById('bulkToolbarCount');
+  if (!toolbar) return;
+
+  // Watch for selection changes via MutationObserver on the selection badge
+  var selectionBadge = document.getElementById('selectionCountBadge');
+  if (selectionBadge) {
+    var observer = new MutationObserver(function() {
+      var countSpan = document.getElementById('selectionCount');
+      var count = countSpan ? parseInt(countSpan.textContent) || 0 : 0;
+      if (count > 0) {
+        toolbar.classList.add('visible');
+        if (countEl) countEl.textContent = count;
+      } else {
+        toolbar.classList.remove('visible');
+      }
+    });
+    observer.observe(selectionBadge, { attributes: true, childList: true, subtree: true });
+  }
+
+  // Also listen for checkbox changes directly
+  document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('order-checkbox') || e.target.id === 'selectAllOrders') {
+      setTimeout(function() {
+        var checked = document.querySelectorAll('.order-checkbox:checked').length;
+        if (checked > 0) {
+          toolbar.classList.add('visible');
+          if (countEl) countEl.textContent = checked;
+        } else {
+          toolbar.classList.remove('visible');
+        }
+      }, 50);
+    }
+  });
+})();
+
+// Status timeline tooltip
+(function() {
+  var tooltip = null;
+
+  function createTooltip() {
+    tooltip = document.createElement('div');
+    tooltip.className = 'status-timeline-tooltip';
+    document.body.appendChild(tooltip);
+  }
+
+  document.addEventListener('mouseover', function(e) {
+    var badge = e.target.closest('.status-has-tooltip[data-timeline]');
+    if (!badge || !badge.dataset.timeline) return;
+
+    if (!tooltip) createTooltip();
+    tooltip.textContent = badge.dataset.timeline;
+    tooltip.style.display = 'block';
+
+    var rect = badge.getBoundingClientRect();
+    tooltip.style.left = (rect.left + rect.width / 2 - tooltip.offsetWidth / 2) + 'px';
+    tooltip.style.top = (rect.top - tooltip.offsetHeight - 8) + 'px';
+  });
+
+  document.addEventListener('mouseout', function(e) {
+    if (e.target.closest('.status-has-tooltip') && tooltip) tooltip.style.display = 'none';
+  });
+})();
+
+// File preview tooltip on order number hover
+(function() {
+  var tooltip = null;
+
+  function createTooltip() {
+    tooltip = document.createElement('div');
+    tooltip.className = 'file-preview-tooltip';
+    tooltip.innerHTML = '<img src="" alt="Preview">';
+    document.body.appendChild(tooltip);
+  }
+
+  document.addEventListener('mouseover', function(e) {
+    var link = e.target.closest('.order-number[data-preview]');
+    if (!link) return;
+
+    if (!tooltip) createTooltip();
+    var img = tooltip.querySelector('img');
+    img.src = link.dataset.preview;
+    tooltip.style.display = 'block';
+
+    var rect = link.getBoundingClientRect();
+    var top = rect.bottom + 8;
+    var left = rect.left;
+
+    // Keep within viewport
+    if (top + 400 > window.innerHeight) top = rect.top - 408;
+    if (left + 400 > window.innerWidth) left = window.innerWidth - 410;
+
+    tooltip.style.top = top + 'px';
+    tooltip.style.left = left + 'px';
+  });
+
+  document.addEventListener('mouseout', function(e) {
+    var link = e.target.closest('.order-number[data-preview]');
+    if (link && tooltip) tooltip.style.display = 'none';
+  });
+})();
+
+/* Event tab bar and Today filter removed — using filters panel instead */
+
+// View toggle — switch between table and kanban board
+function switchView(view) {
+  var tableBtn = document.getElementById('tableViewBtn');
+  var boardBtn = document.getElementById('boardViewBtn');
+
+  if (view === 'board') {
+    KanbanBoard.show();
+    if (tableBtn) tableBtn.classList.remove('active');
+    if (boardBtn) boardBtn.classList.add('active');
+  } else {
+    KanbanBoard.hide();
+    if (tableBtn) tableBtn.classList.add('active');
+    if (boardBtn) boardBtn.classList.remove('active');
+  }
+}
+
+// Smart Alerts — filter by alert type
+function filterByAlert(filterType) {
+  // Expand filters panel if collapsed
+  var filtersContainer = document.getElementById('filtersContainer');
+  if (filtersContainer && filtersContainer.classList.contains('collapsed')) {
+    toggleFiltersPanel();
+  }
+
+  if (filterType === 'pastdue' || filterType === 'duetoday') {
+    // These need special handling — sort by due date and scroll to table
+    var table = document.getElementById('ordersTable');
+    if (table) table.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    // For past due / due today, filter by searching the date in the table
+    var searchBox = document.getElementById('searchBox');
+    if (filterType === 'duetoday') {
+      var today = new Date();
+      var monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      searchBox.value = monthNames[today.getMonth()] + ' ' + today.getDate();
+      searchBox.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+  } else if (filterType.startsWith('status-')) {
+    // Click the corresponding status filter button
+    var status = filterType.replace('status-', '');
+    var filterBtn = document.querySelector('.filter-btn.status-' + status);
+    if (filterBtn && !filterBtn.classList.contains('active')) {
+      filterBtn.click();
+    }
+  }
+}
+
+// ===== FILTER PRESETS =====
+var PRESET_STORAGE_KEY = 'mtcc_filter_presets';
+
+function getFilterPresets() {
+  try {
+    return JSON.parse(localStorage.getItem(PRESET_STORAGE_KEY)) || {};
+  } catch (e) { return {}; }
+}
+
+function populatePresetSelect() {
+  var select = document.getElementById('filterPresetSelect');
+  if (!select) return;
+  var presets = getFilterPresets();
+  var names = Object.keys(presets);
+
+  // Keep the default option, remove the rest
+  select.innerHTML = '<option value="">Saved Presets... (' + names.length + ')</option>';
+  names.forEach(function(name) {
+    var opt = document.createElement('option');
+    opt.value = name;
+    opt.textContent = name;
+    select.appendChild(opt);
+  });
+}
+
+function saveFilterPreset() {
+  if (!window.filterManager) return;
+
+  var name = prompt('Name this filter preset:');
+  if (!name || !name.trim()) return;
+  name = name.trim();
+
+  var state = {
+    priority: Array.from(window.filterManager.filters.priority),
+    status: Array.from(window.filterManager.filters.status),
+    prefix: Array.from(window.filterManager.filters.prefix),
+    search: window.filterManager.filters.search || '',
+    eventsMode: window.filterManager.eventsMode || 'active'
+  };
+
+  var presets = getFilterPresets();
+  presets[name] = state;
+  localStorage.setItem(PRESET_STORAGE_KEY, JSON.stringify(presets));
+  populatePresetSelect();
+
+  if (typeof showNotification === 'function') {
+    showNotification('Preset "' + name + '" saved', 'success');
+  }
+}
+
+function loadFilterPreset(name) {
+  if (!name || !window.filterManager) {
+    document.getElementById('deletePresetBtn').style.display = 'none';
+    return;
+  }
+
+  var presets = getFilterPresets();
+  var preset = presets[name];
+  if (!preset) return;
+
+  // Clear existing filters
+  window.filterManager.filters.priority.clear();
+  window.filterManager.filters.status.clear();
+  window.filterManager.filters.prefix.clear();
+  window.filterManager.filters.search = '';
+
+  // Apply saved filters
+  if (preset.priority) preset.priority.forEach(function(v) { window.filterManager.filters.priority.add(v); });
+  if (preset.status) preset.status.forEach(function(v) { window.filterManager.filters.status.add(v); });
+  if (preset.prefix) preset.prefix.forEach(function(v) { window.filterManager.filters.prefix.add(v); });
+  if (preset.search) {
+    window.filterManager.filters.search = preset.search;
+    var searchBox = document.getElementById('searchBox');
+    if (searchBox) searchBox.value = preset.search;
+  }
+
+  // Update button active states
+  document.querySelectorAll('.filter-btn').forEach(function(btn) {
+    var type = btn.dataset.filterType;
+    var value = btn.dataset.filterValue;
+    if (type && value) {
+      var filterSet = window.filterManager.filters[type];
+      if (filterSet && filterSet.has && filterSet.has(value)) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    }
+  });
+
+  // Show delete button
+  document.getElementById('deletePresetBtn').style.display = '';
+
+  // Re-apply filters
+  window.filterManager.applyFilters();
+
+  if (typeof showNotification === 'function') {
+    showNotification('Preset "' + name + '" loaded', 'info');
+  }
+}
+
+function deleteFilterPreset() {
+  var select = document.getElementById('filterPresetSelect');
+  var name = select ? select.value : '';
+  if (!name) return;
+
+  if (!confirm('Delete preset "' + name + '"?')) return;
+
+  var presets = getFilterPresets();
+  delete presets[name];
+  localStorage.setItem(PRESET_STORAGE_KEY, JSON.stringify(presets));
+  populatePresetSelect();
+  document.getElementById('deletePresetBtn').style.display = 'none';
+
+  if (typeof showNotification === 'function') {
+    showNotification('Preset "' + name + '" deleted', 'info');
+  }
+}
+
+// Initialize presets on load
+document.addEventListener('DOMContentLoaded', function() {
+  populatePresetSelect();
+});
+
+function dismissAlerts() {
+  var bar = document.getElementById('smartAlertsBar');
+  if (bar) {
+    bar.style.transition = 'all 0.3s ease';
+    bar.style.opacity = '0';
+    bar.style.maxHeight = '0';
+    bar.style.marginBottom = '0';
+    bar.style.overflow = 'hidden';
+    setTimeout(function() { bar.style.display = 'none'; }, 300);
+  }
+}
+
 function toggleFiltersPanel() {
     const filtersContainer = document.getElementById('filtersContainer');
     const toggleIcon = document.getElementById('filtersToggleIcon');
@@ -4628,11 +5128,11 @@ function toggleFiltersPanel() {
     
     if (isCollapsed) {
         filtersContainer.classList.remove('collapsed');
-        if (toggleIcon) toggleIcon.textContent = '<?= SYMBOL_ARROW_UP ?>';
+        if (toggleIcon) toggleIcon.innerHTML = '\u2191';
         if (toggleBtn) toggleBtn.classList.add('active');
     } else {
         filtersContainer.classList.add('collapsed');
-        if (toggleIcon) toggleIcon.textContent = '<?= SYMBOL_ARROW_CYCLE ?>';
+        if (toggleIcon) toggleIcon.innerHTML = '\u21BA';
         if (toggleBtn) toggleBtn.classList.remove('active');
     }
 }
@@ -4645,11 +5145,11 @@ function toggleAnalytics() {
     
     if (container.classList.contains('collapsed')) {
         container.classList.remove('collapsed');
-        icon.textContent = '<?= SYMBOL_ARROW_UP ?>';
+        icon.innerHTML = '\u2191';
         btn.classList.remove('collapsed');
     } else {
         container.classList.add('collapsed');
-        icon.textContent = '<?= SYMBOL_ARROW_CYCLE ?>';
+        icon.innerHTML = '\u21BA';
         btn.classList.add('collapsed');
     }
 }
@@ -4661,9 +5161,10 @@ function toggleAnalytics() {
 
 // Configuration
 const AUTO_REFRESH_CONFIG = {
-    pollInterval: 60000,      // Check for new orders every 60 seconds
+    pollInterval: 30000,      // Check every 30 seconds
     enabled: true,            // Auto-refresh enabled by default
     knownOrderRefs: new Set(), // Track known order reference codes
+    knownStatusHash: '',      // Track status changes from vendor/webhook
     soundEnabled: true,       // Sound notification enabled
     browserNotifyEnabled: true // Browser notification enabled
 };
@@ -4856,25 +5357,56 @@ async function checkForNewOrders() {
     try {
         const response = await fetch('admin-orders.php?check_new_orders=1');
         const data = await response.json();
-        
+
         if (data.success && data.orderRefs) {
             // Find new orders by comparing reference codes
             const newRefs = data.orderRefs.filter(ref => !AUTO_REFRESH_CONFIG.knownOrderRefs.has(ref));
-            
+
             if (newRefs.length > 0) {
                 console.log('[Auto-Refresh] New orders detected:', newRefs);
-                
+
                 // Add new refs to known set so we don't notify again
                 newRefs.forEach(ref => AUTO_REFRESH_CONFIG.knownOrderRefs.add(ref));
-                
+
                 // Show notifications
                 showNewOrdersBadge(newRefs.length);
                 playNotificationSound();
                 showBrowserNotification(newRefs.length);
             }
+
+            // Check for status changes (from vendor portal, webhooks, other admins)
+            if (data.statusHash && AUTO_REFRESH_CONFIG.knownStatusHash) {
+                if (data.statusHash !== AUTO_REFRESH_CONFIG.knownStatusHash) {
+                    console.log('[Auto-Refresh] Status changes detected, refreshing...');
+                    AUTO_REFRESH_CONFIG.knownStatusHash = data.statusHash;
+                    showStatusUpdateBanner();
+                }
+            }
+            // Store initial hash
+            if (data.statusHash && !AUTO_REFRESH_CONFIG.knownStatusHash) {
+                AUTO_REFRESH_CONFIG.knownStatusHash = data.statusHash;
+            }
         }
     } catch (error) {
         console.error('[Auto-Refresh] Error checking for new orders:', error);
+    }
+}
+
+function showStatusUpdateBanner() {
+    // Don't show duplicate banners
+    if (document.getElementById('statusUpdateBanner')) return;
+
+    var banner = document.createElement('div');
+    banner.id = 'statusUpdateBanner';
+    banner.className = 'status-update-banner';
+    banner.innerHTML = '<span>&#128260; Order statuses have been updated by another user or system.</span>' +
+        '<button onclick="window.location.reload()" class="status-update-refresh-btn">Refresh Now</button>' +
+        '<button onclick="this.parentElement.remove()" class="status-update-dismiss-btn">&#10005;</button>';
+
+    // Insert after page header
+    var header = document.querySelector('.page-header');
+    if (header && header.parentElement) {
+        header.parentElement.insertBefore(banner, header.nextSibling);
     }
 }
 
@@ -4935,16 +5467,34 @@ function testNotification() {
 // Make it globally accessible for console testing
 window.testNotification = testNotification;
 
-// Update table title when events toggle changes
+// Update table title and analytics when events toggle changes
 document.addEventListener('DOMContentLoaded', function() {
     const eventsToggle = document.getElementById('eventsToggle');
     const tableTitleMode = document.getElementById('tableTitleMode');
-    
+
     if (eventsToggle && tableTitleMode) {
         eventsToggle.addEventListener('click', function(e) {
             if (e.target.classList.contains('segment-btn')) {
                 const mode = e.target.dataset.mode;
+
+                // Update active button state
+                eventsToggle.querySelectorAll('.segment-btn').forEach(function(btn) {
+                    btn.classList.remove('active');
+                });
+                e.target.classList.add('active');
+
+                // Update table title
                 tableTitleMode.textContent = mode === 'active' ? 'Active Events' : 'All Events';
+
+                // Update analytics charts and metrics
+                if (window.analyticsManager && typeof window.analyticsManager.recalculateForEventsMode === 'function') {
+                    window.analyticsManager.recalculateForEventsMode(mode);
+                }
+
+                // Update table filtering
+                if (window.simpleFilters && typeof window.simpleFilters.setEventsMode === 'function') {
+                    window.simpleFilters.setEventsMode(mode);
+                }
             }
         });
     }

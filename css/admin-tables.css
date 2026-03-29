@@ -473,9 +473,9 @@
 .status-item.status-unpaid { background: #fefce8; color: #a16207; }
 .status-item.status-paid { background: #f0fdf4; color: #166534; }
 .status-item.status-printing { background: #f0f9ff; color: #1e40af; }
-.status-item.status-delivered { background: #fef3c7; color: #92400e; }
+.status-item.status-delivered { background: #fef3c7; color: var(--brown); }
 
-.status-item.status-pickedup { background: #22c55e; color: #ffffff; }
+.status-item.status-pickedup { background: var(--green-dark); color: #ffffff; }
 
 .status-count {
     font-weight: 700;
@@ -783,8 +783,8 @@
 .filter-btn.status-printing.active { background: var(--blue); border-color: var(--blue); }
 .filter-btn.status-ready_to_ship.active { background: #06b6d4; border-color: #06b6d4; }
 .filter-btn.status-shipped.active { background: #14b8a6; border-color: #14b8a6; }
-.filter-btn.status-delivered.active { background: #92400e; border-color: #92400e; }
-.filter-btn.status-pickedup.active { background: #22c55e; border-color: #22c55e; }
+.filter-btn.status-delivered.active { background: var(--brown); border-color: var(--brown); }
+.filter-btn.status-pickedup.active { background: var(--green-dark); border-color: var(--green-dark); }
 .filter-btn.status-unclaimed.active { background: #ec4899; border-color: #ec4899; }
 .filter-btn.status-missing.active { background: var(--red); border-color: var(--red); }
 .filter-btn.status-cancelled.active { background: var(--subtext); border-color: var(--subtext); }
@@ -888,21 +888,21 @@
 }
 
 .orders-table th.sortable::after {
-    content: ' â†•';
+    content: ' \2195';
     font-size: 0.8rem;
     opacity: 0.6;
     margin-left: 4px;
 }
 
 .orders-table th.sorted-asc::after {
-    content: ' â†‘';
+    content: ' \2191';
     color: #10b981;
     opacity: 1;
     font-weight: bold;
 }
 
 .orders-table th.sorted-desc::after {
-    content: ' â†“';
+    content: ' \2193';
     color: #ef4444;
     opacity: 1;
     font-weight: bold;
@@ -952,11 +952,9 @@
 /* Status-based row styling - left borders removed */
 
 /* Row background colors for specific statuses */
-.orders-table tr.pickedup td { background-color: #c0ffd7; }
-.orders-table tr.cancelled td { background-color: #f3f4f6; color: var(--subtext); }
+.orders-table tr.pickedup td { background-color: #dcfce7; }
 .orders-table tr.cancelled td a { color: var(--subtext); }
-.orders-table tr.refunded td { background-color: #fef2f2; }
-.orders-table tr.refunded td:first-child { border-left-color: var(--red); }
+/* Left border highlights removed */
 
 .order-number {
     font-weight: 700;
@@ -1287,8 +1285,8 @@
 .status-dot.status-printing { background: var(--blue); }
 .status-dot.status-ready_to_ship { background: #06b6d4; }
 .status-dot.status-shipped { background: #14b8a6; }
-.status-dot.status-delivered { background: #92400e; }
-.status-dot.status-pickedup { background: #22c55e; }
+.status-dot.status-delivered { background: var(--brown); }
+.status-dot.status-pickedup { background: var(--green-dark); }
 .status-dot.status-unclaimed { background: #ec4899; }
 .status-dot.status-missing { background: var(--red); }
 .status-dot.status-cancelled { background: var(--subtext); }
@@ -1496,12 +1494,12 @@
 
 /* Sort direction indicator on active button */
 .date-sort-btn.active.sorted-asc::after {
-    content: ' â†‘';
+    content: ' \2191';
     color: #10b981;
 }
 
 .date-sort-btn.active.sorted-desc::after {
-    content: ' â†“';
+    content: ' \2193';
     color: #ef4444;
 }
 
@@ -1637,9 +1635,7 @@
     background: linear-gradient(90deg, rgba(124, 58, 237, 0.12) 0%, rgba(139, 92, 246, 0.08) 100%) !important;
 }
 
-.orders-table tbody tr.selected td:first-child {
-    border-left: 3px solid var(--primary);
-}
+/* Selected row border removed */
 
 /* Selection count badge in table header */
 .selection-count-badge {
@@ -1697,17 +1693,19 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 38px;
-    height: 38px;
-    background: rgba(255, 255, 255, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    border-radius: 8px;
+    width: 32px;
+    height: 32px;
+    background: white;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
     cursor: pointer;
     transition: all 0.2s ease;
+    color: var(--text);
 }
 
 .actions-menu-btn:hover {
-    background: rgba(255, 255, 255, 0.25);
+    background: #f1f5f9;
+    border-color: #94a3b8;
 }
 
 .actions-menu-btn.active {
@@ -1715,8 +1713,8 @@
 }
 
 .actions-menu-icon {
-    color: white;
-    font-size: 20px;
+    color: var(--text);
+    font-size: 18px;
     font-weight: bold;
     line-height: 1;
 }

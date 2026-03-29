@@ -586,7 +586,7 @@
     .status-badge.status-delivered { background: #faf5ff !important; color: #7c2d12 !important; border-color: var(--primary) !important; }
 
     .status-badge-large.status-pickedup,
-    .status-badge.status-pickedup { background: #f0fdf4 !important; color: #166534 !important; border-color: #22c55e !important; }
+    .status-badge.status-pickedup { background: #f0fdf4 !important; color: #166534 !important; border-color: var(--green-dark) !important; }
 
     .status-badge-large.status-cancelled,
     .status-badge.status-cancelled { background: #fef2f2 !important; color: #991b1b !important; border-color: var(--red) !important; }
@@ -617,5 +617,36 @@
     
     .page-break::before {
         display: none !important;
+    }
+
+    /* PDF Export Mode — table-focused print */
+    body.pdf-export-mode .admin-sidebar,
+    body.pdf-export-mode .page-header-right,
+    body.pdf-export-mode .smart-alerts-bar,
+    body.pdf-export-mode .analytics-dashboard,
+    body.pdf-export-mode .filters-container,
+    body.pdf-export-mode .table-header-right,
+    body.pdf-export-mode .sticky-cta-bar,
+    body.pdf-export-mode .actions-column,
+    body.pdf-export-mode .checkbox-column,
+    body.pdf-export-mode #paginationNav,
+    body.pdf-export-mode .status-update-banner {
+        display: none !important;
+    }
+
+    body.pdf-export-mode .orders-table {
+        font-size: 9px !important;
+        width: 100% !important;
+    }
+
+    body.pdf-export-mode .orders-table th,
+    body.pdf-export-mode .orders-table td {
+        padding: 4px 6px !important;
+    }
+
+    body.pdf-export-mode .table-title-main::after {
+        content: ' — Exported ' attr(data-date);
+        font-weight: 400;
+        font-size: 0.8em;
     }
 }

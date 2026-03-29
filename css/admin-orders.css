@@ -1075,6 +1075,12 @@ textarea.field-control {
 .orders-table {
     position: relative;
     z-index: 1;
+    table-layout: auto;
+}
+
+/* Column sizing */
+.orders-table th.sortable {
+    min-width: 60px;
 }
 
 .orders-table tbody tr {
@@ -1707,52 +1713,53 @@ textarea.field-control {
 }
 
 .orders-table thead {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    background: #f1f5f9;
 }
 
 .orders-table thead th:first-child {
-    border-left: 4px solid var(--primary);
+    border-left: none;
 }
 
 .orders-table thead tr {
-    background: transparent;
+    background: #f1f5f9;
 }
 
 .orders-table th {
-    background: transparent;
-    color: white;
-    padding: 16px 12px;
+    background: #f1f5f9;
+    color: var(--text);
+    padding: 10px 12px;
     text-align: left;
     font-weight: 600;
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     cursor: pointer;
     user-select: none;
     transition: background 0.2s;
     position: relative;
+    border-bottom: 2px solid #e2e8f0;
 }
 
 .orders-table th:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: #e2e8f0;
 }
 
 .orders-table th.sortable::after {
-    content: ' ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬Â¢ÃƒÂ¯Ã‚Â¸Ã‚Â';
+    content: ' \2195';
     font-size: 0.8rem;
     opacity: 0.6;
     margin-left: 4px;
 }
 
 .orders-table th.sorted-asc::after {
-    content: ' ÃƒÂ¢Ã‚Â¬Ã¢â‚¬Â ';
+    content: ' \2191';
     color: #10b981;
     opacity: 1;
     font-weight: bold;
 }
 
 .orders-table th.sorted-desc::after {
-    content: ' ÃƒÂ¢Ã‚Â¬Ã¢â‚¬Â¡';
+    content: ' \2193';
     color: #ef4444;
     opacity: 1;
     font-weight: bold;
@@ -1778,10 +1785,10 @@ textarea.field-control {
 }
 
 .orders-table td {
-    padding: 16px 12px;
+    padding: 8px 12px;
     vertical-align: middle;
     color: #374151;
-    border-left: 4px solid transparent;
+    border-left: none;
     transition: all 0.2s;
     position: relative;
 }
@@ -1794,13 +1801,7 @@ textarea.field-control {
 }
 
 /* Status-based Row Colors */
-.orders-table tr.submitted td:first-child { border-left-color: var(--green); }
-.orders-table tr.checking td:first-child { border-left-color: var(--orange); }
-.orders-table tr.unpaid td:first-child { border-left-color: var(--yellow); }
-.orders-table tr.paid td:first-child { border-left-color: var(--green); }
-.orders-table tr.printing td:first-child { border-left-color: var(--blue); }
-.orders-table tr.delivered td:first-child { border-left-color: var(--primary); }
-.orders-table tr.cancelled td:first-child { border-left-color: var(--red); }
+/* Left border highlights removed */
 
 .order-number {
     font-weight: 700;
@@ -2495,7 +2496,7 @@ input[type="button"],
 }
 
 
-}/* ===== MISSING STATUS BADGE STYLES ===== */
+/* ===== MISSING STATUS BADGE STYLES ===== */
 /* Append to admin-orders.css */
 /* Phase 2A: Added preflight, ready, dispatched, shipped, pickedup statuses */
 
@@ -2513,7 +2514,7 @@ input[type="button"],
 .status-badge.status-shipped { background: #ecfdf5; color: #065f46; border-color: #14b8a6; }
 
 .status-badge-large.status-pickedup,
-.status-badge.status-pickedup { background: #f0fdf4; color: #166534; border-color: #22c55e; }
+.status-badge.status-pickedup { background: #f0fdf4; color: #166534; border-color: var(--green-dark); }
 
 .status-badge-large.status-file_issue,
 .status-badge.status-file_issue { background: #fff7ed; color: #c2410c; border-color: var(--orange); }
@@ -2537,25 +2538,766 @@ input[type="button"],
 .header.status-shipped,
 .header.border-status-shipped { border-left-color: #14b8a6 !important; }
 .header.status-pickedup,
-.header.border-status-pickedup { border-left-color: #22c55e !important; }
+.header.border-status-pickedup { border-left-color: var(--green-dark) !important; }
 
 /* --- Header Input Status Colors --- */
 .header-input.status-preflight { background: #f5f3ff; color: #8b5cf6; border-color: #8b5cf6; }
 .header-input.status-ready { background: var(--primary-light); color: var(--primary); border-color: var(--primary); }
 .header-input.status-dispatched { background: #f3e8ff; color: #6d28d9; border-color: #6d28d9; }
 .header-input.status-shipped { background: #ecfdf5; color: #14b8a6; border-color: #14b8a6; }
-.header-input.status-pickedup { background: #f0fdf4; color: #22c55e; border-color: #22c55e; }
+.header-input.status-pickedup { background: #f0fdf4; color: var(--green-dark); border-color: var(--green-dark); }
 
 /* --- Status Dots --- */
 .status-dot.status-preflight { background: #8b5cf6; }
 .status-dot.status-ready { background: var(--primary); }
 .status-dot.status-dispatched { background: #6d28d9; }
 .status-dot.status-shipped { background: #14b8a6; }
-.status-dot.status-pickedup { background: #22c55e; }
+.status-dot.status-pickedup { background: var(--green-dark); }
 
 /* --- Filter Button Active States --- */
 .filter-btn.status-preflight.active { background: #8b5cf6; border-color: #8b5cf6; }
 .filter-btn.status-ready.active { background: var(--primary); border-color: var(--primary); }
 .filter-btn.status-dispatched.active { background: #6d28d9; border-color: #6d28d9; }
 .filter-btn.status-shipped.active { background: #14b8a6; border-color: #14b8a6; }
-.filter-btn.status-pickedup.active { background: #22c55e; border-color: #22c55e; }
+.filter-btn.status-pickedup.active { background: var(--green-dark); border-color: var(--green-dark); }
+
+/* ===== SMART ALERTS BAR ===== */
+.smart-alerts-bar {
+  padding: 0 24px;
+  margin-bottom: 0.75rem;
+}
+
+.alerts-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  padding: 0.5rem 0.75rem;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius, 0.75rem);
+  border-left: 4px solid var(--primary, #7c3aed);
+}
+
+.alert-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-family: var(--font-main, 'Montserrat', sans-serif);
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.alert-chip:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.alert-chip-icon {
+  font-size: 0.85rem;
+}
+
+.alert-chip-count {
+  font-weight: 800;
+  font-size: 0.8rem;
+}
+
+.alert-chip-text {
+  font-weight: 500;
+}
+
+/* Alert types */
+.alert-chip.alert-danger {
+  background: #fef2f2;
+  color: #dc2626;
+  border-color: #fecaca;
+}
+
+.alert-chip.alert-danger:hover {
+  background: #fee2e2;
+}
+
+.alert-chip.alert-warning {
+  background: #fffbeb;
+  color: #b45309;
+  border-color: #fde68a;
+}
+
+.alert-chip.alert-warning:hover {
+  background: #fef3c7;
+}
+
+.alert-chip.alert-info {
+  background: #eff6ff;
+  color: #2563eb;
+  border-color: #bfdbfe;
+}
+
+.alert-chip.alert-info:hover {
+  background: #dbeafe;
+}
+
+.alert-dismiss-btn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.alert-dismiss-btn:hover {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+/* ===== FILTER PRESETS ===== */
+.filter-presets-group {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-left: auto;
+  margin-right: 0.5rem;
+}
+
+.filter-preset-select {
+  font-size: 0.75rem;
+  font-family: var(--font-main);
+  padding: 0.3rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: white;
+  color: var(--text);
+  cursor: pointer;
+  min-width: 140px;
+}
+
+.filter-preset-save-btn {
+  font-size: 0.72rem;
+  font-weight: 600;
+  font-family: var(--font-main);
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--primary);
+  border-radius: 6px;
+  background: white;
+  color: var(--primary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.filter-preset-save-btn:hover {
+  background: #f5f3ff;
+}
+
+.filter-preset-delete-btn {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.4rem;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  background: white;
+  color: #ef4444;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.filter-preset-delete-btn:hover {
+  background: #fef2f2;
+}
+
+/* ===== STATUS UPDATE BANNER ===== */
+.status-update-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 1rem;
+  margin: 0 20px 0.5rem;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-left: 4px solid #3b82f6;
+  border-radius: var(--radius, 0.75rem);
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #1e40af;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.status-update-refresh-btn {
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-family: var(--font-main);
+  padding: 0.3rem 0.75rem;
+  border: none;
+  border-radius: 6px;
+  background: #3b82f6;
+  color: white;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  white-space: nowrap;
+}
+
+.status-update-refresh-btn:hover {
+  background: #2563eb;
+}
+
+.status-update-dismiss-btn {
+  background: none;
+  border: none;
+  color: #93c5fd;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0.2rem;
+  margin-left: auto;
+}
+
+.status-update-dismiss-btn:hover {
+  color: #3b82f6;
+}
+
+/* ===== VIEW TOGGLE (Table / Board) — matches date-sort-toggle style ===== */
+.view-toggle-group {
+  display: inline-flex;
+  background: #e2e8f0;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.view-toggle-btn {
+  padding: 4px 10px;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-family: var(--font-main);
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.view-toggle-btn:hover:not(.active) {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.view-toggle-btn.active {
+  background: white;
+  color: #1e1b4b;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+/* ===== KANBAN BOARD ===== */
+.kanban-board {
+  display: flex;
+  gap: 0.35rem;
+  padding: 0.75rem 0;
+  overflow-x: hidden;
+  min-height: 400px;
+  width: 100%;
+}
+
+.kanban-column {
+  flex: 1 1 0;
+  min-width: 0;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+}
+
+.kanban-column-header {
+  padding: 0.5rem 0.6rem;
+  border-top: 3px solid #9ca3af;
+  border-radius: 8px 8px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: white;
+}
+
+.kanban-col-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.kanban-col-count {
+  font-size: 0.7rem;
+  font-weight: 700;
+  background: #e2e8f0;
+  color: var(--subtext);
+  padding: 0.1rem 0.4rem;
+  border-radius: 10px;
+  min-width: 1.2rem;
+  text-align: center;
+}
+
+.kanban-column-body {
+  flex: 1;
+  padding: 0.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  overflow-y: auto;
+  max-height: 600px;
+  min-height: 60px;
+}
+
+.kanban-column-body.drag-over {
+  background: #eff6ff;
+  border: 1px dashed #3b82f6;
+  border-radius: 0 0 6px 6px;
+}
+
+/* Kanban Card */
+.kanban-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 0.6rem;
+  cursor: grab;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.kanban-card:hover {
+  box-shadow: 0 3px 10px rgba(0,0,0,0.12);
+  transform: translateY(-2px);
+}
+
+.kanban-card.dragging {
+  opacity: 0.5;
+  transform: rotate(2deg);
+}
+
+.kanban-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.35rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.kanban-card-ref {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.kanban-card-ref:hover {
+  text-decoration: underline;
+}
+
+.kanban-card-priority {
+  font-size: 0.6rem;
+  padding: 0.12rem 0.35rem;
+  border-radius: 4px;
+  font-weight: 800;
+}
+
+.kanban-card-line {
+  font-size: 0.7rem;
+  color: var(--text);
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kanban-card-line:first-of-type {
+  font-weight: 600;
+}
+
+.kanban-card-date {
+  color: var(--subtext);
+}
+
+.kanban-card-price {
+  font-weight: 800;
+}
+
+/* ===== COLUMN CUSTOMIZATION ===== */
+.column-config-wrapper {
+  position: relative;
+}
+
+.column-config-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 100;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  padding: 0.5rem 0;
+  min-width: 160px;
+  margin-top: 0.25rem;
+}
+
+.col-config-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--subtext);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 0.3rem 0.75rem 0.4rem;
+  border-bottom: 1px solid #f3f4f6;
+  margin-bottom: 0.25rem;
+}
+
+.col-config-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.col-config-item:hover {
+  background: #f9fafb;
+}
+
+.col-config-item input[type="checkbox"] {
+  accent-color: var(--primary);
+}
+
+/* ===== BULK ACTION DOCK (matches Production style) ===== */
+.queue-bulk-dock {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 9000;
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.queue-bulk-dock.visible {
+  transform: translateY(0);
+}
+
+.queue-bulk-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 12px 24px;
+  background: #1a1625;
+  color: white;
+}
+
+.queue-bulk-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 8px;
+  background: var(--primary);
+  border-radius: 13px;
+  font-weight: 700;
+  font-size: 0.82rem;
+}
+
+.queue-bulk-label {
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.queue-bulk-btn {
+  padding: 7px 16px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+  font-family: var(--font-main);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.queue-bulk-push {
+  background: var(--primary);
+  color: white;
+}
+
+.queue-bulk-push:hover {
+  background: #6d28d9;
+}
+
+.queue-bulk-batch {
+  background: rgba(255, 255, 255, 0.12);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.queue-bulk-batch:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.queue-bulk-issue {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+}
+
+.queue-bulk-issue:hover {
+  background: rgba(239, 68, 68, 0.25);
+}
+
+.queue-bulk-clear {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 6px;
+}
+
+.queue-bulk-clear:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+/* ===== VENDOR COLUMN ===== */
+.vendor-cell .cell-main {
+  font-size: 0.78rem;
+}
+
+.vendor-unassigned {
+  color: #9ca3af;
+  font-style: italic;
+  font-size: 0.72rem;
+}
+
+/* ===== FILE PREVIEW TOOLTIP ===== */
+.file-preview-tooltip {
+  position: fixed;
+  z-index: 9000;
+  width: 400px;
+  height: 400px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  padding: 4px;
+  pointer-events: none;
+  display: none;
+}
+
+.file-preview-tooltip img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 6px;
+}
+
+/* stat-main-value removed — using existing .primary-metric class */
+
+/* ===== STATUS TIMELINE TOOLTIP ===== */
+.status-timeline-tooltip {
+  position: fixed;
+  z-index: 9500;
+  background: #1e1b4b;
+  color: white;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  line-height: 1.6;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  pointer-events: none;
+  white-space: pre-line;
+  max-width: 250px;
+  display: none;
+}
+
+.status-timeline-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: #1e1b4b;
+}
+
+/* Header stat badges removed — using smart alerts bar instead */
+
+/* Event tab bar removed */
+
+.col-config-btn {
+  background: none;
+  border: none;
+  color: var(--subtext);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.col-config-btn:hover {
+  background: #e2e8f0;
+  color: var(--text);
+}
+
+/* ===== MOBILE RESPONSIVE TABLE — CARD LAYOUT ===== */
+@media (max-width: 768px) {
+  .orders-table thead {
+    display: none;
+  }
+
+  .orders-table tbody tr {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    position: relative;
+  }
+
+  .orders-table tbody td {
+    border: none;
+    padding: 0;
+    font-size: 0.8rem;
+  }
+
+  /* Checkbox — top-left */
+  .orders-table tbody td.checkbox-column {
+    position: absolute;
+    top: 0.6rem;
+    left: 0.6rem;
+  }
+
+  /* Order # — full width, prominent */
+  .orders-table tbody td:nth-child(2) {
+    width: 100%;
+    padding-left: 2rem;
+    font-weight: 700;
+    font-size: 0.9rem;
+    margin-bottom: 0.2rem;
+  }
+
+  /* Priority — inline after order # */
+  .orders-table tbody td:nth-child(3) {
+    order: -1;
+    position: absolute;
+    top: 0.6rem;
+    right: 0.6rem;
+  }
+
+  /* Customer — full width */
+  .orders-table tbody td:nth-child(4) {
+    width: 100%;
+  }
+
+  /* Due date — half width */
+  .orders-table tbody td:nth-child(5) {
+    width: 50%;
+  }
+
+  /* Size — half width */
+  .orders-table tbody td:nth-child(6) {
+    width: 45%;
+  }
+
+  /* Price */
+  .orders-table tbody td:nth-child(7) {
+    font-weight: 700;
+    font-size: 0.85rem;
+  }
+
+  /* COGS — hide on mobile */
+  .orders-table tbody td:nth-child(8) {
+    display: none;
+  }
+
+  /* Status — prominent */
+  .orders-table tbody td:nth-child(9) {
+    margin-left: auto;
+  }
+
+  /* Actions */
+  .orders-table tbody td:nth-child(10) {
+    position: absolute;
+    bottom: 0.6rem;
+    right: 0.6rem;
+  }
+
+  /* Hide column config on mobile */
+  .column-config-wrapper {
+    display: none;
+  }
+
+  /* Table header adjustments */
+  .table-header-bar {
+    flex-wrap: wrap;
+  }
+
+  .table-header-left,
+  .table-header-right {
+    width: 100%;
+  }
+
+  .table-header-right {
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .search-box-compact {
+    flex: 1;
+    min-width: 120px;
+  }
+
+  /* Kanban scrolls horizontally on mobile */
+  .kanban-column {
+    min-width: 140px;
+    max-width: 170px;
+  }
+
+  /* Alerts wrap nicely */
+  .alerts-inner {
+    flex-wrap: wrap;
+  }
+
+  .alert-chip-text {
+    display: none;
+  }
+}
