@@ -84,9 +84,10 @@
             "label": "MTCC Staff",
             "allowed_statuses": [
                 "pickedup",
-                "unclaimed"
+                "unclaimed",
+                "missing"
             ],
-            "description": "Can mark orders as picked up or unclaimed by customer"
+            "description": "Can mark orders as picked up, unclaimed, or missing"
         },
         "admin": {
             "label": "Administrator",

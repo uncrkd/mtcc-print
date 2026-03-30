@@ -1924,18 +1924,151 @@ document.addEventListener('visibilitychange', function() {
 // Order Detail Panel (Slide-up)
 // ============================================
 
-function showOrderDetail(ref, mode) {
-    // Fetch route info if not already loaded
-    var ord = orderCache[ref];
-    if (ord && !ord.route_distance_km && (mode === 'delivery' || mode === 'available')) {
-        fetchRouteInfo(ref);
+// ============================================
+// MTCC Staff Detail Panel (simplified)
+// ============================================
+
+function renderMTCCDetailPanel(order, mode) {
+    var badgeClass = 'badge-' + order.status;
+    var html = '';
+
+    // Due date bar
+    if (order.due_date) {
+        var dueStr = order.due_date_formatted || order.due_date;
+        var timeStr = (order.due_time_formatted && order.due_time_formatted !== 'Anytime') ? order.due_time_formatted : '';
+        html += '<div class="detail-due-bar">';
+        html += '<div class="detail-due-left"><span class="detail-due-heading">DUE DATE</span><span class="detail-due-date">' + escapeHtml(dueStr) + '</span></div>';
+        if (timeStr) html += '<div class="detail-due-right"><span class="detail-due-heading">DUE BY</span><span class="detail-due-time">' + escapeHtml(timeStr) + '</span></div>';
+        html += '</div>';
     }
+
+    // Header: Order ID + status
+    html += '<div class="detail-order-header">';
+    html += '<div><div class="detail-order-ref"><span class="ref-label">Order:</span> ' + escapeHtml(order.ref) + '</div>';
+    html += '<div class="detail-order-tracking">' + escapeHtml(order.tracking || '') + '</div></div>';
+    html += '<span class="order-status-badge ' + badgeClass + '">' + (statusLabels[order.status] || order.status) + '</span>';
+    html += '</div>';
+
+    // Order details grid — simplified for MTCC
+    html += '<div class="detail-grid">';
+    html += renderDetailField('Customer', order.customer_name);
+    if (order.customer_phone) html += renderDetailField('Phone', order.customer_phone);
+    if (order.customer_email) html += renderDetailField('Email', order.customer_email);
+    html += renderDetailField('Event', (order.event_acronym || order.event || '') + (order.building ? ' \u2014 ' + order.building : ''));
+    html += renderDetailField('Material', order.material);
+    html += renderDetailField('Size', order.size);
+    if (order.quantity > 1) html += renderDetailField('Quantity', order.quantity);
+    if (order.notes) html += '<div class="detail-field full-width">' + renderDetailField('Notes', order.notes) + '</div>';
+    html += '</div>';
+
+    // Status-specific info
+    var pipelineStatuses = {preflight: 'With Vendor', printing: 'In Production', ready: 'Ready for Courier', dispatched: 'Courier Assigned', shipped: 'On the Way'};
+    if (pipelineStatuses[order.status]) {
+        html += '<div class="mtcc-status-info">';
+        html += '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>';
+        html += '<span>' + pipelineStatuses[order.status] + '</span>';
+        if (order.courier_name && (order.status === 'dispatched' || order.status === 'shipped')) {
+            html += '<span class="mtcc-courier-name"> \u2014 ' + escapeHtml(order.courier_name) + '</span>';
+        }
+        html += '</div>';
+    }
+
+    // Actions
+    html += '<div class="detail-actions">';
+
+    // Confirm Pick Up button (for delivered orders)
+    if (order.status === 'delivered') {
+        html += '<button class="status-action-btn btn-pickedup" onclick="updateOrderStatus(\'' + escapeAttr(order.ref) + '\', \'pickedup\')">';
+        html += '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/></svg> ';
+        html += 'Confirm Pick Up</button>';
+
+        // Scan to confirm button
+        html += '<button class="status-action-btn btn-scan-goto" onclick="scanExpectedRef=\'' + escapeAttr(order.ref) + '\'; closeDetailPanel(); switchTab(\'scan\')">';
+        html += '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="6" y1="8" x2="6" y2="16"/><line x1="10" y1="8" x2="10" y2="16"/><line x1="14" y1="8" x2="14" y2="16"/><line x1="18" y1="8" x2="18" y2="16"/></svg> ';
+        html += 'Scan to Verify</button>';
+    }
+
+    // Report Missing button (any paid+ order)
+    var missingStatuses = ['paid', 'preflight', 'printing', 'ready', 'dispatched', 'shipped', 'delivered'];
+    if (missingStatuses.indexOf(order.status) !== -1) {
+        html += '<button class="status-action-btn btn-missing" onclick="reportMissing(\'' + escapeAttr(order.ref) + '\')">';
+        html += '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> ';
+        html += 'Report Missing</button>';
+    }
+
+    // Report Issue button (for delivered/dispatched/shipped)
+    if (typeof CourierIssues !== 'undefined' && ['delivered', 'dispatched', 'shipped'].indexOf(order.status) !== -1) {
+        html += CourierIssues.getReportButtonHTML(order.ref, order.status);
+    }
+
+    html += '</div>';
+
+    // Print Stuff contact only
+    html += '<div class="detail-contacts">';
+    html += '<div class="detail-contacts-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72"/></svg> Support</div>';
+    html += '<a class="contact-row" href="tel:+14378828822"><div class="contact-info"><div class="contact-label">Print Stuff</div><div class="contact-number">(437) 882-8822</div></div><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72"/></svg></a>';
+    html += '<a class="contact-row" href="mailto:orders@printstuff.ca"><div class="contact-info"><div class="contact-label">Email Support</div><div class="contact-number">orders@printstuff.ca</div></div><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></a>';
+    html += '</div>';
+
+    return html;
+}
+
+// Report Missing handler for MTCC staff
+function reportMissing(ref) {
+    var order = orderCache[ref];
+    var customerName = order ? order.customer_name : ref;
+    if (!confirm('Report order ' + ref + ' (' + customerName + ') as missing?\n\nThis will flag the order for investigation by Print Stuff.')) return;
+
+    haptic.tap();
+    var data = {
+        ref: ref,
+        issue_type: 'missing_item',
+        issue_label: 'Missing Item',
+        notes: 'Reported as missing by MTCC staff. Previous status: ' + (order ? order.status : 'unknown')
+    };
+
+    // First report the issue
+    apiCall('report_issue', data, function(result) {
+        if (!result.success) {
+            haptic.error();
+            showToast(result.error || 'Failed to report', 'error');
+            return;
+        }
+        // Then update status to missing
+        apiCall('update_status', { ref: ref, status: 'missing' }, function(statusResult) {
+            if (statusResult.success) {
+                haptic.confirm();
+                showToast('Order reported as missing', 'success');
+                closeDetailPanel();
+                refreshTab(currentTab);
+            } else {
+                haptic.warning();
+                showToast('Issue reported but status update failed: ' + (statusResult.error || ''), 'error');
+            }
+        });
+    });
+}
+
+function showOrderDetail(ref, mode) {
     var order = orderCache[ref];
     if (!order) return;
     haptic.tap();
     var panel = document.getElementById('detailPanel');
     var overlay = document.getElementById('detailOverlay');
     var content = document.getElementById('detailContent');
+
+    // MTCC staff gets a simplified detail panel
+    if (currentUser && currentUser.role === 'mtcc_staff') {
+        content.innerHTML = renderMTCCDetailPanel(order, mode);
+        panel.classList.add('active');
+        overlay.classList.add('active');
+        return;
+    }
+
+    // Fetch route info if not already loaded (courier/admin only)
+    if (order && !order.route_distance_km && (mode === 'delivery' || mode === 'available')) {
+        fetchRouteInfo(ref);
+    }
     var isPipeline = (mode === 'upcoming');
     var urgency = getUrgencyInfo(order);
     var badgeClass = 'badge-' + order.status;
