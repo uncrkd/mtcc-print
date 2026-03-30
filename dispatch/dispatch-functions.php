@@ -21,6 +21,9 @@ if (!defined('DISPATCH_EARNINGS_FILE'))    define('DISPATCH_EARNINGS_FILE', __DI
 if (!defined('DISPATCH_NOTIF_FILE'))       define('DISPATCH_NOTIF_FILE', __DIR__ . '/../data/dispatch-notifications.json');
 if (!defined('DISPATCH_WEATHER_CACHE'))    define('DISPATCH_WEATHER_CACHE', __DIR__ . '/weather-cache.json');
 
+// Load centralized data access layer (provides cascadeStatusTo, logOrderHistory, etc.)
+require_once __DIR__ . '/../includes/data-access.php';
+
 // ============================================
 // Status Helpers
 // ============================================

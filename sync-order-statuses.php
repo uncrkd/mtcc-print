@@ -1,166 +1,122 @@
 <?php
-require_once __DIR__ . '/includes/icons.php';
 /**
- * One-Time Status Sync Script (Fixed)
- * 
- * This script reads each order JSON file, extracts the referenceCode,
- * looks up the status in statuses.json, and adds the status field to the order file.
- * 
- * Run once, then delete this file.
+ * Order Status Sync Verification
+ * MTCC Print Services
+ *
+ * Location: /sync-order-statuses.php
+ *
+ * Compares statuses.json against individual order JSON files.
+ * Fixes any drift by treating statuses.json as the source of truth.
+ * Logs all corrections to order history.
+ *
+ * Usage:
+ *   - Cron: Run nightly via cPanel cron job
+ *     php /home1/stuffprint/mtcc.print-stuff.ca/sync-order-statuses.php
+ *   - Browser: https://mtcc.print-stuff.ca/sync-order-statuses.php
+ *     (requires admin login)
+ *   - CLI: php sync-order-statuses.php
+ *
+ * Output: JSON report of drift found and corrections applied.
  */
 
+// Timezone
+date_default_timezone_set('America/Toronto');
+
+// Detect CLI vs web
+$isCLI = (php_sapi_name() === 'cli');
+
+if (!$isCLI) {
+    // Web access requires admin login
+    session_start();
+    if (empty($_SESSION['admin_logged_in'])) {
+        http_response_code(403);
+        echo json_encode(['error' => 'Admin login required']);
+        exit;
+    }
+    header('Content-Type: application/json');
+}
+
+// Load data access layer
+require_once __DIR__ . '/includes/data-access.php';
+
 // Configuration
-$statusesFile = __DIR__ . '/data/statuses.json';
+$statusFile = __DIR__ . '/data/statuses.json';
 $ordersDir = __DIR__ . '/uploads/orders/';
 
-// Track results
-$results = [
-    'updated' => [],
-    'skipped' => [],
-    'no_status' => [],
-    'errors' => []
+// Load statuses.json (source of truth)
+$statuses = loadStatuses($statusFile);
+
+// Scan all order files
+$orderFiles = glob($ordersDir . '*-order.json');
+
+$report = [
+    'timestamp' => date('c'),
+    'total_orders_scanned' => 0,
+    'total_in_statuses_json' => count($statuses),
+    'drift_found' => 0,
+    'corrections_applied' => 0,
+    'missing_from_statuses' => 0,
+    'details' => [],
 ];
 
-// Check if statuses.json exists
-if (!file_exists($statusesFile)) {
-    die("Error: statuses.json not found at: $statusesFile");
+foreach ($orderFiles as $file) {
+    $data = json_decode(file_get_contents($file), true);
+    if (!$data || empty($data['referenceCode'])) continue;
+
+    $ref = $data['referenceCode'];
+    $report['total_orders_scanned']++;
+
+    $fileStatus = $data['status'] ?? null;
+    $jsonStatus = $statuses[$ref] ?? null;
+
+    // Case 1: Order exists in file but not in statuses.json
+    if ($jsonStatus === null) {
+        $report['missing_from_statuses']++;
+        $defaultStatus = $fileStatus ?: 'unpaid';
+        $statuses[$ref] = $defaultStatus;
+        $report['details'][] = [
+            'ref' => $ref,
+            'issue' => 'missing_from_statuses_json',
+            'file_status' => $fileStatus,
+            'action' => "Added to statuses.json as '$defaultStatus'",
+        ];
+        logOrderHistory($ref, 'sync_correction', "Added to statuses.json (was missing). Status: $defaultStatus", 'System (sync)');
+        continue;
+    }
+
+    // Case 2: Statuses differ between statuses.json and order file
+    if ($fileStatus !== null && $fileStatus !== $jsonStatus) {
+        $report['drift_found']++;
+        // Trust statuses.json — update order file
+        $data['status'] = $jsonStatus;
+        file_put_contents($file, json_encode($data, JSON_PRETTY_PRINT), LOCK_EX);
+        $report['corrections_applied']++;
+        $report['details'][] = [
+            'ref' => $ref,
+            'issue' => 'status_drift',
+            'statuses_json' => $jsonStatus,
+            'order_file' => $fileStatus,
+            'action' => "Order file corrected: '$fileStatus' -> '$jsonStatus'",
+        ];
+        logOrderHistory($ref, 'sync_correction', "Status drift corrected: order file had '$fileStatus', statuses.json had '$jsonStatus'. File updated to match.", 'System (sync)');
+    }
 }
 
-// Check if orders directory exists
-if (!is_dir($ordersDir)) {
-    die("Error: Orders directory not found at: $ordersDir");
+// Save any additions to statuses.json
+if ($report['missing_from_statuses'] > 0) {
+    saveStatuses($statuses, $statusFile);
 }
 
-// Load statuses.json
-$statuses = json_decode(file_get_contents($statusesFile), true);
-if (!$statuses) {
-    die("Error: Could not parse statuses.json");
-}
+// Output
+$output = json_encode($report, JSON_PRETTY_PRINT);
 
-echo "<html><head><title>Status Sync</title>";
-echo "<style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 20px; max-width: 900px; margin: 0 auto; }
-    h1 { color: #1f2937; }
-    .success { color: #059669; }
-    .error { color: #dc2626; }
-    .warning { color: #d97706; }
-    .info { color: #0284c7; }
-    pre { background: #f3f4f6; padding: 12px; border-radius: 8px; overflow-x: auto; max-height: 300px; font-size: 12px; }
-    .summary { background: #f0fdf4; border: 1px solid #bbf7d0; padding: 16px; border-radius: 8px; margin-top: 20px; }
-    .summary.has-errors { background: #fef2f2; border-color: #fecaca; }
-</style></head><body>";
-
-echo "<h1>ðŸ”„ Order Status Sync (Fixed)</h1>";
-echo "<p>Adding status field to order JSON files from <code>statuses.json</code>...</p>";
-
-// Get all order JSON files
-$files = glob($ordersDir . '*.json');
-
-foreach ($files as $file) {
-    $filename = basename($file);
-    
-    // Skip history files
-    if (strpos($filename, '_history') !== false || strpos($filename, 'history.json') !== false) {
-        continue;
-    }
-    
-    // Load order data
-    $orderData = json_decode(file_get_contents($file), true);
-    if (!$orderData) {
-        $results['errors'][] = "$filename - Could not parse JSON";
-        continue;
-    }
-    
-    // Get reference code from file content
-    $refCode = $orderData['referenceCode'] ?? null;
-    if (!$refCode) {
-        $results['errors'][] = "$filename - No referenceCode in file";
-        continue;
-    }
-    
-    // Look up status in statuses.json
-    $statusFromFile = $statuses[$refCode] ?? null;
-    
-    if (!$statusFromFile) {
-        // No status found - set default to 'unpaid'
-        $statusFromFile = 'unpaid';
-        $results['no_status'][] = "$refCode - No status in statuses.json, defaulting to 'unpaid'";
-    }
-    
-    // Check if already has correct status
-    $currentStatus = $orderData['status'] ?? null;
-    if ($currentStatus === $statusFromFile) {
-        $results['skipped'][] = "$refCode (already $statusFromFile)";
-        continue;
-    }
-    
-    // Update status in order data
-    $orderData['status'] = $statusFromFile;
-    $orderData['statusSyncedAt'] = date('Y-m-d H:i:s');
-    
-    // Save order
-    $saved = file_put_contents($file, json_encode($orderData, JSON_PRETTY_PRINT));
-    
-    if ($saved === false) {
-        $results['errors'][] = "$refCode - Failed to save $filename";
+if ($isCLI) {
+    echo $output . "\n";
+    if ($report['drift_found'] > 0 || $report['missing_from_statuses'] > 0) {
+        echo "\n** ISSUES FOUND: {$report['drift_found']} drift, {$report['missing_from_statuses']} missing **\n";
     } else {
-        $oldStatus = $currentStatus ?? 'none';
-        $results['updated'][] = "$refCode: $oldStatus <?= SYMBOL_ARROW_RIGHT ?> $statusFromFile";
+        echo "\nAll {$report['total_orders_scanned']} orders in sync.\n";
     }
+} else {
+    echo $output;
 }
-
-// Display results
-$hasErrors = count($results['errors']) > 0;
-
-echo "<div class='summary " . ($hasErrors ? 'has-errors' : '') . "'>";
-echo "<h2><?= ICON_CHART_UP ?> Summary</h2>";
-echo "<ul>";
-echo "<li class='success'><strong>" . count($results['updated']) . "</strong> orders updated</li>";
-echo "<li class='info'><strong>" . count($results['skipped']) . "</strong> orders already in sync (skipped)</li>";
-echo "<li class='warning'><strong>" . count($results['no_status']) . "</strong> orders not in statuses.json (set to unpaid)</li>";
-echo "<li class='error'><strong>" . count($results['errors']) . "</strong> errors</li>";
-echo "</ul>";
-echo "</div>";
-
-if (count($results['updated']) > 0) {
-    echo "<h3 class='success'><?= ICON_CHECK_GREEN ?> Updated Orders (" . count($results['updated']) . ")</h3>";
-    echo "<pre>";
-    foreach ($results['updated'] as $item) {
-        echo htmlspecialchars($item) . "\n";
-    }
-    echo "</pre>";
-}
-
-if (count($results['skipped']) > 0) {
-    echo "<h3 class='info'>â­ Skipped - Already Synced (" . count($results['skipped']) . ")</h3>";
-    echo "<pre>";
-    foreach ($results['skipped'] as $item) {
-        echo htmlspecialchars($item) . "\n";
-    }
-    echo "</pre>";
-}
-
-if (count($results['no_status']) > 0) {
-    echo "<h3 class='warning'><?= ICON_WARNING ?> No Status Found - Set to Unpaid (" . count($results['no_status']) . ")</h3>";
-    echo "<pre>";
-    foreach ($results['no_status'] as $item) {
-        echo htmlspecialchars($item) . "\n";
-    }
-    echo "</pre>";
-}
-
-if (count($results['errors']) > 0) {
-    echo "<h3 class='error'>âŒ Errors (" . count($results['errors']) . ")</h3>";
-    echo "<pre>";
-    foreach ($results['errors'] as $item) {
-        echo htmlspecialchars($item) . "\n";
-    }
-    echo "</pre>";
-}
-
-echo "<hr>";
-echo "<p><strong><?= ICON_WARNING ?> Important:</strong> Delete this file after running!</p>";
-echo "<p><code>rm sync-order-statuses.php</code></p>";
-
-echo "</body></html>";
-?>

@@ -49,12 +49,36 @@ function batch_getOrderStatus($ref) {
 }
 
 /**
- * Set status for a single order ref
+ * Set status for a single order ref.
+ * Uses cascadeStatusTo() for forward lifecycle moves (auto-fills skipped steps).
+ * Falls back to direct write for reversions (e.g., dispatched → ready on release).
  */
 function batch_setOrderStatus($ref, $newStatus) {
+    if (function_exists('cascadeStatusTo')) {
+        $result = cascadeStatusTo(
+            $ref, $newStatus, 'Dispatch (batch)',
+            'Batch operation',
+            DISPATCH_STATUSES_FILE,
+            DISPATCH_ORDERS_DIR
+        );
+        if ($result['success']) return;
+    }
+    // Fallback: direct write (for reversions or if data-access.php not loaded)
     $statuses = dispatch_loadStatuses();
+    $oldStatus = $statuses[$ref] ?? 'unknown';
     $statuses[$ref] = $newStatus;
     file_put_contents(DISPATCH_STATUSES_FILE, json_encode($statuses, JSON_PRETTY_PRINT), LOCK_EX);
+    // Also sync order file
+    if (function_exists('findOrderByReference')) {
+        $orderInfo = findOrderByReference($ref, DISPATCH_ORDERS_DIR);
+        if ($orderInfo) {
+            $orderInfo['data']['status'] = $newStatus;
+            file_put_contents($orderInfo['filepath'], json_encode($orderInfo['data'], JSON_PRETTY_PRINT), LOCK_EX);
+        }
+    }
+    if (function_exists('logOrderHistory')) {
+        logOrderHistory($ref, 'status_change', "Batch status: {$oldStatus} to {$newStatus}", 'Dispatch (batch)');
+    }
 }
 
 /**

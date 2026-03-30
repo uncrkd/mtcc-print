@@ -15,8 +15,12 @@
  */
 function sendDispatchNotification($order, $newStatus, $scannedBy = 'Courier') {
  // Only send emails for specific statuses
- $notifyStatuses = ['printing', 'shipped', 'delivered', 'pickedup'];
- 
+ // printing = order is in production, no more changes allowed
+ // delivered = ready for pickup at MTCC or delivered to address
+ // pickedup = only for MTCC pickup confirmations
+ // cancelled/refunded = important account notifications
+ $notifyStatuses = ['printing', 'delivered', 'pickedup', 'cancelled', 'refunded'];
+
  if (!in_array($newStatus, $notifyStatuses)) {
  return false;
  }
@@ -42,27 +46,32 @@ function sendDispatchNotification($order, $newStatus, $scannedBy = 'Courier') {
  $subject = "Your Poster is Being Printed - {$referenceCode}";
  $html = generatePrintingEmailHTML($order, $referenceCode, $customerName);
  break;
- 
- case 'shipped':
- $subject = "Order {$referenceCode} - Shipped";
- $html = generateShippedEmailHTML($order, $referenceCode, $customerName, $isMTCC);
- break;
- 
+
  case 'delivered':
  if ($isMTCC) {
- $subject = "Order {$referenceCode} - Ready for Pickup";
+ $subject = "Order {$referenceCode} - Ready for Pickup at MTCC";
  $html = generateDeliveredMTCCEmailHTML($order, $referenceCode, $customerName);
  } else {
  $subject = "Order {$referenceCode} - Delivered";
  $html = generateDeliveredAddressEmailHTML($order, $referenceCode, $customerName);
  }
  break;
- 
+
  case 'pickedup':
  $subject = "Order {$referenceCode} - Complete";
  $html = generatePickedUpEmailHTML($order, $referenceCode, $customerName);
  break;
- 
+
+ case 'cancelled':
+ $subject = "Order {$referenceCode} - Cancelled";
+ $html = generateCancelledEmailHTML($order, $referenceCode, $customerName);
+ break;
+
+ case 'refunded':
+ $subject = "Order {$referenceCode} - Refund Processed";
+ $html = generateRefundedEmailHTML($order, $referenceCode, $customerName);
+ break;
+
  default:
  return false;
  }
@@ -680,6 +689,157 @@ function generatePickedUpEmailHTML($order, $referenceCode, $customerName) {
  <div style="color: #6b7280; font-size: 13px; margin-bottom: 8px;">Questions? Contact us at <a href="mailto:orders@printstuff.ca" style="color: #7c3aed; text-decoration: none;">orders@printstuff.ca</a></div>
  <div style="color: #9ca3af; font-size: 11px;">&copy; ' . $currentYear . ' Print Stuff - Professional Poster Printing</div>
  <div style="margin-top: 6px;"><a href="mailto:orders@printstuff.ca?subject=Unsubscribe" style="color: #d1d5db; font-size: 10px; text-decoration: underline;">Unsubscribe</a></div>
+ </td>
+ </tr>
+ </table>
+
+</td>
+</tr>
+</table>
+
+</body>
+</html>';
+
+ return $html;
+}
+
+function generateCancelledEmailHTML($order, $referenceCode, $customerName) {
+ $currentYear = date('Y');
+
+ $html = '<!DOCTYPE html>
+<html>
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Order Cancelled</title>
+</head>
+<body style="font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #faf8ff;">
+
+<table cellpadding="0" cellspacing="0" style="width: 100%; max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+<tr>
+<td>
+
+ <!-- Header -->
+ <table cellpadding="0" cellspacing="0" style="width: 100%; background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%); border-radius: 12px 12px 0 0;">
+ <tr>
+ <td style="padding: 30px; text-align: center;">
+ <div style="color: #ffffff; font-size: 24px; font-weight: 700; margin-bottom: 6px;">Order Cancelled</div>
+ <div style="color: #d1d5db; font-size: 14px;">Order ' . htmlspecialchars($referenceCode) . '</div>
+ </td>
+ </tr>
+ </table>
+
+ <!-- Content -->
+ <table cellpadding="0" cellspacing="0" style="width: 100%;">
+ <tr>
+ <td style="padding: 30px;">
+ <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+ Hi ' . htmlspecialchars($customerName) . ',
+ </p>
+ <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+ Your poster order <strong style="color: #7c3aed;">' . htmlspecialchars($referenceCode) . '</strong> has been cancelled.
+ </p>
+ <table cellpadding="0" cellspacing="0" style="width: 100%; background-color: #f3f4f6; border-radius: 8px; border: 1px solid #e5e7eb; margin: 20px 0;">
+ <tr>
+ <td style="padding: 20px; text-align: center;">
+ <div style="color: #6b7280; font-size: 14px;">If you believe this was done in error or have questions, please contact us.</div>
+ </td>
+ </tr>
+ </table>
+ <div style="text-align: center; margin: 24px 0;">
+ <a href="mailto:orders@printstuff.ca?subject=Re: Order ' . htmlspecialchars($referenceCode) . ' Cancellation"
+ style="display: inline-block; padding: 14px 32px; background-color: #7c3aed; color: #ffffff; font-size: 14px; font-weight: 600; text-decoration: none; border-radius: 8px;">
+ Contact Us
+ </a>
+ </div>
+ </td>
+ </tr>
+ </table>
+
+ <!-- Footer -->
+ <table cellpadding="0" cellspacing="0" style="width: 100%; background-color: #f8fafc; border-radius: 0 0 12px 12px; border-top: 1px solid #e5e7eb;">
+ <tr>
+ <td style="padding: 20px; text-align: center;">
+ <div style="color: #6b7280; font-size: 13px; margin-bottom: 8px;">Questions? Contact us at <a href="mailto:orders@printstuff.ca" style="color: #7c3aed; text-decoration: none;">orders@printstuff.ca</a></div>
+ <div style="color: #9ca3af; font-size: 11px;">&copy; ' . $currentYear . ' Print Stuff - Professional Poster Printing</div>
+ </td>
+ </tr>
+ </table>
+
+</td>
+</tr>
+</table>
+
+</body>
+</html>';
+
+ return $html;
+}
+
+function generateRefundedEmailHTML($order, $referenceCode, $customerName) {
+ $currentYear = date('Y');
+ $refundAmount = '';
+ if (isset($order['refund']['amount'])) {
+ $refundAmount = '$' . number_format($order['refund']['amount'], 2);
+ } elseif (isset($order['pricing']['total'])) {
+ $refundAmount = '$' . number_format($order['pricing']['total'], 2);
+ }
+
+ $html = '<!DOCTYPE html>
+<html>
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Refund Processed</title>
+</head>
+<body style="font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #faf8ff;">
+
+<table cellpadding="0" cellspacing="0" style="width: 100%; max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+<tr>
+<td>
+
+ <!-- Header -->
+ <table cellpadding="0" cellspacing="0" style="width: 100%; background: linear-gradient(135deg, #059669 0%, #047857 100%); border-radius: 12px 12px 0 0;">
+ <tr>
+ <td style="padding: 30px; text-align: center;">
+ <div style="color: #ffffff; font-size: 24px; font-weight: 700; margin-bottom: 6px;">Refund Processed</div>
+ <div style="color: #a7f3d0; font-size: 14px;">Order ' . htmlspecialchars($referenceCode) . '</div>
+ </td>
+ </tr>
+ </table>
+
+ <!-- Content -->
+ <table cellpadding="0" cellspacing="0" style="width: 100%;">
+ <tr>
+ <td style="padding: 30px;">
+ <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+ Hi ' . htmlspecialchars($customerName) . ',
+ </p>
+ <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+ A refund has been processed for your order <strong style="color: #7c3aed;">' . htmlspecialchars($referenceCode) . '</strong>.
+ </p>
+ <table cellpadding="0" cellspacing="0" style="width: 100%; background-color: #f0fdf4; border-radius: 8px; border: 2px solid #059669; margin: 20px 0;">
+ <tr>
+ <td style="padding: 24px; text-align: center;">
+ <div style="color: #065f46; font-size: 14px; font-weight: 600; margin-bottom: 8px;">Refund Amount</div>
+ <div style="color: #047857; font-size: 28px; font-weight: 700;">' . htmlspecialchars($refundAmount) . '</div>
+ <div style="color: #6b7280; font-size: 13px; margin-top: 8px;">Please allow 5&ndash;10 business days for the refund to appear on your statement.</div>
+ </td>
+ </tr>
+ </table>
+ <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 20px 0 0 0;">
+ If you have any questions about this refund, please don&apos;t hesitate to reach out.
+ </p>
+ </td>
+ </tr>
+ </table>
+
+ <!-- Footer -->
+ <table cellpadding="0" cellspacing="0" style="width: 100%; background-color: #f8fafc; border-radius: 0 0 12px 12px; border-top: 1px solid #e5e7eb;">
+ <tr>
+ <td style="padding: 20px; text-align: center;">
+ <div style="color: #6b7280; font-size: 13px; margin-bottom: 8px;">Questions? Contact us at <a href="mailto:orders@printstuff.ca" style="color: #7c3aed; text-decoration: none;">orders@printstuff.ca</a></div>
+ <div style="color: #9ca3af; font-size: 11px;">&copy; ' . $currentYear . ' Print Stuff - Professional Poster Printing</div>
  </td>
  </tr>
  </table>
