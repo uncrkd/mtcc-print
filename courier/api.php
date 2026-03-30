@@ -576,6 +576,7 @@ function handleGetMTCCDashboard() {
             $recentPickups[] = [
                 'ref' => $ref,
                 'customer_name' => $order['customerInfo']['name'] ?? $order['name'] ?? '',
+                'event' => $order['event']['name'] ?? $order['event_select']['name'] ?? '',
                 'event_acronym' => $order['event']['acronym'] ?? $order['event_select']['acronym'] ?? '',
                 'pickedup_at' => $pickupTime,
             ];

@@ -691,7 +691,8 @@ function buildSearchFilterBar(tabId) {
         html += '<button class="mtcc-filter-pill' + (mtccEventFilter === '' ? ' active' : '') + '" onclick="setMTCCEventFilter(\'' + tabId + '\', \'\')">All</button>';
         cachedActiveEvents.forEach(function(ev) {
             var acronym = ev.acronym || ev;
-            html += '<button class="mtcc-filter-pill' + (mtccEventFilter === acronym ? ' active' : '') + '" onclick="setMTCCEventFilter(\'' + tabId + '\', \'' + escapeAttr(acronym) + '\')">' + escapeHtml(acronym) + '</button>';
+            var evName = ev.name || acronym;
+            html += '<button class="mtcc-filter-pill' + (mtccEventFilter === acronym ? ' active' : '') + '" onclick="setMTCCEventFilter(\'' + tabId + '\', \'' + escapeAttr(acronym) + '\')">' + escapeHtml(evName) + '</button>';
         });
         html += '</div>';
     }
@@ -845,13 +846,20 @@ function loadMTCCDashboard() {
         html += '</div>';
 
         // Event breakdown — clickable, sets event filter and navigates to pickup
+        // Build acronym → full name lookup from active events
+        var eventNameMap = {};
+        (result.active_events || []).forEach(function(e) {
+            if (e.acronym) eventNameMap[e.acronym] = e.name || e.acronym;
+        });
+
         var events = result.event_breakdown || {};
         var eventKeys = Object.keys(events);
         if (eventKeys.length > 0) {
             html += '<div class="mtcc-dash-section"><div class="mtcc-section-header">Waiting by Event</div>';
             html += '<div class="mtcc-event-pills">';
             eventKeys.forEach(function(ev) {
-                html += '<button class="mtcc-event-pill" onclick="mtccEventFilter=\'' + escapeAttr(ev) + '\'; switchTab(\'pickup\')">' + escapeHtml(ev) + ': <strong>' + events[ev] + '</strong></button>';
+                var evName = eventNameMap[ev] || ev;
+                html += '<button class="mtcc-event-pill" onclick="mtccEventFilter=\'' + escapeAttr(ev) + '\'; switchTab(\'pickup\')">' + escapeHtml(evName) + ': <strong>' + events[ev] + '</strong></button>';
             });
             html += '</div></div>';
         }
@@ -1672,7 +1680,7 @@ function renderOrderCard(order, mode) {
     if (isMTCCCard) {
         html += '<div class="order-card-body">';
         html += '<div class="order-detail"><span class="order-detail-label">Customer</span><span class="order-detail-value">' + escapeHtml(order.customer_name) + '</span></div>';
-        html += '<div class="order-detail"><span class="order-detail-label">Event</span><span class="order-detail-value">' + escapeHtml(order.event_acronym || order.event) + (order.building ? ' \u2014 ' + escapeHtml(order.building) : '') + '</span></div>';
+        html += '<div class="order-detail"><span class="order-detail-label">Event</span><span class="order-detail-value">' + escapeHtml(isMTCCCard ? (order.event || order.event_acronym) : (order.event_acronym || order.event)) + (order.building ? ' \u2014 ' + escapeHtml(order.building) : '') + '</span></div>';
         if (mode === 'complete' && order.delivered_at) {
             var pDate = new Date(order.delivered_at);
             var pStr = isNaN(pDate) ? '' : pDate.toLocaleDateString('en-US', {month: 'short', day: 'numeric'}) + ', ' + pDate.toLocaleTimeString('en-US', {hour: 'numeric', minute: '2-digit'});
@@ -1996,7 +2004,7 @@ function renderMTCCDetailPanel(order, mode) {
     if (order.customer_phone) html += '<div class="mtcc-detail-row"><span class="mtcc-detail-label">Phone</span><a class="mtcc-detail-value mtcc-detail-link" href="tel:' + order.customer_phone.replace(/[^0-9+]/g, '') + '">' + escapeHtml(order.customer_phone) + '</a></div>';
     if (order.customer_email) html += '<div class="mtcc-detail-row"><span class="mtcc-detail-label">Email</span><a class="mtcc-detail-value mtcc-detail-link" href="mailto:' + escapeAttr(order.customer_email) + '">' + escapeHtml(order.customer_email) + '</a></div>';
     html += '<div class="mtcc-detail-divider"></div>';
-    html += '<div class="mtcc-detail-row"><span class="mtcc-detail-label">Event</span><span class="mtcc-detail-value">' + escapeHtml(order.event_acronym || order.event || '') + (order.building ? ' \u2014 ' + escapeHtml(order.building) : '') + '</span></div>';
+    html += '<div class="mtcc-detail-row"><span class="mtcc-detail-label">Event</span><span class="mtcc-detail-value">' + escapeHtml(order.event || order.event_acronym || '') + (order.building ? ' \u2014 ' + escapeHtml(order.building) : '') + '</span></div>';
     html += '<div class="mtcc-detail-row"><span class="mtcc-detail-label">Material</span><span class="mtcc-detail-value">' + escapeHtml(order.material) + '</span></div>';
     html += '<div class="mtcc-detail-row"><span class="mtcc-detail-label">Size</span><span class="mtcc-detail-value">' + escapeHtml(order.size) + '</span></div>';
     if (order.quantity > 1) html += '<div class="mtcc-detail-row"><span class="mtcc-detail-label">Quantity</span><span class="mtcc-detail-value">' + order.quantity + '</span></div>';
@@ -2600,7 +2608,7 @@ function showScanResult(result) {
     html += '<div class="order-detail"><span class="order-detail-label">Customer</span><span class="order-detail-value">' + escapeHtml(order.customer_name) + '</span></div>';
     html += '<div class="order-detail"><span class="order-detail-label">Destination</span><span class="order-detail-value">' + escapeHtml(order.destination || '-') + '</span></div>';
     html += '<div class="order-detail"><span class="order-detail-label">Material</span><span class="order-detail-value">' + escapeHtml(order.material) + '</span></div>';
-    html += '<div class="order-detail"><span class="order-detail-label">Event</span><span class="order-detail-value">' + escapeHtml(order.event_acronym || order.event || '-') + '</span></div>';
+    html += '<div class="order-detail"><span class="order-detail-label">Event</span><span class="order-detail-value">' + escapeHtml((currentUser && currentUser.role === 'mtcc_staff') ? (order.event || order.event_acronym || '-') : (order.event_acronym || order.event || '-')) + '</span></div>';
     html += '</div></div>';
 
     if (statuses.length > 0) {
