@@ -5135,6 +5135,20 @@ input {
 }
 
 .mtcc-detail-due {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.mtcc-due-label {
+    font-size: 0.6rem;
+    font-weight: 700;
+    color: rgba(255,255,255,0.7);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.mtcc-due-value {
     color: white;
     font-size: 0.82rem;
     font-weight: 600;

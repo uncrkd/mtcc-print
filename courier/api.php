@@ -635,7 +635,7 @@ function handleGetCompleted() {
     usort($completed, function($a, $b) {
         $aT = $a['dispatch_pickedup_at'] ?? $a['delivered_at'] ?? '';
         $bT = $b['dispatch_pickedup_at'] ?? $b['delivered_at'] ?? '';
-        return strcmp($b, $a);
+        return strcmp($bT, $aT);
     });
 
     echo json_encode(['success' => true, 'orders' => $completed, 'count' => count($completed)]);

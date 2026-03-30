@@ -692,8 +692,8 @@ function buildSearchFilterBar(tabId) {
     }
     html += '</div>';
 
-    // Event filter pills
-    if (cachedActiveEvents.length > 1) {
+    // Event filter pills (show when any active events exist)
+    if (cachedActiveEvents.length > 0) {
         html += '<div class="mtcc-filter-pills">';
         html += '<button class="mtcc-filter-pill' + (mtccEventFilter === '' ? ' active' : '') + '" onclick="setMTCCEventFilter(\'' + tabId + '\', \'\')">All</button>';
         cachedActiveEvents.forEach(function(ev) {
@@ -1996,9 +1996,9 @@ function renderMTCCDetailPanel(order, mode) {
     // Due date header — colored by status phase (Fix 2)
     var dueStr = order.due_date_formatted || order.due_date || '';
     var timeStr = (order.due_time_formatted && order.due_time_formatted !== 'Anytime') ? order.due_time_formatted : 'Anytime';
-    html += '<div class="mtcc-detail-header" style="background: linear-gradient(135deg, ' + phaseColor + ', ' + phaseColor + 'dd);">';
+    html += '<div class="mtcc-detail-header" style="background: linear-gradient(135deg, ' + phaseColor + ', ' + phaseColor + 'cc);">';
     if (dueStr) {
-        html += '<div class="mtcc-detail-due">Due ' + escapeHtml(dueStr) + '  |  by: ' + escapeHtml(timeStr) + '</div>';
+        html += '<div class="mtcc-detail-due"><span class="mtcc-due-label">DUE DATE</span><span class="mtcc-due-value">' + escapeHtml(dueStr) + '  |  by: ' + escapeHtml(timeStr) + '</span></div>';
     }
     html += '<span class="order-status-badge ' + badgeClass + ' mtcc-header-badge">' + (statusLabels[order.status] || order.status) + '</span>';
     html += '</div>';
@@ -2038,7 +2038,7 @@ function renderMTCCDetailPanel(order, mode) {
     if (order.status === 'delivered') {
         html += '<div class="mtcc-btn-row">';
         html += '<button class="mtcc-action-btn mtcc-btn-confirm" onclick="updateOrderStatus(\'' + escapeAttr(order.ref) + '\', \'pickedup\')">';
-        html += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Confirm Pick Up</button>';
+        html += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Confirm Pick Up</button>';
         html += '<button class="mtcc-action-btn mtcc-btn-scan" onclick="scanExpectedRef=\'' + escapeAttr(order.ref) + '\'; closeDetailPanel(); switchTab(\'scan\')">';
         html += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="6" y1="8" x2="6" y2="16"/><line x1="10" y1="8" x2="10" y2="16"/><line x1="14" y1="8" x2="14" y2="16"/><line x1="18" y1="8" x2="18" y2="16"/></svg> Scan to Verify</button>';
         html += '</div>';
