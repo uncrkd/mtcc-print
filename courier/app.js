@@ -823,64 +823,69 @@ function loadMTCCDashboard() {
         var s = result.stats;
         var html = '';
 
-        // Stats cards
+        // Stats cards — clickable, navigate to relevant tab
         html += '<div class="mtcc-stats-grid">';
-        html += '<div class="mtcc-stat-card stat-purple"><div class="mtcc-stat-number">' + s.waiting_for_pickup + '</div><div class="mtcc-stat-label">Waiting for Pickup</div></div>';
-        html += '<div class="mtcc-stat-card stat-blue"><div class="mtcc-stat-number">' + s.expected_today + '</div><div class="mtcc-stat-label">Expected Today</div></div>';
-        html += '<div class="mtcc-stat-card stat-green"><div class="mtcc-stat-number">' + s.picked_up_today + '</div><div class="mtcc-stat-label">Picked Up Today</div></div>';
+        html += '<div class="mtcc-stat-card stat-purple" onclick="switchTab(\'pickup\')"><div class="mtcc-stat-number">' + s.waiting_for_pickup + '</div><div class="mtcc-stat-label">Waiting for Pickup</div></div>';
+        html += '<div class="mtcc-stat-card stat-blue" onclick="switchTab(\'upcoming_mtcc\')"><div class="mtcc-stat-number">' + s.expected_today + '</div><div class="mtcc-stat-label">Expected Today</div></div>';
+        html += '<div class="mtcc-stat-card stat-green" onclick="switchTab(\'complete\')"><div class="mtcc-stat-number">' + s.picked_up_today + '</div><div class="mtcc-stat-label">Picked Up Today</div></div>';
         html += '<div class="mtcc-stat-card' + (s.open_issues > 0 ? ' stat-red' : ' stat-grey') + '"><div class="mtcc-stat-number">' + s.open_issues + '</div><div class="mtcc-stat-label">Open Issues</div></div>';
         html += '</div>';
 
-        // Event breakdown (if multiple events)
+        // Event breakdown — clickable, sets event filter and navigates to pickup
         var events = result.event_breakdown || {};
         var eventKeys = Object.keys(events);
         if (eventKeys.length > 0) {
-            html += '<div class="mtcc-section-header">Waiting by Event</div>';
+            html += '<div class="mtcc-dash-section"><div class="mtcc-section-header">Waiting by Event</div>';
             html += '<div class="mtcc-event-pills">';
             eventKeys.forEach(function(ev) {
-                html += '<span class="mtcc-event-pill">' + escapeHtml(ev) + ': <strong>' + events[ev] + '</strong></span>';
+                html += '<button class="mtcc-event-pill" onclick="mtccEventFilter=\'' + escapeAttr(ev) + '\'; switchTab(\'pickup\')">' + escapeHtml(ev) + ': <strong>' + events[ev] + '</strong></button>';
             });
-            html += '</div>';
+            html += '</div></div>';
         }
 
-        // Pipeline summary
+        // Pipeline summary — clickable, navigates to upcoming
         if (s.in_production > 0 || s.in_transit > 0) {
-            html += '<div class="mtcc-section-header">Pipeline</div>';
-            html += '<div class="mtcc-pipeline">';
+            html += '<div class="mtcc-dash-section"><div class="mtcc-section-header">Pipeline</div>';
+            html += '<div class="mtcc-pipeline" onclick="switchTab(\'upcoming_mtcc\')">';
             if (s.in_production > 0) html += '<div class="mtcc-pipeline-item"><span class="mtcc-pipeline-dot dot-amber"></span>' + s.in_production + ' in production</div>';
             if (s.in_transit > 0) html += '<div class="mtcc-pipeline-item"><span class="mtcc-pipeline-dot dot-blue"></span>' + s.in_transit + ' in transit</div>';
-            html += '</div>';
+            html += '</div></div>';
         }
 
-        // Upcoming deliveries
+        // Upcoming deliveries — clickable rows open detail panel
         var upcoming = result.upcoming_deliveries || [];
         if (upcoming.length > 0) {
-            html += '<div class="mtcc-section-header">Next Expected Deliveries</div>';
+            html += '<div class="mtcc-dash-section"><div class="mtcc-section-header">Next Expected Deliveries</div>';
+            html += '<div class="mtcc-dash-list">';
             upcoming.forEach(function(o) {
+                orderCache[o.ref] = o; // cache for detail panel
                 var statusLabel = {ready: 'Ready for Courier', dispatched: 'Courier Assigned', shipped: 'On the Way', printing: 'In Production', preflight: 'With Vendor'};
                 var dueStr = o.due_date_formatted || '';
                 var timeStr = o.due_time_formatted || '';
-                html += '<div class="mtcc-upcoming-item">';
+                html += '<div class="mtcc-upcoming-item" onclick="showOrderDetail(\'' + escapeAttr(o.ref) + '\', \'upcoming_mtcc\')">';
                 html += '<div class="mtcc-upcoming-left"><strong>' + escapeHtml(o.ref) + '</strong><span class="mtcc-upcoming-customer">' + escapeHtml(o.customer_name) + '</span></div>';
                 html += '<div class="mtcc-upcoming-right"><span class="mtcc-upcoming-status badge-' + o.status + '">' + (statusLabel[o.status] || o.status) + '</span>';
                 if (dueStr) html += '<span class="mtcc-upcoming-due">' + escapeHtml(dueStr) + (timeStr ? ' ' + escapeHtml(timeStr) : '') + '</span>';
                 html += '</div></div>';
             });
+            html += '</div></div>';
         }
 
-        // Recent pickups
+        // Recent pickups — clickable rows open detail panel
         var recent = result.recent_pickups || [];
         if (recent.length > 0) {
-            html += '<div class="mtcc-section-header">Recent Pickups Today</div>';
+            html += '<div class="mtcc-dash-section"><div class="mtcc-section-header">Recent Pickups Today</div>';
+            html += '<div class="mtcc-dash-list">';
             recent.forEach(function(r) {
                 var pTime = r.pickedup_at ? new Date(r.pickedup_at) : null;
                 var timeStr = pTime ? pTime.toLocaleTimeString('en-US', {hour: 'numeric', minute: '2-digit'}) : '';
-                html += '<div class="mtcc-recent-item">';
+                html += '<div class="mtcc-recent-item" onclick="if(orderCache[\'' + escapeAttr(r.ref) + '\']) showOrderDetail(\'' + escapeAttr(r.ref) + '\', \'complete\')">';
                 html += '<span class="mtcc-recent-ref">' + escapeHtml(r.ref) + '</span>';
                 html += '<span class="mtcc-recent-name">' + escapeHtml(r.customer_name) + '</span>';
                 html += '<span class="mtcc-recent-time">' + timeStr + '</span>';
                 html += '</div>';
             });
+            html += '</div></div>';
         }
 
         el.innerHTML = html;
@@ -1578,6 +1583,7 @@ function renderOrderCard(order, mode) {
     orderCache[order.ref] = order;
     var urgency = getUrgencyInfo(order);
     var isPipeline = (mode === 'upcoming');
+    var isMTCCCard = (mode === 'pickup' || mode === 'upcoming_mtcc' || mode === 'complete');
     var pipelineCls = isPipeline ? ' pipeline-card ' + getPipelineTierClass(order) : '';
     var isInTransit = (mode === 'delivery' && order.status === 'shipped');
     var transitCls = isInTransit ? ' in-transit-card' : '';
@@ -1614,13 +1620,13 @@ function renderOrderCard(order, mode) {
         html += '</div>';
     }
 
-    // Top row: ID ref (left) + payout (right)
+    // Top row: ID ref (left) + payout (right, courier only)
     html += '<div class="order-card-top">';
     html += '<div class="order-card-top-left">';
     html += '<div class="order-ref"><span class="ref-label">ID:</span> ' + escapeHtml(order.ref) + '</div>';
     html += '</div>';
-    // Base pay + bonus
-    if (order.est_payout && mode !== 'pickup') {
+    // Base pay + bonus (hide for MTCC card modes)
+    if (order.est_payout && !isMTCCCard) {
         var basePay = 0, bonusTotal = 0;
         if (order.est_payout_breakdown && order.est_payout_breakdown.length > 0) {
             order.est_payout_breakdown.forEach(function(b) {
@@ -1635,10 +1641,19 @@ function renderOrderCard(order, mode) {
     }
     html += '</div>';
 
-    if (mode === 'pickup') {
+    if (isMTCCCard) {
         html += '<div class="order-card-body">';
         html += '<div class="order-detail"><span class="order-detail-label">Customer</span><span class="order-detail-value">' + escapeHtml(order.customer_name) + '</span></div>';
         html += '<div class="order-detail"><span class="order-detail-label">Event</span><span class="order-detail-value">' + escapeHtml(order.event_acronym || order.event) + '</span></div>';
+        if (mode === 'upcoming_mtcc') {
+            var mtccStatusLabel = {shipped: 'On the Way', dispatched: 'Courier Assigned', ready: 'Ready for Courier', printing: 'In Production', preflight: 'With Vendor'};
+            html += '<div class="order-detail"><span class="order-detail-label">Status</span><span class="order-detail-value">' + (mtccStatusLabel[order.status] || order.status) + '</span></div>';
+        }
+        if (mode === 'complete' && order.delivered_at) {
+            var pDate = new Date(order.delivered_at);
+            var pStr = isNaN(pDate) ? '' : pDate.toLocaleDateString('en-US', {month: 'short', day: 'numeric'}) + ', ' + pDate.toLocaleTimeString('en-US', {hour: 'numeric', minute: '2-digit'});
+            if (pStr) html += '<div class="order-detail"><span class="order-detail-label">Picked Up</span><span class="order-detail-value">' + pStr + '</span></div>';
+        }
         html += '</div>';
     } else {
         var pickup = order.vendor_name || 'Vendor';
@@ -1661,7 +1676,7 @@ function renderOrderCard(order, mode) {
     html += '<div class="order-card-footer">';
     var qty = order.quantity || 1;
     html += '<span class="card-meta">\ud83d\udce6 ' + qty + '</span>';
-    if (order.size && mode !== 'pickup') {
+    if (order.size && !isMTCCCard) {
         html += '<span class="card-footer-dot">\u00b7</span>';
         html += '<span class="card-meta">\ud83d\udcd0 ' + escapeHtml(order.size) + '</span>';
     }
@@ -1996,8 +2011,8 @@ function renderMTCCDetailPanel(order, mode) {
         html += 'Report Missing</button>';
     }
 
-    // Report Issue button (for delivered/dispatched/shipped)
-    if (typeof CourierIssues !== 'undefined' && ['delivered', 'dispatched', 'shipped'].indexOf(order.status) !== -1) {
+    // Report Issue button (any order that has been paid for)
+    if (typeof CourierIssues !== 'undefined' && ['paid', 'preflight', 'printing', 'ready', 'dispatched', 'shipped', 'delivered'].indexOf(order.status) !== -1) {
         html += CourierIssues.getReportButtonHTML(order.ref, order.status);
     }
 
@@ -3389,6 +3404,9 @@ function getTabIcon(iconId) {
         pickup: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>',
         activity: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
         history: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+        dashboard: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>',
+        upcoming: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+        complete: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
     };
     return icons[iconId] || '';
 }
