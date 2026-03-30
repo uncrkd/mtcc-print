@@ -1597,7 +1597,8 @@ function renderOrderCard(order, mode) {
     var statusClass = 'status-' + order.status;
     var badgeClass = 'badge-' + order.status;
 
-    var html = '<div class="order-card ' + statusClass + pipelineCls + transitCls + '" data-urgency="' + urgency.level + '" data-ref="' + escapeHtml(order.ref) + '" data-mode="' + mode + '" data-transit="' + (isInTransit ? '1' : '0') + '">';
+    var mtccCls = isMTCCCard ? ' mtcc-card' : '';
+    var html = '<div class="order-card ' + statusClass + pipelineCls + transitCls + mtccCls + '" data-urgency="' + urgency.level + '" data-ref="' + escapeHtml(order.ref) + '" data-mode="' + mode + '" data-transit="' + (isInTransit ? '1' : '0') + '">';
 
     // Transit hero banner (purple gradient)
     if (isInTransit) {
@@ -1614,8 +1615,15 @@ function renderOrderCard(order, mode) {
         if (order.due_time_formatted && order.due_time_formatted !== 'Anytime') timeStr = order.due_time_formatted;
         var barCls = 'card-due-bar';
         if (isMTCCCard) {
-            // MTCC cards: color by order status
-            barCls += ' due-status-' + order.status;
+            // MTCC cards: color by MTCC phase (grouped statuses share same color)
+            var mtccPhase = 'default';
+            if (['preflight', 'file_issue', 'printing'].indexOf(order.status) !== -1) mtccPhase = 'production';
+            else if (['ready'].indexOf(order.status) !== -1) mtccPhase = 'preparing';
+            else if (['dispatched', 'shipped'].indexOf(order.status) !== -1) mtccPhase = 'ontheway';
+            else if (order.status === 'delivered') mtccPhase = 'ready-for-pickup';
+            else if (order.status === 'pickedup') mtccPhase = 'pickedup';
+            else if (order.status === 'missing') mtccPhase = 'missing';
+            barCls += ' due-mtcc-' + mtccPhase;
         } else if (isInTransit) {
             barCls += ' due-transit';
         } else if (urgency.level === 'red') {

@@ -21,8 +21,8 @@ session_start();
     <link rel="icon" type="image/png" href="../assets/logo.png">
     <link rel="apple-touch-icon" href="../assets/logo.png">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="app.css?v=10">
-    <link rel="stylesheet" href="courier-issues.css?v=1">
+    <link rel="stylesheet" href="app.css?v=11">
+    <link rel="stylesheet" href="courier-issues.css?v=2">
     <!-- QuaggaJS for barcode scanning -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDtsKlcP439gjDYjDOTbd-nd4spGM77fYg&libraries=places,marker&loading=async&callback=Function.prototype"></script>
@@ -390,7 +390,7 @@ session_start();
 <!-- Full-Page Transit View -->
 <div id="transitView"></div>
 
-<script src="app.js?v=10"></script>
-<script src="courier-issues.js?v=1"></script>
+<script src="app.js?v=11"></script>
+<script src="courier-issues.js?v=2"></script>
 </body>
 </html>

@@ -766,6 +766,7 @@ input {
 
 /* Card footer (payout, packages, time) */
 
+/* Left border indicator — courier cards only (hidden for MTCC via isMTCCCard class) */
 .order-card::before {
     content: '';
     position: absolute;
@@ -774,6 +775,8 @@ input {
     bottom: 0;
     width: 4px;
 }
+
+.order-card.mtcc-card::before { display: none; }
 
 .order-card.status-ready::before { background: #d97706; }
 .order-card.status-dispatched::before { background: #7c3aed; }
@@ -5034,16 +5037,14 @@ input {
    MTCC Card Due Bar — Status Colors
    ============================================ */
 
-.card-due-bar.due-status-delivered { background: linear-gradient(135deg, #059669, #047857); color: white; }
-.card-due-bar.due-status-pickedup { background: linear-gradient(135deg, #22c55e, #16a34a); color: white; }
-.card-due-bar.due-status-shipped { background: linear-gradient(135deg, #14b8a6, #0d9488); color: white; }
-.card-due-bar.due-status-dispatched { background: linear-gradient(135deg, #7c3aed, #6d28d9); color: white; }
-.card-due-bar.due-status-ready { background: linear-gradient(135deg, #d97706, #b45309); color: white; }
-.card-due-bar.due-status-printing { background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; }
-.card-due-bar.due-status-preflight { background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white; }
-.card-due-bar.due-status-paid { background: linear-gradient(135deg, #ca8a04, #a16207); color: white; }
-.card-due-bar.due-status-missing { background: linear-gradient(135deg, #dc2626, #b91c1c); color: white; }
-.card-due-bar.due-status-file_issue { background: linear-gradient(135deg, #ea580c, #c2410c); color: white; }
+/* MTCC card due bars — grouped by MTCC phase (same label = same color) */
+.card-due-bar.due-mtcc-production { background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; }
+.card-due-bar.due-mtcc-preparing { background: linear-gradient(135deg, #d97706, #b45309); color: white; }
+.card-due-bar.due-mtcc-ontheway { background: linear-gradient(135deg, #14b8a6, #0d9488); color: white; }
+.card-due-bar.due-mtcc-ready-for-pickup { background: linear-gradient(135deg, #059669, #047857); color: white; }
+.card-due-bar.due-mtcc-pickedup { background: linear-gradient(135deg, #22c55e, #16a34a); color: white; }
+.card-due-bar.due-mtcc-missing { background: linear-gradient(135deg, #dc2626, #b91c1c); color: white; }
+.card-due-bar.due-mtcc-default { background: linear-gradient(135deg, #64748b, #475569); color: white; }
 
 .due-bar-badge {
     margin-left: auto;
