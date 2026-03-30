@@ -1217,6 +1217,7 @@ function formatOrderForApp($order, $ref = null, $statusOverride = null) {
         'tracking' => $tracking,
         'status' => $status,
         'customer_name' => $customerInfo['name'] ?? '',
+        'customer_email' => $customerInfo['email'] ?? '',
         'customer_phone' => $customerInfo['phone'] ?? '',
         'material' => $order['material'] ?? '',
         'size' => ($dimensions['width'] ?? '') . '" x ' . ($dimensions['height'] ?? '') . '"',

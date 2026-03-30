@@ -4841,3 +4841,106 @@ input {
     border-bottom: 2px solid #e5e7eb;
     margin-top: 8px;
 }
+
+/* ============================================
+   MTCC Search & Filter Styles
+   ============================================ */
+
+.mtcc-search-filter {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: #f8fafc;
+    padding: 10px 0 8px;
+    margin-bottom: 8px;
+}
+
+.mtcc-search-bar {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.mtcc-search-icon {
+    position: absolute;
+    left: 12px;
+    pointer-events: none;
+}
+
+.mtcc-search-input {
+    width: 100%;
+    padding: 10px 36px 10px 36px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-family: inherit;
+    background: white;
+    color: #374151;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.mtcc-search-input:focus {
+    border-color: #7c3aed;
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+.mtcc-search-input::placeholder {
+    color: #9ca3af;
+}
+
+.mtcc-search-clear {
+    position: absolute;
+    right: 8px;
+    background: #e5e7eb;
+    border: none;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    color: #6b7280;
+}
+
+.mtcc-search-clear:active {
+    background: #d1d5db;
+}
+
+.mtcc-filter-pills {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+}
+
+.mtcc-filter-pills::-webkit-scrollbar { display: none; }
+
+.mtcc-filter-pill {
+    flex-shrink: 0;
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border: 1px solid #e5e7eb;
+    background: white;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+}
+
+.mtcc-filter-pill:active {
+    transform: scale(0.96);
+}
+
+.mtcc-filter-pill.active {
+    background: #7c3aed;
+    color: white;
+    border-color: #7c3aed;
+}

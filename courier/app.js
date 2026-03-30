@@ -24,6 +24,14 @@ var COURIER_APP_VERSION = 'v10-transit-clean';
 var orderCache = {};
 var batchCache = {};
 
+// MTCC tab cached data (for client-side search/filter)
+var cachedPickupOrders = [];
+var cachedUpcomingMtccOrders = [];
+var cachedCompleteOrders = [];
+var cachedActiveEvents = []; // active event acronyms for filter pills
+var mtccSearchQuery = '';
+var mtccEventFilter = ''; // '' = all events
+
 // Live countdown timers
 var countdownInterval = null;
 
@@ -639,19 +647,162 @@ function setAvailableView(view) {
 
 function loadPickupQueue() {
     apiCall('get_pickup_queue', null, function(result) {
-        var el = document.getElementById('pickupContent');
         if (!result.success) {
-            el.innerHTML = '<div class="empty-state"><h3>Error</h3><p>' + escapeHtml(result.error) + '</p></div>';
+            var el = document.getElementById('pickupContent');
+            if (el) el.innerHTML = '<div class="empty-state"><h3>Error</h3><p>' + escapeHtml(result.error) + '</p></div>';
             return;
         }
-        if (result.orders.length === 0) {
-            el.innerHTML = '<div class="empty-state"><div class="empty-state-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M5 12h14"/><path d="M12 5v14"/><rect x="3" y="3" width="18" height="18" rx="2"/></svg></div><h3>Pickup Queue Empty</h3><p>No orders waiting for customer pickup.</p></div>';
-            return;
-        }
-        var html = '<div class="section-label">' + result.count + ' order' + (result.count !== 1 ? 's' : '') + ' waiting for pickup</div>';
-        result.orders.forEach(function(o) { html += renderOrderCard(o, 'pickup'); });
-        el.innerHTML = html;
+        cachedPickupOrders = result.orders || [];
+        renderPickupFromCache();
     });
+}
+
+// ============================================
+// MTCC Search & Event Filter
+// ============================================
+
+function buildSearchFilterBar(tabId) {
+    var html = '<div class="mtcc-search-filter">';
+    html += '<div class="mtcc-search-bar">';
+    html += '<svg class="mtcc-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
+    html += '<input type="text" class="mtcc-search-input" id="mtccSearch_' + tabId + '" placeholder="Search by name, order ID, or email..." oninput="onMTCCSearch(\'' + tabId + '\', this.value)" value="' + escapeAttr(mtccSearchQuery) + '">';
+    if (mtccSearchQuery) {
+        html += '<button class="mtcc-search-clear" onclick="clearMTCCSearch(\'' + tabId + '\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>';
+    }
+    html += '</div>';
+
+    // Event filter pills
+    if (cachedActiveEvents.length > 1) {
+        html += '<div class="mtcc-filter-pills">';
+        html += '<button class="mtcc-filter-pill' + (mtccEventFilter === '' ? ' active' : '') + '" onclick="setMTCCEventFilter(\'' + tabId + '\', \'\')">All</button>';
+        cachedActiveEvents.forEach(function(ev) {
+            var acronym = ev.acronym || ev;
+            html += '<button class="mtcc-filter-pill' + (mtccEventFilter === acronym ? ' active' : '') + '" onclick="setMTCCEventFilter(\'' + tabId + '\', \'' + escapeAttr(acronym) + '\')">' + escapeHtml(acronym) + '</button>';
+        });
+        html += '</div>';
+    }
+
+    html += '</div>';
+    return html;
+}
+
+function onMTCCSearch(tabId, query) {
+    mtccSearchQuery = query.trim();
+    rerenderMTCCTab(tabId);
+}
+
+function clearMTCCSearch(tabId) {
+    mtccSearchQuery = '';
+    var input = document.getElementById('mtccSearch_' + tabId);
+    if (input) input.value = '';
+    rerenderMTCCTab(tabId);
+}
+
+function setMTCCEventFilter(tabId, acronym) {
+    mtccEventFilter = (mtccEventFilter === acronym) ? '' : acronym;
+    rerenderMTCCTab(tabId);
+}
+
+function filterMTCCOrders(orders) {
+    var filtered = orders;
+
+    // Event filter
+    if (mtccEventFilter) {
+        filtered = filtered.filter(function(o) {
+            var ref = (o.ref || '').toUpperCase();
+            var evAcr = (o.event_acronym || '').toUpperCase();
+            return ref.indexOf(mtccEventFilter.toUpperCase()) === 0 || evAcr === mtccEventFilter.toUpperCase();
+        });
+    }
+
+    // Search filter
+    if (mtccSearchQuery) {
+        var q = mtccSearchQuery.toLowerCase();
+        filtered = filtered.filter(function(o) {
+            return (o.ref || '').toLowerCase().indexOf(q) !== -1
+                || (o.customer_name || '').toLowerCase().indexOf(q) !== -1
+                || (o.customer_email || '').toLowerCase().indexOf(q) !== -1
+                || (o.tracking || '').toLowerCase().indexOf(q) !== -1;
+        });
+    }
+
+    return filtered;
+}
+
+function rerenderMTCCTab(tabId) {
+    switch (tabId) {
+        case 'pickup': renderPickupFromCache(); break;
+        case 'upcoming_mtcc': renderUpcomingMTCCFromCache(); break;
+        case 'complete': renderCompleteFromCache(); break;
+    }
+}
+
+function renderPickupFromCache() {
+    var el = document.getElementById('pickupContent');
+    if (!el) return;
+    var filtered = filterMTCCOrders(cachedPickupOrders);
+    var html = buildSearchFilterBar('pickup');
+    html += '<div class="section-label">' + filtered.length + ' order' + (filtered.length !== 1 ? 's' : '') + ' waiting for pickup' + (mtccSearchQuery || mtccEventFilter ? ' (filtered)' : '') + '</div>';
+    if (filtered.length === 0 && (mtccSearchQuery || mtccEventFilter)) {
+        html += '<div class="empty-state"><p>No orders match your search.</p></div>';
+    } else if (filtered.length === 0) {
+        html += '<div class="empty-state"><div class="empty-state-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M5 12h14"/><path d="M12 5v14"/><rect x="3" y="3" width="18" height="18" rx="2"/></svg></div><h3>Pickup Queue Empty</h3><p>No orders waiting for customer pickup.</p></div>';
+    } else {
+        filtered.forEach(function(o) { html += renderOrderCard(o, 'pickup'); });
+    }
+    el.innerHTML = html;
+}
+
+function renderUpcomingMTCCFromCache() {
+    var el = document.getElementById('upcomingMtccContent');
+    if (!el) return;
+    var filtered = filterMTCCOrders(cachedUpcomingMtccOrders);
+    var statusLabels = {shipped: 'On the Way', dispatched: 'Courier Assigned', ready: 'Ready for Courier', printing: 'In Production', preflight: 'With Vendor'};
+    var groups = {transit: [], ready: [], production: []};
+    filtered.forEach(function(o) {
+        if (o.status === 'shipped' || o.status === 'dispatched') groups.transit.push(o);
+        else if (o.status === 'ready') groups.ready.push(o);
+        else groups.production.push(o);
+    });
+
+    var html = buildSearchFilterBar('upcoming_mtcc');
+    html += '<div class="section-label">' + filtered.length + ' order' + (filtered.length !== 1 ? 's' : '') + ' in the pipeline' + (mtccSearchQuery || mtccEventFilter ? ' (filtered)' : '') + '</div>';
+
+    if (filtered.length === 0 && (mtccSearchQuery || mtccEventFilter)) {
+        html += '<div class="empty-state"><p>No orders match your search.</p></div>';
+    } else if (filtered.length === 0) {
+        html += '<div class="empty-state"><div class="empty-state-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div><h3>All Caught Up</h3><p>No orders in the pipeline right now.</p></div>';
+    } else {
+        if (groups.transit.length > 0) {
+            html += '<div class="mtcc-group-header">On the Way (' + groups.transit.length + ')</div>';
+            groups.transit.forEach(function(o) { html += renderOrderCard(o, 'upcoming_mtcc'); });
+        }
+        if (groups.ready.length > 0) {
+            html += '<div class="mtcc-group-header">Ready for Courier (' + groups.ready.length + ')</div>';
+            groups.ready.forEach(function(o) { html += renderOrderCard(o, 'upcoming_mtcc'); });
+        }
+        if (groups.production.length > 0) {
+            html += '<div class="mtcc-group-header">In Production (' + groups.production.length + ')</div>';
+            groups.production.forEach(function(o) { html += renderOrderCard(o, 'upcoming_mtcc'); });
+        }
+    }
+    el.innerHTML = html;
+}
+
+function renderCompleteFromCache() {
+    var el = document.getElementById('completeContent');
+    if (!el) return;
+    var filtered = filterMTCCOrders(cachedCompleteOrders);
+    var html = buildSearchFilterBar('complete');
+    html += '<div class="section-label">' + filtered.length + ' order' + (filtered.length !== 1 ? 's' : '') + ' picked up' + (mtccSearchQuery || mtccEventFilter ? ' (filtered)' : '') + '</div>';
+    if (filtered.length === 0 && (mtccSearchQuery || mtccEventFilter)) {
+        html += '<div class="empty-state"><p>No orders match your search.</p></div>';
+    } else if (filtered.length === 0) {
+        html += '<div class="empty-state"><div class="empty-state-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M12 6v6l4 2"/></svg></div><h3>No Completed Pickups</h3><p>Picked up orders for active events will appear here.</p></div>';
+    } else {
+        filtered.forEach(function(o) { html += renderOrderCard(o, 'complete'); });
+    }
+    el.innerHTML = html;
 }
 
 // ============================================
@@ -666,6 +817,9 @@ function loadMTCCDashboard() {
             el.innerHTML = '<div class="empty-state"><h3>Error</h3><p>' + escapeHtml(result.error || 'Failed to load') + '</p></div>';
             return;
         }
+        // Cache active events for filter pills
+        cachedActiveEvents = result.active_events || [];
+
         var s = result.stats;
         var html = '';
 
@@ -735,59 +889,25 @@ function loadMTCCDashboard() {
 
 function loadUpcomingMTCC() {
     apiCall('get_upcoming_mtcc', null, function(result) {
-        var el = document.getElementById('upcomingMtccContent');
-        if (!el) return;
         if (!result.success) {
-            el.innerHTML = '<div class="empty-state"><h3>Error</h3><p>' + escapeHtml(result.error || 'Failed to load') + '</p></div>';
+            var el = document.getElementById('upcomingMtccContent');
+            if (el) el.innerHTML = '<div class="empty-state"><h3>Error</h3><p>' + escapeHtml(result.error || 'Failed to load') + '</p></div>';
             return;
         }
-        if (result.orders.length === 0) {
-            el.innerHTML = '<div class="empty-state"><div class="empty-state-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div><h3>All Caught Up</h3><p>No orders in the pipeline right now.</p></div>';
-            return;
-        }
-
-        var statusLabels = {shipped: 'On the Way', dispatched: 'Courier Assigned', ready: 'Ready for Courier', printing: 'In Production', preflight: 'With Vendor'};
-        var groups = {transit: [], ready: [], production: []};
-        result.orders.forEach(function(o) {
-            if (o.status === 'shipped' || o.status === 'dispatched') groups.transit.push(o);
-            else if (o.status === 'ready') groups.ready.push(o);
-            else groups.production.push(o);
-        });
-
-        var html = '<div class="section-label">' + result.count + ' order' + (result.count !== 1 ? 's' : '') + ' in the pipeline</div>';
-
-        if (groups.transit.length > 0) {
-            html += '<div class="mtcc-group-header">On the Way (' + groups.transit.length + ')</div>';
-            groups.transit.forEach(function(o) { html += renderOrderCard(o, 'upcoming_mtcc'); });
-        }
-        if (groups.ready.length > 0) {
-            html += '<div class="mtcc-group-header">Ready for Courier (' + groups.ready.length + ')</div>';
-            groups.ready.forEach(function(o) { html += renderOrderCard(o, 'upcoming_mtcc'); });
-        }
-        if (groups.production.length > 0) {
-            html += '<div class="mtcc-group-header">In Production (' + groups.production.length + ')</div>';
-            groups.production.forEach(function(o) { html += renderOrderCard(o, 'upcoming_mtcc'); });
-        }
-
-        el.innerHTML = html;
+        cachedUpcomingMtccOrders = result.orders || [];
+        renderUpcomingMTCCFromCache();
     });
 }
 
 function loadCompleted() {
     apiCall('get_completed', null, function(result) {
-        var el = document.getElementById('completeContent');
-        if (!el) return;
         if (!result.success) {
-            el.innerHTML = '<div class="empty-state"><h3>Error</h3><p>' + escapeHtml(result.error || 'Failed to load') + '</p></div>';
+            var el = document.getElementById('completeContent');
+            if (el) el.innerHTML = '<div class="empty-state"><h3>Error</h3><p>' + escapeHtml(result.error || 'Failed to load') + '</p></div>';
             return;
         }
-        if (result.orders.length === 0) {
-            el.innerHTML = '<div class="empty-state"><div class="empty-state-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M12 6v6l4 2"/></svg></div><h3>No Completed Pickups</h3><p>Picked up orders for active events will appear here.</p></div>';
-            return;
-        }
-        var html = '<div class="section-label">' + result.count + ' order' + (result.count !== 1 ? 's' : '') + ' picked up</div>';
-        result.orders.forEach(function(o) { html += renderOrderCard(o, 'complete'); });
-        el.innerHTML = html;
+        cachedCompleteOrders = result.orders || [];
+        renderCompleteFromCache();
     });
 }
 
