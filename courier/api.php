@@ -66,6 +66,9 @@ switch ($action) {
     case 'get_pickup_queue':   requireAuth(); handleGetPickupQueue(); break;
     case 'get_activity':       requireAuth(); handleGetActivity(); break;
     case 'get_upcoming':       requireAuth(); handleGetUpcoming(); break;
+    case 'get_mtcc_dashboard': requireAuth(); handleGetMTCCDashboard(); break;
+    case 'get_completed':      requireAuth(); handleGetCompleted(); break;
+    case 'get_upcoming_mtcc':  requireAuth(); handleGetUpcomingMTCC(); break;
     // Dispatch Actions
     case 'accept_delivery':    requireAuth(); handleAcceptDelivery(); break;
     case 'update_status':      requireAuth(); handleUpdateStatus(); break;
@@ -253,9 +256,16 @@ function getTabsForRole($role) {
                 ['id' => 'earnings', 'label' => 'Earnings', 'icon' => 'earnings'],
             ];
         case 'mtcc_staff':
+            return [
+                ['id' => 'mtcc_dashboard', 'label' => 'Dashboard', 'icon' => 'dashboard'],
+                ['id' => 'pickup', 'label' => 'Pickup', 'icon' => 'pickup'],
+                ['id' => 'scan', 'label' => 'Scan', 'icon' => 'scan'],
+                ['id' => 'upcoming_mtcc', 'label' => 'Upcoming', 'icon' => 'upcoming'],
+                ['id' => 'complete', 'label' => 'Complete', 'icon' => 'complete'],
+            ];
         case 'admin':
             return [
-                ['id' => 'pickup', 'label' => 'Pickup Queue', 'icon' => 'pickup'],
+                ['id' => 'pickup', 'label' => 'Pickup', 'icon' => 'pickup'],
                 ['id' => 'scan', 'label' => 'Scan', 'icon' => 'scan'],
                 ['id' => 'activity', 'label' => 'Activity', 'icon' => 'activity'],
             ];
@@ -482,6 +492,203 @@ function handleGetActivity() {
     echo json_encode(['success' => true, 'entries' => array_slice(array_values($todayEntries), 0, 50)]);
 }
 
+
+// ============================================
+// MTCC Staff Dashboard
+// ============================================
+
+function handleGetMTCCDashboard() {
+    $statuses = courier_loadStatuses();
+    $today = date('Y-m-d');
+
+    // Load active events to filter
+    $activeEvents = loadActiveEvents();
+    $activeAcronyms = array_column($activeEvents, 'acronym');
+
+    $waitingForPickup = 0;
+    $pickedUpToday = 0;
+    $expectedToday = 0;
+    $openIssues = 0;
+    $inProduction = 0;
+    $inTransit = 0;
+    $upcomingDeliveries = [];
+
+    foreach ($statuses as $ref => $status) {
+        if (empty($ref)) continue;
+
+        // Check if order belongs to an active event
+        $eventPrefix = explode('-', $ref)[0] ?? '';
+        if (!empty($activeAcronyms) && !in_array($eventPrefix, $activeAcronyms)) continue;
+
+        if ($status === 'delivered') {
+            $waitingForPickup++;
+        } elseif ($status === 'pickedup') {
+            // Check if picked up today
+            $order = courier_loadOrder($ref);
+            if ($order) {
+                $pickupTime = $order['dispatch']['pickedup_at'] ?? '';
+                if ($pickupTime && substr($pickupTime, 0, 10) === $today) {
+                    $pickedUpToday++;
+                }
+            }
+        } elseif (in_array($status, ['dispatched', 'shipped'])) {
+            $inTransit++;
+            // Check if due today
+            $order = courier_loadOrder($ref);
+            if ($order) {
+                $dueDate = $order['selectedDate'] ?? '';
+                if ($dueDate === $today) $expectedToday++;
+                $formatted = formatOrderForApp($order, $ref, $status);
+                $upcomingDeliveries[] = $formatted;
+            }
+        } elseif (in_array($status, ['ready'])) {
+            $order = courier_loadOrder($ref);
+            if ($order) {
+                $dueDate = $order['selectedDate'] ?? '';
+                if ($dueDate === $today) $expectedToday++;
+                $formatted = formatOrderForApp($order, $ref, $status);
+                $upcomingDeliveries[] = $formatted;
+            }
+        } elseif (in_array($status, ['preflight', 'printing'])) {
+            $inProduction++;
+        } elseif (in_array($status, ['missing', 'file_issue'])) {
+            $openIssues++;
+        }
+    }
+
+    // Sort upcoming by hours_remaining
+    usort($upcomingDeliveries, function($a, $b) {
+        $aH = $a['hours_remaining'] ?? 9999;
+        $bH = $b['hours_remaining'] ?? 9999;
+        return $aH <=> $bH;
+    });
+
+    // Recent pickups (last 10 today)
+    $recentPickups = [];
+    foreach ($statuses as $ref => $status) {
+        if ($status !== 'pickedup') continue;
+        $eventPrefix = explode('-', $ref)[0] ?? '';
+        if (!empty($activeAcronyms) && !in_array($eventPrefix, $activeAcronyms)) continue;
+        $order = courier_loadOrder($ref);
+        if (!$order) continue;
+        $pickupTime = $order['dispatch']['pickedup_at'] ?? '';
+        if ($pickupTime && substr($pickupTime, 0, 10) === $today) {
+            $recentPickups[] = [
+                'ref' => $ref,
+                'customer_name' => $order['customerInfo']['name'] ?? $order['name'] ?? '',
+                'event_acronym' => $order['event']['acronym'] ?? $order['event_select']['acronym'] ?? '',
+                'pickedup_at' => $pickupTime,
+            ];
+        }
+    }
+    usort($recentPickups, function($a, $b) {
+        return strcmp($b['pickedup_at'], $a['pickedup_at']);
+    });
+
+    // Event breakdown
+    $eventCounts = [];
+    foreach ($statuses as $ref => $status) {
+        if ($status !== 'delivered') continue;
+        $eventPrefix = explode('-', $ref)[0] ?? '';
+        if (!empty($activeAcronyms) && !in_array($eventPrefix, $activeAcronyms)) continue;
+        $eventCounts[$eventPrefix] = ($eventCounts[$eventPrefix] ?? 0) + 1;
+    }
+
+    echo json_encode([
+        'success' => true,
+        'stats' => [
+            'waiting_for_pickup' => $waitingForPickup,
+            'picked_up_today' => $pickedUpToday,
+            'expected_today' => $expectedToday,
+            'open_issues' => $openIssues,
+            'in_production' => $inProduction,
+            'in_transit' => $inTransit,
+        ],
+        'upcoming_deliveries' => array_slice($upcomingDeliveries, 0, 8),
+        'recent_pickups' => array_slice($recentPickups, 0, 10),
+        'event_breakdown' => $eventCounts,
+        'active_events' => $activeEvents,
+    ]);
+}
+
+function handleGetCompleted() {
+    $statuses = courier_loadStatuses();
+    $activeEvents = loadActiveEvents();
+    $activeAcronyms = array_column($activeEvents, 'acronym');
+    $completed = [];
+
+    foreach ($statuses as $ref => $status) {
+        if ($status !== 'pickedup') continue;
+
+        // Filter to active events only
+        $eventPrefix = explode('-', $ref)[0] ?? '';
+        if (!empty($activeAcronyms) && !in_array($eventPrefix, $activeAcronyms)) continue;
+
+        $order = courier_loadOrder($ref);
+        if (!$order) continue;
+
+        $completed[] = formatOrderForApp($order, $ref, $status);
+    }
+
+    // Sort by pickup time (newest first)
+    usort($completed, function($a, $b) {
+        $aT = $a['dispatch_pickedup_at'] ?? $a['delivered_at'] ?? '';
+        $bT = $b['dispatch_pickedup_at'] ?? $b['delivered_at'] ?? '';
+        return strcmp($b, $a);
+    });
+
+    echo json_encode(['success' => true, 'orders' => $completed, 'count' => count($completed)]);
+}
+
+function handleGetUpcomingMTCC() {
+    $statuses = courier_loadStatuses();
+    $activeEvents = loadActiveEvents();
+    $activeAcronyms = array_column($activeEvents, 'acronym');
+    $orders = [];
+
+    $pipelineStatuses = ['preflight', 'printing', 'ready', 'dispatched', 'shipped'];
+
+    foreach ($statuses as $ref => $status) {
+        if (empty($ref) || !in_array($status, $pipelineStatuses)) continue;
+
+        $eventPrefix = explode('-', $ref)[0] ?? '';
+        if (!empty($activeAcronyms) && !in_array($eventPrefix, $activeAcronyms)) continue;
+
+        $order = courier_loadOrder($ref);
+        if (!$order) continue;
+
+        $orders[] = formatOrderForApp($order, $ref, $status);
+    }
+
+    // Sort: in transit first (dispatched/shipped), then ready, then production
+    $statusPriority = ['shipped' => 1, 'dispatched' => 2, 'ready' => 3, 'printing' => 4, 'preflight' => 5];
+    usort($orders, function($a, $b) use ($statusPriority) {
+        $aP = $statusPriority[$a['status']] ?? 9;
+        $bP = $statusPriority[$b['status']] ?? 9;
+        if ($aP !== $bP) return $aP - $bP;
+        $aH = $a['hours_remaining'] ?? 9999;
+        $bH = $b['hours_remaining'] ?? 9999;
+        return $aH <=> $bH;
+    });
+
+    echo json_encode(['success' => true, 'orders' => $orders, 'count' => count($orders)]);
+}
+
+/**
+ * Load active events from admin/events.json
+ */
+function loadActiveEvents() {
+    $eventsFile = __DIR__ . '/../admin/events.json';
+    if (!file_exists($eventsFile)) return [];
+    $data = json_decode(file_get_contents($eventsFile), true);
+    if (!$data) return [];
+    // Support both flat array and {active: [...]} formats
+    $events = $data['active'] ?? $data;
+    if (!is_array($events)) return [];
+    return array_filter($events, function($e) {
+        return ($e['status'] ?? '') === 'active';
+    });
+}
 
 // ============================================
 // Upcoming Orders (printing / ready_to_ship)

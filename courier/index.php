@@ -104,9 +104,9 @@ session_start();
             </button>
         </div>
 
-        <div class="drawer-body">
-            <!-- Availability Toggle -->
-            <div class="drawer-section">
+        <div class="drawer-body" id="drawerBody">
+            <!-- Courier-only: Availability Toggle -->
+            <div class="drawer-section drawer-courier-only">
                 <div class="drawer-item drawer-toggle-item">
                     <div class="drawer-item-left">
                         <div class="drawer-item-icon status-icon"><div class="availability-dot" id="availabilityDot"></div></div>
@@ -119,8 +119,8 @@ session_start();
                 </div>
             </div>
 
-            <!-- Navigation -->
-            <div class="drawer-section">
+            <!-- Courier-only: Navigation -->
+            <div class="drawer-section drawer-courier-only">
                 <div class="drawer-section-label">Navigation</div>
                 <button class="drawer-item" onclick="drawerNav('deliveries')">
                     <div class="drawer-item-left">
@@ -136,8 +136,8 @@ session_start();
                 </button>
             </div>
 
-            <!-- Support -->
-            <div class="drawer-section">
+            <!-- Courier-only: Support -->
+            <div class="drawer-section drawer-courier-only">
                 <div class="drawer-section-label">Support</div>
                 <a class="drawer-item" href="tel:+14168008632">
                     <div class="drawer-item-left">
@@ -152,6 +152,25 @@ session_start();
                         <span>Call MTCC</span>
                     </div>
                     <span class="drawer-item-meta">416-585-5000</span>
+                </a>
+            </div>
+
+            <!-- MTCC Staff: Support (Print Stuff only) -->
+            <div class="drawer-section drawer-mtcc-only" style="display:none;">
+                <div class="drawer-section-label">Print Stuff Support</div>
+                <a class="drawer-item" href="tel:+14378828822">
+                    <div class="drawer-item-left">
+                        <div class="drawer-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72"/></svg></div>
+                        <span>Call Print Stuff</span>
+                    </div>
+                    <span class="drawer-item-meta">(437) 882-8822</span>
+                </a>
+                <a class="drawer-item" href="mailto:orders@printstuff.ca">
+                    <div class="drawer-item-left">
+                        <div class="drawer-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
+                        <span>Email Support</span>
+                    </div>
+                    <span class="drawer-item-meta">orders@printstuff.ca</span>
                 </a>
             </div>
         </div>
@@ -280,13 +299,43 @@ session_start();
             </div>
         </div>
         
-        <!-- ACTIVITY TAB (MTCC Staff / Admin) -->
+        <!-- ACTIVITY TAB (Admin) -->
         <div class="tab-pane" id="tab-activity">
             <div class="tab-header">
                 <h2>Today's Activity</h2>
             </div>
             <div class="tab-body" id="activityContent">
                 <div class="loading-state"><div class="spinner-ring"></div><span>Loading activity...</span></div>
+            </div>
+        </div>
+
+        <!-- MTCC DASHBOARD TAB -->
+        <div class="tab-pane" id="tab-mtcc_dashboard">
+            <div class="tab-header">
+                <h2>Dashboard</h2>
+            </div>
+            <div class="tab-body" id="mtccDashboardContent">
+                <div class="loading-state"><div class="spinner-ring"></div><span>Loading dashboard...</span></div>
+            </div>
+        </div>
+
+        <!-- UPCOMING TAB (MTCC - pipeline orders) -->
+        <div class="tab-pane" id="tab-upcoming_mtcc">
+            <div class="tab-header">
+                <h2>Upcoming Orders</h2>
+            </div>
+            <div class="tab-body" id="upcomingMtccContent">
+                <div class="loading-state"><div class="spinner-ring"></div><span>Loading orders...</span></div>
+            </div>
+        </div>
+
+        <!-- COMPLETE TAB (MTCC - picked up orders) -->
+        <div class="tab-pane" id="tab-complete">
+            <div class="tab-header">
+                <h2>Completed Pickups</h2>
+            </div>
+            <div class="tab-body" id="completeContent">
+                <div class="loading-state"><div class="spinner-ring"></div><span>Loading completed orders...</span></div>
             </div>
         </div>
         

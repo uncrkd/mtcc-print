@@ -321,6 +321,15 @@ function showApp() {
     if (availToggle) availToggle.checked = true;
     if (availDot) availDot.classList.add('online');
 
+    // Role-based drawer visibility
+    var isMTCC = currentUser.role === 'mtcc_staff';
+    document.querySelectorAll('.drawer-courier-only').forEach(function(el) {
+        el.style.display = isMTCC ? 'none' : '';
+    });
+    document.querySelectorAll('.drawer-mtcc-only').forEach(function(el) {
+        el.style.display = isMTCC ? '' : 'none';
+    });
+
     // Build nav tabs
     buildNavTabs(currentUser.tabs);
 
@@ -456,6 +465,9 @@ function refreshTab(tabId) {
         case 'history': loadHistory(); break;
         case 'activity': loadActivity(); break;
         case 'nearby': loadNearby(); break;
+        case 'mtcc_dashboard': loadMTCCDashboard(); break;
+        case 'upcoming_mtcc': loadUpcomingMTCC(); break;
+        case 'complete': loadCompleted(); break;
         // scan tab: handled by switchTab directly
     }
 }
@@ -642,6 +654,147 @@ function loadPickupQueue() {
     });
 }
 
+// ============================================
+// MTCC Staff Tab Loaders
+// ============================================
+
+function loadMTCCDashboard() {
+    apiCall('get_mtcc_dashboard', null, function(result) {
+        var el = document.getElementById('mtccDashboardContent');
+        if (!el) return;
+        if (!result.success) {
+            el.innerHTML = '<div class="empty-state"><h3>Error</h3><p>' + escapeHtml(result.error || 'Failed to load') + '</p></div>';
+            return;
+        }
+        var s = result.stats;
+        var html = '';
+
+        // Stats cards
+        html += '<div class="mtcc-stats-grid">';
+        html += '<div class="mtcc-stat-card stat-purple"><div class="mtcc-stat-number">' + s.waiting_for_pickup + '</div><div class="mtcc-stat-label">Waiting for Pickup</div></div>';
+        html += '<div class="mtcc-stat-card stat-blue"><div class="mtcc-stat-number">' + s.expected_today + '</div><div class="mtcc-stat-label">Expected Today</div></div>';
+        html += '<div class="mtcc-stat-card stat-green"><div class="mtcc-stat-number">' + s.picked_up_today + '</div><div class="mtcc-stat-label">Picked Up Today</div></div>';
+        html += '<div class="mtcc-stat-card' + (s.open_issues > 0 ? ' stat-red' : ' stat-grey') + '"><div class="mtcc-stat-number">' + s.open_issues + '</div><div class="mtcc-stat-label">Open Issues</div></div>';
+        html += '</div>';
+
+        // Event breakdown (if multiple events)
+        var events = result.event_breakdown || {};
+        var eventKeys = Object.keys(events);
+        if (eventKeys.length > 0) {
+            html += '<div class="mtcc-section-header">Waiting by Event</div>';
+            html += '<div class="mtcc-event-pills">';
+            eventKeys.forEach(function(ev) {
+                html += '<span class="mtcc-event-pill">' + escapeHtml(ev) + ': <strong>' + events[ev] + '</strong></span>';
+            });
+            html += '</div>';
+        }
+
+        // Pipeline summary
+        if (s.in_production > 0 || s.in_transit > 0) {
+            html += '<div class="mtcc-section-header">Pipeline</div>';
+            html += '<div class="mtcc-pipeline">';
+            if (s.in_production > 0) html += '<div class="mtcc-pipeline-item"><span class="mtcc-pipeline-dot dot-amber"></span>' + s.in_production + ' in production</div>';
+            if (s.in_transit > 0) html += '<div class="mtcc-pipeline-item"><span class="mtcc-pipeline-dot dot-blue"></span>' + s.in_transit + ' in transit</div>';
+            html += '</div>';
+        }
+
+        // Upcoming deliveries
+        var upcoming = result.upcoming_deliveries || [];
+        if (upcoming.length > 0) {
+            html += '<div class="mtcc-section-header">Next Expected Deliveries</div>';
+            upcoming.forEach(function(o) {
+                var statusLabel = {ready: 'Ready for Courier', dispatched: 'Courier Assigned', shipped: 'On the Way', printing: 'In Production', preflight: 'With Vendor'};
+                var dueStr = o.due_date_formatted || '';
+                var timeStr = o.due_time_formatted || '';
+                html += '<div class="mtcc-upcoming-item">';
+                html += '<div class="mtcc-upcoming-left"><strong>' + escapeHtml(o.ref) + '</strong><span class="mtcc-upcoming-customer">' + escapeHtml(o.customer_name) + '</span></div>';
+                html += '<div class="mtcc-upcoming-right"><span class="mtcc-upcoming-status badge-' + o.status + '">' + (statusLabel[o.status] || o.status) + '</span>';
+                if (dueStr) html += '<span class="mtcc-upcoming-due">' + escapeHtml(dueStr) + (timeStr ? ' ' + escapeHtml(timeStr) : '') + '</span>';
+                html += '</div></div>';
+            });
+        }
+
+        // Recent pickups
+        var recent = result.recent_pickups || [];
+        if (recent.length > 0) {
+            html += '<div class="mtcc-section-header">Recent Pickups Today</div>';
+            recent.forEach(function(r) {
+                var pTime = r.pickedup_at ? new Date(r.pickedup_at) : null;
+                var timeStr = pTime ? pTime.toLocaleTimeString('en-US', {hour: 'numeric', minute: '2-digit'}) : '';
+                html += '<div class="mtcc-recent-item">';
+                html += '<span class="mtcc-recent-ref">' + escapeHtml(r.ref) + '</span>';
+                html += '<span class="mtcc-recent-name">' + escapeHtml(r.customer_name) + '</span>';
+                html += '<span class="mtcc-recent-time">' + timeStr + '</span>';
+                html += '</div>';
+            });
+        }
+
+        el.innerHTML = html;
+    });
+}
+
+function loadUpcomingMTCC() {
+    apiCall('get_upcoming_mtcc', null, function(result) {
+        var el = document.getElementById('upcomingMtccContent');
+        if (!el) return;
+        if (!result.success) {
+            el.innerHTML = '<div class="empty-state"><h3>Error</h3><p>' + escapeHtml(result.error || 'Failed to load') + '</p></div>';
+            return;
+        }
+        if (result.orders.length === 0) {
+            el.innerHTML = '<div class="empty-state"><div class="empty-state-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div><h3>All Caught Up</h3><p>No orders in the pipeline right now.</p></div>';
+            return;
+        }
+
+        var statusLabels = {shipped: 'On the Way', dispatched: 'Courier Assigned', ready: 'Ready for Courier', printing: 'In Production', preflight: 'With Vendor'};
+        var groups = {transit: [], ready: [], production: []};
+        result.orders.forEach(function(o) {
+            if (o.status === 'shipped' || o.status === 'dispatched') groups.transit.push(o);
+            else if (o.status === 'ready') groups.ready.push(o);
+            else groups.production.push(o);
+        });
+
+        var html = '<div class="section-label">' + result.count + ' order' + (result.count !== 1 ? 's' : '') + ' in the pipeline</div>';
+
+        if (groups.transit.length > 0) {
+            html += '<div class="mtcc-group-header">On the Way (' + groups.transit.length + ')</div>';
+            groups.transit.forEach(function(o) { html += renderOrderCard(o, 'upcoming_mtcc'); });
+        }
+        if (groups.ready.length > 0) {
+            html += '<div class="mtcc-group-header">Ready for Courier (' + groups.ready.length + ')</div>';
+            groups.ready.forEach(function(o) { html += renderOrderCard(o, 'upcoming_mtcc'); });
+        }
+        if (groups.production.length > 0) {
+            html += '<div class="mtcc-group-header">In Production (' + groups.production.length + ')</div>';
+            groups.production.forEach(function(o) { html += renderOrderCard(o, 'upcoming_mtcc'); });
+        }
+
+        el.innerHTML = html;
+    });
+}
+
+function loadCompleted() {
+    apiCall('get_completed', null, function(result) {
+        var el = document.getElementById('completeContent');
+        if (!el) return;
+        if (!result.success) {
+            el.innerHTML = '<div class="empty-state"><h3>Error</h3><p>' + escapeHtml(result.error || 'Failed to load') + '</p></div>';
+            return;
+        }
+        if (result.orders.length === 0) {
+            el.innerHTML = '<div class="empty-state"><div class="empty-state-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M12 6v6l4 2"/></svg></div><h3>No Completed Pickups</h3><p>Picked up orders for active events will appear here.</p></div>';
+            return;
+        }
+        var html = '<div class="section-label">' + result.count + ' order' + (result.count !== 1 ? 's' : '') + ' picked up</div>';
+        result.orders.forEach(function(o) { html += renderOrderCard(o, 'complete'); });
+        el.innerHTML = html;
+    });
+}
+
+// ============================================
+// Earnings (Courier)
+// ============================================
+
 function loadEarnings() {
     apiCall('get_earnings', null, function(result) {
         var el = document.getElementById('earningsContent');
@@ -814,7 +967,11 @@ function loadActivity() {
         var html = '';
         result.entries.forEach(function(e) {
             var icon = statusIcons[e.toStatus] || '\u{1F504}';
-            var time = e.timestamp ? e.timestamp.split(' ')[1] || '' : '';
+            var time = '';
+            if (e.timestamp) {
+                var d = new Date(e.timestamp.replace(' ', 'T'));
+                time = isNaN(d) ? e.timestamp : d.toLocaleDateString('en-US', {month: 'short', day: 'numeric'}) + ', ' + d.toLocaleTimeString('en-US', {hour: 'numeric', minute: '2-digit'});
+            }
             html += '<div class="activity-entry">';
             html += '<div class="activity-icon ' + (e.toStatus || '') + '">' + icon + '</div>';
             html += '<div class="activity-text"><div class="activity-title">' + escapeHtml(e.referenceCode) + ' \u2192 ' + escapeHtml(e.toStatus || '') + '</div>';
@@ -1792,7 +1949,7 @@ function showOrderDetail(ref, mode) {
                     else if (s === 'dispatched') { label = 'Accept Delivery'; icon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> '; }
                     else if (s === 'shipped') { label = 'Mark Picked Up from Vendor'; icon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5a2 2 0 01-2 2"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg> '; }
                     else if (s === 'delivered') { label = 'Mark Delivered'; icon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg> '; }
-                    else if (s === 'pickedup') { label = 'Mark Customer Picked Up'; icon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/></svg> '; }
+                    else if (s === 'pickedup') { label = 'Confirm Pick Up'; icon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/></svg> '; }
                     html += '<button class="status-action-btn btn-' + s + '" onclick="updateOrderStatus(\'' + escapeAttr(order.ref) + '\', \'' + s + '\')">' + icon + label + '</button>';
                 });
                 html += '</div>';
@@ -2185,7 +2342,7 @@ function showScanResult(result) {
             if (result.receive_mode && s === 'delivered') { label = 'Confirm Received at MTCC'; icon = '\u2705 '; }
             else if (s === 'shipped') { label = 'Picked Up from Vendor'; icon = '\ud83d\udce6 '; }
             else if (s === 'delivered') { label = 'Mark Delivered'; icon = '\ud83d\udccd '; }
-            else if (s === 'pickedup') { label = 'Mark Customer Picked Up'; icon = '\ud83e\udd1d '; }
+            else if (s === 'pickedup') { label = 'Confirm Pick Up'; icon = '\ud83e\udd1d '; }
             else if (s === 'dispatched') { label = 'Accept Delivery'; icon = '\u2705 '; }
             stickyHtml += '<button class="scan-sticky-btn btn-' + s + '" onclick="updateScannedOrderStatus(\'' + escapeAttr(order.ref) + '\', \'' + s + '\')">' + icon + label + '</button>';
         });
