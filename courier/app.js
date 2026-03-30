@@ -556,7 +556,7 @@ var cachedAvailUpcoming = [];
 
 function loadAvailable() {
     var loaded = { active: false, upcoming: false };
-    
+
     apiCall('get_available', null, function(result) {
         loaded.active = true;
         if (result.success) {
@@ -564,7 +564,7 @@ function loadAvailable() {
         }
         if (loaded.upcoming) renderAvailableView();
     });
-    
+
     apiCall('get_upcoming', null, function(result) {
         loaded.upcoming = true;
         if (result.success) {
@@ -572,8 +572,6 @@ function loadAvailable() {
         }
         if (loaded.active) renderAvailableView();
     });
-    
-    setTimeout(function() { renderAvailableView(); }, 3000);
 }
 
 function renderAvailableView() {
@@ -2098,6 +2096,7 @@ function processScannedCode(code) {
         if (!result.success) {
             haptic.error();
             showScanError(result.error || 'Order not found');
+            scanLocked = false; // Unlock scanner so user can try again
             return;
         }
         haptic.success();
@@ -2114,7 +2113,7 @@ function showScanResult(result) {
     var html = '<div class="scan-result-card">';
 
     // Fix 1: Warn if scanned order doesn't match the order card they came from
-    if (scanExpectedRef && order.ref.toUpperCase() !== scanExpectedRef.toUpperCase()) {
+    if (scanExpectedRef && order.ref && order.ref.toUpperCase() !== scanExpectedRef.toUpperCase()) {
         html += '<div class="scan-warning" style="background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:10px 12px;margin:0 0 10px 0;display:flex;align-items:center;gap:8px;">';
         html += '<span style="font-size:1.3rem;">&#9888;</span>';
         html += '<div><strong style="color:#92400e;">Wrong item scanned</strong>';
@@ -2236,6 +2235,7 @@ function doScanStatusUpdate(ref, newStatus, photoData) {
         } else {
             haptic.error();
             showToast(result.error || 'Update failed', 'error');
+            scanLocked = false; // Unlock scanner so user can retry
         }
     });
 }
@@ -2281,10 +2281,25 @@ function capturePhoto() {
     var video = document.getElementById('photoVideo');
     var preview = document.getElementById('photoPreview');
     var canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    canvas.getContext('2d').drawImage(video, 0, 0);
-    capturedPhoto = canvas.toDataURL('image/jpeg', 0.8);
+    // Cap resolution to 1920px max dimension to keep file size manageable
+    var maxDim = 1920;
+    var w = video.videoWidth || 640;
+    var h = video.videoHeight || 480;
+    if (w > maxDim || h > maxDim) {
+        var scale = maxDim / Math.max(w, h);
+        w = Math.round(w * scale);
+        h = Math.round(h * scale);
+    }
+    canvas.width = w;
+    canvas.height = h;
+    canvas.getContext('2d').drawImage(video, 0, 0, w, h);
+    // Start at 0.7 quality, reduce if over 2MB
+    var quality = 0.7;
+    capturedPhoto = canvas.toDataURL('image/jpeg', quality);
+    while (capturedPhoto.length > 2 * 1024 * 1024 && quality > 0.3) {
+        quality -= 0.1;
+        capturedPhoto = canvas.toDataURL('image/jpeg', quality);
+    }
 
     preview.src = capturedPhoto;
     preview.style.display = 'block';
@@ -2881,7 +2896,7 @@ function releaseDelivery(ref, btnEl) {
             haptic.success();
             closeDetailPanel();
             // Refresh both tabs
-            loadDeliveries();
+            loadMyDeliveries();
             loadAvailable();
         } else {
             showToast(result.error || 'Failed to release', 'error');
@@ -2910,7 +2925,7 @@ function releaseBatch(batchId, btnEl) {
             showToast(result.message || 'Batch released', 'success');
             haptic.success();
             closeBatchDetail();
-            loadDeliveries();
+            loadMyDeliveries();
             loadAvailable();
         } else {
             showToast(result.error || 'Failed to release batch', 'error');
