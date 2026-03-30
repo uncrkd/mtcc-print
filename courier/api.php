@@ -21,6 +21,7 @@ if (!file_exists($dispatchFunctions)) {
     exit;
 }
 require_once $dispatchFunctions;
+require_once __DIR__ . '/../includes/data-access.php';
 
 // Include dispatch email functions
 $emailFunctions = __DIR__ . '/../dispatch-email-functions.php';
@@ -1387,7 +1388,7 @@ function handleGetNearbyOrders() {
     $courierLng = (float)($_POST['lng'] ?? 0);
     $radiusKm = (float)($_POST['radius'] ?? 15);
     
-    if (!$courierLat || !$courierLng) {
+    if ((!$courierLat && !$courierLng) || $courierLat < -90 || $courierLat > 90 || $courierLng < -180 || $courierLng > 180) {
         echo json_encode(['success' => false, 'error' => 'Location required']);
         return;
     }
@@ -1400,12 +1401,9 @@ function handleGetNearbyOrders() {
     
     $nearbyOrders = [];
     
-    foreach ($statuses as $ref => $info) {
-        $status = is_array($info) ? ($info['status'] ?? '') : $info;
+    foreach ($statuses as $ref => $status) {
+        if (!is_string($status)) continue;
         if (!in_array($status, ['ready', 'dispatched'])) continue;
-        
-        // Check not assigned to another courier
-        if ($status === 'dispatched' && !empty($info['assigned_courier'])) continue;
         
         $order = courier_loadOrder($ref);
         if (!$order) continue;
