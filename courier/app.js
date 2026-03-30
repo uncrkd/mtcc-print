@@ -2131,6 +2131,14 @@ function showScanResult(result) {
         haptic.warning();
     }
 
+    // Vendor behind warning: order hasn't been marked ready yet but courier has the item
+    if (result.vendor_behind && result.vendor_warning) {
+        html += '<div class="scan-warning" style="background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:10px 12px;margin:0 0 10px 0;display:flex;align-items:center;gap:8px;">';
+        html += '<span style="font-size:1.3rem;">&#9888;</span>';
+        html += '<div><strong style="color:#92400e;">Vendor hasn\'t updated status</strong>';
+        html += '<div style="color:#78350f;font-size:0.8rem;">' + escapeHtml(result.vendor_warning) + '</div></div></div>';
+    }
+
     // Fix 2b: Note if order is unassigned (ready status, no courier)
     if (currentUser && currentUser.role === 'courier' && order.status === 'ready' && !order.courier_pin) {
         html += '<div class="scan-warning" style="background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;padding:10px 12px;margin:0 0 10px 0;display:flex;align-items:center;gap:8px;">';

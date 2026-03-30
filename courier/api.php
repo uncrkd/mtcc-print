@@ -552,21 +552,30 @@ function handleAcceptDelivery() {
     
     // Check status from statuses.json (source of truth)
     $currentStatus = courier_getStatus($ref);
-    if ($currentStatus !== 'ready') {
+    $acceptableStatuses = ['ready', 'preflight', 'printing']; // Allow vendor-behind orders
+    if (!in_array($currentStatus, $acceptableStatuses)) {
         echo json_encode(['success' => false, 'error' => 'Order not available (status: ' . ($currentStatus ?: 'unknown') . ')']);
         return;
     }
-    
+
     // Check not already assigned
     $dispatch = $order['dispatch'] ?? [];
     if (!empty($dispatch['courier_pin']) || !empty($dispatch['courier_id'])) {
         echo json_encode(['success' => false, 'error' => 'Already assigned to another courier']);
         return;
     }
-    
-    // Update status in statuses.json
-    courier_setStatus($ref, 'dispatched');
-    
+
+    // Auto-cascade to dispatched (fills in skipped vendor steps if needed)
+    $cascadeResult = cascadeStatusTo(
+        $ref, 'dispatched', $user['name'],
+        'Courier accepted delivery',
+        dirname(__DIR__) . '/data/statuses.json',
+        dirname(__DIR__) . '/uploads/orders/'
+    );
+
+    // Reload order after cascade
+    $order = courier_loadOrder($ref);
+
     // Update dispatch metadata in order file
     $order['dispatch'] = array_merge($order['dispatch'] ?? [], [
         'courier_type' => 'internal',
@@ -611,12 +620,28 @@ function handleUpdateStatus() {
         return;
     }
     
-    // Get current status from statuses.json
+    // Get current status from statuses.json (source of truth)
     $oldStatus = courier_getStatus($ref);
-    
-    // Update status in statuses.json (source of truth)
-    courier_setStatus($ref, $newStatus);
-    
+
+    // Auto-cascade through skipped lifecycle steps if needed
+    // e.g. order still in "preflight" but courier is marking "shipped"
+    $cascadeResult = cascadeStatusTo(
+        $ref, $newStatus, $user['name'],
+        'Courier confirmed via app',
+        dirname(__DIR__) . '/data/statuses.json',
+        dirname(__DIR__) . '/uploads/orders/'
+    );
+
+    if (!$cascadeResult['success']) {
+        echo json_encode(['success' => false, 'error' => $cascadeResult['error'] ?? 'Status update failed']);
+        return;
+    }
+
+    $skippedSteps = $cascadeResult['skipped'] ?? [];
+
+    // Reload order after cascade may have updated it
+    $order = courier_loadOrder($ref);
+
     // Update dispatch metadata in order file
     $order['dispatch'] = $order['dispatch'] ?? [];
     
@@ -659,7 +684,12 @@ function handleUpdateStatus() {
         dispatch_notifyStatusChange($ref, $oldStatus, $newStatus, $user['name']);
     }
     
-    echo json_encode(['success' => true, 'message' => 'Status updated to ' . $newStatus, 'order' => formatOrderForApp($order, $ref, $newStatus)]);
+    $message = 'Status updated to ' . $newStatus;
+    if (!empty($skippedSteps)) {
+        $message .= ' (auto-advanced through: ' . implode(', ', $skippedSteps) . ')';
+    }
+
+    echo json_encode(['success' => true, 'message' => $message, 'skipped_steps' => $skippedSteps, 'order' => formatOrderForApp($order, $ref, $newStatus)]);
 }
 
 function handleReportIssue() {
@@ -744,13 +774,29 @@ function handleScanOrder() {
     $currentStatus = courier_getStatus($ref);
     $nextStatuses = getAvailableStatusTransitions($currentStatus, $user['role'], $user['allowed_statuses']);
     $receiveMode = in_array($user['role'], ['mtcc_staff', 'admin']) && $currentStatus === 'shipped';
-    
+
+    // Detect if order is behind in lifecycle (vendor skipped steps)
+    $vendorBehind = false;
+    $vendorWarning = null;
+    $behindStatuses = ['preflight', 'printing'];
+    if ($user['role'] === 'courier' && in_array($currentStatus, $behindStatuses)) {
+        $vendorBehind = true;
+        $statusLabels = ['preflight' => 'Preflight (awaiting vendor)', 'printing' => 'Printing'];
+        $vendorWarning = 'This order is still in "' . ($statusLabels[$currentStatus] ?? $currentStatus) . '". If you have the item, confirm pickup and the system will auto-advance the status.';
+        // Allow courier to mark shipped even though order isn't "ready" yet — cascade handles it
+        if (!in_array('shipped', $nextStatuses)) {
+            $nextStatuses[] = 'shipped';
+        }
+    }
+
     echo json_encode([
         'success' => true,
         'order' => formatOrderForApp($order, $ref, $currentStatus),
         'current_status' => $currentStatus,
         'available_statuses' => $nextStatuses,
         'receive_mode' => $receiveMode,
+        'vendor_behind' => $vendorBehind,
+        'vendor_warning' => $vendorWarning,
     ]);
 }
 

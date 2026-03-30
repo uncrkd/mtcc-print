@@ -219,6 +219,112 @@ function updateOrderStatusSync($referenceCode, $newStatus, $user = 'System', $st
     return ['success' => true, 'old_status' => $oldStatus, 'error' => null];
 }
 
+/**
+ * The expected order lifecycle path (happy path).
+ * Used by cascadeStatusTo() to fill in skipped steps.
+ */
+function getLifecyclePath() {
+    return ['unpaid', 'paid', 'preflight', 'printing', 'ready', 'dispatched', 'shipped', 'delivered', 'pickedup'];
+}
+
+/**
+ * Auto-cascade an order through skipped lifecycle steps to reach a target status.
+ *
+ * Example: Order is in "preflight", courier marks "shipped".
+ * This will auto-advance: preflight → printing → ready → dispatched → shipped,
+ * logging each intermediate step with an "auto-advanced" note.
+ *
+ * @param string $referenceCode Order reference code
+ * @param string $targetStatus  The status we want to reach
+ * @param string $user          Who triggered this (e.g. "Mike (Courier)")
+ * @param string $reason        Why the cascade happened (e.g. "Courier confirmed pickup")
+ * @param string $statusFile    Path to statuses.json
+ * @param string $orderDir      Path to orders directory
+ * @return array ['success' => bool, 'skipped' => array of auto-advanced statuses, 'old_status' => string]
+ */
+function cascadeStatusTo($referenceCode, $targetStatus, $user = 'System', $reason = '', $statusFile = 'data/statuses.json', $orderDir = 'uploads/orders/') {
+    $statuses = loadStatuses($statusFile);
+    $currentStatus = $statuses[$referenceCode] ?? 'unpaid';
+    $lifecycle = getLifecyclePath();
+
+    $currentIdx = array_search($currentStatus, $lifecycle);
+    $targetIdx = array_search($targetStatus, $lifecycle);
+
+    // If either status isn't on the main lifecycle path, or target is behind/equal, do a direct update
+    if ($currentIdx === false || $targetIdx === false || $targetIdx <= $currentIdx) {
+        return updateOrderStatusSync($referenceCode, $targetStatus, $user, $statusFile, $orderDir, false);
+    }
+
+    // Auto-advance through each intermediate step
+    $skipped = [];
+    for ($i = $currentIdx + 1; $i < $targetIdx; $i++) {
+        $intermediateStatus = $lifecycle[$i];
+        $skipped[] = $intermediateStatus;
+
+        // Update statuses.json for intermediate step
+        $statuses[$intermediateStatus] = $intermediateStatus; // placeholder, overwritten below
+        $statuses[$referenceCode] = $intermediateStatus;
+        saveStatuses($statuses, $statusFile);
+
+        // Log the auto-advance to order history
+        $statusLabels = [
+            'preflight' => 'Preflight', 'printing' => 'Printing', 'ready' => 'Ready to Ship',
+            'dispatched' => 'Dispatched', 'shipped' => 'Shipped', 'delivered' => 'Delivered',
+        ];
+        $label = $statusLabels[$intermediateStatus] ?? $intermediateStatus;
+        $autoNote = "Auto-advanced to \"$label\" — $reason";
+        logOrderHistory($referenceCode, 'status_auto_advanced', $autoNote, 'System');
+    }
+
+    // Now set the actual target status (with full sync)
+    $result = updateOrderStatusSync($referenceCode, $targetStatus, $user, $statusFile, $orderDir, false);
+    $result['skipped'] = $skipped;
+    $result['old_status'] = $currentStatus;
+
+    // Log a notification for admin if steps were skipped
+    if (!empty($skipped)) {
+        $skippedList = implode(' → ', $skipped);
+        logSkippedStepsNotification($referenceCode, $currentStatus, $targetStatus, $skippedList, $user, $reason);
+    }
+
+    return $result;
+}
+
+/**
+ * Log a notification when vendor steps are skipped.
+ * Writes to data/dispatch-notifications.json so admin dispatch hub sees it.
+ */
+function logSkippedStepsNotification($refCode, $fromStatus, $toStatus, $skippedList, $user, $reason) {
+    $notifFile = 'data/dispatch-notifications.json';
+    $notifs = [];
+    if (file_exists($notifFile)) {
+        $notifs = json_decode(file_get_contents($notifFile), true) ?: [];
+    }
+    if (!isset($notifs['notifications'])) {
+        $notifs['notifications'] = [];
+    }
+
+    $notifs['notifications'][] = [
+        'id' => 'skip_' . bin2hex(random_bytes(6)),
+        'type' => 'skipped_steps',
+        'reference_code' => $refCode,
+        'message' => "Order $refCode skipped steps ($skippedList) — $reason by $user",
+        'from_status' => $fromStatus,
+        'to_status' => $toStatus,
+        'skipped' => $skippedList,
+        'triggered_by' => $user,
+        'created_at' => date('c'),
+        'read' => false,
+    ];
+
+    // Keep last 200 notifications
+    if (count($notifs['notifications']) > 200) {
+        $notifs['notifications'] = array_slice($notifs['notifications'], -200);
+    }
+
+    file_put_contents($notifFile, json_encode($notifs, JSON_PRETTY_PRINT), LOCK_EX);
+}
+
 // ============================================
 // ORDER LOOKUP
 // ============================================
