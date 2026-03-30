@@ -47,6 +47,18 @@ if (file_exists($basePath . 'includes/utilities.php')) {
 $currentTab = $_GET['tab'] ?? 'queue';
 
 // ============================================
+// LOAD REQUIRED FUNCTIONS
+// ============================================
+require_once __DIR__ . '/../includes/vendor-functions.php';
+require_once __DIR__ . '/../includes/data-access.php';
+require_once __DIR__ . '/../includes/production-handlers.php';
+require_once __DIR__ . '/../includes/production-tokens.php';
+require_once __DIR__ . '/../includes/production-queue.php';
+require_once __DIR__ . '/../includes/production-issues.php';
+require_once __DIR__ . '/../includes/production-reminders.php';
+require_once __DIR__ . '/../includes/production-email.php';
+
+// ============================================
 // AJAX HANDLERS
 // ============================================
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_action'])) {
@@ -245,17 +257,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_action'])) {
     exit;
 }
 
-// ============================================
-// VENDOR FUNCTIONS
-// ============================================
-require_once __DIR__ . '/../includes/vendor-functions.php';
-require_once __DIR__ . '/../includes/data-access.php';
-require_once __DIR__ . '/../includes/production-handlers.php';
-require_once __DIR__ . '/../includes/production-tokens.php';
-require_once __DIR__ . '/../includes/production-queue.php';
-require_once __DIR__ . '/../includes/production-issues.php';
-require_once __DIR__ . '/../includes/production-reminders.php';
-require_once __DIR__ . '/../includes/production-email.php';
 // ============================================
 // LOAD DATA
 // ============================================

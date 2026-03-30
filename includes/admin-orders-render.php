@@ -1407,7 +1407,7 @@ $canViewVendor = in_array($_SESSION['admin_role'] ?? '', ['god_mode', 'super_adm
 <?php outputIconsScript(); ?>
 </head>
 <body<?= $isEditMode ? ' class="edit-mode"' : '' ?>>
-<?php require_once __DIR__ . '/includes/admin-sidebar.php'; renderSidebar('orders'); ?>
+<?php require_once __DIR__ . '/admin-sidebar.php'; renderSidebar('orders'); ?>
 <script src="js/admin-sidebar.js"></script>
 <script>
 // Pass PHP data to JavaScript modules

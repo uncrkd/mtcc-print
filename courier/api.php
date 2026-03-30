@@ -87,7 +87,8 @@ switch ($action) {
     case 'release_delivery':   requireAuth(); handleReleaseDelivery(); break;
     case 'release_batch':      requireAuth(); handleReleaseBatch(); break;
     case 'set_availability':   requireAuth(); handleSetAvailability(); break;
-    
+    case 'report_issue':       requireAuth(); handleReportIssue(); break;
+
     default:
         echo json_encode(['success' => false, 'error' => 'Unknown action: ' . $action]);
         break;
@@ -659,6 +660,66 @@ function handleUpdateStatus() {
     }
     
     echo json_encode(['success' => true, 'message' => 'Status updated to ' . $newStatus, 'order' => formatOrderForApp($order, $ref, $newStatus)]);
+}
+
+function handleReportIssue() {
+    $user = getCurrentUser();
+    $ref = trim($_POST['ref'] ?? '');
+    $issueType = trim($_POST['issue_type'] ?? '');
+    $issueLabel = trim($_POST['issue_label'] ?? '');
+    $notes = trim($_POST['notes'] ?? '');
+    $photoData = $_POST['photo'] ?? '';
+
+    if (!$ref || !$issueType) {
+        echo json_encode(['success' => false, 'error' => 'Reference and issue type required']);
+        return;
+    }
+
+    // Save photo if provided
+    $photoPath = null;
+    if ($photoData && strpos($photoData, 'data:image') === 0) {
+        $photoPath = saveDeliveryPhoto($ref . '_issue', $photoData);
+    }
+
+    // Build issue record
+    $issue = [
+        'id' => 'issue_' . bin2hex(random_bytes(6)),
+        'reference_code' => $ref,
+        'issue_type' => $issueType,
+        'issue_label' => $issueLabel,
+        'notes' => $notes,
+        'photo' => $photoPath,
+        'reported_by' => $user['name'],
+        'reported_by_pin' => $user['pin'],
+        'reported_by_role' => $user['role'],
+        'reported_at' => date('c'),
+        'status' => 'open',
+        'resolved_at' => null,
+        'resolved_by' => null,
+    ];
+
+    // Append to delivery-issues.json
+    $issuesFile = dirname(__DIR__) . '/data/delivery-issues.json';
+    $issues = [];
+    if (file_exists($issuesFile)) {
+        $issues = json_decode(file_get_contents($issuesFile), true) ?: [];
+    }
+    if (!isset($issues['issues'])) {
+        $issues['issues'] = [];
+    }
+    $issues['issues'][] = $issue;
+    $issues['metadata']['last_updated'] = date('c');
+    file_put_contents($issuesFile, json_encode($issues, JSON_PRETTY_PRINT), LOCK_EX);
+
+    // Log activity
+    logCourierActivity($ref, 'issue_reported', $issueType . ': ' . ($notes ?: $issueLabel), $user);
+
+    // Dispatch notification if available
+    if (function_exists('dispatch_notifyStatusChange')) {
+        dispatch_notifyStatusChange($ref, 'issue', $issueType, $user['name']);
+    }
+
+    echo json_encode(['success' => true, 'message' => 'Issue reported successfully']);
 }
 
 function handleScanOrder() {

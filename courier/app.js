@@ -14,6 +14,7 @@ var currentTab = '';
 var pinCode = '';
 var scannerActive = false;
 var scanLocked = false;  // Lock scanner while awaiting status action
+var scanExpectedRef = null; // Set when scanning from an order card (for validation)
 var courierLocation = null; // Cached GPS coordinates {lat, lng}
 var autoRefreshInterval = null;
 var capturedPhoto = null;
@@ -1776,7 +1777,7 @@ function showOrderDetail(ref, mode) {
             html += '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="6" y1="8" x2="6" y2="16"/><line x1="10" y1="8" x2="10" y2="16"/><line x1="14" y1="8" x2="14" y2="16"/><line x1="18" y1="8" x2="18" y2="16"/></svg>';
             html += '<div class="scan-prompt-text"><strong>Scan barcode to confirm pickup</strong><span>Use the Scan tab to scan this order\'s barcode before marking as picked up.</span></div>';
             html += '</div>';
-            html += '<button class="status-action-btn btn-scan-goto" onclick="closeDetailPanel(); switchTab(\'scan\')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg> Open Scanner</button>';
+            html += '<button class="status-action-btn btn-scan-goto" onclick="scanExpectedRef=\'' + escapeAttr(order.ref) + '\'; closeDetailPanel(); switchTab(\'scan\')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg> Open Scanner</button>';
             html += '</div>';
         } else if (mode !== 'completed') {
             var transitions = getStatusTransitions(order.status);
@@ -2111,6 +2112,33 @@ function showScanResult(result) {
     var badgeClass = 'badge-' + order.status;
 
     var html = '<div class="scan-result-card">';
+
+    // Fix 1: Warn if scanned order doesn't match the order card they came from
+    if (scanExpectedRef && order.ref.toUpperCase() !== scanExpectedRef.toUpperCase()) {
+        html += '<div class="scan-warning" style="background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:10px 12px;margin:0 0 10px 0;display:flex;align-items:center;gap:8px;">';
+        html += '<span style="font-size:1.3rem;">&#9888;</span>';
+        html += '<div><strong style="color:#92400e;">Wrong item scanned</strong>';
+        html += '<div style="color:#78350f;font-size:0.8rem;">Expected ' + escapeHtml(scanExpectedRef) + ' but scanned ' + escapeHtml(order.ref) + '</div></div></div>';
+        haptic.warning();
+    }
+
+    // Fix 2: Warn if order is assigned to a different courier
+    if (currentUser && currentUser.role === 'courier' && order.courier_pin && order.courier_pin !== currentUser.pin) {
+        html += '<div class="scan-warning" style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 12px;margin:0 0 10px 0;display:flex;align-items:center;gap:8px;">';
+        html += '<span style="font-size:1.3rem;">&#128721;</span>';
+        html += '<div><strong style="color:#991b1b;">Assigned to another courier</strong>';
+        html += '<div style="color:#7f1d1d;font-size:0.8rem;">This order is assigned to ' + escapeHtml(order.courier_name || 'another courier') + '</div></div></div>';
+        haptic.warning();
+    }
+
+    // Fix 2b: Note if order is unassigned (ready status, no courier)
+    if (currentUser && currentUser.role === 'courier' && order.status === 'ready' && !order.courier_pin) {
+        html += '<div class="scan-warning" style="background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;padding:10px 12px;margin:0 0 10px 0;display:flex;align-items:center;gap:8px;">';
+        html += '<span style="font-size:1.3rem;">&#8505;</span>';
+        html += '<div><strong style="color:#1e40af;">Unassigned order</strong>';
+        html += '<div style="color:#1e3a8a;font-size:0.8rem;">This order hasn\'t been assigned yet. Accept it to add to your deliveries.</div></div></div>';
+    }
+
     html += '<div class="scan-result-header"><span class="scan-result-ref">' + escapeHtml(order.ref) + '</span>';
     html += '<span class="order-status-badge ' + badgeClass + '">' + (statusLabels[order.status] || order.status) + '</span></div>';
 
@@ -2172,6 +2200,7 @@ function hideScanResult() {
     var sticky = document.getElementById('scanStickyAction');
     if (sticky) sticky.remove();
     scanLocked = false;
+    scanExpectedRef = null;
 }
 
 function updateScannedOrderStatus(ref, newStatus) {

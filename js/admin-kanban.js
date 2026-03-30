@@ -104,7 +104,7 @@ var KanbanBoard = (function() {
 
       card.innerHTML =
         '<div class="kanban-card-header">' +
-          '<a href="?view=' + encodeURIComponent(ref) + '" class="kanban-card-ref">' + escapeHtml(ref) + '</a>' +
+          '<a href="?view=' + encodeURIComponent(ref) + '" class="kanban-card-ref" onclick="if(typeof OrderSlideout!==\'undefined\'){OrderSlideout.open(\'' + escapeHtml(ref) + '\');return false;}">' + escapeHtml(ref) + '</a>' +
           '<span class="kanban-card-priority priority-indicator ' + priority + '">' + priority.charAt(0).toUpperCase() + '</span>' +
         '</div>' +
         '<div class="kanban-card-line">' + escapeHtml(name) + '</div>' +
