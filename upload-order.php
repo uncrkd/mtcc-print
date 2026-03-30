@@ -751,7 +751,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
         $statuses[$referenceCode] = 'submitted';
-        file_put_contents($statusFile, json_encode($statuses, JSON_PRETTY_PRINT));
+        file_put_contents($statusFile, json_encode($statuses, JSON_PRETTY_PRINT), LOCK_EX);
         
         // Send confirmation emails (don't fail if emails fail)
         try {

@@ -192,7 +192,7 @@ function handleCheckoutCompleted($session) {
         $statuses = json_decode(file_get_contents($statusFile), true) ?? [];
     }
     $statuses[$orderRef] = 'paid';
-    file_put_contents($statusFile, json_encode($statuses, JSON_PRETTY_PRINT));
+    file_put_contents($statusFile, json_encode($statuses, JSON_PRETTY_PRINT), LOCK_EX);
     
     // Send notification emails
     try {

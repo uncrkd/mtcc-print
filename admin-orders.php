@@ -67,7 +67,7 @@ if (isset($_POST['update_status'])) {
         $statuses[$referenceCode] = $newStatus;
         
         // Save statuses
-        if (file_put_contents($statusFile, json_encode($statuses, JSON_PRETTY_PRINT)) === false) {
+        if (file_put_contents($statusFile, json_encode($statuses, JSON_PRETTY_PRINT), LOCK_EX) === false) {
             throw new Exception('Failed to save status file');
         }
         
