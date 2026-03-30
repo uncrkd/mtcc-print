@@ -1606,16 +1606,29 @@ function renderOrderCard(order, mode) {
         var timeStr = '';
         if (order.due_time_formatted && order.due_time_formatted !== 'Anytime') timeStr = order.due_time_formatted;
         var barCls = 'card-due-bar';
-        if (isInTransit) barCls += ' due-transit';
-        else if (urgency.level === 'red') barCls += ' due-red';
-        else if (urgency.level === 'orange') barCls += ' due-orange';
+        if (isMTCCCard) {
+            // MTCC cards: color by order status
+            barCls += ' due-status-' + order.status;
+        } else if (isInTransit) {
+            barCls += ' due-transit';
+        } else if (urgency.level === 'red') {
+            barCls += ' due-red';
+        } else if (urgency.level === 'orange') {
+            barCls += ' due-orange';
+        }
         html += '<div class="' + barCls + '">';
         html += '<span class="due-label">DUE</span> ' + escapeHtml(dueFull);
         if (timeStr) html += ' <span class="due-sep-by">by:</span> ' + escapeHtml(timeStr);
-        // Countdown (right-aligned)
-        var countdownTarget = getCountdownTarget(order);
-        if (countdownTarget && order.hours_remaining !== null && order.hours_remaining > 0 && order.hours_remaining <= 24) {
-            html += '<span class="due-bar-countdown" data-countdown-target="' + countdownTarget + '">--:--:--</span>';
+        // MTCC cards: status badge in due bar (right side)
+        if (isMTCCCard) {
+            html += '<span class="order-status-badge ' + badgeClass + ' badge-sm due-bar-badge">' + (statusLabels[order.status] || order.status) + '</span>';
+        }
+        // Countdown (right-aligned, courier only)
+        if (!isMTCCCard) {
+            var countdownTarget = getCountdownTarget(order);
+            if (countdownTarget && order.hours_remaining !== null && order.hours_remaining > 0 && order.hours_remaining <= 24) {
+                html += '<span class="due-bar-countdown" data-countdown-target="' + countdownTarget + '">--:--:--</span>';
+            }
         }
         html += '</div>';
     }
@@ -1644,11 +1657,7 @@ function renderOrderCard(order, mode) {
     if (isMTCCCard) {
         html += '<div class="order-card-body">';
         html += '<div class="order-detail"><span class="order-detail-label">Customer</span><span class="order-detail-value">' + escapeHtml(order.customer_name) + '</span></div>';
-        html += '<div class="order-detail"><span class="order-detail-label">Event</span><span class="order-detail-value">' + escapeHtml(order.event_acronym || order.event) + '</span></div>';
-        if (mode === 'upcoming_mtcc') {
-            var mtccStatusLabel = {shipped: 'On the Way', dispatched: 'Courier Assigned', ready: 'Ready for Courier', printing: 'In Production', preflight: 'With Vendor'};
-            html += '<div class="order-detail"><span class="order-detail-label">Status</span><span class="order-detail-value">' + (mtccStatusLabel[order.status] || order.status) + '</span></div>';
-        }
+        html += '<div class="order-detail"><span class="order-detail-label">Event</span><span class="order-detail-value">' + escapeHtml(order.event_acronym || order.event) + (order.building ? ' \u2014 ' + escapeHtml(order.building) : '') + '</span></div>';
         if (mode === 'complete' && order.delivered_at) {
             var pDate = new Date(order.delivered_at);
             var pStr = isNaN(pDate) ? '' : pDate.toLocaleDateString('en-US', {month: 'short', day: 'numeric'}) + ', ' + pDate.toLocaleTimeString('en-US', {hour: 'numeric', minute: '2-digit'});
@@ -1672,20 +1681,22 @@ function renderOrderCard(order, mode) {
         html += '</div></div></div>';
     }
 
-    // Footer: pkgs · size · status
-    html += '<div class="order-card-footer">';
-    var qty = order.quantity || 1;
-    html += '<span class="card-meta">\ud83d\udce6 ' + qty + '</span>';
-    if (order.size && !isMTCCCard) {
-        html += '<span class="card-footer-dot">\u00b7</span>';
-        html += '<span class="card-meta">\ud83d\udcd0 ' + escapeHtml(order.size) + '</span>';
+    // Footer: pkgs · size · status (skip for MTCC cards — badge is in due bar)
+    if (!isMTCCCard) {
+        html += '<div class="order-card-footer">';
+        var qty = order.quantity || 1;
+        html += '<span class="card-meta">\ud83d\udce6 ' + qty + '</span>';
+        if (order.size) {
+            html += '<span class="card-footer-dot">\u00b7</span>';
+            html += '<span class="card-meta">\ud83d\udcd0 ' + escapeHtml(order.size) + '</span>';
+        }
+        if (!isInTransit) {
+            html += '<span class="card-footer-spacer"></span>';
+            html += '<span class="order-status-badge ' + badgeClass + ' badge-sm">' + (statusLabels[order.status] || order.status) + '</span>';
+            if (order.has_issue) html += '<span class="order-issue-badge">⚠️ Issue</span>';
+        }
+        html += '</div>';
     }
-    if (!isInTransit) {
-        html += '<span class="card-footer-spacer"></span>';
-        html += '<span class="order-status-badge ' + badgeClass + ' badge-sm">' + (statusLabels[order.status] || order.status) + '</span>';
-        if (order.has_issue) html += '<span class="order-issue-badge">⚠️ Issue</span>';
-    }
-    html += '</div>';
 
     html += '</div>';
     return html;
@@ -1964,16 +1975,20 @@ function renderMTCCDetailPanel(order, mode) {
     html += '<span class="order-status-badge ' + badgeClass + '">' + (statusLabels[order.status] || order.status) + '</span>';
     html += '</div>';
 
-    // Order details grid — simplified for MTCC
-    html += '<div class="detail-grid">';
-    html += renderDetailField('Customer', order.customer_name);
-    if (order.customer_phone) html += renderDetailField('Phone', order.customer_phone);
-    if (order.customer_email) html += renderDetailField('Email', order.customer_email);
-    html += renderDetailField('Event', (order.event_acronym || order.event || '') + (order.building ? ' \u2014 ' + order.building : ''));
-    html += renderDetailField('Material', order.material);
-    html += renderDetailField('Size', order.size);
-    if (order.quantity > 1) html += renderDetailField('Quantity', order.quantity);
-    if (order.notes) html += '<div class="detail-field full-width">' + renderDetailField('Notes', order.notes) + '</div>';
+    // Order details — clean two-column layout for MTCC
+    html += '<div class="mtcc-detail-grid">';
+    html += '<div class="mtcc-detail-row"><span class="mtcc-detail-label">Customer</span><span class="mtcc-detail-value">' + escapeHtml(order.customer_name) + '</span></div>';
+    if (order.customer_phone) html += '<div class="mtcc-detail-row"><span class="mtcc-detail-label">Phone</span><a class="mtcc-detail-value mtcc-detail-link" href="tel:' + order.customer_phone.replace(/[^0-9+]/g, '') + '">' + escapeHtml(order.customer_phone) + '</a></div>';
+    if (order.customer_email) html += '<div class="mtcc-detail-row"><span class="mtcc-detail-label">Email</span><a class="mtcc-detail-value mtcc-detail-link" href="mailto:' + escapeAttr(order.customer_email) + '">' + escapeHtml(order.customer_email) + '</a></div>';
+    html += '<div class="mtcc-detail-divider"></div>';
+    html += '<div class="mtcc-detail-row"><span class="mtcc-detail-label">Event</span><span class="mtcc-detail-value">' + escapeHtml(order.event_acronym || order.event || '') + (order.building ? ' \u2014 ' + escapeHtml(order.building) : '') + '</span></div>';
+    html += '<div class="mtcc-detail-row"><span class="mtcc-detail-label">Material</span><span class="mtcc-detail-value">' + escapeHtml(order.material) + '</span></div>';
+    html += '<div class="mtcc-detail-row"><span class="mtcc-detail-label">Size</span><span class="mtcc-detail-value">' + escapeHtml(order.size) + '</span></div>';
+    if (order.quantity > 1) html += '<div class="mtcc-detail-row"><span class="mtcc-detail-label">Quantity</span><span class="mtcc-detail-value">' + order.quantity + '</span></div>';
+    if (order.notes) {
+        html += '<div class="mtcc-detail-divider"></div>';
+        html += '<div class="mtcc-detail-row mtcc-detail-notes"><span class="mtcc-detail-label">Notes</span><span class="mtcc-detail-value">' + escapeHtml(order.notes) + '</span></div>';
+    }
     html += '</div>';
 
     // Status-specific info
@@ -2003,16 +2018,8 @@ function renderMTCCDetailPanel(order, mode) {
         html += 'Scan to Verify</button>';
     }
 
-    // Report Missing button (any paid+ order)
-    var missingStatuses = ['paid', 'preflight', 'printing', 'ready', 'dispatched', 'shipped', 'delivered'];
-    if (missingStatuses.indexOf(order.status) !== -1) {
-        html += '<button class="status-action-btn btn-missing" onclick="reportMissing(\'' + escapeAttr(order.ref) + '\')">';
-        html += '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> ';
-        html += 'Report Missing</button>';
-    }
-
-    // Report Issue button (any order that has been paid for)
-    if (typeof CourierIssues !== 'undefined' && ['paid', 'preflight', 'printing', 'ready', 'dispatched', 'shipped', 'delivered'].indexOf(order.status) !== -1) {
+    // Report Issue button (includes Missing Item as an issue type)
+    if (typeof CourierIssues !== 'undefined') {
         html += CourierIssues.getReportButtonHTML(order.ref, order.status);
     }
 

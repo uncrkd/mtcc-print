@@ -14,6 +14,8 @@ var CourierIssues = (function() {
 
     // Predefined issue types
     var ISSUE_TYPES = [
+        { id: 'missing_item', label: 'Missing Item', icon: '\u2753', photoRequired: false,
+          description: 'Item never arrived or cannot be found', setsMissing: true },
         { id: 'damaged_in_transit', label: 'Damaged in Transit', icon: '\ud83d\udccc', photoRequired: true,
           description: 'Print was damaged during transport' },
         { id: 'wrong_order', label: 'Wrong Order', icon: '\u274c', photoRequired: false,
@@ -26,6 +28,8 @@ var CourierIssues = (function() {
           description: 'Print not ready for pickup at vendor' },
         { id: 'quality_concern', label: 'Quality Concern', icon: '\ud83d\udd0d', photoRequired: true,
           description: 'Print quality appears poor (colors, alignment, etc.)' },
+        { id: 'not_picked_up', label: 'Not Picked Up', icon: '\ud83d\udce6', photoRequired: false,
+          description: 'Customer did not pick up after event ended' },
         { id: 'other', label: 'Other Issue', icon: '\u2753', photoRequired: false,
           description: 'Something else went wrong' }
     ];
@@ -258,9 +262,14 @@ var CourierIssues = (function() {
         apiCall('report_issue', postData, function(result) {
             _isSubmitting = false;
             if (result.success) {
+                // If issue type sets missing status, update order status too
+                if (_selectedType && _selectedType.setsMissing) {
+                    apiCall('update_status', { ref: _currentRef, status: 'missing' }, function() {});
+                }
                 if (typeof haptic !== 'undefined') haptic.success();
                 if (typeof showToast === 'function') showToast('Issue reported successfully', 'success');
                 close();
+                if (typeof closeDetailPanel === 'function') closeDetailPanel();
                 // Refresh current tab to show updated status
                 if (typeof refreshTab === 'function' && typeof currentTab !== 'undefined') {
                     refreshTab(currentTab);
@@ -279,8 +288,9 @@ var CourierIssues = (function() {
     // ============================================
 
     function getReportButtonHTML(ref, orderStatus) {
-        // Only show for active deliveries (dispatched, shipped)
-        if (orderStatus !== 'dispatched' && orderStatus !== 'shipped') return '';
+        // Show for any order that has been paid for
+        var showStatuses = ['paid', 'preflight', 'printing', 'ready', 'dispatched', 'shipped', 'delivered'];
+        if (showStatuses.indexOf(orderStatus) === -1) return '';
         
         var html = '<div class="issue-report-trigger" style="padding:0 16px 8px;">';
         html += '<button class="issue-report-btn" onclick="CourierIssues.open(\'' + escapeAttr(ref) + '\')">';
