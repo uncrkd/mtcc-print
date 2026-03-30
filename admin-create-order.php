@@ -15,6 +15,7 @@ require_once 'includes/utilities.php';
 require_once 'includes/admin-order-handlers.php';
 require_once 'email-order-confirmation.php';
 require_once 'includes/icons.php';
+require_once 'includes/status-config.php';
 
 // Error reporting for debugging
 error_reporting(E_ALL);
@@ -37,23 +38,13 @@ if (isset($_POST['create_order'])) {
     }
 }
 
-// Load status configuration
-$statusConfig = [
-    'unpaid' => ['label' => 'Unpaid', 'color' => '#eab308'],
-    'paid' => ['label' => 'Paid', 'color' => '#059669'],
-    'preflight' => ['label' => 'Preflight', 'color' => '#8b5cf6'],
-    'file_issue' => ['label' => 'File Issue', 'color' => '#ea580c'],
-    'printing' => ['label' => 'Printing', 'color' => '#0284c7'],
-    'ready' => ['label' => 'Ready', 'color' => '#0d9488'],
-    'dispatched' => ['label' => 'Dispatched', 'color' => '#7c3aed'],
-    'shipped' => ['label' => 'Shipped', 'color' => '#14b8a6'],
-    'delivered' => ['label' => 'Delivered', 'color' => '#92400e'],
-    'pickedup' => ['label' => 'Picked Up', 'color' => '#22c55e'],
-    'unclaimed' => ['label' => 'Unclaimed', 'color' => '#ec4899'],
-    'missing' => ['label' => 'Missing', 'color' => '#dc2626'],
-    'cancelled' => ['label' => 'Cancelled', 'color' => '#6b7280'],
-    'refunded' => ['label' => 'Refunded', 'color' => '#dc2626']
-];
+// Load status configuration from centralized status-config.php
+$statusLabelsMap = getStatusLabelsForRole('admin');
+$statusColorsMap = getStatusColors();
+$statusConfig = [];
+foreach ($statusLabelsMap as $code => $label) {
+    $statusConfig[$code] = ['label' => $label, 'color' => $statusColorsMap[$code] ?? '#6b7280'];
+}
 ?>
 
 <!DOCTYPE html>

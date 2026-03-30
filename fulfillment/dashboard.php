@@ -238,7 +238,7 @@ function getTierSortOrder($t) { return ['sameday'=>1,'nextday'=>2,'2days'=>3,'3d
 function formatFileSize($b) { if(!$b||$b<=0)return ''; $k=1024;$s=['B','KB','MB','GB'];$i=floor(log($b)/log($k));return round($b/pow($k,$i),1).' '.$s[$i]; }
 function daysUntilDue($d) { if(!$d)return null; return (int)((strtotime($d)-strtotime('today'))/86400); }
 function getDueClass($d) { $days=daysUntilDue($d); if($days===null)return ''; if($days<0)return 'due-overdue'; if($days===0)return 'due-today'; if($days===1)return 'due-tomorrow'; if($days<=3)return 'due-soon'; return ''; }
-function getStatusLabel($s) { return ['preflight'=>'Awaiting','printing'=>'Printing','ready_to_ship'=>'Ready','shipped'=>'Shipped','delivered'=>'Delivered','pickedup'=>'Picked Up','file_issue'=>'Issue'][$s??''] ?? ucfirst($s??''); }
+function getStatusLabel($s) { return ['preflight'=>'Awaiting Review','printing'=>'Printing','ready'=>'Ready to Ship','ready_to_ship'=>'Ready to Ship','shipped'=>'Shipped','delivered'=>'Delivered','pickedup'=>'Picked Up','file_issue'=>'File Issue'][$s??''] ?? ucfirst($s??''); }
 function calcArea($d) { return ($d['width']??0)*($d['height']??0); }
 
 function renderDueCompact($dueDate, $deliveryTime = 'anytime') {

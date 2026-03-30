@@ -296,7 +296,9 @@ function getStatusIcon($status) {
         'preflight'     => STATUS_PREFLIGHT,      // 📋
         'file_issue' => STATUS_FILE_ISSUE,  // ðŸ”
         'printing'   => STATUS_PRINTING,    // ðŸ–¨ï¸
-        'ready_to_ship' => STATUS_READY_TO_SHIP,  // 📦
+        'ready'      => STATUS_READY_TO_SHIP,  // 📦
+        'ready_to_ship' => STATUS_READY_TO_SHIP,  // 📦 (legacy alias)
+        'dispatched' => STATUS_SHIPPED,     // 🚚
         'shipped'    => STATUS_SHIPPED,     // ðŸšš
         'delivered'  => STATUS_DELIVERED,   // ðŸ“¦
         'pickedup'   => STATUS_PICKEDUP,    // âœ…

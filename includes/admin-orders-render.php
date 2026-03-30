@@ -10,6 +10,8 @@
  *            generateBulkOrderPrint, displayOrderView
  */
 
+require_once __DIR__ . '/status-config.php';
+
 function generateShippingLabel( $order ) {
   // Load statuses for this order
   $statusFile = 'data/statuses.json';
@@ -796,23 +798,13 @@ window.onload = function() {
 
 // BULK ORDER PRINT - Opens each order detail in iframes for exact layout match
 function generateBulkOrderPrint( $orders, $statuses ) {
-    // Status configuration - EXACT match to displayOrderView
-    $statusConfig = [
-        'unpaid' => ['label' => 'Unpaid', 'color' => '#eab308', 'class' => 'unpaid'],
-        'paid' => ['label' => 'Paid', 'color' => '#059669', 'class' => 'paid'],
-        'file_issue' => ['label' => 'File Issue', 'color' => '#ea580c', 'class' => 'file_issue'],
-        'printing' => ['label' => 'Printing', 'color' => '#0284c7', 'class' => 'printing'],
-        'preflight' => ['label' => 'Preflight', 'color' => '#8b5cf6', 'class' => 'preflight'],
-        'ready' => ['label' => 'Ready to Ship', 'color' => '#7c3aed', 'class' => 'ready'],
-        'dispatched' => ['label' => 'Dispatched', 'color' => '#6d28d9', 'class' => 'dispatched'],
-        'shipped' => ['label' => 'Shipped', 'color' => '#14b8a6', 'class' => 'shipped'],
-        'delivered' => ['label' => 'Delivered', 'color' => '#92400e', 'class' => 'delivered'],
-        'pickedup' => ['label' => 'Picked Up', 'color' => '#22c55e', 'class' => 'pickedup'],
-        'unclaimed' => ['label' => 'Unclaimed', 'color' => '#ec4899', 'class' => 'unclaimed'],
-        'missing' => ['label' => 'Missing', 'color' => '#dc2626', 'class' => 'missing'],
-        'cancelled' => ['label' => 'Cancelled', 'color' => '#6b7280', 'class' => 'cancelled'],
-        'refunded' => ['label' => 'Refunded', 'color' => '#dc2626', 'class' => 'refunded']
-    ];
+    // Status configuration - uses centralized status-config.php
+    $statusLabelsMap = getStatusLabelsForRole('admin');
+    $statusColorsMap = getStatusColors();
+    $statusConfig = [];
+    foreach ($statusLabelsMap as $code => $label) {
+        $statusConfig[$code] = ['label' => $label, 'color' => $statusColorsMap[$code] ?? '#6b7280', 'class' => $code];
+    }
     
     $statusIcons = [
         'unpaid' => '<?= ICON_HOURGLASS ?>', 'paid' => '<?= ICON_MONEY_BAG ?>', 'file_issue' => '<?= ICON_EYE ?>',
@@ -1240,23 +1232,13 @@ $canViewVendor = in_array($_SESSION['admin_role'] ?? '', ['god_mode', 'super_adm
     }
   }
 
-  // Status configuration
-  $statusConfig = [
-    'unpaid' => [ 'label' => 'Unpaid', 'color' => '#eab308', 'class' => 'unpaid' ],
-    'paid' => [ 'label' => 'Paid', 'color' => '#059669', 'class' => 'paid' ],
-    'file_issue' => [ 'label' => 'File Issue', 'color' => '#ea580c', 'class' => 'file_issue' ],
-    'printing' => [ 'label' => 'Printing', 'color' => '#0284c7', 'class' => 'printing' ],
-    'preflight' => [ 'label' => 'Preflight', 'color' => '#8b5cf6', 'class' => 'preflight' ],
-    'ready' => [ 'label' => 'Ready to Ship', 'color' => '#7c3aed', 'class' => 'ready' ],
-    'dispatched' => [ 'label' => 'Dispatched', 'color' => '#6d28d9', 'class' => 'dispatched' ],
-    'shipped' => [ 'label' => 'Shipped', 'color' => '#14b8a6', 'class' => 'shipped' ],
-    'delivered' => [ 'label' => 'Delivered', 'color' => '#92400e', 'class' => 'delivered' ],
-    'pickedup' => [ 'label' => 'Picked Up', 'color' => '#22c55e', 'class' => 'pickedup' ],
-    'unclaimed' => [ 'label' => 'Unclaimed', 'color' => '#ec4899', 'class' => 'unclaimed' ],
-    'missing' => [ 'label' => 'Missing', 'color' => '#dc2626', 'class' => 'missing' ],
-    'cancelled' => [ 'label' => 'Cancelled', 'color' => '#6b7280', 'class' => 'cancelled' ],
-    'refunded' => [ 'label' => 'Refunded', 'color' => '#dc2626', 'class' => 'refunded' ]
-  ];
+  // Status configuration - uses centralized status-config.php
+  $statusLabelsMap = getStatusLabelsForRole('admin');
+  $statusColorsMap = getStatusColors();
+  $statusConfig = [];
+  foreach ($statusLabelsMap as $code => $label) {
+    $statusConfig[$code] = [ 'label' => $label, 'color' => $statusColorsMap[$code] ?? '#6b7280', 'class' => $code ];
+  }
 
   // Generate the tracking number once in PHP
   $trackingNumber = generateMTCCTrackingNumber( $order );
@@ -1576,9 +1558,9 @@ window.orderDueDate = '<?= htmlspecialchars($order['selectedDate']) ?>'; // Lega
             'paid' => '<?= ICON_MONEY_BAG ?> Paid',
             'file_issue' => '<?= ICON_EYE ?> File Issue',
             'printing' => '<?= ICON_PRINTER ?> Printing',
-            'preflight' => '<?= ICON_EYE ?> Preflight',
+            'preflight' => '<?= ICON_EYE ?> Sent to Vendor',
             'ready' => '<?= ICON_PACKAGE ?> Ready to Ship',
-            'dispatched' => '<?= ICON_TRUCK ?> Dispatched',
+            'dispatched' => '<?= ICON_TRUCK ?> Courier Assigned',
             'shipped' => '<?= ICON_TRUCK ?> Shipped',
             'delivered' => '<?= ICON_PACKAGE ?> Delivered',
             'pickedup' => '<?= ICON_CHECK_GREEN ?> Picked Up',

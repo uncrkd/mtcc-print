@@ -588,7 +588,7 @@ $issueCount = count($openIssues);
                     </div>
                     <?php endif; ?>
                     <span class="batch-status batch-status-<?= $batch['status'] ?>">
-                        <?= $batch['status'] === 'dispatched' ? 'Dispatched' : 'Pending' ?>
+                        <?= $batch['status'] === 'dispatched' ? 'Courier Assigned' : 'Pending' ?>
                     </span>
                 </div>
             </div>
@@ -641,7 +641,7 @@ $issueCount = count($openIssues);
                     <div class="active-order-dest"><?= htmlspecialchars($order['destination']) ?></div>
                     <div class="active-order-status">
                         <span class="status-badge status-<?= $order['status'] ?>">
-                            <?= $order['status'] === 'shipped' ? 'In Transit' : 'Dispatched' ?>
+                            <?= $order['status'] === 'shipped' ? 'Shipped' : 'Courier Assigned' ?>
                         </span>
                     </div>
                     <div class="active-order-due-group">

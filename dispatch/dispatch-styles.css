@@ -409,17 +409,17 @@ html, body {
     text-transform: uppercase;
 }
 
-.order-status.status-paid { background: #dbeafe; color: #1e40af; }
-.order-status.status-preflight { background: #f5f3ff; color: #6d28d9; }
-.order-status.status-printing { background: #fef3c7; color: var(--brown); }
-.order-status.status-ready { background: #ccfbf1; color: #0d9488; }
+.order-status.status-paid { background: #fef9c3; color: #a16207; }
+.order-status.status-preflight { background: #f5f3ff; color: #7c3aed; }
+.order-status.status-printing { background: #eef2ff; color: #4338ca; }
+.order-status.status-ready { background: #fffbeb; color: #b45309; }
 .order-status.status-ready_to_ship { background: #ecfeff; color: #0891b2; }
-.order-status.status-dispatched { background: #ede9fe; color: var(--primary); }
-.order-status.status-shipped { background: #e0e7ff; color: #3730a3; }
-.order-status.status-delivered { background: #d1fae5; color: #065f46; }
-.order-status.status-pickedup { background: #10b981; color: white; }
-.order-status.status-file_issue { background: #fee2e2; color: #991b1b; }
-.order-status.status-missing { background: #ef4444; color: white; }
+.order-status.status-dispatched { background: #f5f3ff; color: #7c3aed; }
+.order-status.status-shipped { background: #f0fdfa; color: #0f766e; }
+.order-status.status-delivered { background: #ecfdf5; color: #047857; }
+.order-status.status-pickedup { background: #f0fdf4; color: #15803d; }
+.order-status.status-file_issue { background: #fff7ed; color: #c2410c; }
+.order-status.status-missing { background: #fef2f2; color: #b91c1c; }
 
 .order-details {
     display: flex;
@@ -539,21 +539,21 @@ html, body {
 }
 
 /* Suggested button colors based on status */
-.btn-suggested.btn-status-unpaid { background: var(--yellow); }
-.btn-suggested.btn-status-paid { background: var(--green); }
+.btn-suggested.btn-status-unpaid { background: #eab308; }
+.btn-suggested.btn-status-paid { background: #ca8a04; }
 .btn-suggested.btn-status-preflight { background: #8b5cf6; }
-.btn-suggested.btn-status-file_issue { background: var(--orange); }
-.btn-suggested.btn-status-printing { background: var(--blue); }
-.btn-suggested.btn-status-ready { background: #0d9488; }
+.btn-suggested.btn-status-file_issue { background: #ea580c; }
+.btn-suggested.btn-status-printing { background: #6366f1; }
+.btn-suggested.btn-status-ready { background: #d97706; }
 .btn-suggested.btn-status-ready_to_ship { background: #06b6d4; }
-.btn-suggested.btn-status-dispatched { background: var(--primary); }
+.btn-suggested.btn-status-dispatched { background: #7c3aed; }
 .btn-suggested.btn-status-shipped { background: #14b8a6; }
-.btn-suggested.btn-status-delivered { background: var(--brown); }
-.btn-suggested.btn-status-pickedup { background: var(--green-dark); }
-.btn-suggested.btn-status-unclaimed { background: #ec4899; }
-.btn-suggested.btn-status-missing { background: var(--red); }
-.btn-suggested.btn-status-cancelled { background: var(--grey); }
-.btn-suggested.btn-status-refunded { background: var(--red); }
+.btn-suggested.btn-status-delivered { background: #059669; }
+.btn-suggested.btn-status-pickedup { background: #22c55e; }
+.btn-suggested.btn-status-unclaimed { background: #e11d48; }
+.btn-suggested.btn-status-missing { background: #dc2626; }
+.btn-suggested.btn-status-cancelled { background: #64748b; }
+.btn-suggested.btn-status-refunded { background: #9ca3af; }
 
 .other-statuses p {
     font-size: 0.85rem;
@@ -594,21 +594,21 @@ html, body {
 }
 
 /* Status-specific button colors */
-.btn-status-unpaid { background: var(--yellow); }
-.btn-status-paid { background: var(--green); }
+.btn-status-unpaid { background: #eab308; }
+.btn-status-paid { background: #ca8a04; }
 .btn-status-preflight { background: #8b5cf6; }
-.btn-status-file_issue { background: var(--orange); }
-.btn-status-printing { background: var(--blue); }
-.btn-status-ready { background: #0d9488; }
+.btn-status-file_issue { background: #ea580c; }
+.btn-status-printing { background: #6366f1; }
+.btn-status-ready { background: #d97706; }
 .btn-status-ready_to_ship { background: #06b6d4; }
-.btn-status-dispatched { background: var(--primary); }
+.btn-status-dispatched { background: #7c3aed; }
 .btn-status-shipped { background: #14b8a6; }
-.btn-status-delivered { background: var(--brown); }
-.btn-status-pickedup { background: var(--green-dark); }
-.btn-status-unclaimed { background: #ec4899; }
-.btn-status-missing { background: var(--red); }
-.btn-status-cancelled { background: var(--grey); }
-.btn-status-refunded { background: var(--red); }
+.btn-status-delivered { background: #059669; }
+.btn-status-pickedup { background: #22c55e; }
+.btn-status-unclaimed { background: #e11d48; }
+.btn-status-missing { background: #dc2626; }
+.btn-status-cancelled { background: #64748b; }
+.btn-status-refunded { background: #9ca3af; }
 
 /* Photo Capture */
 .photo-capture {

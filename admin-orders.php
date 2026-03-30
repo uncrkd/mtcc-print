@@ -10,6 +10,7 @@ require_once 'admin-auth.php';
 // Include icon library
 require_once 'includes/icons.php';
 require_once 'includes/data-access.php';
+require_once 'includes/status-config.php';
 
 // Require at least view permission for orders
 requireAnyPermission(['orders_edit', 'orders_view']);
@@ -84,21 +85,7 @@ if (isset($_POST['update_status'])) {
         }
         
         // Log to order history
-        $statusLabels = [
-            'unpaid' => 'Unpaid',
-            'paid' => 'Paid',
-            'file_issue' => 'File Issue',
-            'printing' => 'Printing',
-            'preflight' => 'Preflight',
-            'ready' => 'Ready to Ship',
-            'dispatched' => 'Dispatched',
-            'shipped' => 'Shipped',
-            'delivered' => 'Delivered',
-            'pickedup' => 'Picked Up',
-            'unclaimed' => 'Unclaimed',
-            'missing' => 'Missing',
-            'cancelled' => '<?= ICON_CROSS ?> Cancelled'
-        ];
+        $statusLabels = getStatusLabelsForRole('admin');
         $oldLabel = $statusLabels[$oldStatus] ?? $oldStatus;
         $newLabel = $statusLabels[$newStatus] ?? $newStatus;
         logOrderHistory($referenceCode, 'status_change', "Status changed from \"$oldLabel\" to \"$newLabel\"", getCurrentAdminName());
@@ -451,23 +438,13 @@ $preflightLogFile = 'data/preflight-log.json';
 $preflightLog = file_exists($preflightLogFile) ? (json_decode(file_get_contents($preflightLogFile), true) ?: []) : [];
 $preflightEntries = $preflightLog['entries'] ?? [];
 
-// Status configuration
-$statusConfig = [
-  'unpaid' => [ 'label' => 'Unpaid', 'color' => '#eab308', 'class' => 'unpaid' ],
-  'paid' => [ 'label' => 'Paid', 'color' => '#059669', 'class' => 'paid' ],
-  'file_issue' => [ 'label' => 'File Issue', 'color' => '#ea580c', 'class' => 'file_issue' ],
-  'printing' => [ 'label' => 'Printing', 'color' => '#0284c7', 'class' => 'printing' ],
-  'preflight' => [ 'label' => 'Preflight', 'color' => '#8b5cf6', 'class' => 'preflight' ],
-  'ready' => [ 'label' => 'Ready to Ship', 'color' => '#7c3aed', 'class' => 'ready' ],
-  'dispatched' => [ 'label' => 'Dispatched', 'color' => '#6d28d9', 'class' => 'dispatched' ],
-  'shipped' => [ 'label' => 'Shipped', 'color' => '#14b8a6', 'class' => 'shipped' ],
-  'delivered' => [ 'label' => 'Delivered', 'color' => '#92400e', 'class' => 'delivered' ],
-  'pickedup' => [ 'label' => 'Picked Up', 'color' => '#22c55e', 'class' => 'pickedup' ],
-  'unclaimed' => [ 'label' => 'Unclaimed', 'color' => '#ec4899', 'class' => 'unclaimed' ],
-  'missing' => [ 'label' => 'Missing', 'color' => '#dc2626', 'class' => 'missing' ],
-  'cancelled' => [ 'label' => 'Cancelled', 'color' => '#6b7280', 'class' => 'cancelled' ],
-  'refunded' => [ 'label' => 'Refunded', 'color' => '#dc2626', 'class' => 'refunded' ]
-];
+// Status configuration - uses centralized status-config.php
+$statusLabelsMap = getStatusLabelsForRole('admin');
+$statusColorsMap = getStatusColors();
+$statusConfig = [];
+foreach ($statusLabelsMap as $code => $label) {
+  $statusConfig[$code] = [ 'label' => $label, 'color' => $statusColorsMap[$code] ?? '#6b7280', 'class' => $code ];
+}
 
 // Admin is logged in - show orders
 $orderDir = 'uploads/orders/';

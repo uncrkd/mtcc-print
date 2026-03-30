@@ -190,13 +190,20 @@ function updateStatusBadgeInDOM(referenceCode, newStatus) {
         'checking': 'File Checking',
         'unpaid': 'Unpaid',
         'paid': 'Paid',
+        'preflight': 'Sent to Vendor',
+        'file_issue': 'File Issue',
         'printing': 'Printing',
+        'ready': 'Ready to Ship',
+        'dispatched': 'Courier Assigned',
+        'shipped': 'Shipped',
         'delivered': 'Delivered',
         'pickedup': 'Picked Up',
+        'unclaimed': 'Unclaimed',
+        'missing': 'Missing',
         'cancelled': 'Cancelled',
         'refunded': 'Refunded'
     };
-    
+
     // Update in table view
     const tableRows = document.querySelectorAll('#ordersTableBody tr');
     tableRows.forEach(row => {
@@ -246,9 +253,18 @@ function showStatusUpdateMessage(referenceCode, newStatus) {
         'checking': 'File Checking',
         'unpaid': 'Unpaid',
         'paid': 'Paid',
+        'preflight': 'Sent to Vendor',
+        'file_issue': 'File Issue',
         'printing': 'Printing',
+        'ready': 'Ready to Ship',
+        'dispatched': 'Courier Assigned',
+        'shipped': 'Shipped',
         'delivered': 'Delivered',
-        'cancelled': 'Cancelled'
+        'pickedup': 'Picked Up',
+        'unclaimed': 'Unclaimed',
+        'missing': 'Missing',
+        'cancelled': 'Cancelled',
+        'refunded': 'Refunded'
     };
     
     const tempMessage = document.createElement('div');
@@ -712,7 +728,7 @@ function addUtilityStyles() {
 const quickStatusConfig = {
     'unpaid': { label: 'Unpaid', icon: '&#9203;' },      // â³
     'paid': { label: 'Paid', icon: '&#128176;' },        // ðŸ’°
-    'preflight': { label: 'Preflight', icon: '&#128640;' },  // &#128640;
+    'preflight': { label: 'Sent to Vendor', icon: '&#128640;' },  // &#128640;
     'file_issue': { label: 'File Issue', icon: '&#128269;' }, // &#128269;
     'printing': { label: 'Printing', icon: '&#128424;&#65039;' },  // ðŸ–¨ï¸
     'ready': { label: 'Ready to Ship', icon: '&#9989;' },  // &#9989;

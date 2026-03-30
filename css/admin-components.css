@@ -229,43 +229,43 @@
 
 /* Status Colors */
 .status-badge-large.status-file_issue,
-.status-badge.status-file_issue { background: #fff7ed; color: #c2410c; border-color: var(--orange); }
+.status-badge.status-file_issue { background: #fff7ed; color: #c2410c; border-color: #ea580c; }
 
 .status-badge-large.status-shipped,
-.status-badge.status-shipped { background: #fff7ed; color: #c2410c; border-color: var(--orange); }
+.status-badge.status-shipped { background: #f0fdfa; color: #0f766e; border-color: #14b8a6; }
 
 .status-badge-large.status-unpaid,
-.status-badge.status-unpaid { background: #fefce8; color: #a16207; border-color: var(--yellow); }
+.status-badge.status-unpaid { background: #fefce8; color: #a16207; border-color: #eab308; }
 
 .status-badge-large.status-paid,
-.status-badge.status-paid { background: #f0fdf4; color: #166534; border-color: var(--green); }
+.status-badge.status-paid { background: #fef9c3; color: #a16207; border-color: #ca8a04; }
 
 .status-badge-large.status-printing,
-.status-badge.status-printing { background: #f0f9ff; color: #1e40af; border-color: var(--blue); }
+.status-badge.status-printing { background: #eef2ff; color: #4338ca; border-color: #6366f1; }
 
 .status-badge-large.status-delivered,
-.status-badge.status-delivered { background: #fef3c7; color: var(--brown); border-color: var(--brown); }
+.status-badge.status-delivered { background: #ecfdf5; color: #047857; border-color: #059669; }
 
 .status-badge-large.status-pickedup,
-.status-badge.status-pickedup { background: var(--green-dark); color: #ffffff; border-color: var(--green-dark); }
+.status-badge.status-pickedup { background: #f0fdf4; color: #15803d; border-color: #22c55e; }
 
 .status-badge-large.status-preflight,
-.status-badge.status-preflight { background: #f5f3ff; color: var(--primary); border-color: #8b5cf6; }
+.status-badge.status-preflight { background: #f5f3ff; color: #7c3aed; border-color: #8b5cf6; }
 
 .status-badge-large.status-ready,
-.status-badge.status-ready { background: #f0fdfa; color: #0d9488; border-color: #0d9488; }
+.status-badge.status-ready { background: #fffbeb; color: #b45309; border-color: #d97706; }
 
 .status-badge-large.status-dispatched,
-.status-badge.status-dispatched { background: var(--primary-light); color: #6d28d9; border-color: var(--primary); }
+.status-badge.status-dispatched { background: #f5f3ff; color: #6d28d9; border-color: #7c3aed; }
 
 .status-badge-large.status-unclaimed,
-.status-badge.status-unclaimed { background: #fdf2f8; color: #be185d; border-color: #ec4899; }
+.status-badge.status-unclaimed { background: #fff1f2; color: #be123c; border-color: #e11d48; }
 
 .status-badge-large.status-missing,
-.status-badge.status-missing { background: #fef2f2; color: var(--red); border-color: var(--red); }
+.status-badge.status-missing { background: #fef2f2; color: #b91c1c; border-color: #dc2626; }
 
 .status-badge-large.status-refunded,
-.status-badge.status-refunded { background: #fef2f2; color: var(--red); border-color: var(--red); }
+.status-badge.status-refunded { background: #f9fafb; color: #6b7280; border-color: #9ca3af; }
 
 .status-badge-large.status-cancelled,
 .status-badge.status-cancelled { background: #f3f4f6; color: var(--subtext); border-color: var(--subtext); }
@@ -377,11 +377,11 @@ textarea.field-control {
 }
 
 .header.status-ready {
-    border-left-color: #0d9488;
+    border-left-color: #d97706;
 }
 
 .header.status-dispatched {
-    border-left-color: var(--primary);
+    border-left-color: #7c3aed;
 }
 
 
@@ -408,18 +408,18 @@ textarea.field-control {
 }
 
 /* Status Colors for Input */
-.header-input.status-file_issue { background: #f3f4f6; color: #374151; border-color: var(--subtext); }
-.header-input.status-shipped { background: #fff7ed; color: var(--orange); border-color: var(--orange); }
-.header-input.status-unpaid { background: #fefce8; color: var(--yellow); border-color: var(--yellow); }
-.header-input.status-paid { background: #f0fdf4; color: var(--green); border-color: var(--green); }
-.header-input.status-printing { background: #f0f9ff; color: var(--blue); border-color: var(--blue); }
-.header-input.status-delivered { background: #fef3c7; color: var(--brown); border-color: var(--brown); }
-.header-input.status-pickedup { background: var(--green-dark); color: #ffffff; border-color: var(--green-dark); }
-.header-input.status-preflight { background: #f5f3ff; color: var(--primary); border-color: #8b5cf6; }
-.header-input.status-ready { background: #f0fdfa; color: #0d9488; border-color: #0d9488; }
-.header-input.status-dispatched { background: var(--primary-light); color: #6d28d9; border-color: var(--primary); }
-.header-input.status-cancelled { background: #f3f4f6; color: var(--subtext); border-color: var(--subtext); }
-.header-input.status-damaged { background: #fef2f2; color: var(--red); border-color: var(--red); }
+.header-input.status-file_issue { background: #fff7ed; color: #ea580c; border-color: #ea580c; }
+.header-input.status-shipped { background: #f0fdfa; color: #14b8a6; border-color: #14b8a6; }
+.header-input.status-unpaid { background: #fefce8; color: #eab308; border-color: #eab308; }
+.header-input.status-paid { background: #fef9c3; color: #ca8a04; border-color: #ca8a04; }
+.header-input.status-printing { background: #eef2ff; color: #6366f1; border-color: #6366f1; }
+.header-input.status-delivered { background: #ecfdf5; color: #059669; border-color: #059669; }
+.header-input.status-pickedup { background: #f0fdf4; color: #22c55e; border-color: #22c55e; }
+.header-input.status-preflight { background: #f5f3ff; color: #8b5cf6; border-color: #8b5cf6; }
+.header-input.status-ready { background: #fffbeb; color: #d97706; border-color: #d97706; }
+.header-input.status-dispatched { background: #f5f3ff; color: #7c3aed; border-color: #7c3aed; }
+.header-input.status-cancelled { background: #f8fafc; color: #64748b; border-color: #64748b; }
+.header-input.status-damaged { background: #fef2f2; color: #dc2626; border-color: #dc2626; }
 
 /* ===== FILE UPLOAD COMPONENTS ===== */
 .file-details {
@@ -1675,13 +1675,13 @@ textarea.field-control {
 
 /* New status classes */
 .status-badge-large.status-shipped,
-.status-badge.status-shipped { background: #f0fdfa; color: #0d9488; border-color: #14b8a6; }
+.status-badge.status-shipped { background: #f0fdfa; color: #0f766e; border-color: #14b8a6; }
 
 .status-badge-large.status-unclaimed,
-.status-badge.status-unclaimed { background: #fdf2f8; color: #be185d; border-color: #ec4899; }
+.status-badge.status-unclaimed { background: #fff1f2; color: #be123c; border-color: #e11d48; }
 
 .status-badge-large.status-missing,
-.status-badge.status-missing { background: #fef2f2; color: var(--red); border-color: var(--red); animation: pulse-red 2s infinite; }
+.status-badge.status-missing { background: #fef2f2; color: #b91c1c; border-color: #dc2626; animation: pulse-red 2s infinite; }
 
 @keyframes pulse-red {
     0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4); }
@@ -1689,19 +1689,19 @@ textarea.field-control {
 }
 
 .header.status-shipped { background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%); border-color: #14b8a6; }
-.header.status-unclaimed { background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%); border-color: #ec4899; }
-.header.status-missing { background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border-color: var(--red); }
+.header.status-unclaimed { background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%); border-color: #e11d48; }
+.header.status-missing { background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border-color: #dc2626; }
 .header.status-preflight { background: linear-gradient(135deg, #f5f3ff 0%, var(--primary-light) 100%); border-color: #8b5cf6; }
-.header.status-ready { background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%); border-color: #0d9488; }
-.header.status-dispatched { background: linear-gradient(135deg, var(--primary-light) 0%, #ddd6fe 100%); border-color: var(--primary); }
+.header.status-ready { background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border-color: #d97706; }
+.header.status-dispatched { background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%); border-color: #7c3aed; }
 
 .header-input.status-shipped { background: #f0fdfa; color: #14b8a6; border-color: #14b8a6; }
-.header-input.status-unclaimed { background: #fdf2f8; color: #ec4899; border-color: #ec4899; }
-.header-input.status-missing { background: #fef2f2; color: var(--red); border-color: var(--red); }
+.header-input.status-unclaimed { background: #fff1f2; color: #e11d48; border-color: #e11d48; }
+.header-input.status-missing { background: #fef2f2; color: #dc2626; border-color: #dc2626; }
 
 /* ===== PREFLIGHT STATUS (Purple) ===== */
 .status-badge-large.status-preflight,
-.status-badge.status-preflight { background: #f5f3ff; color: var(--primary); border-color: #8b5cf6; }
+.status-badge.status-preflight { background: #f5f3ff; color: #7c3aed; border-color: #8b5cf6; }
 
 .header.status-preflight { background: linear-gradient(135deg, #f5f3ff 0%, var(--primary-light) 100%); border-color: #8b5cf6; }
 

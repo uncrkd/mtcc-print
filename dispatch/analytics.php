@@ -224,10 +224,11 @@ $periodLabels = [
         border-radius: 4px;
         text-transform: uppercase;
     }
-    .recent-status-delivered { background: #ecfdf5; color: var(--green); }
-    .recent-status-pickedup { background: #eff6ff; color: var(--blue); }
-    .recent-status-dispatched { background: var(--primary-light); color: var(--primary); }
-    .recent-status-ready { background: #fff7ed; color: var(--orange); }
+    .recent-status-delivered { background: #ecfdf5; color: #059669; }
+    .recent-status-pickedup { background: #f0fdf4; color: #22c55e; }
+    .recent-status-dispatched { background: #f5f3ff; color: #7c3aed; }
+    .recent-status-shipped { background: #f0fdfa; color: #14b8a6; }
+    .recent-status-ready { background: #fffbeb; color: #d97706; }
     .recent-detail {
         flex: 1;
         font-size: 0.74rem;

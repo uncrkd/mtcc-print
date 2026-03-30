@@ -105,7 +105,7 @@ function createActionsDropdown() {
                 <div class="submenu-item" onclick="bulkChangeStatus('unpaid', event)"><span class="status-badge status-unpaid">&#9203; Unpaid</span></div>
                 <div class="submenu-item" onclick="bulkChangeStatus('paid', event)"><span class="status-badge status-paid">&#128176; Paid</span></div>
                 <div class="submenu-divider"></div>
-                <div class="submenu-item" onclick="bulkChangeStatus('preflight', event)"><span class="status-badge status-preflight">&#128640; Preflight</span></div>
+                <div class="submenu-item" onclick="bulkChangeStatus('preflight', event)"><span class="status-badge status-preflight">&#128640; Sent to Vendor</span></div>
                 <div class="submenu-item" onclick="bulkChangeStatus('file_issue', event)"><span class="status-badge status-file_issue">&#128065; File Issue</span></div>
                 <div class="submenu-item" onclick="bulkChangeStatus('printing', event)"><span class="status-badge status-printing">&#128424;&#65039; Printing</span></div>
                 <div class="submenu-divider"></div>
@@ -229,7 +229,7 @@ async function bulkChangeStatus(newStatus, event) {
     }
     
     const statusLabels = {
-        'unpaid': 'Unpaid', 'paid': 'Paid', 'file_issue': 'File Issue', 'printing': 'Printing', 'shipped': 'Shipped', 'delivered': 'Delivered',
+        'unpaid': 'Unpaid', 'paid': 'Paid', 'preflight': 'Sent to Vendor', 'file_issue': 'File Issue', 'printing': 'Printing', 'ready': 'Ready to Ship', 'dispatched': 'Courier Assigned', 'shipped': 'Shipped', 'delivered': 'Delivered',
         'pickedup': 'Picked Up', 'unclaimed': 'Unclaimed', 'missing': 'Missing', 'cancelled': 'Cancelled', 'refunded': 'Refunded'
     };
     
@@ -442,7 +442,7 @@ function escapeCSV(value) {
 }
 
 function formatStatusForExport(status) {
-    const labels = { 'unpaid': 'Unpaid', 'paid': 'Paid', 'file_issue': 'File Issue', 'paid': 'Paid', 'printing': 'Printing', 'delivered': 'Delivered', 'pickedup': 'Picked Up', 'cancelled': 'Cancelled', 'refunded': 'Refunded' };
+    const labels = { 'unpaid': 'Unpaid', 'paid': 'Paid', 'preflight': 'Sent to Vendor', 'file_issue': 'File Issue', 'printing': 'Printing', 'ready': 'Ready to Ship', 'dispatched': 'Courier Assigned', 'shipped': 'Shipped', 'delivered': 'Delivered', 'pickedup': 'Picked Up', 'unclaimed': 'Unclaimed', 'missing': 'Missing', 'cancelled': 'Cancelled', 'refunded': 'Refunded' };
     return labels[status] || status;
 }
 

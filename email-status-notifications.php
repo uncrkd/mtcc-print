@@ -216,7 +216,7 @@ function generatePrintingEmailHTML($order, $referenceCode, $customerName) {
 <td>
 
  <!-- Header -->
- <table cellpadding="0" cellspacing="0" style="width: 100%; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border-radius: 12px 12px 0 0;">
+ <table cellpadding="0" cellspacing="0" style="width: 100%; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); border-radius: 12px 12px 0 0;">
  <tr>
  <td style="padding: 30px; text-align: center;">
  <div style="color: #ffffff; font-size: 24px; font-weight: 700; margin-bottom: 6px;">Your Poster is Being Printed</div>
@@ -628,7 +628,7 @@ function generatePickedUpEmailHTML($order, $referenceCode, $customerName) {
 <td>
 
  <!-- Header -->
- <table cellpadding="0" cellspacing="0" style="width: 100%; background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); border-radius: 12px 12px 0 0;">
+ <table cellpadding="0" cellspacing="0" style="width: 100%; background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); border-radius: 12px 12px 0 0;">
  <tr>
  <td style="padding: 30px; text-align: center;">
  <div style="color: #ffffff; font-size: 24px; font-weight: 700; margin-bottom: 6px;">Thank You!</div>
@@ -799,7 +799,7 @@ function generateRefundedEmailHTML($order, $referenceCode, $customerName) {
 <td>
 
  <!-- Header -->
- <table cellpadding="0" cellspacing="0" style="width: 100%; background: linear-gradient(135deg, #059669 0%, #047857 100%); border-radius: 12px 12px 0 0;">
+ <table cellpadding="0" cellspacing="0" style="width: 100%; background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%); border-radius: 12px 12px 0 0;">
  <tr>
  <td style="padding: 30px; text-align: center;">
  <div style="color: #ffffff; font-size: 24px; font-weight: 700; margin-bottom: 6px;">Refund Processed</div>

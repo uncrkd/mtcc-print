@@ -638,7 +638,7 @@ class SimpleFilterManager {
         const labels = {
             'unpaid': 'Unpaid',
             'paid': 'Paid',
-            'preflight': 'Preflight',
+            'preflight': 'Sent to Vendor',
             'file_issue': 'File Issue',
             'printing': 'Printing',
             'ready': 'Ready to Ship',

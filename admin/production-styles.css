@@ -304,13 +304,13 @@
 }
 
 .status-badge.status-printing {
-    background: #dbeafe;
-    color: #1d4ed8;
+    background: #eef2ff;
+    color: #4338ca;
 }
 
 .status-badge.status-ready {
-    background: #ecfeff;
-    color: #0e7490;
+    background: #fffbeb;
+    color: #b45309;
 }
 
 /* =====================================================

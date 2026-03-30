@@ -587,19 +587,19 @@ body {
     text-transform: capitalize;
 }
 
-.status-paid { background: var(--success-light); color: #065f46; }
-.status-unpaid { background: var(--warning-light); color: #92400e; }
-.status-preflight { background: #f5f3ff; color: #6d28d9; }
-.status-refunded { background: var(--danger-light); color: #991b1b; }
-.status-cancelled { background: var(--gray-200); color: var(--gray-600); }
-.status-printing { background: var(--info-light); color: #1e40af; }
+.status-paid { background: #fef9c3; color: #a16207; }
+.status-unpaid { background: #fefce8; color: #a16207; }
+.status-preflight { background: #f5f3ff; color: #7c3aed; }
+.status-refunded { background: #f9fafb; color: #6b7280; }
+.status-cancelled { background: #f8fafc; color: #475569; }
+.status-printing { background: #eef2ff; color: #4338ca; }
 .status-ready_to_ship { background: #ecfeff; color: #0891b2; }
-.status-shipped { background: #ccfbf1; color: #0d9488; }
-.status-delivered { background: var(--warning-light); color: #92400e; }
-.status-pickedup { background: var(--success-light); color: #065f46; }
+.status-shipped { background: #f0fdfa; color: #0f766e; }
+.status-delivered { background: #ecfdf5; color: #047857; }
+.status-pickedup { background: #f0fdf4; color: #15803d; }
 .status-file_issue { background: #fff7ed; color: #c2410c; }
-.status-unclaimed { background: #fdf2f8; color: #be185d; }
-.status-missing { background: var(--danger-light); color: #991b1b; }
+.status-unclaimed { background: #fff1f2; color: #be123c; }
+.status-missing { background: #fef2f2; color: #b91c1c; }
 
 /* ==========================================================================
    Empty State

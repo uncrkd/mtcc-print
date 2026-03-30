@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/status-config.php';
+
 /**
  * Centralized Data Access Layer
  * MTCC Print Services
@@ -207,14 +209,7 @@ function updateOrderStatusSync($referenceCode, $newStatus, $user = 'System', $st
     }
 
     // 5. Log to order history
-    $statusLabels = [
-        'unpaid' => 'Unpaid', 'paid' => 'Paid', 'preflight' => 'Preflight',
-        'file_issue' => 'File Issue', 'printing' => 'Printing',
-        'ready' => 'Ready to Ship', 'dispatched' => 'Dispatched',
-        'shipped' => 'Shipped', 'delivered' => 'Delivered',
-        'pickedup' => 'Picked Up', 'unclaimed' => 'Unclaimed',
-        'missing' => 'Missing', 'cancelled' => 'Cancelled', 'refunded' => 'Refunded'
-    ];
+    $statusLabels = getStatusLabelsForRole('admin');
     $oldLabel = $statusLabels[$oldStatus] ?? $oldStatus;
     $newLabel = $statusLabels[$newStatus] ?? $newStatus;
     logOrderHistory($referenceCode, 'status_change', "Status changed from \"$oldLabel\" to \"$newLabel\"", $user);

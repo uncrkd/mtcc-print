@@ -22,7 +22,13 @@ if (file_exists(__DIR__ . '/includes/icons.php')) {
     require_once __DIR__ . '/includes/icons.php';
 }
 
+// Include centralized status config
+if (file_exists(__DIR__ . '/includes/status-config.php')) {
+    require_once __DIR__ . '/includes/status-config.php';
+}
+
 // Status configuration with customer-friendly messages
+// Labels and colors from centralized status-config.php, messages/icons/steps are page-specific
 $statusConfig = [
     'unpaid' => [
         'label' => 'Awaiting Payment',
@@ -34,19 +40,19 @@ $statusConfig = [
     'paid' => [
         'label' => 'Payment Received',
         'icon' => '&#128176;',
-        'color' => '#059669',
+        'color' => '#ca8a04',
         'message' => 'Payment confirmed! Your order is in the queue.',
         'step' => 2
     ],
     'preflight' => [
-        'label' => 'Processing',
+        'label' => 'In Production',
         'icon' => '&#128065;',
         'color' => '#8b5cf6',
         'message' => 'Your file is being reviewed and prepared for printing.',
         'step' => 2
     ],
     'file_issue' => [
-        'label' => 'File Review',
+        'label' => 'In Production',
         'icon' => '&#128065;',
         'color' => '#ea580c',
         'message' => 'We\'re reviewing your file. We\'ll contact you if there are any issues.',
@@ -55,26 +61,26 @@ $statusConfig = [
     'printing' => [
         'label' => 'Printing',
         'icon' => '&#128424;',
-        'color' => '#0284c7',
+        'color' => '#6366f1',
         'message' => 'Your poster is being printed!',
         'step' => 3
     ],
     'ready' => [
-        'label' => 'Printed',
+        'label' => 'Preparing to Ship',
         'icon' => '&#128230;',
-        'color' => '#0d9488',
+        'color' => '#d97706',
         'message' => 'Your poster has been printed and is ready for delivery.',
         'step' => 3
     ],
     'dispatched' => [
-        'label' => 'Out for Delivery',
+        'label' => 'On the Way',
         'icon' => '&#128666;',
         'color' => '#7c3aed',
         'message' => 'Your poster is on its way to the delivery location.',
         'step' => 4
     ],
     'shipped' => [
-        'label' => 'Out for Delivery',
+        'label' => 'On the Way',
         'icon' => '&#128666;',
         'color' => '#14b8a6',
         'message' => 'Your order is on its way to the delivery location.',
@@ -83,26 +89,26 @@ $statusConfig = [
     'delivered' => [
         'label' => 'Ready for Pickup',
         'icon' => '&#128230;',
-        'color' => '#92400e',
+        'color' => '#059669',
         'message' => 'Your poster has arrived and is ready for pickup at the delivery location.',
         'step' => 5
     ],
     'pickedup' => [
-        'label' => 'Picked Up',
+        'label' => 'Complete',
         'icon' => '&#9989;',
         'color' => '#22c55e',
         'message' => 'Your order has been picked up. Thank you!',
         'step' => 5
     ],
     'unclaimed' => [
-        'label' => 'Ready for Pickup',
+        'label' => 'Unclaimed',
         'icon' => '&#128236;',
-        'color' => '#ec4899',
+        'color' => '#e11d48',
         'message' => 'Your order is ready and waiting for pickup.',
         'step' => 4
     ],
     'missing' => [
-        'label' => 'Attention Required',
+        'label' => 'Under Investigation',
         'icon' => '&#9888;',
         'color' => '#dc2626',
         'message' => 'Please contact us regarding your order.',
@@ -111,14 +117,14 @@ $statusConfig = [
     'cancelled' => [
         'label' => 'Cancelled',
         'icon' => '&#10006;',
-        'color' => '#6b7280',
+        'color' => '#64748b',
         'message' => 'This order has been cancelled.',
         'step' => 0
     ],
     'refunded' => [
         'label' => 'Refunded',
         'icon' => '&#128683;',
-        'color' => '#dc2626',
+        'color' => '#9ca3af',
         'message' => 'This order has been refunded.',
         'step' => 0
     ]

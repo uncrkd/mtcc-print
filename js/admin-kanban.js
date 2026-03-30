@@ -6,15 +6,16 @@
 var KanbanBoard = (function() {
   // Status columns in workflow order
   var COLUMNS = [
-    { key: 'unpaid', label: 'Unpaid', color: '#9ca3af' },
-    { key: 'paid', label: 'Paid', color: '#3b82f6' },
-    { key: 'preflight', label: 'Preflight', color: '#8b5cf6' },
-    { key: 'file_issue', label: 'File Issue', color: '#ef4444' },
-    { key: 'printing', label: 'Printing', color: '#f59e0b' },
-    { key: 'ready', label: 'Ready', color: '#10b981' },
+    { key: 'unpaid', label: 'Unpaid', color: '#eab308' },
+    { key: 'paid', label: 'Paid', color: '#ca8a04' },
+    { key: 'preflight', label: 'Sent to Vendor', color: '#8b5cf6' },
+    { key: 'file_issue', label: 'File Issue', color: '#ea580c' },
+    { key: 'printing', label: 'Printing', color: '#6366f1' },
+    { key: 'ready', label: 'Ready to Ship', color: '#d97706' },
+    { key: 'dispatched', label: 'Courier Assigned', color: '#7c3aed' },
     { key: 'shipped', label: 'Shipped', color: '#14b8a6' },
     { key: 'delivered', label: 'Delivered', color: '#059669' },
-    { key: 'pickedup', label: 'Picked Up', color: '#047857' }
+    { key: 'pickedup', label: 'Picked Up', color: '#22c55e' }
   ];
 
   var container = null;

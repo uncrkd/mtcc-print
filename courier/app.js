@@ -338,6 +338,20 @@ function showApp() {
         el.style.display = isMTCC ? '' : 'none';
     });
 
+    // Set role-specific status labels for badge rendering
+    if (currentUser.role === 'mtcc_staff') {
+        statusLabels = {
+            preflight: 'In Production', file_issue: 'In Production', printing: 'In Production',
+            ready: 'Preparing to Ship', dispatched: 'On the Way', shipped: 'On the Way',
+            delivered: 'Ready for Pickup', pickedup: 'Picked Up', missing: 'Missing', unclaimed: 'Unclaimed'
+        };
+    } else {
+        statusLabels = {
+            ready: 'Available', dispatched: 'Accepted', shipped: 'In Transit',
+            delivered: 'Delivered', missing: 'Missing'
+        };
+    }
+
     // Build nav tabs
     buildNavTabs(currentUser.tabs);
 
@@ -757,7 +771,6 @@ function renderUpcomingMTCCFromCache() {
     var el = document.getElementById('upcomingMtccContent');
     if (!el) return;
     var filtered = filterMTCCOrders(cachedUpcomingMtccOrders);
-    var statusLabels = {shipped: 'On the Way', dispatched: 'Courier Assigned', ready: 'Ready for Courier', printing: 'In Production', preflight: 'With Vendor'};
     var groups = {transit: [], ready: [], production: []};
     filtered.forEach(function(o) {
         if (o.status === 'shipped' || o.status === 'dispatched') groups.transit.push(o);
@@ -778,7 +791,7 @@ function renderUpcomingMTCCFromCache() {
             groups.transit.forEach(function(o) { html += renderOrderCard(o, 'upcoming_mtcc'); });
         }
         if (groups.ready.length > 0) {
-            html += '<div class="mtcc-group-header">Ready for Courier (' + groups.ready.length + ')</div>';
+            html += '<div class="mtcc-group-header">Preparing to Ship (' + groups.ready.length + ')</div>';
             groups.ready.forEach(function(o) { html += renderOrderCard(o, 'upcoming_mtcc'); });
         }
         if (groups.production.length > 0) {
@@ -859,7 +872,7 @@ function loadMTCCDashboard() {
             html += '<div class="mtcc-dash-list">';
             upcoming.forEach(function(o) {
                 orderCache[o.ref] = o; // cache for detail panel
-                var statusLabel = {ready: 'Ready for Courier', dispatched: 'Courier Assigned', shipped: 'On the Way', printing: 'In Production', preflight: 'With Vendor'};
+                var statusLabel = {preflight: 'In Production', file_issue: 'In Production', printing: 'In Production', ready: 'Preparing to Ship', dispatched: 'On the Way', shipped: 'On the Way', delivered: 'Ready for Pickup', pickedup: 'Picked Up', missing: 'Missing', unclaimed: 'Unclaimed'};
                 var dueStr = o.due_date_formatted || '';
                 var timeStr = o.due_time_formatted || '';
                 html += '<div class="mtcc-upcoming-item" onclick="showOrderDetail(\'' + escapeAttr(o.ref) + '\', \'upcoming_mtcc\')">';
@@ -1111,13 +1124,7 @@ function loadActivity() {
 // ============================================
 // Status Labels & Transitions
 // ============================================
-var statusLabels = {
-    ready: 'Ready for Pickup',
-    dispatched: 'Dispatched',
-    shipped: 'In Transit',
-    delivered: 'Delivered',
-    pickedup: 'Picked Up'
-};
+var statusLabels = {}; // populated after login based on role
 
 /**
  * Get available status transitions based on current status AND user role.
@@ -1992,7 +1999,7 @@ function renderMTCCDetailPanel(order, mode) {
     html += '</div>';
 
     // Status-specific info
-    var pipelineStatuses = {preflight: 'With Vendor', printing: 'In Production', ready: 'Ready for Courier', dispatched: 'Courier Assigned', shipped: 'On the Way'};
+    var pipelineStatuses = {preflight: 'In Production', file_issue: 'In Production', printing: 'In Production', ready: 'Preparing to Ship', dispatched: 'On the Way', shipped: 'On the Way'};
     if (pipelineStatuses[order.status]) {
         html += '<div class="mtcc-status-info">';
         html += '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>';
@@ -2615,7 +2622,7 @@ function showScanResult(result) {
         statuses.forEach(function(s) {
             var label = s, icon = '';
             if (result.receive_mode && s === 'delivered') { label = 'Confirm Received at MTCC'; icon = '\u2705 '; }
-            else if (s === 'shipped') { label = 'Picked Up from Vendor'; icon = '\ud83d\udce6 '; }
+            else if (s === 'shipped') { label = 'Confirm Pickup'; icon = '\ud83d\udce6 '; }
             else if (s === 'delivered') { label = 'Mark Delivered'; icon = '\ud83d\udccd '; }
             else if (s === 'pickedup') { label = 'Confirm Pick Up'; icon = '\ud83e\udd1d '; }
             else if (s === 'dispatched') { label = 'Accept Delivery'; icon = '\u2705 '; }

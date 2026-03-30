@@ -59,8 +59,8 @@ var OrderSlideout = (function() {
   function fmtMoney(v) { var n = parseFloat(v); return isNaN(n) ? '$0.00' : '$' + n.toFixed(2); }
 
   var STATUS_LABELS = {
-    unpaid:'Unpaid', paid:'Paid', preflight:'Preflight', file_issue:'File Issue',
-    printing:'Printing', ready:'Ready to Ship', dispatched:'Dispatched',
+    unpaid:'Unpaid', paid:'Paid', preflight:'Sent to Vendor', file_issue:'File Issue',
+    printing:'Printing', ready:'Ready to Ship', dispatched:'Courier Assigned',
     shipped:'Shipped', delivered:'Delivered', pickedup:'Picked Up',
     unclaimed:'Unclaimed', missing:'Missing', cancelled:'Cancelled', refunded:'Refunded'
   };

@@ -277,10 +277,10 @@ function buildOrderConfirmedEmail($refCode, $vendorName, $data) {
  <strong>" . htmlspecialchars($vendorName) . "</strong> has confirmed order <strong style='color: #7c3aed;'>" . htmlspecialchars($refCode) . "</strong> and printing has started.
  </p>
  
- <table cellpadding='0' cellspacing='0' style='width: 100%; background-color: #eff6ff; border-radius: 8px; border-left: 4px solid #3b82f6; margin: 16px 0;'>
+ <table cellpadding='0' cellspacing='0' style='width: 100%; background-color: #eef2ff; border-radius: 8px; border-left: 4px solid #6366f1; margin: 16px 0;'>
  <tr><td style='padding: 16px;'>
- <div style='color: #1e40af; font-size: 14px; font-weight: 600;'>Status: Printing</div>
- <div style='color: #1d4ed8; font-size: 13px; margin-top: 4px;'>The vendor has downloaded the file and is actively printing this order.</div>
+ <div style='color: #4f46e5; font-size: 14px; font-weight: 600;'>Status: Printing</div>
+ <div style='color: #4338ca; font-size: 13px; margin-top: 4px;'>The vendor has downloaded the file and is actively printing this order.</div>
  </td></tr>
  </table>";
 

@@ -114,7 +114,7 @@ if (function_exists('getVendorDeadlineForOrder') && $hasPreflight) {
   
   <div class="section-header" style="color: <?= $hasFileIssue ? '#ea580c' : ($isConfirmed ? '#059669' : '#7c3aed') ?>;">
     <span class="card-icon"><?= $hasFileIssue ? ICON_WARNING : ($isConfirmed ? ICON_CHECK_GREEN : ICON_PRINTER) ?></span> 
-    Preflight & Vendor Information
+    Vendor & Production Information
   </div>
   
   <div style="padding: 0 var(--space-md) var(--space-md);">

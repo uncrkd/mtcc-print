@@ -574,25 +574,25 @@
     .status-badge.status-checking { background: #fff7ed !important; color: #c2410c !important; border-color: var(--orange) !important; }
 
     .status-badge-large.status-unpaid,
-    .status-badge.status-unpaid { background: #fefce8 !important; color: #a16207 !important; border-color: var(--yellow) !important; }
+    .status-badge.status-unpaid { background: #fefce8 !important; color: #a16207 !important; border-color: #eab308 !important; }
 
     .status-badge-large.status-paid,
-    .status-badge.status-paid { background: #f0fdf4 !important; color: #166534 !important; border-color: var(--green) !important; }
+    .status-badge.status-paid { background: #fef9c3 !important; color: #a16207 !important; border-color: #ca8a04 !important; }
 
     .status-badge-large.status-printing,
-    .status-badge.status-printing { background: #f0f9ff !important; color: #1e40af !important; border-color: var(--blue) !important; }
+    .status-badge.status-printing { background: #eef2ff !important; color: #4338ca !important; border-color: #6366f1 !important; }
 
     .status-badge-large.status-delivered,
-    .status-badge.status-delivered { background: #faf5ff !important; color: #7c2d12 !important; border-color: var(--primary) !important; }
+    .status-badge.status-delivered { background: #ecfdf5 !important; color: #047857 !important; border-color: #059669 !important; }
 
     .status-badge-large.status-pickedup,
-    .status-badge.status-pickedup { background: #f0fdf4 !important; color: #166534 !important; border-color: var(--green-dark) !important; }
+    .status-badge.status-pickedup { background: #f0fdf4 !important; color: #15803d !important; border-color: #22c55e !important; }
 
     .status-badge-large.status-cancelled,
-    .status-badge.status-cancelled { background: #fef2f2 !important; color: #991b1b !important; border-color: var(--red) !important; }
+    .status-badge.status-cancelled { background: #f8fafc !important; color: #475569 !important; border-color: #64748b !important; }
 
     .status-badge-large.status-refunded,
-    .status-badge.status-refunded { background: #fef2f2 !important; color: #991b1b !important; border-color: var(--red) !important; }
+    .status-badge.status-refunded { background: #f9fafb !important; color: #6b7280 !important; border-color: #9ca3af !important; }
 
     /* Priority tier colors */
     .priority-tier-badge.priority-tier-early { background: #f0fdf4 !important; color: var(--green) !important; border-color: var(--green) !important; }

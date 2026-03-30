@@ -268,16 +268,21 @@ function changeStatusFromMenu(referenceCode, newStatus) {
             // Show success message
             const statusLabels = {
                 'unpaid': 'Unpaid',
-                'file_issue': 'File Issue',
-                'unpaid': 'Unpaid',
                 'paid': 'Paid',
+                'preflight': 'Sent to Vendor',
+                'file_issue': 'File Issue',
                 'printing': 'Printing',
+                'ready': 'Ready to Ship',
+                'dispatched': 'Courier Assigned',
+                'shipped': 'Shipped',
                 'delivered': 'Delivered',
                 'pickedup': 'Picked Up',
+                'unclaimed': 'Unclaimed',
+                'missing': 'Missing',
                 'cancelled': 'Cancelled',
                 'refunded': 'Refunded'
             };
-            
+
             showMenuSuccessMessage(`Order #${referenceCode} updated to ${statusLabels[newStatus]}`);
             
         } else {
@@ -312,16 +317,21 @@ function updateTableStatusBadge(referenceCode, newStatus) {
     
     const statusLabels = {
         'unpaid': 'Unpaid',
-        'file_issue': 'File Issue',
-        'unpaid': 'Unpaid',
         'paid': 'Paid',
+        'preflight': 'Sent to Vendor',
+        'file_issue': 'File Issue',
         'printing': 'Printing',
+        'ready': 'Ready to Ship',
+        'dispatched': 'Courier Assigned',
+        'shipped': 'Shipped',
         'delivered': 'Delivered',
         'pickedup': 'Picked Up',
+        'unclaimed': 'Unclaimed',
+        'missing': 'Missing',
         'cancelled': 'Cancelled',
         'refunded': 'Refunded'
     };
-    
+
     // Find and update the row
     const tableRows = document.querySelectorAll('#ordersTableBody tr');
     tableRows.forEach(row => {
