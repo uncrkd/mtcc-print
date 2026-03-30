@@ -125,6 +125,101 @@ function saveStatuses($statuses, $statusFile = 'data/statuses.json') {
 }
 
 // ============================================
+// SYNCHRONIZED STATUS UPDATE
+// ============================================
+
+/**
+ * Valid status transitions. Each status maps to an array of statuses it can transition to.
+ * This is the single source of truth for the order lifecycle.
+ */
+function getValidTransitions() {
+    return [
+        'unpaid'     => ['paid', 'cancelled'],
+        'paid'       => ['preflight', 'cancelled', 'refunded'],
+        'preflight'  => ['printing', 'file_issue', 'cancelled', 'refunded'],
+        'file_issue' => ['preflight', 'paid', 'printing', 'cancelled', 'refunded'],
+        'printing'   => ['ready', 'file_issue', 'cancelled', 'refunded'],
+        'ready'      => ['dispatched', 'shipped', 'cancelled', 'refunded'],
+        'dispatched' => ['shipped', 'ready', 'cancelled'],
+        'shipped'    => ['delivered', 'dispatched', 'cancelled'],
+        'delivered'  => ['pickedup', 'unclaimed', 'missing'],
+        'pickedup'   => [],
+        'unclaimed'  => ['delivered'],
+        'missing'    => ['delivered'],
+        'cancelled'  => ['paid'],
+        'refunded'   => [],
+    ];
+}
+
+/**
+ * Check if a status transition is valid.
+ * @param string $from Current status
+ * @param string $to   Target status
+ * @return bool True if transition is allowed
+ */
+function isValidTransition($from, $to) {
+    $transitions = getValidTransitions();
+    $allowed = $transitions[$from] ?? [];
+    return in_array($to, $allowed);
+}
+
+/**
+ * Update order status in BOTH statuses.json AND the order JSON file.
+ * Also logs to order history. This is the canonical way to change status.
+ *
+ * @param string $referenceCode Order reference code
+ * @param string $newStatus     Target status
+ * @param string $user          Who is making the change (defaults to 'System')
+ * @param string $statusFile    Path to statuses.json
+ * @param string $orderDir      Path to orders directory
+ * @param bool   $validate      Whether to enforce transition rules (default true)
+ * @return array ['success' => bool, 'error' => string|null, 'old_status' => string]
+ */
+function updateOrderStatusSync($referenceCode, $newStatus, $user = 'System', $statusFile = 'data/statuses.json', $orderDir = 'uploads/orders/', $validate = true) {
+    // 1. Load current status from statuses.json (source of truth)
+    $statuses = loadStatuses($statusFile);
+    $oldStatus = $statuses[$referenceCode] ?? 'unpaid';
+
+    // 2. Validate transition
+    if ($validate && !isValidTransition($oldStatus, $newStatus)) {
+        return [
+            'success' => false,
+            'error' => "Invalid transition: $oldStatus to $newStatus",
+            'old_status' => $oldStatus
+        ];
+    }
+
+    // 3. Update statuses.json
+    $statuses[$referenceCode] = $newStatus;
+    if (!saveStatuses($statuses, $statusFile)) {
+        return ['success' => false, 'error' => 'Failed to save status file', 'old_status' => $oldStatus];
+    }
+
+    // 4. Update order JSON file (keep in sync)
+    $orderInfo = findOrderByReference($referenceCode, $orderDir);
+    if ($orderInfo) {
+        $orderData = $orderInfo['data'];
+        $orderData['status'] = $newStatus;
+        file_put_contents($orderInfo['filepath'], json_encode($orderData, JSON_PRETTY_PRINT), LOCK_EX);
+    }
+
+    // 5. Log to order history
+    $statusLabels = [
+        'unpaid' => 'Unpaid', 'paid' => 'Paid', 'preflight' => 'Preflight',
+        'file_issue' => 'File Issue', 'printing' => 'Printing',
+        'ready' => 'Ready to Ship', 'dispatched' => 'Dispatched',
+        'shipped' => 'Shipped', 'delivered' => 'Delivered',
+        'pickedup' => 'Picked Up', 'unclaimed' => 'Unclaimed',
+        'missing' => 'Missing', 'cancelled' => 'Cancelled', 'refunded' => 'Refunded'
+    ];
+    $oldLabel = $statusLabels[$oldStatus] ?? $oldStatus;
+    $newLabel = $statusLabels[$newStatus] ?? $newStatus;
+    logOrderHistory($referenceCode, 'status_change', "Status changed from \"$oldLabel\" to \"$newLabel\"", $user);
+
+    return ['success' => true, 'old_status' => $oldStatus, 'error' => null];
+}
+
+// ============================================
 // ORDER LOOKUP
 // ============================================
 

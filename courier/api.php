@@ -913,8 +913,8 @@ function formatOrderForApp($order, $ref = null, $statusOverride = null) {
     $customerInfo = $order['customerInfo'] ?? [];
     $dimensions = $order['dimensions'] ?? [];
     $pricing = $order['pricing'] ?? [];
-    $event = $order['event'] ?? [];
-    
+    $event = $order['event'] ?? $order['event_select'] ?? [];
+
     // Build tracking number
     $eventPrefix = $event['acronym'] ?? '';
     $orderNum = '001';
@@ -1156,7 +1156,7 @@ function findOrderByTrackingOrRef($tracking) {
         }
         
         // Generate tracking number and compare
-        $ep = $order['event']['acronym'] ?? '';
+        $ep = $order['event']['acronym'] ?? $order['event_select']['acronym'] ?? '';
         $num = '001';
         if (preg_match('/(\d+)$/', $ref, $m)) $num = $m[1];
         $ds = $order['selectedDate'] ?? date('Y-m-d');

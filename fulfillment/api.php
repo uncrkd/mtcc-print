@@ -26,6 +26,7 @@
  */
 
 require_once 'vendor-auth.php';
+require_once __DIR__ . '/../includes/data-access.php';
 
 // Email notifications
 $emailFulfillmentPath = __DIR__ . '/../email-fulfillment.php';
@@ -71,6 +72,19 @@ $activityLogFile = $basePath . 'data/activity-log.json';
 function loadJsonSafe($file) {
     if (!file_exists($file)) return [];
     return json_decode(file_get_contents($file), true) ?: [];
+}
+
+/**
+ * Sync status to the individual order JSON file.
+ * Keeps order files in sync with statuses.json.
+ */
+function syncOrderFileStatus($refCode, $newStatus, $ordersDir) {
+    $orderInfo = findOrderByReference($refCode, $ordersDir);
+    if ($orderInfo) {
+        $data = $orderInfo['data'];
+        $data['status'] = $newStatus;
+        file_put_contents($orderInfo['filepath'], json_encode($data, JSON_PRETTY_PRINT), LOCK_EX);
+    }
 }
 
 function verifyVendorOwnership($refCode, $vendorId, $preflightLogFile) {
@@ -357,7 +371,7 @@ switch ($action) {
         handleFlagIssue($input, $vendorId, $preflightLogFile, $statusesFile, $ordersDir, $activityLogFile);
         break;
     case 'revert_to_printing':
-        handleRevertToPrinting($input, $vendorId, $preflightLogFile, $statusesFile, $activityLogFile);
+        handleRevertToPrinting($input, $vendorId, $preflightLogFile, $statusesFile, $ordersDir, $activityLogFile);
         break;
     case 'add_note':
         handleAddNote($input, $vendorId, $preflightLogFile, $activityLogFile);
@@ -429,6 +443,8 @@ function handleApprove($input, $vendorId, $preflightLogFile, $statusesFile, $ord
 
     $statuses[$refCode] = 'printing';
     file_put_contents($statusesFile, json_encode($statuses, JSON_PRETTY_PRINT), LOCK_EX);
+    syncOrderFileStatus($refCode, 'printing', $ordersDir);
+    logOrderHistory($refCode, 'status_change', 'Vendor approved — printing started', getCurrentVendorName());
 
     logActivity($activityLogFile, 'vendor_approved', $refCode,
         'Order approved for print via ' . (isAdminViewer() ? 'admin (vendor portal)' : 'vendor dashboard'), getCurrentVendorName());
@@ -485,6 +501,8 @@ function handleMarkReady($input, $vendorId, $preflightLogFile, $statusesFile, $o
 
     $statuses[$refCode] = 'ready';
     file_put_contents($statusesFile, json_encode($statuses, JSON_PRETTY_PRINT), LOCK_EX);
+    syncOrderFileStatus($refCode, 'ready', $ordersDir);
+    logOrderHistory($refCode, 'status_change', 'Vendor marked as printed and ready to ship', getCurrentVendorName());
 
     logActivity($activityLogFile, 'vendor_marked_ready', $refCode,
         'Marked as printed/ready via ' . (isAdminViewer() ? 'admin (vendor portal)' : 'vendor dashboard'), getCurrentVendorName());
@@ -526,6 +544,8 @@ function handleFlagIssue($input, $vendorId, $preflightLogFile, $statusesFile, $o
     $statuses = loadJsonSafe($statusesFile);
     $statuses[$refCode] = 'file_issue';
     file_put_contents($statusesFile, json_encode($statuses, JSON_PRETTY_PRINT), LOCK_EX);
+    syncOrderFileStatus($refCode, 'file_issue', $ordersDir);
+    logOrderHistory($refCode, 'status_change', 'File issue flagged: ' . substr($reason, 0, 200), getCurrentVendorName());
 
     logActivity($activityLogFile, 'vendor_file_issue', $refCode,
         'File issue flagged: ' . substr($reason, 0, 200), getCurrentVendorName());
@@ -536,7 +556,7 @@ function handleFlagIssue($input, $vendorId, $preflightLogFile, $statusesFile, $o
 // ============================================
 // ACTION: Revert to Printing (ready → printing)
 // ============================================
-function handleRevertToPrinting($input, $vendorId, $preflightLogFile, $statusesFile, $activityLogFile) {
+function handleRevertToPrinting($input, $vendorId, $preflightLogFile, $statusesFile, $ordersDir, $activityLogFile) {
     $refCode = $input['reference_code'] ?? '';
     if (empty($refCode)) { echo json_encode(['success' => false, 'error' => 'Reference code required']); return; }
 
@@ -559,6 +579,8 @@ function handleRevertToPrinting($input, $vendorId, $preflightLogFile, $statusesF
 
     $statuses[$refCode] = 'printing';
     file_put_contents($statusesFile, json_encode($statuses, JSON_PRETTY_PRINT), LOCK_EX);
+    syncOrderFileStatus($refCode, 'printing', $ordersDir);
+    logOrderHistory($refCode, 'status_change', 'Reverted to printing', getCurrentVendorName());
 
     logActivity($activityLogFile, 'vendor_reverted_to_printing', $refCode,
         'Order reverted to printing via ' . (isAdminViewer() ? 'admin (vendor portal)' : 'vendor dashboard'), getCurrentVendorName());
