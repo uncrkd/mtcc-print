@@ -364,6 +364,13 @@ function showApp() {
     loadWeather();
     startGeoWatch();
 
+    // Preload active events for MTCC filter pills
+    if (currentUser.role === 'mtcc_staff') {
+        apiCall('get_mtcc_dashboard', null, function(r) {
+            if (r.success) cachedActiveEvents = r.active_events || [];
+        });
+    }
+
     // FALLBACK: If auto-launch didn't fire from callback, try again after data loads
     setTimeout(function() {
         console.log('[Fallback] Checking for transit orders... cachedActive=' + cachedActive.length);
@@ -879,15 +886,8 @@ function loadMTCCDashboard() {
             html += '<div class="mtcc-dash-section"><div class="mtcc-section-header">Next Expected Deliveries</div>';
             html += '<div class="mtcc-dash-list">';
             upcoming.forEach(function(o) {
-                orderCache[o.ref] = o; // cache for detail panel
-                var statusLabel = {preflight: 'In Production', file_issue: 'In Production', printing: 'In Production', ready: 'Preparing to Ship', dispatched: 'On the Way', shipped: 'On the Way', delivered: 'Ready for Pickup', pickedup: 'Picked Up', missing: 'Missing', unclaimed: 'Unclaimed'};
-                var dueStr = o.due_date_formatted || '';
-                var timeStr = o.due_time_formatted || '';
-                html += '<div class="mtcc-upcoming-item" onclick="showOrderDetail(\'' + escapeAttr(o.ref) + '\', \'upcoming_mtcc\')">';
-                html += '<div class="mtcc-upcoming-left"><strong>' + escapeHtml(o.ref) + '</strong><span class="mtcc-upcoming-customer">' + escapeHtml(o.customer_name) + '</span></div>';
-                html += '<div class="mtcc-upcoming-right"><span class="mtcc-upcoming-status badge-' + o.status + '">' + (statusLabel[o.status] || o.status) + '</span>';
-                if (dueStr) html += '<span class="mtcc-upcoming-due">' + escapeHtml(dueStr) + (timeStr ? ' ' + escapeHtml(timeStr) : '') + '</span>';
-                html += '</div></div>';
+                orderCache[o.ref] = o;
+                html += renderOrderCard(o, 'upcoming_mtcc');
             });
             html += '</div></div>';
         }
@@ -1640,11 +1640,14 @@ function renderOrderCard(order, mode) {
             barCls += ' due-orange';
         }
         html += '<div class="' + barCls + '">';
-        html += '<span class="due-label">DUE</span> ' + escapeHtml(dueFull);
-        if (timeStr) html += ' <span class="due-sep-by">by:</span> ' + escapeHtml(timeStr);
-        // MTCC cards: status badge in due bar (right side)
         if (isMTCCCard) {
+            // MTCC: consistent format "Due Friday, Dec 26, 2025  |  by: 3:00 PM"
+            var mtccTimeLabel = timeStr || 'Anytime';
+            html += '<span class="due-text-mtcc">Due ' + escapeHtml(dueFull) + '  |  by: ' + escapeHtml(mtccTimeLabel) + '</span>';
             html += '<span class="order-status-badge ' + badgeClass + ' badge-sm due-bar-badge">' + (statusLabels[order.status] || order.status) + '</span>';
+        } else {
+            html += '<span class="due-label">DUE</span> ' + escapeHtml(dueFull);
+            if (timeStr) html += ' <span class="due-sep-by">by:</span> ' + escapeHtml(timeStr);
         }
         // Countdown (right-aligned, courier only)
         if (!isMTCCCard) {
@@ -1981,24 +1984,40 @@ function renderMTCCDetailPanel(order, mode) {
     var badgeClass = 'badge-' + order.status;
     var html = '';
 
-    // Due date bar
-    if (order.due_date) {
-        var dueStr = order.due_date_formatted || order.due_date;
-        var timeStr = (order.due_time_formatted && order.due_time_formatted !== 'Anytime') ? order.due_time_formatted : '';
-        html += '<div class="detail-due-bar">';
-        html += '<div class="detail-due-left"><span class="detail-due-heading">DUE DATE</span><span class="detail-due-date">' + escapeHtml(dueStr) + '</span></div>';
-        if (timeStr) html += '<div class="detail-due-right"><span class="detail-due-heading">DUE BY</span><span class="detail-due-time">' + escapeHtml(timeStr) + '</span></div>';
-        html += '</div>';
-    }
+    // Determine MTCC phase color for header
+    var phaseColor = '#64748b';
+    if (['preflight', 'file_issue', 'printing'].indexOf(order.status) !== -1) phaseColor = '#6366f1';
+    else if (order.status === 'ready') phaseColor = '#d97706';
+    else if (['dispatched', 'shipped'].indexOf(order.status) !== -1) phaseColor = '#14b8a6';
+    else if (order.status === 'delivered') phaseColor = '#059669';
+    else if (order.status === 'pickedup') phaseColor = '#22c55e';
+    else if (order.status === 'missing') phaseColor = '#dc2626';
 
-    // Header: Order ID + status
-    html += '<div class="detail-order-header">';
-    html += '<div><div class="detail-order-ref"><span class="ref-label">Order:</span> ' + escapeHtml(order.ref) + '</div>';
-    html += '<div class="detail-order-tracking">' + escapeHtml(order.tracking || '') + '</div></div>';
-    html += '<span class="order-status-badge ' + badgeClass + '">' + (statusLabels[order.status] || order.status) + '</span>';
+    // Due date header — colored by status phase (Fix 2)
+    var dueStr = order.due_date_formatted || order.due_date || '';
+    var timeStr = (order.due_time_formatted && order.due_time_formatted !== 'Anytime') ? order.due_time_formatted : 'Anytime';
+    html += '<div class="mtcc-detail-header" style="background: linear-gradient(135deg, ' + phaseColor + ', ' + phaseColor + 'dd);">';
+    if (dueStr) {
+        html += '<div class="mtcc-detail-due">Due ' + escapeHtml(dueStr) + '  |  by: ' + escapeHtml(timeStr) + '</div>';
+    }
+    html += '<span class="order-status-badge ' + badgeClass + ' mtcc-header-badge">' + (statusLabels[order.status] || order.status) + '</span>';
     html += '</div>';
 
-    // Order details — clean two-column layout for MTCC
+    // Order ID + barcode (Fix 6)
+    html += '<div class="mtcc-detail-id-section">';
+    html += '<div class="mtcc-detail-id-left">';
+    html += '<div class="mtcc-detail-id-label">ORDER</div>';
+    html += '<div class="mtcc-detail-id-value">' + escapeHtml(order.ref) + '</div>';
+    html += '</div>';
+    if (order.tracking) {
+        html += '<div class="mtcc-detail-id-right">';
+        html += '<div class="mtcc-detail-id-label">CODE</div>';
+        html += '<div class="mtcc-detail-id-code">' + escapeHtml(order.tracking) + '</div>';
+        html += '</div>';
+    }
+    html += '</div>';
+
+    // Order details grid
     html += '<div class="mtcc-detail-grid">';
     html += '<div class="mtcc-detail-row"><span class="mtcc-detail-label">Customer</span><span class="mtcc-detail-value">' + escapeHtml(order.customer_name) + '</span></div>';
     if (order.customer_phone) html += '<div class="mtcc-detail-row"><span class="mtcc-detail-label">Phone</span><a class="mtcc-detail-value mtcc-detail-link" href="tel:' + order.customer_phone.replace(/[^0-9+]/g, '') + '">' + escapeHtml(order.customer_phone) + '</a></div>';
@@ -2014,45 +2033,34 @@ function renderMTCCDetailPanel(order, mode) {
     }
     html += '</div>';
 
-    // Status-specific info
-    var pipelineStatuses = {preflight: 'In Production', file_issue: 'In Production', printing: 'In Production', ready: 'Preparing to Ship', dispatched: 'On the Way', shipped: 'On the Way'};
-    if (pipelineStatuses[order.status]) {
-        html += '<div class="mtcc-status-info">';
-        html += '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>';
-        html += '<span>' + pipelineStatuses[order.status] + '</span>';
-        if (order.courier_name && (order.status === 'dispatched' || order.status === 'shipped')) {
-            html += '<span class="mtcc-courier-name"> \u2014 ' + escapeHtml(order.courier_name) + '</span>';
-        }
+    // Actions (Fix 3: 50/50 buttons for pickup, Report Issue always visible)
+    html += '<div class="mtcc-detail-actions">';
+    if (order.status === 'delivered') {
+        html += '<div class="mtcc-btn-row">';
+        html += '<button class="mtcc-action-btn mtcc-btn-confirm" onclick="updateOrderStatus(\'' + escapeAttr(order.ref) + '\', \'pickedup\')">';
+        html += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Confirm Pick Up</button>';
+        html += '<button class="mtcc-action-btn mtcc-btn-scan" onclick="scanExpectedRef=\'' + escapeAttr(order.ref) + '\'; closeDetailPanel(); switchTab(\'scan\')">';
+        html += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="6" y1="8" x2="6" y2="16"/><line x1="10" y1="8" x2="10" y2="16"/><line x1="14" y1="8" x2="14" y2="16"/><line x1="18" y1="8" x2="18" y2="16"/></svg> Scan to Verify</button>';
         html += '</div>';
     }
-
-    // Actions
-    html += '<div class="detail-actions">';
-
-    // Confirm Pick Up button (for delivered orders)
-    if (order.status === 'delivered') {
-        html += '<button class="status-action-btn btn-pickedup" onclick="updateOrderStatus(\'' + escapeAttr(order.ref) + '\', \'pickedup\')">';
-        html += '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/></svg> ';
-        html += 'Confirm Pick Up</button>';
-
-        // Scan to confirm button
-        html += '<button class="status-action-btn btn-scan-goto" onclick="scanExpectedRef=\'' + escapeAttr(order.ref) + '\'; closeDetailPanel(); switchTab(\'scan\')">';
-        html += '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="6" y1="8" x2="6" y2="16"/><line x1="10" y1="8" x2="10" y2="16"/><line x1="14" y1="8" x2="14" y2="16"/><line x1="18" y1="8" x2="18" y2="16"/></svg> ';
-        html += 'Scan to Verify</button>';
-    }
-
-    // Report Issue button (includes Missing Item as an issue type)
+    // Report Issue — ALWAYS visible for paid+ orders (Fix 1)
     if (typeof CourierIssues !== 'undefined') {
-        html += CourierIssues.getReportButtonHTML(order.ref, order.status);
+        var showStatuses = ['paid', 'preflight', 'printing', 'ready', 'dispatched', 'shipped', 'delivered'];
+        if (showStatuses.indexOf(order.status) !== -1) {
+            html += '<button class="mtcc-action-btn mtcc-btn-issue" onclick="CourierIssues.open(\'' + escapeAttr(order.ref) + '\')">';
+            html += '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Report Issue</button>';
+        }
     }
-
     html += '</div>';
 
-    // Print Stuff contact only
-    html += '<div class="detail-contacts">';
-    html += '<div class="detail-contacts-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72"/></svg> Support</div>';
-    html += '<a class="contact-row" href="tel:+14378828822"><div class="contact-info"><div class="contact-label">Print Stuff</div><div class="contact-number">(437) 882-8822</div></div><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72"/></svg></a>';
-    html += '<a class="contact-row" href="mailto:orders@printstuff.ca"><div class="contact-info"><div class="contact-label">Email Support</div><div class="contact-number">orders@printstuff.ca</div></div><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></a>';
+    // Support buttons — 50/50 row (Fix 5)
+    html += '<div class="mtcc-support-row">';
+    html += '<a class="mtcc-support-btn" href="tel:+14378828822">';
+    html += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>';
+    html += '<span>Call Support</span></a>';
+    html += '<a class="mtcc-support-btn" href="mailto:orders@printstuff.ca">';
+    html += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 4l-10 7L2 4"/></svg>';
+    html += '<span>Email Support</span></a>';
     html += '</div>';
 
     return html;

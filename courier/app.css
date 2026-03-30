@@ -5120,3 +5120,156 @@ input {
     font-weight: 400;
     line-height: 1.5;
 }
+
+/* ============================================
+   MTCC Detail Panel v2
+   ============================================ */
+
+.mtcc-detail-header {
+    padding: 16px 20px;
+    border-radius: 16px 16px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: -16px -16px 0;
+}
+
+.mtcc-detail-due {
+    color: white;
+    font-size: 0.82rem;
+    font-weight: 600;
+}
+
+.mtcc-header-badge {
+    background: rgba(255,255,255,0.25) !important;
+    color: white !important;
+    border: 1px solid rgba(255,255,255,0.5) !important;
+    font-size: 0.65rem !important;
+    flex-shrink: 0;
+}
+
+.mtcc-detail-id-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 16px 16px 12px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.mtcc-detail-id-label {
+    font-size: 0.62rem;
+    font-weight: 700;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.mtcc-detail-id-value {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: #1a1625;
+    letter-spacing: -0.02em;
+}
+
+.mtcc-detail-id-right {
+    text-align: right;
+}
+
+.mtcc-detail-id-code {
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: #6b7280;
+    font-family: 'SF Mono', Monaco, Consolas, monospace;
+}
+
+/* Action buttons */
+.mtcc-detail-actions {
+    padding: 0 16px 8px;
+}
+
+.mtcc-btn-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.mtcc-action-btn {
+    flex: 1;
+    padding: 14px 12px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    font-family: inherit;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: transform 0.1s;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.mtcc-action-btn:active {
+    transform: scale(0.97);
+}
+
+.mtcc-btn-confirm {
+    background: #059669;
+    color: white;
+}
+
+.mtcc-btn-scan {
+    background: white;
+    color: #7c3aed;
+    border: 2px solid #7c3aed !important;
+}
+
+.mtcc-btn-issue {
+    width: 100%;
+    background: white;
+    color: #d97706;
+    border: 1.5px solid #fbbf24 !important;
+    margin-bottom: 8px;
+}
+
+/* Support buttons row */
+.mtcc-support-row {
+    display: flex;
+    gap: 8px;
+    padding: 8px 16px 16px;
+}
+
+.mtcc-support-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px;
+    border-radius: 12px;
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+    color: #374151;
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-decoration: none;
+    font-family: inherit;
+    transition: background 0.15s;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.mtcc-support-btn:active {
+    background: #e5e7eb;
+}
+
+.mtcc-support-btn svg {
+    stroke: #7c3aed;
+    flex-shrink: 0;
+}
+
+/* Due text format for MTCC cards */
+.due-text-mtcc {
+    font-size: 0.72rem;
+    font-weight: 600;
+}
