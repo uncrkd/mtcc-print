@@ -19,6 +19,7 @@ requirePermission('dispatch');
 
 // Include dependencies
 require_once __DIR__ . '/../includes/icons.php';
+require_once __DIR__ . '/../includes/data-access.php';
 require_once __DIR__ . '/dispatch-functions.php';
 require_once __DIR__ . '/batch-suggestions.php';
 require_once __DIR__ . '/../includes/delivery-issues.php';
@@ -50,9 +51,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_action'])) {
             foreach ($files as $file) {
                 $data = json_decode(file_get_contents($file), true);
                 if ($data && isset($data['referenceCode']) && $data['referenceCode'] === $ref) {
+                    $data['status'] = 'dispatched';
                     $data['dispatch'] = [
                         'courier_id' => $courierId,
                         'courier_name' => $courierName,
+                        'courier_pin' => $courierId,
                         'dispatched_at' => date('c'),
                         'picked_up_at' => null,
                         'delivered_at' => null,
@@ -74,7 +77,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_action'])) {
                 file_put_contents($statusFile, json_encode($statuses, JSON_PRETTY_PRINT), LOCK_EX);
                 
                 dispatch_notifyOrderDispatched($ref, $courierName);
-                
+
+                // Log to order history
+                if (function_exists('logOrderHistory')) {
+                    logOrderHistory($ref, 'status_change', "Dispatched to courier: $courierName", getCurrentAdminName() ?? 'Admin');
+                }
+
                 // Log activity
                 if (function_exists('logAdminActivity')) {
                     logAdminActivity('Order Dispatched', [

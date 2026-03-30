@@ -17,6 +17,15 @@ function updateOrderStatus($referenceCode, $newStatus, $statusesFile) {
     $statuses[$referenceCode] = $newStatus;
 
     if (file_put_contents($statusesFile, json_encode($statuses, JSON_PRETTY_PRINT), LOCK_EX)) {
+        // Sync order file to match statuses.json
+        $ordersDir = dirname(dirname($statusesFile)) . '/uploads/orders/';
+        if (function_exists('findOrderByReference')) {
+            $orderInfo = findOrderByReference($referenceCode, $ordersDir);
+            if ($orderInfo) {
+                $orderInfo['data']['status'] = $newStatus;
+                file_put_contents($orderInfo['filepath'], json_encode($orderInfo['data'], JSON_PRETTY_PRINT), LOCK_EX);
+            }
+        }
         if (function_exists('logOrderHistory')) {
             logOrderHistory($referenceCode, 'status_change', "Status changed from {$oldStatus} to {$newStatus}", getCurrentAdminName() ?? 'Admin');
         }

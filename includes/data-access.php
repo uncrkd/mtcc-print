@@ -55,7 +55,9 @@ function saveJsonFile($path, $data) {
  */
 if (!function_exists('logOrderHistory')) {
     function logOrderHistory($referenceCode, $action, $details = '', $user = 'System') {
-        $historyFile = 'uploads/orders/' . $referenceCode . '_history.json';
+        // Use absolute path so this works from any directory (root, fulfillment/, courier/, etc.)
+        $baseDir = defined('MTCC_ROOT') ? MTCC_ROOT : dirname(__DIR__);
+        $historyFile = $baseDir . '/uploads/orders/' . $referenceCode . '_history.json';
 
         $history = [];
         if (file_exists($historyFile)) {
@@ -82,7 +84,8 @@ if (!function_exists('logOrderHistory')) {
  */
 if (!function_exists('getOrderHistory')) {
     function getOrderHistory($referenceCode) {
-        $historyFile = 'uploads/orders/' . $referenceCode . '_history.json';
+        $baseDir = defined('MTCC_ROOT') ? MTCC_ROOT : dirname(__DIR__);
+        $historyFile = $baseDir . '/uploads/orders/' . $referenceCode . '_history.json';
 
         if (!file_exists($historyFile)) {
             return [];
