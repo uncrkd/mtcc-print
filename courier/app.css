@@ -5940,3 +5940,128 @@ input {
 .batch-stop-order:last-child {
     border-bottom: none;
 }
+
+/* ============================================
+   Batch Detail v4 — Complete Rewrite
+   ============================================ */
+
+/* Batch ID label */
+.batch-id-label {
+    font-size: 0.6rem;
+    font-weight: 700;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 2px;
+}
+
+/* Route stats — purple, spaced */
+.route-info-styled {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    padding: 10px 16px !important;
+}
+
+.route-stat-item {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+}
+
+.route-stat-label {
+    font-size: 0.68rem;
+    color: #9ca3af;
+    font-weight: 400;
+}
+
+.route-stat-value {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #7c3aed;
+}
+
+.route-stat-sep {
+    margin: 0 12px;
+    color: #d1d5db;
+    font-size: 0.6rem;
+}
+
+/* Timeline — left icon column + right content */
+.batch-timeline {
+    padding: 8px 16px 0;
+}
+
+.bt-stop {
+    display: flex;
+    align-items: stretch;
+}
+
+.bt-left {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 28px;
+    flex-shrink: 0;
+    margin-right: 14px;
+}
+
+.bt-icon {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.bt-line {
+    flex: 1;
+    width: 2px;
+    border-left: 2px dashed #d1d5db;
+    min-height: 20px;
+}
+
+.bt-right {
+    flex: 1;
+    padding-bottom: 16px;
+    position: relative;
+    min-width: 0;
+}
+
+.bt-label-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+}
+
+.bt-name {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #1a1625;
+}
+
+.bt-addr {
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin-top: 2px;
+}
+
+/* Contacts 2x2 grid */
+.courier-contact-grid-2x2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    padding: 12px 16px;
+}
+
+.courier-contact-grid-2x2 .courier-contact-btn {
+    width: auto;
+}
+
+/* Release at very bottom */
+.batch-release-bottom {
+    padding: 16px;
+    margin-top: 12px;
+    border-top: 1px solid #f3f4f6;
+}
