@@ -1721,15 +1721,10 @@ function renderOrderCard(order, mode) {
             html += '<span class="due-text-mtcc">Due ' + escapeHtml(dueFull) + '  |  by: ' + escapeHtml(mtccTimeLabel) + '</span>';
             html += '<span class="order-status-badge ' + badgeClass + ' badge-sm due-bar-badge">' + (statusLabels[order.status] || order.status) + '</span>';
         } else {
-            html += '<span class="due-label">DUE</span> ' + escapeHtml(dueFull);
-            if (timeStr) html += ' <span class="due-sep-by">by:</span> ' + escapeHtml(timeStr);
-        }
-        // Countdown (right-aligned, courier only)
-        if (!isMTCCCard) {
-            var countdownTarget = getCountdownTarget(order);
-            if (countdownTarget && order.hours_remaining !== null && order.hours_remaining > 0 && order.hours_remaining <= 24) {
-                html += '<span class="due-bar-countdown" data-countdown-target="' + countdownTarget + '">--:--:--</span>';
-            }
+            // Courier: consistent format matching MTCC + status badge
+            var courierTimeLabel = timeStr || 'Anytime';
+            html += '<span class="due-text-mtcc">Due ' + escapeHtml(dueFull) + '  |  by: ' + escapeHtml(courierTimeLabel) + '</span>';
+            html += '<span class="order-status-badge ' + badgeClass + ' badge-sm due-bar-badge">' + (statusLabels[order.status] || order.status) + '</span>';
         }
         html += '</div>';
     }
@@ -1782,7 +1777,7 @@ function renderOrderCard(order, mode) {
         html += '</div></div></div>';
     }
 
-    // Footer: pkgs · size · status (skip for MTCC cards — badge is in due bar)
+    // Footer: pkgs · size (status badge now in due bar for all cards)
     if (!isMTCCCard) {
         html += '<div class="order-card-footer">';
         var qty = order.quantity || 1;
@@ -1791,10 +1786,9 @@ function renderOrderCard(order, mode) {
             html += '<span class="card-footer-dot">\u00b7</span>';
             html += '<span class="card-meta">\ud83d\udcd0 ' + escapeHtml(order.size) + '</span>';
         }
-        if (!isInTransit) {
+        if (order.has_issue) {
             html += '<span class="card-footer-spacer"></span>';
-            html += '<span class="order-status-badge ' + badgeClass + ' badge-sm">' + (statusLabels[order.status] || order.status) + '</span>';
-            if (order.has_issue) html += '<span class="order-issue-badge">⚠️ Issue</span>';
+            html += '<span class="order-issue-badge">⚠️ Issue</span>';
         }
         html += '</div>';
     }
@@ -2939,17 +2933,18 @@ function renderBatchCard(batch, mode) {
     html += '</div>';
     html += '</div>';
 
-    // Due bar (most urgent order)
+    // Due bar — consistent format
     if (batch.due_date_formatted) {
         var barCls = 'card-due-bar';
-        if (isInProgress) barCls += ' due-transit';
-        else if (batch.urgency === 'red') barCls += ' due-red';
-        else if (batch.urgency === 'orange') barCls += ' due-orange';
+        if (isInProgress) barCls += ' due-status-shipped';
+        else if (batch.urgency === 'red') barCls += ' due-urgent-red';
+        else if (batch.urgency === 'orange') barCls += ' due-urgent-orange';
+        else barCls += ' due-status-dispatched';
+        var batchCardTime = batch.due_time_formatted || 'Anytime';
         html += '<div class="' + barCls + '">';
-        html += '<span class="due-label">DUE</span> ' + escapeHtml(batch.due_date_formatted);
-        if (batch.due_time_formatted && batch.due_time_formatted !== 'Anytime') {
-            html += ' <span class="due-sep-by">by:</span> ' + escapeHtml(batch.due_time_formatted);
-        }
+        html += '<span class="due-text-mtcc">Due ' + escapeHtml(batch.due_date_formatted) + '  |  by: ' + escapeHtml(batchCardTime) + '</span>';
+        var batchBadge = isInProgress ? 'In Transit' : (batch.status === 'accepted' ? 'Accepted' : 'Pending');
+        html += '<span class="order-status-badge badge-' + batch.status + ' badge-sm due-bar-badge">' + batchBadge + '</span>';
         html += '</div>';
     }
 
@@ -3133,21 +3128,13 @@ function showBatchDetail(batchId, mode) {
 
     // Due date bar — same layout as order detail
     if (batch.due_date_formatted) {
-        var detailBarCls = 'detail-due-bar';
-        if (batch.status === 'in_progress') detailBarCls += ' due-transit';
-        else if (batch.urgency === 'red') detailBarCls += ' due-red';
-        else if (batch.urgency === 'orange') detailBarCls += ' due-orange';
-        html += '<div class="' + detailBarCls + '">';
+        var batchTimeLabel = batch.due_time_formatted || 'Anytime';
+        html += '<div class="detail-due-bar">';
         html += '<div class="detail-due-left">';
         html += '<span class="detail-due-heading">DUE DATE</span>';
-        html += '<span class="detail-due-date">' + escapeHtml(batch.due_date_formatted) + '</span>';
+        html += '<span class="detail-due-date">' + escapeHtml(batch.due_date_formatted) + '  |  by: ' + escapeHtml(batchTimeLabel) + '</span>';
         html += '</div>';
-        if (batch.due_time_formatted && batch.due_time_formatted !== 'Anytime') {
-            html += '<div class="detail-due-right">';
-            html += '<span class="detail-due-heading">DUE BY</span>';
-            html += '<span class="detail-due-time">' + escapeHtml(batch.due_time_formatted) + '</span>';
-            html += '</div>';
-        }
+        html += '<span class="order-status-badge badge-' + batch.status + ' mtcc-header-badge">' + batchStatus + '</span>';
         html += '</div>';
     }
 
