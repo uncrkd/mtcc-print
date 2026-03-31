@@ -3812,17 +3812,13 @@ input {
     z-index: 1;
 }
 .batch-stop-dot.pickup {
-    font-size: 1rem;
+    background: #3b82f6;
 }
 .batch-stop-dot.dropoff {
-    font-size: 1rem;
+    background: #059669;
 }
 .batch-stop-dot.done {
     background: #10b981;
-    border-color: #10b981;
-    color: #fff;
-    font-size: 0.75rem;
-    font-weight: 700;
 }
 
 .batch-stop-line {
@@ -5169,6 +5165,7 @@ input {
 .due-bar-badge {
     margin-left: auto;
     flex-shrink: 0;
+    align-self: flex-end;
     background: rgba(255,255,255,0.25) !important;
     color: white !important;
     border: 1px solid rgba(255,255,255,0.4) !important;

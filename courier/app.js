@@ -2324,9 +2324,7 @@ function showOrderDetail(ref, mode) {
             var transitions = getStatusTransitions(order.status);
             if (transitions.length > 0) {
                 html += '<div class="detail-actions">';
-                if (transitions.indexOf('delivered') !== -1 && currentUser.role === 'courier') {
-                    html += '<label class="photo-checkbox"><input type="checkbox" id="detailPhotoCheck" checked> Include delivery photo</label>';
-                }
+                // Photo required for delivery — no checkbox needed
                 transitions.forEach(function(s) {
                     var label = s, icon = '';
                     if (s === 'shipped') { label = 'Confirm Pickup'; icon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> '; }
@@ -2490,8 +2488,8 @@ function acceptDelivery(ref, btnEl) {
 
 function updateOrderStatus(ref, newStatus) {
     // Check if photo needed
-    var photoCheck = document.getElementById('detailPhotoCheck');
-    if (newStatus === 'delivered' && photoCheck && photoCheck.checked && currentUser.role === 'courier') {
+    // Photo required for all deliveries
+    if (newStatus === 'delivered' && currentUser.role === 'courier') {
         openPhotoCapture(function(photoData) {
             doStatusUpdate(ref, newStatus, photoData);
         });
@@ -2682,9 +2680,7 @@ function showScanResult(result) {
         if (result.receive_mode) {
             html += '<div class="receive-label">Confirm received at MTCC:</div>';
         }
-        if (statuses.indexOf('delivered') !== -1 && currentUser.role === 'courier') {
-            html += '<label class="photo-checkbox"><input type="checkbox" id="scanPhotoCheck" checked> Include delivery photo</label>';
-        }
+        // Photo required for delivery — no checkbox
         html += '</div>';
     }
     html += '</div>';
@@ -2732,8 +2728,8 @@ function hideScanResult() {
 }
 
 function updateScannedOrderStatus(ref, newStatus) {
-    var photoCheck = document.getElementById('scanPhotoCheck');
-    if (newStatus === 'delivered' && photoCheck && photoCheck.checked && currentUser.role === 'courier') {
+    // Photo required for all deliveries
+    if (newStatus === 'delivered' && currentUser.role === 'courier') {
         openPhotoCapture(function(photoData) {
             doScanStatusUpdate(ref, newStatus, photoData);
         });
@@ -2978,10 +2974,12 @@ function renderBatchCard(batch, mode) {
         html += '<div class="' + stopCls + '">';
         // Dot + connector
         html += '<div class="batch-stop-col">';
-        if (stop.type === 'pickup') {
-            html += '<div class="batch-stop-dot pickup' + (isDone ? ' done' : '') + '">' + (isDone ? '\u2713' : '\ud83d\udce6') + '</div>';
+        if (isDone) {
+            html += '<div class="batch-stop-dot done"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>';
+        } else if (stop.type === 'pickup') {
+            html += '<div class="batch-stop-dot pickup"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/></svg></div>';
         } else {
-            html += '<div class="batch-stop-dot dropoff' + (isDone ? ' done' : '') + '">' + (isDone ? '\u2713' : '\ud83d\udccd') + '</div>';
+            html += '<div class="batch-stop-dot dropoff"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>';
         }
         if (idx < stops.length - 1) html += '<div class="batch-stop-line"></div>';
         html += '</div>';
