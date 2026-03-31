@@ -1916,12 +1916,14 @@ function showTransitView(ref, mode) {
         html += '</div>';
     }
 
-    // Contact buttons (two proper buttons, not circles)
+    // Contact buttons — no customer phone for MTCC deliveries
     html += '<div class="tv-contact-btns">';
-    html += '<a class="tv-contact-btn tv-contact-support" href="tel:' + SUPPORT_PHONES.admin.number.replace(/[^0-9+]/g, '') + '">' + icoPhone + ' Print Stuff Support</a>';
-    if (order.customer_phone) {
-        html += '<a class="tv-contact-btn tv-contact-customer" href="tel:' + order.customer_phone.replace(/[^0-9+]/g, '') + '">' + icoPhone + ' Call Customer</a>';
+    html += '<a class="tv-contact-btn tv-contact-support" href="tel:' + SUPPORT_PHONES.admin.number.replace(/[^0-9+]/g, '') + '">' + icoPhone + ' Print Stuff</a>';
+    var isMTCCDest = (order.destination_type === 'mtcc' || (order.destination || '').toLowerCase().indexOf('mtcc') !== -1);
+    if (order.customer_phone && !isMTCCDest) {
+        html += '<a class="tv-contact-btn tv-contact-customer" href="tel:' + order.customer_phone.replace(/[^0-9+]/g, '') + '">' + icoPhone + ' Customer</a>';
     }
+    html += '<a class="tv-contact-btn tv-contact-support" href="tel:' + SUPPORT_PHONES.mtcc.number.replace(/[^0-9+]/g, '') + '">' + icoPhone + ' MTCC</a>';
     html += '</div>';
 
     // Secondary actions
