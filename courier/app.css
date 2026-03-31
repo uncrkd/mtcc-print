@@ -5578,3 +5578,106 @@ input {
     color: #10b981;
     font-weight: 600;
 }
+
+/* ============================================
+   Courier Detail Panel v2
+   ============================================ */
+
+/* Sticky action button (accept, scan) */
+.courier-sticky-action {
+    position: sticky;
+    bottom: 0;
+    padding: 12px 16px;
+    background: white;
+    border-top: 1px solid #f3f4f6;
+    z-index: 10;
+}
+
+.courier-sticky-action .status-action-btn {
+    width: 100%;
+}
+
+/* Actions container */
+.courier-detail-actions {
+    padding: 0 16px 8px;
+}
+
+/* 50/50 button row */
+.courier-btn-row {
+    display: flex;
+    gap: 8px;
+}
+
+.courier-btn-row .release-btn {
+    flex: 1;
+}
+
+/* Contact buttons row (3 buttons) */
+.courier-contact-row {
+    display: flex;
+    gap: 6px;
+    padding: 12px 16px 20px;
+}
+
+.courier-contact-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 6px;
+    border-radius: 12px;
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+    color: #374151;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-decoration: none;
+    text-align: center;
+    font-family: inherit;
+    transition: background 0.15s;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.courier-contact-btn:active {
+    background: #e5e7eb;
+}
+
+.courier-contact-btn svg {
+    stroke: #7c3aed;
+}
+
+/* Route card v2 — consistent icons */
+.route-icon-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+    width: 24px;
+    margin-right: 12px;
+}
+
+.route-dashed-line {
+    flex: 1;
+    min-height: 20px;
+    width: 2px;
+    border-left: 2px dashed #d1d5db;
+    margin: 4px 0;
+}
+
+.route-nav-link {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #7c3aed;
+    text-decoration: none;
+    flex-shrink: 0;
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1px solid #e9d5ff;
+    background: #faf5ff;
+    align-self: center;
+}
+
+.route-nav-link:active {
+    background: #ede9fe;
+}

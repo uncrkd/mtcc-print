@@ -2223,31 +2223,16 @@ function showOrderDetail(ref, mode) {
     var phoneIcon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>';
     var html = '';
 
-    // Due date bar — flush at top of detail panel
+    // Fix 1+10: Due date bar with time default + status badge in header
     if (order.due_date && !isPipeline) {
         var dueStr = order.due_date_formatted || order.due_date;
-        var timeStr = '';
-        if (order.due_time_formatted && order.due_time_formatted !== 'Anytime') timeStr = order.due_time_formatted;
-        var dueUrgency = getUrgencyInfo(order);
-        var detailBarCls = 'detail-due-bar';
-        if (order.status === 'shipped') detailBarCls += ' due-transit';
-        else if (dueUrgency.level === 'red') detailBarCls += ' due-red';
-        else if (dueUrgency.level === 'orange') detailBarCls += ' due-orange';
-        html += '<div class="' + detailBarCls + '">';
+        var timeStr = order.due_time_formatted || 'Anytime';
+        html += '<div class="detail-due-bar">';
         html += '<div class="detail-due-left">';
         html += '<span class="detail-due-heading">DUE DATE</span>';
-        html += '<span class="detail-due-date">' + escapeHtml(dueStr) + '</span>';
+        html += '<span class="detail-due-date">' + escapeHtml(dueStr) + '  |  by: ' + escapeHtml(timeStr) + '</span>';
         html += '</div>';
-        if (timeStr) {
-            html += '<div class="detail-due-right">';
-            html += '<span class="detail-due-heading">DUE BY</span>';
-            html += '<span class="detail-due-time">' + escapeHtml(timeStr) + '</span>';
-            html += '</div>';
-        }
-        var countdownTarget = getCountdownTarget(order);
-        if (countdownTarget && order.hours_remaining !== null && order.hours_remaining > 0 && order.hours_remaining <= 24) {
-            html += '<span class="due-bar-countdown" data-countdown-target="' + countdownTarget + '">--:--:--</span>';
-        }
+        html += '<span class="order-status-badge ' + badgeClass + ' mtcc-header-badge">' + (statusLabels[order.status] || order.status) + '</span>';
         html += '</div>';
     }
 
@@ -2277,10 +2262,9 @@ function showOrderDetail(ref, mode) {
         html += '</div></div>';
     }
 
-    // Header
+    // Header — order ID + tracking (badge moved to due bar)
     html += '<div class="detail-order-header">';
-    html += '<div><div class="detail-order-ref"><span class="ref-label">ID:</span> ' + escapeHtml(order.ref) + '</div><div class="detail-order-tracking">' + escapeHtml(order.tracking) + '</div></div>';
-    html += '<span class="order-status-badge ' + badgeClass + '">' + (statusLabels[order.status] || order.status) + '</span>';
+    html += '<div><div class="detail-order-ref">' + escapeHtml(order.ref) + '</div><div class="detail-order-tracking">' + escapeHtml(order.tracking) + '</div></div>';
     html += '</div>';
 
     // Route Card
@@ -2320,78 +2304,61 @@ function showOrderDetail(ref, mode) {
         html += '</div>';
     }
 
-    // Actions (before contacts)
+    // Actions
     if (!isPipeline) {
         if (mode === 'available' && order.status === 'ready' && currentUser.role === 'courier') {
-            html += '<div class="detail-actions">';
-            html += '<button class="status-action-btn btn-accept" onclick="acceptDelivery(\'' + escapeAttr(order.ref) + '\', this)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Accept Delivery</button>';
+            // Accept Delivery — sticky at bottom (Fix 3)
+            html += '<div class="courier-sticky-action">';
+            html += '<button class="status-action-btn btn-accept" onclick="acceptDelivery(\'' + escapeAttr(order.ref) + '\', this)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Accept Delivery</button>';
             html += '</div>';
         } else if (mode === 'delivery' && order.status === 'dispatched' && currentUser.role === 'courier') {
-            // Courier must scan barcode to pick up — show prompt instead of button
-            html += '<div class="detail-actions">';
-            html += '<div class="scan-to-pickup-prompt">';
-            html += '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="6" y1="8" x2="6" y2="16"/><line x1="10" y1="8" x2="10" y2="16"/><line x1="14" y1="8" x2="14" y2="16"/><line x1="18" y1="8" x2="18" y2="16"/></svg>';
-            html += '<div class="scan-prompt-text"><strong>Scan barcode to confirm pickup</strong><span>Use the Scan tab to scan this order\'s barcode before marking as picked up.</span></div>';
+            // Fix 8: Scan button sticky, release+issue 50/50
+            html += '<div class="courier-detail-actions">';
+            html += '<div class="courier-btn-row">';
+            html += '<button class="release-btn" onclick="releaseDelivery(\'' + escapeAttr(order.ref) + '\', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg> Release</button>';
+            if (typeof CourierIssues !== 'undefined') {
+                html += '<button class="release-btn" style="border-color:#d97706;color:#d97706;" onclick="CourierIssues.open(\'' + escapeAttr(order.ref) + '\')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Report Issue</button>';
+            }
             html += '</div>';
-            html += '<button class="status-action-btn btn-scan-goto" onclick="scanExpectedRef=\'' + escapeAttr(order.ref) + '\'; closeDetailPanel(); switchTab(\'scan\')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg> Open Scanner</button>';
+            html += '<div class="courier-sticky-action">';
+            html += '<button class="status-action-btn btn-scan-goto" onclick="scanExpectedRef=\'' + escapeAttr(order.ref) + '\'; closeDetailPanel(); switchTab(\'scan\')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="6" y1="8" x2="6" y2="16"/><line x1="10" y1="8" x2="10" y2="16"/><line x1="14" y1="8" x2="14" y2="16"/><line x1="18" y1="8" x2="18" y2="16"/></svg> Scan Barcode to Confirm Pickup</button>';
+            html += '</div>';
             html += '</div>';
         } else if (mode !== 'completed') {
             var transitions = getStatusTransitions(order.status);
             if (transitions.length > 0) {
                 html += '<div class="detail-actions">';
-                var isReceiveMode = (currentUser.role === 'mtcc_staff' || currentUser.role === 'admin') && order.status === 'shipped';
-                if (isReceiveMode) html += '<div class="receive-label">This order was shipped. Confirm received:</div>';
                 if (transitions.indexOf('delivered') !== -1 && currentUser.role === 'courier') {
                     html += '<label class="photo-checkbox"><input type="checkbox" id="detailPhotoCheck" checked> Include delivery photo</label>';
                 }
                 transitions.forEach(function(s) {
                     var label = s, icon = '';
-                    if (isReceiveMode && s === 'delivered') { label = 'Confirm Received at MTCC'; icon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> '; }
-                    else if (s === 'dispatched') { label = 'Accept Delivery'; icon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> '; }
-                    else if (s === 'shipped') { label = 'Mark Picked Up from Vendor'; icon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5a2 2 0 01-2 2"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg> '; }
-                    else if (s === 'delivered') { label = 'Mark Delivered'; icon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg> '; }
-                    else if (s === 'pickedup') { label = 'Confirm Pick Up'; icon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/></svg> '; }
+                    if (s === 'shipped') { label = 'Confirm Pickup'; icon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> '; }
+                    else if (s === 'delivered') { label = 'Mark Delivered'; icon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> '; }
+                    else if (s === 'pickedup') { label = 'Confirm Pick Up'; icon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> '; }
                     html += '<button class="status-action-btn btn-' + s + '" onclick="updateOrderStatus(\'' + escapeAttr(order.ref) + '\', \'' + s + '\')">' + icon + label + '</button>';
                 });
+                // Release + Issue row for shipped orders
+                if (mode === 'delivery' && order.status === 'shipped') {
+                    html += '<div class="courier-btn-row" style="margin-top:8px;">';
+                    html += '<button class="release-btn" onclick="releaseDelivery(\'' + escapeAttr(order.ref) + '\', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg> Release</button>';
+                    if (typeof CourierIssues !== 'undefined') {
+                        html += '<button class="release-btn" style="border-color:#d97706;color:#d97706;" onclick="CourierIssues.open(\'' + escapeAttr(order.ref) + '\')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Report Issue</button>';
+                    }
+                    html += '</div>';
+                }
                 html += '</div>';
             }
         }
     }
 
-    // Release button for courier's own dispatched orders
-    if (mode === 'delivery' && order.status === 'dispatched' && currentUser.role === 'courier') {
-        html += '<div class="release-action">';
-        html += '<button class="release-btn" onclick="releaseDelivery(\'' + escapeAttr(order.ref) + '\', this)">';
-        html += '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>';
-        html += 'Release Order</button>';
-        html += '</div>';
-    }
-    // Admin force-release for dispatched or shipped orders
-    if (mode === 'delivery' && (order.status === 'dispatched' || order.status === 'shipped') && (currentUser.role === 'admin' || currentUser.role === 'mtcc_staff')) {
-        html += '<div class="release-action">';
-        html += '<button class="release-btn" onclick="releaseDelivery(\'' + escapeAttr(order.ref) + '\', this)">';
-        html += '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>';
-        html += 'Unassign Order</button>';
-        html += '</div>';
-    }
-
-        // Report Issue button (for active deliveries)
-    if (typeof CourierIssues !== 'undefined' && (mode === 'delivery' || mode === 'available')) {
-        var issueBtn = CourierIssues.getReportButtonHTML(order.ref, order.status);
-        if (issueBtn) html += issueBtn;
-    }
-
-    // Quick Contacts — at bottom
-    html += '<div class="detail-contacts">';
-    html += '<div class="detail-contacts-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72"/></svg> Quick Contact</div>';
-    html += '<a class="contact-row" href="tel:' + SUPPORT_PHONES.admin.number.replace(/[^0-9+]/g, '') + '"><div class="contact-info"><div class="contact-label">' + SUPPORT_PHONES.admin.label + '</div><div class="contact-number">' + SUPPORT_PHONES.admin.number + '</div></div>' + phoneIcon + '</a>';
+    // Fix 2: Quick contacts as 3 buttons in a row (Print Stuff, Vendor, MTCC)
+    html += '<div class="courier-contact-row">';
+    html += '<a class="courier-contact-btn" href="tel:' + SUPPORT_PHONES.admin.number.replace(/[^0-9+]/g, '') + '"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72"/></svg><span>Print Stuff</span></a>';
     if (order.vendor_phone) {
-        html += '<a class="contact-row" href="tel:' + order.vendor_phone.replace(/[^0-9+]/g, '') + '"><div class="contact-info"><div class="contact-label">' + escapeHtml(order.vendor_name || 'Vendor') + '</div><div class="contact-number">' + escapeHtml(order.vendor_phone) + '</div></div>' + phoneIcon + '</a>';
+        html += '<a class="courier-contact-btn" href="tel:' + order.vendor_phone.replace(/[^0-9+]/g, '') + '"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg><span>' + escapeHtml(order.vendor_name || 'Vendor') + '</span></a>';
     }
-    if (order.customer_phone) {
-        html += '<a class="contact-row" href="tel:' + order.customer_phone.replace(/[^0-9+]/g, '') + '"><div class="contact-info"><div class="contact-label">Customer: ' + escapeHtml(order.customer_name || '') + '</div><div class="contact-number">' + escapeHtml(order.customer_phone) + '</div></div>' + phoneIcon + '</a>';
-    }
-    html += '<a class="contact-row" href="tel:' + SUPPORT_PHONES.mtcc.number.replace(/[^0-9+]/g, '') + '"><div class="contact-info"><div class="contact-label">' + SUPPORT_PHONES.mtcc.label + '</div><div class="contact-number">' + SUPPORT_PHONES.mtcc.number + '</div></div>' + phoneIcon + '</a>';
+    html += '<a class="courier-contact-btn" href="tel:' + SUPPORT_PHONES.mtcc.number.replace(/[^0-9+]/g, '') + '"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>MTCC</span></a>';
     html += '</div>';
 
     content.innerHTML = html;
@@ -2410,42 +2377,41 @@ function renderRouteCard(order) {
     var html = '<div class="route-card">';
     html += '<div class="route-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Route</div>';
 
-    // Embedded Google Map — includes courier location if available
+    // Embedded Google Map
     var singleAddrs = [];
     if (pickupAddr) singleAddrs.push(pickupAddr);
     if (dropoffAddr) singleAddrs.push(dropoffAddr);
     if (singleAddrs.length > 0) {
         var mapQuery = buildMapEmbed(singleAddrs);
         html += '<div class="route-map-container"><iframe class="route-map-iframe" src="' + mapQuery + '" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>';
-    html += '<div class="route-info-badge"><span class="route-info-loading">Calculating route...</span></div>';
-
+        // Fix 5: Route info bar
+        html += '<div class="route-info-badge"><span class="route-info-loading">Calculating route...</span></div>';
     }
 
+    // Fix 6: Consistent pickup/dropoff icons (box blue, pin green, dashed line)
     html += '<div class="route-stops">';
 
-    // Pickup
+    // Pickup — box icon (blue)
     html += '<div class="route-stop">';
-    html += '<div class="route-dot pickup"></div>';
+    html += '<div class="route-icon-col"><svg class="route-icon-pickup" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg><div class="route-dashed-line"></div></div>';
     html += '<div class="route-stop-info"><div class="route-stop-label">PICKUP</div><div class="route-stop-name">' + escapeHtml(pickup) + '</div>';
     if (pickupAddr) html += '<div class="route-stop-addr">' + escapeHtml(pickupAddr) + '</div>';
     html += '</div>';
-    if (pickupAddr) html += '<a class="route-nav-btn" href="https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(pickupAddr) + '" target="_blank" rel="noopener"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg></a>';
+    if (pickupAddr) html += '<a class="route-nav-link" href="https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(pickupAddr) + '" target="_blank" rel="noopener">Navigate</a>';
     html += '</div>';
 
-    html += '<div class="route-connector"></div>';
-
-    // Dropoff
+    // Dropoff — pin icon (green)
     html += '<div class="route-stop">';
-    html += '<div class="route-dot dropoff"></div>';
+    html += '<div class="route-icon-col"><svg class="route-icon-dropoff" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>';
     html += '<div class="route-stop-info"><div class="route-stop-label">DROPOFF</div><div class="route-stop-name">' + escapeHtml(dropoff) + '</div>';
     if (dropoffAddr) html += '<div class="route-stop-addr">' + escapeHtml(dropoffAddr) + '</div>';
     if (instructions) html += '<div class="route-stop-instructions">' + escapeHtml(instructions) + '</div>';
     html += '</div>';
-    if (dropoffAddr) html += '<a class="route-nav-btn" href="https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(dropoffAddr) + '" target="_blank" rel="noopener"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg></a>';
+    if (dropoffAddr) html += '<a class="route-nav-link" href="https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(dropoffAddr) + '" target="_blank" rel="noopener">Navigate</a>';
     html += '</div>';
     html += '</div>';
 
-    // Open in Maps — no origin set, device GPS provides start point
+    // Open in Maps button
     var navAddrs = [];
     if (pickupAddr) navAddrs.push(pickupAddr);
     if (dropoffAddr) navAddrs.push(dropoffAddr);
@@ -3146,6 +3112,13 @@ function showBatchDetail(batchId, mode) {
     var overlay = document.getElementById('detailOverlay');
     var content = document.getElementById('detailContent');
     if (!panel || !content) return;
+
+    // Fix 4: Batch header handle colored
+    var batchColor = '#7c3aed'; // default violet
+    if (batch.status === 'in_progress') batchColor = '#14b8a6';
+    else if (batch.status === 'completed') batchColor = '#059669';
+    panel.style.setProperty('--mtcc-header-color', batchColor);
+    panel.classList.add('mtcc-panel');
 
     var isAvailable = (mode === 'available');
     var isActive = (batch.status === 'accepted' || batch.status === 'in_progress');
