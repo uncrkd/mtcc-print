@@ -2129,9 +2129,9 @@ function renderMTCCDetailPanel(order, mode) {
     html += '<a class="mtcc-support-btn" href="tel:+14378828822">';
     html += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>';
     html += '<span>Call Support</span></a>';
-    html += '<a class="mtcc-support-btn" href="mailto:orders@printstuff.ca">';
-    html += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 4l-10 7L2 4"/></svg>';
-    html += '<span>Email Support</span></a>';
+    html += '<a class="mtcc-support-btn" href="https://tawk.to/chat/69bcadcf600a121c36fa7a4b/1jk4gdsmg" target="_blank" rel="noopener">';
+    html += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
+    html += '<span>Live Chat</span></a>';
     html += '</div>';
 
     return html;
@@ -2173,6 +2173,18 @@ function reportMissing(ref) {
     });
 }
 
+function setPanelGradient(panel, color) {
+    var gradientEnds = {
+        '#d97706': '#b45309', '#7c3aed': '#6d28d9', '#14b8a6': '#0d9488',
+        '#059669': '#047857', '#22c55e': '#16a34a', '#dc2626': '#b91c1c',
+        '#6366f1': '#4f46e5', '#8b5cf6': '#7c3aed', '#64748b': '#475569',
+        '#ea580c': '#c2410c', '#ca8a04': '#a16207', '#eab308': '#ca8a04',
+        '#e11d48': '#be123c', '#9ca3af': '#6b7280'
+    };
+    panel.style.setProperty('--mtcc-header-color', color);
+    panel.style.setProperty('--mtcc-header-color-end', gradientEnds[color] || color);
+}
+
 function showOrderDetail(ref, mode) {
     var order = orderCache[ref];
     if (!order) return;
@@ -2191,7 +2203,7 @@ function showOrderDetail(ref, mode) {
         else if (order.status === 'delivered') pc = '#059669';
         else if (order.status === 'pickedup') pc = '#22c55e';
         else if (order.status === 'missing') pc = '#dc2626';
-        panel.style.setProperty('--mtcc-header-color', pc);
+        setPanelGradient(panel, pc);
         panel.classList.add('mtcc-panel');
         content.innerHTML = renderMTCCDetailPanel(order, mode);
         panel.classList.add('active');
@@ -2206,7 +2218,7 @@ function showOrderDetail(ref, mode) {
     else if (order.status === 'delivered') courierColor = '#059669';
     else if (order.status === 'pickedup') courierColor = '#22c55e';
     else if (order.status === 'missing') courierColor = '#dc2626';
-    panel.style.setProperty('--mtcc-header-color', courierColor);
+    setPanelGradient(panel, courierColor);
     panel.classList.add('mtcc-panel');
 
     // Fetch route info if not already loaded (courier/admin only)
@@ -3073,6 +3085,26 @@ function buildMapEmbed(addresses) {
     return 'https://www.google.com/maps?saddr=' + encodeURIComponent(saddr) + '&daddr=' + daddrs.map(function(a) { return encodeURIComponent(a); }).join('+to:') + '&dirflg=d&output=embed';
 }
 
+// Build Static Map image URL with markers and path
+function buildStaticMapUrl(addresses, width, height) {
+    if (!addresses || addresses.length === 0) return '';
+    var key = 'AIzaSyDtsKlcP439gjDYjDOTbd-nd4spGM77fYg';
+    var params = 'size=' + (width || 600) + 'x' + (height || 250) + '&scale=2&maptype=roadmap';
+    // Markers
+    var colors = ['blue', 'blue', 'blue', 'blue', 'blue'];
+    addresses.forEach(function(addr, i) {
+        var color = (i === addresses.length - 1) ? 'red' : 'blue'; // last stop = red (dropoff)
+        var label = String.fromCharCode(65 + i); // A, B, C...
+        params += '&markers=color:' + color + '%7Clabel:' + label + '%7C' + encodeURIComponent(addr);
+    });
+    // Path connecting all stops
+    params += '&path=color:0x7c3aedff%7Cweight:4';
+    addresses.forEach(function(addr) {
+        params += '%7C' + encodeURIComponent(addr);
+    });
+    return 'https://maps.googleapis.com/maps/api/staticmap?' + params + '&key=' + key;
+}
+
 // Build Google Maps nav URL — no origin, device GPS auto-fills
 function buildGoogleNavUrl(addresses) {
     if (!addresses || addresses.length === 0) return '';
@@ -3112,7 +3144,7 @@ function showBatchDetail(batchId, mode) {
     var batchColor = '#7c3aed'; // default violet
     if (batch.status === 'in_progress') batchColor = '#14b8a6';
     else if (batch.status === 'completed') batchColor = '#059669';
-    panel.style.setProperty('--mtcc-header-color', batchColor);
+    setPanelGradient(panel, batchColor);
     panel.classList.add('mtcc-panel');
 
     var isAvailable = (mode === 'available');
@@ -3175,12 +3207,14 @@ function showBatchDetail(batchId, mode) {
         html += '</div>';
     }
     if (mapAddresses.length >= 1) {
-        html += '<div class="bv7-map-embed"><iframe src="' + buildMapEmbed(mapAddresses) + '" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>';
+        var staticUrl = buildStaticMapUrl(mapAddresses, 600, 250);
+        var navUrl = mapAddresses.length >= 2 ? buildGoogleNavUrl(mapAddresses) : 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(mapAddresses[0]);
+        html += '<a class="bv7-map-link" href="' + navUrl + '" target="_blank" rel="noopener"><img class="bv7-map-img" src="' + staticUrl + '" alt="Route map" loading="lazy"></a>';
     }
     html += '</div>'; // end bv7-map-block
     // Map buttons outside the map block
     if (mapAddresses.length >= 2) {
-        html += '<div class="route-map-buttons' + (isAppleDevice() ? '' : ' single') + '" style="margin:8px 16px 0;">';
+        html += '<div class="route-map-buttons' + (isAppleDevice() ? '' : ' single') + '" style="margin:8px 0 0;">';
         html += '<a class="route-app-btn google" href="' + buildGoogleNavUrl(mapAddresses) + '" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg> Google Maps</a>';
         if (isAppleDevice()) html += '<a class="route-app-btn apple" href="' + buildAppleNavUrl(mapAddresses) + '" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Apple Maps</a>';
         html += '</div>';
