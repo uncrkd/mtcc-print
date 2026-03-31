@@ -840,8 +840,8 @@ function renderPickupFromCache() {
     if (!el) return;
     var filtered = filterMTCCOrders(cachedPickupOrders);
     var html = buildSearchFilterBar('pickup');
-    html += '<div class="section-label">' + filtered.length + ' order' + (filtered.length !== 1 ? 's' : '') + ' waiting for pickup' + (mtccSearchQuery || mtccEventFilter ? ' (filtered)' : '') + '</div>';
-    if (filtered.length === 0 && (mtccSearchQuery || mtccEventFilter)) {
+    html += '<div class="section-label">' + filtered.length + ' order' + (filtered.length !== 1 ? 's' : '') + ' waiting for pickup' + (mtccSearchQuery || mtccEventFilters.length ? ' (filtered)' : '') + '</div>';
+    if (filtered.length === 0 && (mtccSearchQuery || mtccEventFilters.length)) {
         html += '<div class="empty-state"><p>No orders match your search.</p></div>';
     } else if (filtered.length === 0) {
         html += '<div class="empty-state"><div class="empty-state-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M5 12h14"/><path d="M12 5v14"/><rect x="3" y="3" width="18" height="18" rx="2"/></svg></div><h3>Pickup Queue Empty</h3><p>No orders waiting for customer pickup.</p></div>';
@@ -863,9 +863,9 @@ function renderUpcomingMTCCFromCache() {
     });
 
     var html = buildSearchFilterBar('upcoming_mtcc');
-    html += '<div class="section-label">' + filtered.length + ' order' + (filtered.length !== 1 ? 's' : '') + ' in the pipeline' + (mtccSearchQuery || mtccEventFilter ? ' (filtered)' : '') + '</div>';
+    html += '<div class="section-label">' + filtered.length + ' order' + (filtered.length !== 1 ? 's' : '') + ' in the pipeline' + (mtccSearchQuery || mtccEventFilters.length ? ' (filtered)' : '') + '</div>';
 
-    if (filtered.length === 0 && (mtccSearchQuery || mtccEventFilter)) {
+    if (filtered.length === 0 && (mtccSearchQuery || mtccEventFilters.length)) {
         html += '<div class="empty-state"><p>No orders match your search.</p></div>';
     } else if (filtered.length === 0) {
         html += '<div class="empty-state"><div class="empty-state-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div><h3>All Caught Up</h3><p>No orders in the pipeline right now.</p></div>';
@@ -891,8 +891,8 @@ function renderCompleteFromCache() {
     if (!el) return;
     var filtered = filterMTCCOrders(cachedCompleteOrders);
     var html = buildSearchFilterBar('complete');
-    html += '<div class="section-label">' + filtered.length + ' order' + (filtered.length !== 1 ? 's' : '') + ' picked up' + (mtccSearchQuery || mtccEventFilter ? ' (filtered)' : '') + '</div>';
-    if (filtered.length === 0 && (mtccSearchQuery || mtccEventFilter)) {
+    html += '<div class="section-label">' + filtered.length + ' order' + (filtered.length !== 1 ? 's' : '') + ' picked up' + (mtccSearchQuery || mtccEventFilters.length ? ' (filtered)' : '') + '</div>';
+    if (filtered.length === 0 && (mtccSearchQuery || mtccEventFilters.length)) {
         html += '<div class="empty-state"><p>No orders match your search.</p></div>';
     } else if (filtered.length === 0) {
         html += '<div class="empty-state"><div class="empty-state-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M12 6v6l4 2"/></svg></div><h3>No Completed Pickups</h3><p>Picked up orders for active events will appear here.</p></div>';
