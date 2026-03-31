@@ -3177,13 +3177,14 @@ function showBatchDetail(batchId, mode) {
     if (mapAddresses.length >= 1) {
         html += '<div class="bv7-map-embed"><iframe src="' + buildMapEmbed(mapAddresses) + '" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>';
     }
+    html += '</div>'; // end bv7-map-block
+    // Map buttons outside the map block
     if (mapAddresses.length >= 2) {
-        html += '<div class="route-map-buttons' + (isAppleDevice() ? '' : ' single') + '">';
+        html += '<div class="route-map-buttons' + (isAppleDevice() ? '' : ' single') + '" style="margin:8px 16px 0;">';
         html += '<a class="route-app-btn google" href="' + buildGoogleNavUrl(mapAddresses) + '" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg> Google Maps</a>';
         if (isAppleDevice()) html += '<a class="route-app-btn apple" href="' + buildAppleNavUrl(mapAddresses) + '" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Apple Maps</a>';
         html += '</div>';
     }
-    html += '</div>';
 
     // ═══ STOPS with vertical connector ═══
     html += '<div class="batch-timeline-v7">';
@@ -3256,6 +3257,8 @@ function showBatchDetail(batchId, mode) {
         html += '</div>'; // bv7-stop
     });
     html += '</div>';
+    // Divider after stops
+    html += '<div style="height:1px;background:#e5e7eb;margin:12px 16px;"></div>';
 
     // (map already rendered above stops)
 
