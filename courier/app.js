@@ -30,7 +30,8 @@ var cachedUpcomingMtccOrders = [];
 var cachedCompleteOrders = [];
 var cachedActiveEvents = []; // active event acronyms for filter pills
 var mtccSearchQuery = '';
-var mtccEventFilter = ''; // '' = all events
+var mtccEventFilters = []; // array of selected acronyms, empty = all events
+var mtccFilterDropdownOpen = false;
 
 // Live countdown timers
 var countdownInterval = null;
@@ -690,22 +691,59 @@ function loadPickupQueue() {
 
 function buildSearchFilterBar(tabId) {
     var html = '<div class="mtcc-search-filter">';
+
+    // Search bar row with filter button
+    html += '<div class="mtcc-search-row">';
     html += '<div class="mtcc-search-bar">';
     html += '<svg class="mtcc-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
-    html += '<input type="text" class="mtcc-search-input" id="mtccSearch_' + tabId + '" placeholder="Search by name, order ID, or email..." oninput="onMTCCSearch(\'' + tabId + '\', this.value)" value="' + escapeAttr(mtccSearchQuery) + '">';
+    html += '<input type="text" class="mtcc-search-input" id="mtccSearch_' + tabId + '" placeholder="Search name, ID, or email..." oninput="onMTCCSearch(\'' + tabId + '\', this.value)" value="' + escapeAttr(mtccSearchQuery) + '">';
     if (mtccSearchQuery) {
         html += '<button class="mtcc-search-clear" onclick="clearMTCCSearch(\'' + tabId + '\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>';
     }
     html += '</div>';
 
-    // Event filter pills (show when any active events exist)
+    // Filter button (only if events exist)
     if (cachedActiveEvents.length > 0) {
-        html += '<div class="mtcc-filter-pills">';
-        html += '<button class="mtcc-filter-pill' + (mtccEventFilter === '' ? ' active' : '') + '" onclick="setMTCCEventFilter(\'' + tabId + '\', \'\')">All</button>';
+        var filterCount = mtccEventFilters.length;
+        html += '<button class="mtcc-filter-btn' + (filterCount > 0 ? ' has-filters' : '') + '" onclick="toggleEventFilterDropdown(\'' + tabId + '\')">';
+        html += '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>';
+        if (filterCount > 0) {
+            html += '<span class="mtcc-filter-count">' + filterCount + '</span>';
+        }
+        html += '</button>';
+    }
+    html += '</div>';
+
+    // Dropdown checklist (hidden by default)
+    if (cachedActiveEvents.length > 0) {
+        html += '<div class="mtcc-filter-dropdown' + (mtccFilterDropdownOpen ? ' open' : '') + '" id="mtccFilterDropdown_' + tabId + '">';
+        html += '<div class="mtcc-filter-dropdown-header">';
+        html += '<span class="mtcc-filter-dropdown-title">Filter by Event</span>';
+        if (mtccEventFilters.length > 0) {
+            html += '<button class="mtcc-filter-clear" onclick="clearAllEventFilters(\'' + tabId + '\')">Clear All</button>';
+        }
+        html += '</div>';
         cachedActiveEvents.forEach(function(ev) {
             var acronym = ev.acronym || ev;
             var evName = ev.name || acronym;
-            html += '<button class="mtcc-filter-pill' + (mtccEventFilter === acronym ? ' active' : '') + '" onclick="setMTCCEventFilter(\'' + tabId + '\', \'' + escapeAttr(acronym) + '\')">' + escapeHtml(evName) + '</button>';
+            var isChecked = mtccEventFilters.indexOf(acronym) !== -1;
+            html += '<label class="mtcc-filter-item' + (isChecked ? ' checked' : '') + '">';
+            html += '<input type="checkbox"' + (isChecked ? ' checked' : '') + ' onchange="toggleEventFilter(\'' + tabId + '\', \'' + escapeAttr(acronym) + '\', this.checked)">';
+            html += '<span class="mtcc-filter-check"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>';
+            html += '<span class="mtcc-filter-name">' + escapeHtml(evName) + '</span>';
+            html += '<span class="mtcc-filter-acronym">' + escapeHtml(acronym) + '</span>';
+            html += '</label>';
+        });
+        html += '</div>';
+    }
+
+    // Active filter tags (show selected events as removable chips)
+    if (mtccEventFilters.length > 0) {
+        html += '<div class="mtcc-active-filters">';
+        mtccEventFilters.forEach(function(acr) {
+            var ev = cachedActiveEvents.find(function(e) { return (e.acronym || e) === acr; });
+            var name = ev ? (ev.name || acr) : acr;
+            html += '<span class="mtcc-active-tag">' + escapeHtml(name) + '<button onclick="removeEventFilter(\'' + tabId + '\', \'' + escapeAttr(acr) + '\')">&times;</button></span>';
         });
         html += '</div>';
     }
@@ -726,20 +764,52 @@ function clearMTCCSearch(tabId) {
     rerenderMTCCTab(tabId);
 }
 
-function setMTCCEventFilter(tabId, acronym) {
-    mtccEventFilter = (mtccEventFilter === acronym) ? '' : acronym;
+function toggleEventFilterDropdown(tabId) {
+    mtccFilterDropdownOpen = !mtccFilterDropdownOpen;
     rerenderMTCCTab(tabId);
 }
+
+function toggleEventFilter(tabId, acronym, checked) {
+    if (checked) {
+        if (mtccEventFilters.indexOf(acronym) === -1) mtccEventFilters.push(acronym);
+    } else {
+        mtccEventFilters = mtccEventFilters.filter(function(a) { return a !== acronym; });
+    }
+    rerenderMTCCTab(tabId);
+}
+
+function removeEventFilter(tabId, acronym) {
+    mtccEventFilters = mtccEventFilters.filter(function(a) { return a !== acronym; });
+    rerenderMTCCTab(tabId);
+}
+
+function clearAllEventFilters(tabId) {
+    mtccEventFilters = [];
+    mtccFilterDropdownOpen = false;
+    rerenderMTCCTab(tabId);
+}
+
+// Close dropdown when tapping outside
+document.addEventListener('click', function(e) {
+    if (mtccFilterDropdownOpen && !e.target.closest('.mtcc-filter-btn') && !e.target.closest('.mtcc-filter-dropdown')) {
+        mtccFilterDropdownOpen = false;
+        if (currentUser && currentUser.role === 'mtcc_staff') rerenderMTCCTab(currentTab);
+    }
+});
 
 function filterMTCCOrders(orders) {
     var filtered = orders;
 
-    // Event filter
-    if (mtccEventFilter) {
+    // Event filter (multi-select)
+    if (mtccEventFilters.length > 0) {
         filtered = filtered.filter(function(o) {
             var ref = (o.ref || '').toUpperCase();
             var evAcr = (o.event_acronym || '').toUpperCase();
-            return ref.indexOf(mtccEventFilter.toUpperCase()) === 0 || evAcr === mtccEventFilter.toUpperCase();
+            for (var i = 0; i < mtccEventFilters.length; i++) {
+                var f = mtccEventFilters[i].toUpperCase();
+                if (ref.indexOf(f) === 0 || evAcr === f) return true;
+            }
+            return false;
         });
     }
 
@@ -872,7 +942,7 @@ function loadMTCCDashboard() {
             html += '<div class="mtcc-event-pills">';
             eventKeys.forEach(function(ev) {
                 var evName = eventNameMap[ev] || ev;
-                html += '<button class="mtcc-event-pill" onclick="mtccEventFilter=\'' + escapeAttr(ev) + '\'; switchTab(\'pickup\')">' + escapeHtml(evName) + ': <strong>' + events[ev] + '</strong></button>';
+                html += '<button class="mtcc-event-pill" onclick="mtccEventFilters=[\'' + escapeAttr(ev) + '\']; switchTab(\'pickup\')">' + escapeHtml(evName) + ': <strong>' + events[ev] + '</strong></button>';
             });
             html += '</div></div>';
         }
