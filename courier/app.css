@@ -6065,3 +6065,157 @@ input {
     margin-top: 12px;
     border-top: 1px solid #f3f4f6;
 }
+
+/* ============================================
+   Batch Timeline v5 — Polished Layout
+   ============================================ */
+
+/* Override old styles */
+.batch-timeline { padding: 4px 0 0; }
+
+.bt-stop { display: flex; align-items: stretch; }
+
+.bt-left {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 22px;
+    flex-shrink: 0;
+    margin-left: 16px;
+    margin-right: 14px;
+}
+
+.bt-icon-pad { height: 6px; flex-shrink: 0; }
+
+.bt-icon { flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+
+.bt-line {
+    flex: 1;
+    width: 0;
+    border-left: 2px dashed #d1d5db;
+    margin: 6px 0;
+    min-height: 16px;
+}
+
+.bt-right {
+    flex: 1;
+    padding: 8px 16px 16px 0;
+    position: relative;
+    min-width: 0;
+}
+
+/* Tappable stop area */
+.bt-stop-tap {
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    border-radius: 8px;
+    padding: 4px;
+    margin: -4px;
+    transition: background 0.15s;
+}
+
+.bt-stop-tap:active { background: #f8fafc; }
+
+.bt-stop-header { padding: 4px; margin: -4px; }
+
+.bt-label-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+}
+
+.bt-chevron {
+    margin-left: auto;
+    flex-shrink: 0;
+    transition: transform 0.2s;
+}
+
+.bt-name { font-size: 0.9rem; font-weight: 700; color: #1a1625; }
+
+.bt-addr { font-size: 0.75rem; color: #6b7280; margin-top: 2px; line-height: 1.4; }
+
+/* Navigate button — positioned top-right of bt-right */
+.bt-nav {
+    position: absolute;
+    top: 8px;
+    right: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: #f5f3ff;
+    border: 1px solid #e9d5ff;
+    text-decoration: none;
+    transition: background 0.15s;
+}
+
+.bt-nav:active { background: #ede9fe; }
+
+/* Item cards inside expanded stop */
+.bt-items { margin-top: 10px; }
+
+.bt-item-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+}
+
+.bt-item-header {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.bt-item-ref {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #7c3aed;
+}
+
+.bt-item-customer {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #1a1625;
+}
+
+.bt-item-details {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-bottom: 8px;
+}
+
+.bt-item-spec {
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+.bt-item-vendorref {
+    font-size: 0.72rem;
+    color: #9ca3af;
+    font-style: italic;
+}
+
+.bt-item-issue {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #d97706;
+    background: none;
+    border: 1px solid #fde68a;
+    border-radius: 8px;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-family: inherit;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.bt-item-issue:active { background: #fffbeb; }

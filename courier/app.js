@@ -3179,7 +3179,7 @@ function showBatchDetail(batchId, mode) {
         html += '</div>';
     }
 
-    // Stops timeline — left icon column with dashed connectors, content right
+    // Stops timeline
     html += '<div class="batch-timeline">';
     stops.forEach(function(stop, idx) {
         var isDone = (stop.status === 'completed');
@@ -3189,57 +3189,71 @@ function showBatchDetail(batchId, mode) {
         var isPickup = (stop.type === 'pickup');
         var stopId = 'batchStop_' + batch.batch_id + '_' + idx;
         var isLast = (idx === stops.length - 1);
+        var canExpand = isPickup && stop.order_refs && stop.order_refs.length > 0;
 
         html += '<div class="bt-stop">';
 
-        // Left column: icon + dashed line
+        // Left: icon column with connectors
         html += '<div class="bt-left">';
+        html += '<div class="bt-icon-pad"></div>'; // top padding
         html += '<div class="bt-icon">';
         if (isDone) {
-            html += '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
+            html += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
         } else if (isPickup) {
-            html += '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>';
+            html += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>';
         } else {
-            html += '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+            html += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
         }
         html += '</div>';
         if (!isLast) html += '<div class="bt-line"></div>';
         html += '</div>';
 
-        // Right column: content
+        // Right: content — entire area tappable for pickup stops
         html += '<div class="bt-right">';
 
-        // Label row
+        // Tappable header area
+        if (canExpand) {
+            html += '<div class="bt-stop-tap" onclick="toggleBatchStopDetails(\'' + stopId + '\', event)">';
+        } else {
+            html += '<div class="bt-stop-header">';
+        }
+
+        // Label + badges
         html += '<div class="bt-label-row">';
         html += '<span class="route-stop-label">' + stop.type.toUpperCase() + '</span>';
         if (isCurrent) html += '<span class="batch-current-pill">CURRENT</span>';
         if (refCount > 0) html += '<span class="batch-item-badge">' + refCount + ' item' + (refCount !== 1 ? 's' : '') + '</span>';
+        if (canExpand) html += '<svg class="bt-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>';
         html += '</div>';
 
         // Name + address
         html += '<div class="bt-name">' + escapeHtml(stop.name || '') + '</div>';
         if (addr) html += '<div class="bt-addr">' + escapeHtml(addr) + '</div>';
 
-        // Navigate button
-        if (addr) html += '<a class="route-nav-soft" href="https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(addr) + '" target="_blank" rel="noopener" style="position:absolute;top:0;right:0;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg></a>';
+        html += '</div>'; // end tap area
 
-        // Collapsible order details
-        if (isPickup && stop.order_refs && stop.order_refs.length > 0) {
-            html += '<button class="batch-stop-expand" onclick="toggleBatchStopDetails(\'' + stopId + '\', event)">View items <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button>';
-            html += '<div class="batch-stop-details" id="' + stopId + '" style="display:none;">';
+        // Navigate — outside tappable area
+        if (addr) html += '<a class="bt-nav" href="https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(addr) + '" target="_blank" rel="noopener" onclick="event.stopPropagation();"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg></a>';
+
+        // Expandable item cards
+        if (canExpand) {
+            html += '<div class="bt-items" id="' + stopId + '" style="display:none;">';
             stop.order_refs.forEach(function(oRef) {
                 var o = orders.find(function(x) { return x.ref === oRef; }) || {};
-                html += '<div class="batch-stop-order">';
-                html += '<div class="batch-stop-order-info">';
-                html += '<span class="batch-order-ref">' + escapeHtml(oRef) + '</span>';
-                html += '<span class="batch-order-customer">' + escapeHtml(o.customer_name || '') + '</span>';
+                html += '<div class="bt-item-card">';
+                html += '<div class="bt-item-header">';
+                html += '<span class="bt-item-ref">' + escapeHtml(oRef) + '</span>';
+                html += '<span class="bt-item-customer">' + escapeHtml(o.customer_name || '') + '</span>';
+                html += '</div>';
                 var specs = [];
                 if (o.material) specs.push(o.material);
                 if (o.size) specs.push(o.size);
                 if (o.quantity && o.quantity > 1) specs.push(o.quantity + ' boxes');
-                if (specs.length) html += '<span class="batch-order-spec">' + escapeHtml(specs.join(' \u00b7 ')) + '</span>';
-                html += '<span class="batch-order-vendorref">Vendor Ref: ' + escapeHtml(o.vendor_order_number || 'N/A') + '</span>';
+                html += '<div class="bt-item-details">';
+                if (specs.length) html += '<span class="bt-item-spec">' + escapeHtml(specs.join(' \u00b7 ')) + '</span>';
+                html += '<span class="bt-item-vendorref">Vendor Ref: ' + escapeHtml(o.vendor_order_number || 'N/A') + '</span>';
                 html += '</div>';
+                html += '<button class="bt-item-issue" onclick="event.stopPropagation(); CourierIssues.open(\'' + escapeAttr(oRef) + '\')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Report Issue</button>';
                 html += '</div>';
             });
             html += '</div>';
