@@ -3266,6 +3266,7 @@ function showBatchDetail(batchId, mode) {
         group.forEach(function(o) {
             html += '<div class="batch-order-row">';
             html += '<div class="batch-order-info">';
+            if (o.ref) html += '<span class="batch-order-ref">' + escapeHtml(o.ref) + '</span>';
             html += '<span class="batch-order-customer">' + escapeHtml(o.customer_name || 'Customer') + '</span>';
             var details = [];
             if (o.material) details.push(o.material);
@@ -3308,21 +3309,10 @@ function showBatchDetail(batchId, mode) {
         html += '<div class="detail-actions">';
         if (isAvailable && (batch.status === 'pending' || batch.status === 'suggested')) {
             html += '<button class="status-action-btn btn-accept" onclick="acceptBatch(\'' + escapeAttr(batch.batch_id) + '\', this)">';
-            html += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>';
+            html += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
             html += ' Accept Batch (' + batch.order_count + ' orders)</button>';
         }
-        if (isActive && mapAddresses.length >= 2) {
-            var gNavUrl2 = buildGoogleNavUrl(mapAddresses);
-            html += '<a class="status-action-btn btn-shipped" href="' + gNavUrl2 + '" target="_blank" rel="noopener" style="text-decoration:none;text-align:center;">';
-            html += '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>';
-            html += ' Navigate Full Route</a>';
-            if (isAppleDevice()) {
-                var aNavUrl2 = buildAppleNavUrl(mapAddresses);
-                html += '<a class="status-action-btn btn-dispatched" href="' + aNavUrl2 + '" target="_blank" rel="noopener" style="text-decoration:none;text-align:center;">';
-                html += '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
-                html += ' Navigate (Apple Maps)</a>';
-            }
-        }
+        // Navigate Full Route removed — map buttons in route card above handle this
         html += '</div>';
     }
 
