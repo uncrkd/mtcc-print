@@ -6755,3 +6755,11 @@ input {
     height: auto;
     display: block;
 }
+
+/* Route card static map */
+.route-static-img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 8px 8px 0 0;
+}

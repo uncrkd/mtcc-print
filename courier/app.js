@@ -1621,8 +1621,9 @@ function fetchRouteInfo(ref) {
             orderCache[ref].route_duration_min = result.route.duration_min;
             orderCache[ref].route_directions_url = result.route.directions_url;
             orderCache[ref].route_static_map = result.route.static_map_url;
+            orderCache[ref].route_polyline = result.route.polyline;
         }
-        
+
         // Update route badge in detail panel if visible
         var badge = document.querySelector('.route-info-badge');
         if (badge) {
@@ -1630,6 +1631,16 @@ function fetchRouteInfo(ref) {
                               '<span class="route-info-sep">\u00b7</span>' +
                               '<span class="route-info-eta">Drive time: ~' + result.route.duration_min + ' min</span>';
             badge.classList.add('loaded');
+        }
+        // Update static map with real polyline
+        if (result.route.polyline) {
+            var mapImg = document.getElementById('orderMapImg_' + ref);
+            if (mapImg && orderCache[ref]) {
+                var addrs = [];
+                if (orderCache[ref].vendor_address) addrs.push(orderCache[ref].vendor_address);
+                if (orderCache[ref].destination_address) addrs.push(orderCache[ref].destination_address);
+                if (addrs.length > 0) mapImg.src = buildStaticMapUrl(addrs, 600, 250, result.route.polyline);
+            }
         }
     });
 }
@@ -2383,14 +2394,15 @@ function renderRouteCard(order) {
     var html = '<div class="route-card">';
     html += '<div class="route-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Route</div>';
 
-    // Embedded Google Map
+    // Static map with route
     var singleAddrs = [];
     if (pickupAddr) singleAddrs.push(pickupAddr);
     if (dropoffAddr) singleAddrs.push(dropoffAddr);
     if (singleAddrs.length > 0) {
-        var mapQuery = buildMapEmbed(singleAddrs);
-        html += '<div class="route-map-container"><iframe class="route-map-iframe" src="' + mapQuery + '" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>';
-        // Fix 5: Route info bar
+        var orderPolyline = order.route_polyline || null;
+        var singleStaticUrl = buildStaticMapUrl(singleAddrs, 600, 250, orderPolyline);
+        var singleNavUrl = singleAddrs.length >= 2 ? buildGoogleNavUrl(singleAddrs) : 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(singleAddrs[0]);
+        html += '<div class="route-map-container"><a href="' + singleNavUrl + '" target="_blank" rel="noopener"><img class="route-static-img" id="orderMapImg_' + escapeAttr(order.ref) + '" src="' + singleStaticUrl + '" alt="Route" loading="lazy"></a></div>';
         html += '<div class="route-info-badge"><span class="route-info-loading">Calculating route...</span></div>';
     }
 
@@ -3085,23 +3097,26 @@ function buildMapEmbed(addresses) {
     return 'https://www.google.com/maps?saddr=' + encodeURIComponent(saddr) + '&daddr=' + daddrs.map(function(a) { return encodeURIComponent(a); }).join('+to:') + '&dirflg=d&output=embed';
 }
 
-// Build Static Map image URL with markers and path
-function buildStaticMapUrl(addresses, width, height) {
+// Build Static Map image URL with markers and optional encoded polyline
+function buildStaticMapUrl(addresses, width, height, encodedPolyline) {
     if (!addresses || addresses.length === 0) return '';
     var key = 'AIzaSyDtsKlcP439gjDYjDOTbd-nd4spGM77fYg';
     var params = 'size=' + (width || 600) + 'x' + (height || 250) + '&scale=2&maptype=roadmap';
     // Markers
-    var colors = ['blue', 'blue', 'blue', 'blue', 'blue'];
     addresses.forEach(function(addr, i) {
-        var color = (i === addresses.length - 1) ? 'red' : 'blue'; // last stop = red (dropoff)
-        var label = String.fromCharCode(65 + i); // A, B, C...
+        var color = (i === addresses.length - 1) ? 'red' : 'blue';
+        var label = String.fromCharCode(65 + i);
         params += '&markers=color:' + color + '%7Clabel:' + label + '%7C' + encodeURIComponent(addr);
     });
-    // Path connecting all stops
-    params += '&path=color:0x7c3aedff%7Cweight:4';
-    addresses.forEach(function(addr) {
-        params += '%7C' + encodeURIComponent(addr);
-    });
+    // Route path — use encoded polyline if available, else straight lines
+    if (encodedPolyline) {
+        params += '&path=color:0x7c3aedff%7Cweight:4%7Cenc:' + encodeURIComponent(encodedPolyline);
+    } else {
+        params += '&path=color:0x7c3aedff%7Cweight:4';
+        addresses.forEach(function(addr) {
+            params += '%7C' + encodeURIComponent(addr);
+        });
+    }
     return 'https://maps.googleapis.com/maps/api/staticmap?' + params + '&key=' + key;
 }
 
@@ -3207,11 +3222,24 @@ function showBatchDetail(batchId, mode) {
         html += '</div>';
     }
     if (mapAddresses.length >= 1) {
-        var staticUrl = buildStaticMapUrl(mapAddresses, 600, 250);
+        var batchPolyline = (batch.route && batch.route.polyline) ? batch.route.polyline : null;
+        var staticUrl = buildStaticMapUrl(mapAddresses, 600, 250, batchPolyline);
         var navUrl = mapAddresses.length >= 2 ? buildGoogleNavUrl(mapAddresses) : 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(mapAddresses[0]);
-        html += '<a class="bv7-map-link" href="' + navUrl + '" target="_blank" rel="noopener"><img class="bv7-map-img" src="' + staticUrl + '" alt="Route map" loading="lazy"></a>';
+        html += '<a class="bv7-map-link" href="' + navUrl + '" target="_blank" rel="noopener"><img class="bv7-map-img" id="batchMapImg" src="' + staticUrl + '" alt="Route map" loading="lazy"></a>';
     }
     html += '</div>'; // end bv7-map-block
+
+    // If no polyline yet, fetch route and update map
+    if (mapAddresses.length >= 2 && !(batch.route && batch.route.polyline) && courierLocation) {
+        apiCall('get_batch_route', { batch_id: batch.batch_id, lat: courierLocation.lat, lng: courierLocation.lng }, function(r) {
+            if (r.success && r.route && r.route.polyline) {
+                batch.route = batch.route || {};
+                batch.route.polyline = r.route.polyline;
+                var img = document.getElementById('batchMapImg');
+                if (img) img.src = buildStaticMapUrl(mapAddresses, 600, 250, r.route.polyline);
+            }
+        });
+    }
     // Map buttons outside the map block
     if (mapAddresses.length >= 2) {
         html += '<div class="route-map-buttons' + (isAppleDevice() ? '' : ' single') + '" style="margin:8px 0 0;">';
