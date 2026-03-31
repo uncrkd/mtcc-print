@@ -1708,12 +1708,11 @@ function renderOrderCard(order, mode) {
             else if (order.status === 'pickedup') mtccPhase = 'pickedup';
             else if (order.status === 'missing') mtccPhase = 'missing';
             barCls += ' due-mtcc-' + mtccPhase;
-        } else if (isInTransit) {
-            barCls += ' due-transit';
-        } else if (urgency.level === 'red') {
-            barCls += ' due-red';
-        } else if (urgency.level === 'orange') {
-            barCls += ' due-orange';
+        } else {
+            // Courier cards: color by status, urgency overrides for red/orange
+            if (urgency.level === 'red') barCls += ' due-urgent-red';
+            else if (urgency.level === 'orange') barCls += ' due-urgent-orange';
+            else barCls += ' due-status-' + order.status;
         }
         html += '<div class="' + barCls + '">';
         if (isMTCCCard) {
@@ -2203,7 +2202,16 @@ function showOrderDetail(ref, mode) {
         overlay.classList.add('active');
         return;
     }
-    panel.classList.remove('mtcc-panel');
+    // Set courier panel header color by status
+    var courierColor = '#64748b';
+    if (order.status === 'ready') courierColor = '#d97706';
+    else if (order.status === 'dispatched') courierColor = '#7c3aed';
+    else if (order.status === 'shipped') courierColor = '#14b8a6';
+    else if (order.status === 'delivered') courierColor = '#059669';
+    else if (order.status === 'pickedup') courierColor = '#22c55e';
+    else if (order.status === 'missing') courierColor = '#dc2626';
+    panel.style.setProperty('--mtcc-header-color', courierColor);
+    panel.classList.add('mtcc-panel');
 
     // Fetch route info if not already loaded (courier/admin only)
     if (order && !order.route_distance_km && (mode === 'delivery' || mode === 'available')) {

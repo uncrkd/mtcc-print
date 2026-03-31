@@ -766,22 +766,7 @@ input {
 
 /* Card footer (payout, packages, time) */
 
-/* Left border indicator — courier cards only (hidden for MTCC via isMTCCCard class) */
-.order-card::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 4px;
-}
-
-.order-card.mtcc-card::before { display: none; }
-
-.order-card.status-ready::before { background: #d97706; }
-.order-card.status-dispatched::before { background: #7c3aed; }
-.order-card.status-shipped::before { background: #14b8a6; }
-.order-card.status-delivered::before { background: #059669; }
+/* Left border removed — all cards use status-colored due bar header instead */
 
 .order-card-top {
     display: flex;
@@ -826,11 +811,20 @@ input {
     flex-shrink: 0;
 }
 
+.badge-unpaid { background: #fefce8; color: #a16207; border-color: #eab308; }
+.badge-paid { background: #fef9c3; color: #854d0e; border-color: #ca8a04; }
+.badge-preflight { background: #f5f3ff; color: #6d28d9; border-color: #8b5cf6; }
+.badge-file_issue { background: #fff7ed; color: #c2410c; border-color: #ea580c; }
+.badge-printing { background: #eef2ff; color: #4338ca; border-color: #6366f1; }
 .badge-ready { background: #fffbeb; color: #b45309; border-color: #d97706; }
-.badge-dispatched { background: #f5f3ff; color: #7c3aed; border-color: #7c3aed; }
+.badge-dispatched { background: #f5f3ff; color: #6d28d9; border-color: #7c3aed; }
 .badge-shipped { background: #f0fdfa; color: #0f766e; border-color: #14b8a6; }
 .badge-delivered { background: #ecfdf5; color: #047857; border-color: #059669; }
 .badge-pickedup { background: #f0fdf4; color: #15803d; border-color: #22c55e; }
+.badge-missing { background: #fef2f2; color: #991b1b; border-color: #dc2626; }
+.badge-unclaimed { background: #fff1f2; color: #9f1239; border-color: #e11d48; }
+.badge-cancelled { background: #f8fafc; color: #475569; border-color: #64748b; }
+.badge-refunded { background: #f9fafb; color: #6b7280; border-color: #9ca3af; }
 
 .order-card-body {
     display: grid;
@@ -1133,9 +1127,9 @@ input {
 }
 
 .status-action-btn.btn-delivered {
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
     color: white;
-    box-shadow: 0 2px 8px rgba(245,158,11,0.3);
+    box-shadow: 0 2px 8px rgba(5,150,105,0.3);
 }
 
 .status-action-btn.btn-pickedup {
@@ -2128,30 +2122,12 @@ input {
    URGENCY SYSTEM — ::before left border override
    ============================================ */
 
-.order-card[data-urgency="red"]::before {
-    background: #dc2626 !important;
-    animation: bar-pulse 2s ease-in-out infinite;
-}
+/* Urgency card background tints (left border removed) */
 .order-card[data-urgency="red"] {
     background: linear-gradient(135deg, rgba(220,38,38,0.05) 0%, var(--card) 40%);
 }
-
-@keyframes bar-pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-}
-
-.order-card[data-urgency="orange"]::before {
-    background: #ea580c !important;
-}
 .order-card[data-urgency="orange"] {
     background: linear-gradient(135deg, rgba(234,88,12,0.04) 0%, var(--card) 40%);
-}
-
-.order-card[data-urgency="pipeline"]::before {
-    background: repeating-linear-gradient(
-        to bottom, #9ca3af 0px, #9ca3af 4px, transparent 4px, transparent 8px
-    ) !important;
 }
 
 /* Urgency countdown banner */
@@ -2995,19 +2971,16 @@ input {
 
 /* in-transit due bar: consolidated above */
 
-/* Detail panel flush due bar */
+/* Detail panel flush due bar — inherits panel header color */
 .detail-due-bar {
     display: flex;
     align-items: flex-start;
-    padding: 14px 16px;
-    margin: -16px -16px 14px -16px;
-    background: rgba(124,58,237,0.06);
-    color: var(--primary);
+    padding: 14px 20px;
+    margin: 0 -20px 14px;
+    background: var(--mtcc-header-color, #7c3aed);
+    color: white;
     gap: 0;
 }
-.detail-due-bar.due-red { background: rgba(220,38,38,0.07); color: #dc2626; }
-.detail-due-bar.due-orange { background: rgba(234,88,12,0.06); color: #ea580c; }
-.detail-due-bar.due-transit { background: rgba(13,148,136,0.08); color: #0d9488; }
 .detail-due-left, .detail-due-right {
     display: flex;
     flex-direction: column;
@@ -3017,7 +2990,8 @@ input {
 .detail-due-heading {
     font-size: 0.58rem;
     font-weight: 800;
-    opacity: 0.5;
+    opacity: 0.7;
+    color: white;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     margin-bottom: 2px;
@@ -3025,10 +2999,12 @@ input {
 .detail-due-date {
     font-size: 0.82rem;
     font-weight: 700;
+    color: white;
 }
 .detail-due-time {
     font-size: 0.82rem;
     font-weight: 700;
+    color: white;
 }
 .detail-due-bar .due-bar-countdown {
     margin-left: auto;
@@ -4362,7 +4338,7 @@ input {
     color: #fff;
 }
 .scan-sticky-btn.btn-dispatched {
-    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    background: linear-gradient(135deg, #7c3aed, #6d28d9);
     color: #fff;
 }
 .scan-sticky-btn.btn-pickedup {
@@ -5449,3 +5425,21 @@ input {
     font-size: 0.72rem;
     font-weight: 600;
 }
+
+/* Courier card due bars — colored by status */
+.card-due-bar.due-status-ready { background: linear-gradient(135deg, #d97706, #b45309); color: white; }
+.card-due-bar.due-status-dispatched { background: linear-gradient(135deg, #7c3aed, #6d28d9); color: white; }
+.card-due-bar.due-status-shipped { background: linear-gradient(135deg, #14b8a6, #0d9488); color: white; }
+.card-due-bar.due-status-delivered { background: linear-gradient(135deg, #059669, #047857); color: white; }
+.card-due-bar.due-status-pickedup { background: linear-gradient(135deg, #22c55e, #16a34a); color: white; }
+.card-due-bar.due-status-missing { background: linear-gradient(135deg, #dc2626, #b91c1c); color: white; }
+.card-due-bar.due-status-printing { background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; }
+.card-due-bar.due-status-preflight { background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white; }
+
+/* Urgency overrides (courier only) */
+.card-due-bar.due-urgent-red { background: linear-gradient(135deg, #dc2626, #b91c1c); color: white; }
+.card-due-bar.due-urgent-orange { background: linear-gradient(135deg, #ea580c, #c2410c); color: white; }
+
+.card-due-bar .due-label,
+.card-due-bar .due-sep-by { color: rgba(255,255,255,0.7); }
+.card-due-bar .due-bar-countdown { color: white; }
