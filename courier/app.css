@@ -5125,13 +5125,30 @@ input {
    MTCC Detail Panel v2
    ============================================ */
 
+/* MTCC panel — color flows from handle through header */
+.detail-panel.mtcc-panel {
+    background: var(--mtcc-header-color, #64748b);
+}
+
+.detail-panel.mtcc-panel .detail-handle {
+    background: var(--mtcc-header-color, #64748b);
+    border-radius: 20px 20px 0 0;
+}
+
+.detail-panel.mtcc-panel .handle-bar {
+    background: rgba(255,255,255,0.4);
+}
+
+.detail-panel.mtcc-panel .detail-content {
+    background: white;
+}
+
 .mtcc-detail-header {
-    padding: 16px 20px;
-    border-radius: 16px 16px 0 0;
+    padding: 16px 20px 18px;
+    background: var(--mtcc-header-color, #64748b);
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    margin: -16px -16px 0;
+    align-items: flex-end;
 }
 
 .mtcc-detail-due {

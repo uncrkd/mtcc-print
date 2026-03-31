@@ -367,7 +367,13 @@ function showApp() {
     // Preload active events for MTCC filter pills
     if (currentUser.role === 'mtcc_staff') {
         apiCall('get_mtcc_dashboard', null, function(r) {
-            if (r.success) cachedActiveEvents = r.active_events || [];
+            if (r.success) {
+                cachedActiveEvents = r.active_events || [];
+                // Re-render current tab so filter pills appear
+                if (currentTab && currentTab !== 'mtcc_dashboard' && currentTab !== 'scan') {
+                    rerenderMTCCTab(currentTab);
+                }
+            }
         });
     }
 
@@ -1996,7 +2002,7 @@ function renderMTCCDetailPanel(order, mode) {
     // Due date header — colored by status phase (Fix 2)
     var dueStr = order.due_date_formatted || order.due_date || '';
     var timeStr = (order.due_time_formatted && order.due_time_formatted !== 'Anytime') ? order.due_time_formatted : 'Anytime';
-    html += '<div class="mtcc-detail-header" style="background: linear-gradient(135deg, ' + phaseColor + ', ' + phaseColor + 'cc);">';
+    html += '<div class="mtcc-detail-header">';
     if (dueStr) {
         html += '<div class="mtcc-detail-due"><span class="mtcc-due-label">DUE DATE</span><span class="mtcc-due-value">' + escapeHtml(dueStr) + '  |  by: ' + escapeHtml(timeStr) + '</span></div>';
     }
@@ -2112,11 +2118,22 @@ function showOrderDetail(ref, mode) {
 
     // MTCC staff gets a simplified detail panel
     if (currentUser && currentUser.role === 'mtcc_staff') {
+        // Set panel header color to match status phase
+        var pc = '#64748b';
+        if (['preflight', 'file_issue', 'printing'].indexOf(order.status) !== -1) pc = '#6366f1';
+        else if (order.status === 'ready') pc = '#d97706';
+        else if (['dispatched', 'shipped'].indexOf(order.status) !== -1) pc = '#14b8a6';
+        else if (order.status === 'delivered') pc = '#059669';
+        else if (order.status === 'pickedup') pc = '#22c55e';
+        else if (order.status === 'missing') pc = '#dc2626';
+        panel.style.setProperty('--mtcc-header-color', pc);
+        panel.classList.add('mtcc-panel');
         content.innerHTML = renderMTCCDetailPanel(order, mode);
         panel.classList.add('active');
         overlay.classList.add('active');
         return;
     }
+    panel.classList.remove('mtcc-panel');
 
     // Fetch route info if not already loaded (courier/admin only)
     if (order && !order.route_distance_km && (mode === 'delivery' || mode === 'available')) {
@@ -2394,6 +2411,7 @@ function closeDetailPanel() {
     panel.style.transition = '';
     panel.style.transform = '';
     panel.classList.remove('active');
+    panel.classList.remove('mtcc-panel');
     document.getElementById('detailOverlay').classList.remove('active');
 }
 
