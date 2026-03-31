@@ -3126,7 +3126,7 @@ function showBatchDetail(batchId, mode) {
 
     var html = '';
 
-    // Due date bar — same layout as order detail
+    // 1: Due date bar — consistent format with badge bottom-aligned
     if (batch.due_date_formatted) {
         var batchTimeLabel = batch.due_time_formatted || 'Anytime';
         html += '<div class="detail-due-bar">';
@@ -3134,16 +3134,15 @@ function showBatchDetail(batchId, mode) {
         html += '<span class="detail-due-heading">DUE DATE</span>';
         html += '<span class="detail-due-date">' + escapeHtml(batch.due_date_formatted) + '  |  by: ' + escapeHtml(batchTimeLabel) + '</span>';
         html += '</div>';
-        html += '<span class="order-status-badge badge-' + batch.status + ' mtcc-header-badge">' + batchStatus + '</span>';
+        html += '<span class="order-status-badge badge-' + batch.status + ' mtcc-header-badge" style="align-self:flex-end;">' + batchStatus + '</span>';
         html += '</div>';
     }
 
-
-    // Urgency banner (same as order detail)
+    // Urgency banner
     if (batch.urgency === 'red' || batch.urgency === 'orange') {
         var urgCls = batch.urgency === 'red' ? 'urgency-red' : 'urgency-orange';
         html += '<div class="detail-urgency-banner ' + urgCls + '">';
-        html += '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+        html += '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
         html += '<div class="detail-urgency-text"><strong>URGENT BATCH</strong>';
         var dueText = '';
         if (batch.due_date_formatted) dueText = 'Due ' + batch.due_date_formatted;
@@ -3152,13 +3151,15 @@ function showBatchDetail(batchId, mode) {
         html += '</div></div>';
     }
 
-    // Header — matches order detail header layout
-    html += '<div class="detail-order-header">';
+    // 3+4+12: Header — batch ID large, order count smaller, payout right
+    html += '<div class="batch-detail-header">';
     html += '<div>';
-    html += '<div class="detail-order-ref"><span class="batch-id-pill" style="margin-right:6px;">' + escapeHtml(batch.batch_id) + '</span> ' + batch.order_count + ' orders</div>';
-    html += '<div class="detail-order-tracking">' + stops.length + ' stops' + (batch.event_acronym ? ' \u00b7 ' + escapeHtml(batch.event_acronym) : '') + '</div>';
+    html += '<div class="batch-detail-id">' + escapeHtml(batch.batch_id) + '</div>';
+    html += '<div class="batch-detail-meta">' + batch.order_count + ' order' + (batch.order_count !== 1 ? 's' : '') + '</div>';
     html += '</div>';
-    html += '<span class="order-status-badge ' + badgeClass + '">' + batchStatus + '</span>';
+    if (batch.est_payout) {
+        html += '<div class="batch-detail-payout-header">$' + parseFloat(batch.est_payout).toFixed(2) + '</div>';
+    }
     html += '</div>';
 
     // Route Card — same .route-card container as single orders, with multi-stop map
@@ -3180,40 +3181,77 @@ function showBatchDetail(batchId, mode) {
         html += '<div class="route-map-container"><iframe class="route-map-iframe" src="' + buildMapEmbed(mapAddresses) + '" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>';
     }
 
-    // Route stats bar
+    // 5: Route stats bar — bold data, lighter labels
     if (batch.route && (batch.route.distance_km || batch.route.duration_min)) {
-        html += '<div class="route-info-badge"><span class="route-info-stat">Distance: ' + (batch.route.distance_km || '?') + ' km \u00b7 Drive time: ~' + (batch.route.duration_min || '?') + ' min \u00b7 ' + stops.length + ' stops</span></div>';
+        html += '<div class="route-info-badge route-info-styled">';
+        html += '<span class="route-stat-label">Distance: </span><span class="route-stat-value">' + (batch.route.distance_km || '?') + ' km</span>';
+        html += '<span class="route-stat-sep">\u00b7</span>';
+        html += '<span class="route-stat-label">Drive time: </span><span class="route-stat-value">~' + (batch.route.duration_min || '?') + ' min</span>';
+        html += '<span class="route-stat-sep">\u00b7</span>';
+        html += '<span class="route-stat-label">Stops: </span><span class="route-stat-value">' + stops.length + '</span>';
+        html += '</div>';
     }
 
-    // Stops timeline — clean: type, name, address, nav button only
+    // 6-9: Stops timeline — new icons, collapsible with order details
     html += '<div class="route-stops">';
     stops.forEach(function(stop, idx) {
         var isDone = (stop.status === 'completed');
         var isCurrent = (isActive && idx === (batch.current_stop_index || 0) && !isDone);
         var addr = (stop.address || '').replace(/\r\n/g, ', ').replace(/\n/g, ', ');
         var refCount = (stop.order_refs && stop.order_refs.length) || 0;
+        var isPickup = (stop.type === 'pickup');
+        var stopId = 'batchStop_' + batch.batch_id + '_' + idx;
 
         html += '<div class="route-stop' + (isDone ? ' route-stop-done' : '') + (isCurrent ? ' route-stop-current' : '') + '">';
+
+        // 6: Icon aligned with name — blue box for pickup, green pin for dropoff
+        html += '<div class="route-icon-col">';
         if (isDone) {
-            html += '<div class="route-dot ' + stop.type + ' done">\u2713</div>';
+            html += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
+        } else if (isPickup) {
+            html += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>';
         } else {
-            html += '<div class="batch-stop-dot ' + stop.type + '">' + (stop.type === 'pickup' ? '\ud83d\udce6' : '\ud83d\udccd') + '</div>';
+            html += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
         }
-        html += '<div class="route-stop-info">';
+        if (idx < stops.length - 1) html += '<div class="route-dashed-line"></div>';
+        html += '</div>';
+
+        html += '<div class="route-stop-info" style="flex:1;">';
+        // 7: Label with emphasized item count
         html += '<div class="route-stop-label">' + stop.type.toUpperCase();
-        if (isDone) html += ' <span style="color:#10b981;font-weight:700;">\u2713</span>';
-        if (isCurrent) html += ' <span style="background:#7c3aed;color:#fff;font-size:0.6rem;padding:1px 5px;border-radius:3px;margin-left:4px;">CURRENT</span>';
-        if (refCount > 0) html += ' <span style="font-size:0.68rem;color:#6b7280;font-weight:500;margin-left:4px;">\u00b7 ' + refCount + ' item' + (refCount !== 1 ? 's' : '') + '</span>';
+        if (isCurrent) html += ' <span class="batch-current-pill">CURRENT</span>';
+        if (refCount > 0) html += ' <span class="batch-item-count">\u00b7 ' + refCount + ' ITEM' + (refCount !== 1 ? 'S' : '') + '</span>';
         html += '</div>';
         html += '<div class="route-stop-name">' + escapeHtml(stop.name || '') + '</div>';
         if (addr) html += '<div class="route-stop-addr">' + escapeHtml(addr) + '</div>';
-        html += '</div>';
-        // Nav button for each stop
-        if (addr) html += '<a class="route-nav-btn" href="https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(addr) + '" target="_blank" rel="noopener"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg></a>';
+
+        // 9: Collapsible order details for pickup stops
+        if (isPickup && stop.order_refs && stop.order_refs.length > 0) {
+            html += '<button class="batch-stop-expand" onclick="toggleBatchStopDetails(\'' + stopId + '\', event)">View items <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button>';
+            html += '<div class="batch-stop-details" id="' + stopId + '" style="display:none;">';
+            stop.order_refs.forEach(function(oRef) {
+                var o = orders.find(function(x) { return x.ref === oRef; }) || {};
+                html += '<div class="batch-stop-order">';
+                html += '<div class="batch-stop-order-info">';
+                html += '<span class="batch-order-ref">' + escapeHtml(oRef) + '</span>';
+                html += '<span class="batch-order-customer">' + escapeHtml(o.customer_name || '') + '</span>';
+                var specs = [];
+                if (o.material) specs.push(o.material);
+                if (o.size) specs.push(o.size);
+                if (o.quantity && o.quantity > 1) specs.push(o.quantity + ' boxes');
+                if (specs.length) html += '<span class="batch-order-spec">' + escapeHtml(specs.join(' \u00b7 ')) + '</span>';
+                if (o.vendor_order_number) html += '<span class="batch-order-vendorref">Vendor Ref: ' + escapeHtml(o.vendor_order_number) + '</span>';
+                html += '</div>';
+                if (o.status) html += '<span class="order-status-badge badge-' + o.status + ' badge-sm">' + (statusLabels[o.status] || o.status) + '</span>';
+                html += '</div>';
+            });
+            html += '</div>';
+        }
         html += '</div>';
 
-        // Connector between stops
-        if (idx < stops.length - 1) html += '<div class="route-connector"></div>';
+        // 8: Navigate icon — softer style
+        if (addr) html += '<a class="route-nav-soft" href="https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(addr) + '" target="_blank" rel="noopener"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg></a>';
+        html += '</div>';
     });
     html += '</div>';
 
@@ -3231,44 +3269,7 @@ function showBatchDetail(batchId, mode) {
 
     html += '</div>'; // end route-card
 
-    // Orders grouped by pickup location
-    html += '<div class="batch-orders-grouped">';
-    html += '<div class="batch-orders-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5a2 2 0 01-2 2"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg> Pickup Details</div>';
-    // Group orders by vendor
-    var vendorGroups = {};
-    orders.forEach(function(o) {
-        var vKey = o.vendor_name || o.vendor_id || 'Unknown Vendor';
-        if (!vendorGroups[vKey]) vendorGroups[vKey] = [];
-        vendorGroups[vKey].push(o);
-    });
-    Object.keys(vendorGroups).forEach(function(vendorName) {
-        var group = vendorGroups[vendorName];
-        var totalQty = 0;
-        group.forEach(function(o) { totalQty += (o.quantity || 1); });
-        html += '<div class="batch-vendor-group">';
-        html += '<div class="batch-vendor-header">';
-        html += '<span class="batch-vendor-name">\ud83d\udce6 ' + escapeHtml(vendorName) + '</span>';
-        html += '<span class="batch-vendor-count">' + totalQty + ' poster' + (totalQty !== 1 ? 's' : '') + '</span>';
-        html += '</div>';
-        group.forEach(function(o) {
-            html += '<div class="batch-order-row">';
-            html += '<div class="batch-order-info">';
-            if (o.ref) html += '<span class="batch-order-ref">' + escapeHtml(o.ref) + '</span>';
-            html += '<span class="batch-order-customer">' + escapeHtml(o.customer_name || 'Customer') + '</span>';
-            var details = [];
-            if (o.material) details.push(o.material);
-            if (o.size) details.push(o.size);
-            if (o.quantity && o.quantity > 1) details.push('x' + o.quantity);
-            if (details.length > 0) html += '<span class="batch-order-spec">' + escapeHtml(details.join(' \u00b7 ')) + '</span>';
-            html += '</div>';
-            if (o.status) html += '<span class="order-status-badge badge-' + o.status + ' badge-sm">' + (statusLabels[o.status] || o.status) + '</span>';
-            html += '</div>';
-        });
-        html += '</div>';
-    });
-    html += '</div>';
-
-    // Payout — matches order detail payout layout
+    // Payout details (keep full breakdown at bottom)
     if (batch.est_payout) {
         html += '<div class="detail-payout">';
         html += '<div class="payout-total-row">';
@@ -3289,40 +3290,38 @@ function showBatchDetail(batchId, mode) {
         html += '</div>';
     }
 
-    // Action buttons — same layout as order detail
-    if (!isAvailable && !isActive) {
-        // No actions for completed/cancelled
-    } else {
-        html += '<div class="detail-actions">';
-        if (isAvailable && (batch.status === 'pending' || batch.status === 'suggested')) {
-            html += '<button class="status-action-btn btn-accept" onclick="acceptBatch(\'' + escapeAttr(batch.batch_id) + '\', this)">';
-            html += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
-            html += ' Accept Batch (' + batch.order_count + ' orders)</button>';
-        }
-        // Navigate Full Route removed — map buttons in route card above handle this
+    // Actions
+    if (isAvailable && (batch.status === 'pending' || batch.status === 'suggested')) {
+        html += '<div class="courier-sticky-action">';
+        html += '<button class="status-action-btn btn-accept" onclick="acceptBatch(\'' + escapeAttr(batch.batch_id) + '\', this)">';
+        html += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
+        html += ' Accept Batch (' + batch.order_count + ' orders)</button>';
         html += '</div>';
     }
 
-    // Release button
+    // 13: Release + Report Issue 50/50 row
     var batchPin = batch.courier_pin || (batch.courier ? batch.courier.pin : '') || '';
     var canRelease = false;
     if (batch.status === 'accepted' || batch.status === 'dispatched') {
         if (currentUser.role === 'courier' && batchPin === currentUser.pin) canRelease = true;
         if (currentUser.role === 'admin' || currentUser.role === 'mtcc_staff') canRelease = true;
     }
-    if (canRelease) {
-        html += '<div class="release-action" style="padding:0 16px 8px;">';
-        html += '<button class="release-btn" onclick="releaseBatch(\'' + escapeAttr(batch.batch_id) + '\', this)" style="width:100%;padding:10px;border:1.5px solid #ef4444;border-radius:10px;background:#fff;color:#ef4444;font-size:0.85rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">';
-        html += '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>';
-        html += 'Release Batch</button>';
-        html += '</div>';
+    if (canRelease || isActive) {
+        html += '<div class="courier-detail-actions">';
+        html += '<div class="courier-btn-row">';
+        if (canRelease) {
+            html += '<button class="release-btn" onclick="releaseBatch(\'' + escapeAttr(batch.batch_id) + '\', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg> Release Batch</button>';
+        }
+        if (typeof CourierIssues !== 'undefined') {
+            html += '<button class="release-btn" style="border-color:#d97706;color:#d97706;" onclick="CourierIssues.open(\'' + escapeAttr(orders[0] ? orders[0].ref : batch.batch_id) + '\')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Report Issue</button>';
+        }
+        html += '</div></div>';
     }
 
-    // Quick Contacts — same as order detail
-    html += '<div class="detail-contacts">';
-    html += '<div class="detail-contacts-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72"/></svg> Quick Contact</div>';
-    html += '<a class="contact-row" href="tel:' + SUPPORT_PHONES.admin.number.replace(/[^0-9+]/g, '') + '"><div class="contact-info"><div class="contact-label">' + SUPPORT_PHONES.admin.label + '</div><div class="contact-number">' + SUPPORT_PHONES.admin.number + '</div></div>' + phoneIcon + '</a>';
-    // Vendor phones from stops
+    // 14: Quick contacts as buttons with phone numbers (matching courier style)
+    html += '<div class="courier-contact-row">';
+    html += '<a class="courier-contact-btn" href="tel:' + SUPPORT_PHONES.admin.number.replace(/[^0-9+]/g, '') + '"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72"/></svg><span>Print Stuff</span><span class="courier-contact-num">' + SUPPORT_PHONES.admin.number + '</span></a>';
+    // Vendor phones
     var vendorPhones = {};
     stops.forEach(function(stop) {
         if (stop.type === 'pickup' && stop.vendor_phone && !vendorPhones[stop.vendor_phone]) {
@@ -3330,9 +3329,9 @@ function showBatchDetail(batchId, mode) {
         }
     });
     Object.keys(vendorPhones).forEach(function(phone) {
-        html += '<a class="contact-row" href="tel:' + phone.replace(/[^0-9+]/g, '') + '"><div class="contact-info"><div class="contact-label">' + escapeHtml(vendorPhones[phone]) + '</div><div class="contact-number">' + escapeHtml(phone) + '</div></div>' + phoneIcon + '</a>';
+        html += '<a class="courier-contact-btn" href="tel:' + phone.replace(/[^0-9+]/g, '') + '"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg><span>' + escapeHtml(vendorPhones[phone]) + '</span><span class="courier-contact-num">' + escapeHtml(phone) + '</span></a>';
     });
-    html += '<a class="contact-row" href="tel:' + SUPPORT_PHONES.mtcc.number.replace(/[^0-9+]/g, '') + '"><div class="contact-info"><div class="contact-label">' + SUPPORT_PHONES.mtcc.label + '</div><div class="contact-number">' + SUPPORT_PHONES.mtcc.number + '</div></div>' + phoneIcon + '</a>';
+    html += '<a class="courier-contact-btn" href="tel:' + SUPPORT_PHONES.mtcc.number.replace(/[^0-9+]/g, '') + '"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>MTCC</span><span class="courier-contact-num">' + SUPPORT_PHONES.mtcc.number + '</span></a>';
     html += '</div>';
 
     content.innerHTML = html;
@@ -3342,6 +3341,20 @@ function showBatchDetail(batchId, mode) {
 
 function closeBatchDetail() {
     closeDetailPanel();
+}
+
+function toggleBatchStopDetails(stopId, e) {
+    if (e) e.stopPropagation();
+    var el = document.getElementById(stopId);
+    if (!el) return;
+    var btn = el.previousElementSibling;
+    if (el.style.display === 'none') {
+        el.style.display = 'block';
+        if (btn) btn.innerHTML = 'Hide items <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>';
+    } else {
+        el.style.display = 'none';
+        if (btn) btn.innerHTML = 'View items <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>';
+    }
 }
 
 
