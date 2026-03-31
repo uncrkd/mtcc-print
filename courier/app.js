@@ -3149,194 +3149,146 @@ function showBatchDetail(batchId, mode) {
     }
     html += '</div>';
 
-    // Route Card — same .route-card container as single orders, with multi-stop map
-    html += '<div class="route-card">';
-    html += '<div class="route-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Route (' + stops.length + ' stops)</div>';
-
-    // Build multi-stop Google Maps embed URL
+    // Build map addresses
     var mapAddresses = [];
     stops.forEach(function(stop) {
         var addr = (stop.address || '').replace(/\r\n/g, ', ').replace(/\n/g, ', ');
         if (!addr && stop.name) addr = stop.name + ', Toronto, ON';
         if (addr) mapAddresses.push(addr);
     });
-    if (mapAddresses.length >= 2) {
-        // Embed with courier location + all stops
-        var embedUrl = buildMapEmbed(mapAddresses);
-        html += '<div class="route-map-container"><iframe class="route-map-iframe" src="' + embedUrl + '" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>';
-    } else if (mapAddresses.length === 1) {
-        html += '<div class="route-map-container"><iframe class="route-map-iframe" src="' + buildMapEmbed(mapAddresses) + '" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>';
-    }
 
-    // Route stats bar
+    // Route stats — icons instead of labels
     if (batch.route && (batch.route.distance_km || batch.route.duration_min)) {
-        html += '<div class="route-info-badge route-info-styled">';
-        html += '<span class="route-stat-item"><span class="route-stat-label">Distance</span><span class="route-stat-value">' + (batch.route.distance_km || '?') + ' km</span></span>';
-        html += '<span class="route-stat-sep">\u2022</span>';
-        html += '<span class="route-stat-item"><span class="route-stat-label">Drive time</span><span class="route-stat-value">~' + (batch.route.duration_min || '?') + ' min</span></span>';
-        html += '<span class="route-stat-sep">\u2022</span>';
-        html += '<span class="route-stat-item"><span class="route-stat-label">Stops</span><span class="route-stat-value">' + stops.length + '</span></span>';
+        html += '<div class="bt-stats">';
+        html += '<div class="bt-stat"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg><span class="bt-stat-val">' + (batch.route.distance_km || '?') + ' km</span></div>';
+        html += '<div class="bt-stat"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span class="bt-stat-val">~' + (batch.route.duration_min || '?') + ' min</span></div>';
+        html += '<div class="bt-stat"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span class="bt-stat-val">' + stops.length + ' stops</span></div>';
         html += '</div>';
     }
 
-    // Stops timeline
-    html += '<div class="batch-timeline">';
+    // ═══ STOPS — the hero section ═══
+    html += '<div class="bt-stops-section">';
     stops.forEach(function(stop, idx) {
         var isDone = (stop.status === 'completed');
         var isCurrent = (isActive && idx === (batch.current_stop_index || 0) && !isDone);
         var addr = (stop.address || '').replace(/\r\n/g, ', ').replace(/\n/g, ', ');
         var refCount = (stop.order_refs && stop.order_refs.length) || 0;
         var isPickup = (stop.type === 'pickup');
-        var stopId = 'batchStop_' + batch.batch_id + '_' + idx;
         var isLast = (idx === stops.length - 1);
-        var canExpand = isPickup && stop.order_refs && stop.order_refs.length > 0;
+        var vendorPhone = stop.vendor_phone || '';
 
-        html += '<div class="bt-stop">';
+        // Divider between stops
+        if (idx > 0) html += '<div class="bt-divider"></div>';
 
-        // Left: icon column with connectors
-        html += '<div class="bt-left">';
-        html += '<div class="bt-icon-pad"></div>'; // top padding
-        html += '<div class="bt-icon">';
-        if (isDone) {
-            html += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
-        } else if (isPickup) {
-            html += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>';
-        } else {
-            html += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
-        }
-        html += '</div>';
-        if (!isLast) html += '<div class="bt-line"></div>';
-        html += '</div>';
+        html += '<div class="bt-stop' + (isDone ? ' bt-stop-done' : '') + (isCurrent ? ' bt-stop-current' : '') + '">';
 
-        // Right: content — entire area tappable for pickup stops
-        html += '<div class="bt-right">';
-
-        // Tappable header area
-        if (canExpand) {
-            html += '<div class="bt-stop-tap" onclick="toggleBatchStopDetails(\'' + stopId + '\', event)">';
-        } else {
-            html += '<div class="bt-stop-header">';
-        }
-
-        // Label + badges
+        // Label row: type + badges
         html += '<div class="bt-label-row">';
         html += '<span class="route-stop-label">' + stop.type.toUpperCase() + '</span>';
-        if (isCurrent) html += '<span class="batch-current-pill">CURRENT</span>';
         if (refCount > 0) html += '<span class="batch-item-badge">' + refCount + ' item' + (refCount !== 1 ? 's' : '') + '</span>';
-        if (canExpand) html += '<svg class="bt-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>';
+        if (isCurrent) html += '<span class="batch-current-pill">CURRENT</span>';
         html += '</div>';
 
-        // Name + address
+        // Name row: icon + name + nav button (all aligned)
+        html += '<div class="bt-name-row">';
+
+        // Icon — aligned with name
+        html += '<div class="bt-stop-icon">';
+        if (isDone) {
+            html += '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
+        } else if (isPickup) {
+            html += '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>';
+        } else {
+            html += '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+        }
+        html += '</div>';
+
+        // Name + address + phone
+        html += '<div class="bt-name-info">';
         html += '<div class="bt-name">' + escapeHtml(stop.name || '') + '</div>';
         if (addr) html += '<div class="bt-addr">' + escapeHtml(addr) + '</div>';
+        if (vendorPhone) html += '<a class="bt-phone" href="tel:' + vendorPhone.replace(/[^0-9+]/g, '') + '"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72"/></svg> ' + escapeHtml(vendorPhone) + '</a>';
+        html += '</div>';
 
-        html += '</div>'; // end tap area
+        // Nav button — aligned with name
+        if (addr) html += '<a class="bt-nav" href="https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(addr) + '" target="_blank" rel="noopener"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg></a>';
 
-        // Navigate — outside tappable area
-        if (addr) html += '<a class="bt-nav" href="https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(addr) + '" target="_blank" rel="noopener" onclick="event.stopPropagation();"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg></a>';
+        html += '</div>'; // bt-name-row
 
-        // Expandable item cards
-        if (canExpand) {
-            html += '<div class="bt-items" id="' + stopId + '" style="display:none;">';
+        // Items — always visible (no collapsing)
+        if (isPickup && stop.order_refs && stop.order_refs.length > 0) {
+            html += '<div class="bt-items-visible">';
             stop.order_refs.forEach(function(oRef) {
                 var o = orders.find(function(x) { return x.ref === oRef; }) || {};
-                html += '<div class="bt-item-card">';
-                html += '<div class="bt-item-header">';
-                html += '<span class="bt-item-ref">' + escapeHtml(oRef) + '</span>';
-                html += '<span class="bt-item-customer">' + escapeHtml(o.customer_name || '') + '</span>';
-                html += '</div>';
                 var specs = [];
                 if (o.material) specs.push(o.material);
                 if (o.size) specs.push(o.size);
                 if (o.quantity && o.quantity > 1) specs.push(o.quantity + ' boxes');
-                html += '<div class="bt-item-details">';
-                if (specs.length) html += '<span class="bt-item-spec">' + escapeHtml(specs.join(' \u00b7 ')) + '</span>';
-                html += '<span class="bt-item-vendorref">Vendor Ref: ' + escapeHtml(o.vendor_order_number || 'N/A') + '</span>';
-                html += '</div>';
-                html += '<button class="bt-item-issue" onclick="event.stopPropagation(); CourierIssues.open(\'' + escapeAttr(oRef) + '\')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Report Issue</button>';
-                html += '</div>';
+                html += '<div class="bt-item-card">';
+                html += '<div class="bt-item-top"><span class="bt-item-ref">' + escapeHtml(oRef) + '</span><span class="bt-item-customer">' + escapeHtml(o.customer_name || '') + '</span></div>';
+                html += '<div class="bt-item-meta">' + escapeHtml(specs.join(' \u00b7 ') || '') + '</div>';
+                html += '<div class="bt-item-bottom"><span class="bt-item-vendorref">Vendor Ref: ' + escapeHtml(o.vendor_order_number || 'N/A') + '</span>';
+                if (typeof CourierIssues !== 'undefined') html += '<button class="bt-item-issue" onclick="CourierIssues.open(\'' + escapeAttr(oRef) + '\')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Issue</button>';
+                html += '</div></div>';
             });
             html += '</div>';
         }
 
-        html += '</div>'; // bt-right
         html += '</div>'; // bt-stop
     });
+    html += '</div>'; // bt-stops-section
+
+    // Map — below stops
+    html += '<div class="bt-map-section">';
+    if (mapAddresses.length >= 1) {
+        var embedUrl = buildMapEmbed(mapAddresses);
+        html += '<div class="route-map-container"><iframe class="route-map-iframe" src="' + embedUrl + '" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>';
+    }
+    if (mapAddresses.length >= 2) {
+        html += '<div class="route-map-buttons' + (isAppleDevice() ? '' : ' single') + '">';
+        html += '<a class="route-app-btn google" href="' + buildGoogleNavUrl(mapAddresses) + '" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg> Google Maps</a>';
+        if (isAppleDevice()) html += '<a class="route-app-btn apple" href="' + buildAppleNavUrl(mapAddresses) + '" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Apple Maps</a>';
+        html += '</div>';
+    }
     html += '</div>';
 
-    // Open in Maps buttons — no origin set, device GPS auto-fills start point
-    if (mapAddresses.length >= 2) {
-        var gNavUrl = buildGoogleNavUrl(mapAddresses);
-        html += '<div class="route-map-buttons' + (isAppleDevice() ? '' : ' single') + '">';
-        html += '<a class="route-app-btn google" href="' + gNavUrl + '" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg> Google Maps</a>';
-        if (isAppleDevice()) {
-            var aNavUrl = buildAppleNavUrl(mapAddresses);
-            html += '<a class="route-app-btn apple" href="' + aNavUrl + '" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Apple Maps</a>';
-        }
-        html += '</div>';
-    }
-
-    html += '</div>'; // end route-card
-
-    // Payout details (keep full breakdown at bottom)
+    // Compact payout summary
     if (batch.est_payout) {
-        html += '<div class="detail-payout">';
-        html += '<div class="payout-total-row">';
-        html += '<span class="payout-total-label">Est. Payout</span>';
-        html += '<span class="payout-total-amount">$' + parseFloat(batch.est_payout).toFixed(2) + '</span>';
-        html += '</div>';
+        html += '<div class="bt-payout-compact">';
+        html += '<span class="bt-payout-label">Payout: </span>';
         if (batch.est_payout_breakdown && Array.isArray(batch.est_payout_breakdown)) {
-            html += '<div class="payout-items">';
+            var parts = [];
             batch.est_payout_breakdown.forEach(function(item) {
-                var isBonus = (item.label !== 'Base rate');
-                html += '<div class="payout-row' + (isBonus ? ' payout-row-bonus' : '') + '">';
-                html += '<span class="payout-row-label">' + (isBonus ? '+ ' : '') + escapeHtml(item.label) + '</span>';
-                html += '<span class="payout-row-amount">$' + parseFloat(item.amount).toFixed(2) + '</span>';
-                html += '</div>';
+                parts.push('$' + parseFloat(item.amount).toFixed(0) + ' ' + item.label.toLowerCase());
             });
-            html += '</div>';
+            html += '<span class="bt-payout-breakdown">' + parts.join(' + ') + '</span>';
         }
+        html += '<span class="bt-payout-total">= $' + parseFloat(batch.est_payout).toFixed(2) + '</span>';
         html += '</div>';
     }
 
-    // Actions
+    // Bottom actions section
+    html += '<div class="bt-bottom-actions">';
+
+    // Accept batch (for available batches)
     if (isAvailable && (batch.status === 'pending' || batch.status === 'suggested')) {
-        html += '<div class="courier-sticky-action">';
-        html += '<button class="status-action-btn btn-accept" onclick="acceptBatch(\'' + escapeAttr(batch.batch_id) + '\', this)">';
+        html += '<button class="status-action-btn btn-accept bt-full-btn" onclick="acceptBatch(\'' + escapeAttr(batch.batch_id) + '\', this)">';
         html += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
         html += ' Accept Batch (' + batch.order_count + ' orders)</button>';
-        html += '</div>';
     }
 
     // Report Issue — full width
     if (typeof CourierIssues !== 'undefined' && isActive) {
-        html += '<div class="courier-detail-actions">';
-        html += '<button class="release-btn" style="border-color:#d97706;color:#d97706;width:100%;" onclick="CourierIssues.open(\'' + escapeAttr(orders[0] ? orders[0].ref : batch.batch_id) + '\')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Report Issue</button>';
-        html += '</div>';
+        html += '<button class="release-btn bt-full-btn" style="border-color:#d97706;color:#d97706;" onclick="CourierIssues.open(\'' + escapeAttr(orders[0] ? orders[0].ref : batch.batch_id) + '\')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Report Issue</button>';
     }
 
-    // Contacts — 2x2 grid for 4+, 3x1 for 3
-    var contactButtons = [];
-    contactButtons.push({href: 'tel:' + SUPPORT_PHONES.admin.number.replace(/[^0-9+]/g, ''), icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72"/></svg>', name: 'Print Stuff', num: SUPPORT_PHONES.admin.number});
-    var vendorPhones = {};
-    stops.forEach(function(stop) {
-        if (stop.type === 'pickup' && stop.vendor_phone && !vendorPhones[stop.vendor_phone]) {
-            vendorPhones[stop.vendor_phone] = stop.name || 'Vendor';
-        }
-    });
-    Object.keys(vendorPhones).forEach(function(phone) {
-        contactButtons.push({href: 'tel:' + phone.replace(/[^0-9+]/g, ''), icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>', name: escapeHtml(vendorPhones[phone]), num: escapeHtml(phone)});
-    });
-    contactButtons.push({href: 'tel:' + SUPPORT_PHONES.mtcc.number.replace(/[^0-9+]/g, ''), icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>', name: 'MTCC', num: SUPPORT_PHONES.mtcc.number});
-
-    var contactGridClass = contactButtons.length > 3 ? 'courier-contact-grid-2x2' : 'courier-contact-row';
-    html += '<div class="' + contactGridClass + '">';
-    contactButtons.forEach(function(c) {
-        html += '<a class="courier-contact-btn" href="' + c.href + '">' + c.icon + '<span>' + c.name + '</span><span class="courier-contact-num">' + c.num + '</span></a>';
-    });
+    // Contacts — dispatch + MTCC only (vendor phones at each stop)
+    html += '<div class="bt-contact-row">';
+    html += '<a class="courier-contact-btn" href="tel:' + SUPPORT_PHONES.admin.number.replace(/[^0-9+]/g, '') + '"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72"/></svg><span>Print Stuff</span><span class="courier-contact-num">' + SUPPORT_PHONES.admin.number + '</span></a>';
+    html += '<a class="courier-contact-btn" href="tel:' + SUPPORT_PHONES.mtcc.number.replace(/[^0-9+]/g, '') + '"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>MTCC</span><span class="courier-contact-num">' + SUPPORT_PHONES.mtcc.number + '</span></a>';
     html += '</div>';
 
-    // Release batch — at absolute bottom, separated
+    // Release — at very bottom
     var batchPin = batch.courier_pin || (batch.courier ? batch.courier.pin : '') || '';
     var canRelease = false;
     if (batch.status === 'accepted' || batch.status === 'dispatched') {
@@ -3344,10 +3296,12 @@ function showBatchDetail(batchId, mode) {
         if (currentUser.role === 'admin' || currentUser.role === 'mtcc_staff') canRelease = true;
     }
     if (canRelease) {
-        html += '<div class="batch-release-bottom">';
-        html += '<button class="release-btn" onclick="releaseBatch(\'' + escapeAttr(batch.batch_id) + '\', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg> Release Batch</button>';
+        html += '<div class="bt-release-section">';
+        html += '<button class="release-btn bt-full-btn" onclick="releaseBatch(\'' + escapeAttr(batch.batch_id) + '\', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg> Release Batch</button>';
         html += '</div>';
     }
+
+    html += '</div>'; // bt-bottom-actions
 
     content.innerHTML = html;
     panel.classList.add('active');
