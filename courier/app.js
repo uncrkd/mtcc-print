@@ -3151,14 +3151,14 @@ function showBatchDetail(batchId, mode) {
         html += '</div></div>';
     }
 
-    // 3+4+12: Header — batch ID large, order count smaller, payout right
-    html += '<div class="batch-detail-header">';
+    // Header — batch ID large, order count smaller, payout with label
+    html += '<div class="detail-order-header">';
     html += '<div>';
-    html += '<div class="batch-detail-id">' + escapeHtml(batch.batch_id) + '</div>';
-    html += '<div class="batch-detail-meta">' + batch.order_count + ' order' + (batch.order_count !== 1 ? 's' : '') + '</div>';
+    html += '<div class="detail-order-ref">' + escapeHtml(batch.batch_id) + '</div>';
+    html += '<div class="detail-order-tracking">' + batch.order_count + ' order' + (batch.order_count !== 1 ? 's' : '') + '</div>';
     html += '</div>';
     if (batch.est_payout) {
-        html += '<div class="batch-detail-payout-header">$' + parseFloat(batch.est_payout).toFixed(2) + '</div>';
+        html += '<div class="batch-payout-top"><div class="batch-payout-top-label">Est. Payout</div><div class="batch-payout-top-amount">$' + parseFloat(batch.est_payout).toFixed(2) + '</div></div>';
     }
     html += '</div>';
 
@@ -3204,8 +3204,19 @@ function showBatchDetail(batchId, mode) {
 
         html += '<div class="route-stop' + (isDone ? ' route-stop-done' : '') + (isCurrent ? ' route-stop-current' : '') + '">';
 
-        // 6: Icon aligned with name — blue box for pickup, green pin for dropoff
-        html += '<div class="route-icon-col">';
+        // Stop content: label row + name/address with icon aligned to name
+        html += '<div class="batch-stop-content">';
+
+        // Top: label + item badge + navigate
+        html += '<div class="batch-stop-top-row">';
+        html += '<span class="route-stop-label">' + stop.type.toUpperCase() + '</span>';
+        if (isCurrent) html += '<span class="batch-current-pill">CURRENT</span>';
+        if (refCount > 0) html += '<span class="batch-item-badge">' + refCount + ' item' + (refCount !== 1 ? 's' : '') + '</span>';
+        html += '</div>';
+
+        // Name row: icon aligned with name
+        html += '<div class="batch-stop-name-row">';
+        html += '<div class="batch-stop-icon">';
         if (isDone) {
             html += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
         } else if (isPickup) {
@@ -3213,19 +3224,15 @@ function showBatchDetail(batchId, mode) {
         } else {
             html += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
         }
-        if (idx < stops.length - 1) html += '<div class="route-dashed-line"></div>';
         html += '</div>';
-
-        html += '<div class="route-stop-info" style="flex:1;">';
-        // 7: Label with emphasized item count
-        html += '<div class="route-stop-label">' + stop.type.toUpperCase();
-        if (isCurrent) html += ' <span class="batch-current-pill">CURRENT</span>';
-        if (refCount > 0) html += ' <span class="batch-item-count">\u00b7 ' + refCount + ' ITEM' + (refCount !== 1 ? 'S' : '') + '</span>';
-        html += '</div>';
+        html += '<div class="batch-stop-name-info">';
         html += '<div class="route-stop-name">' + escapeHtml(stop.name || '') + '</div>';
         if (addr) html += '<div class="route-stop-addr">' + escapeHtml(addr) + '</div>';
+        html += '</div>';
+        if (addr) html += '<a class="route-nav-soft" href="https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(addr) + '" target="_blank" rel="noopener"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg></a>';
+        html += '</div>';
 
-        // 9: Collapsible order details for pickup stops
+        // Collapsible order details for pickup stops
         if (isPickup && stop.order_refs && stop.order_refs.length > 0) {
             html += '<button class="batch-stop-expand" onclick="toggleBatchStopDetails(\'' + stopId + '\', event)">View items <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button>';
             html += '<div class="batch-stop-details" id="' + stopId + '" style="display:none;">';
@@ -3242,15 +3249,15 @@ function showBatchDetail(batchId, mode) {
                 if (specs.length) html += '<span class="batch-order-spec">' + escapeHtml(specs.join(' \u00b7 ')) + '</span>';
                 if (o.vendor_order_number) html += '<span class="batch-order-vendorref">Vendor Ref: ' + escapeHtml(o.vendor_order_number) + '</span>';
                 html += '</div>';
-                if (o.status) html += '<span class="order-status-badge badge-' + o.status + ' badge-sm">' + (statusLabels[o.status] || o.status) + '</span>';
                 html += '</div>';
             });
             html += '</div>';
         }
-        html += '</div>';
 
-        // 8: Navigate icon — softer style
-        if (addr) html += '<a class="route-nav-soft" href="https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(addr) + '" target="_blank" rel="noopener"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg></a>';
+        html += '</div>'; // end batch-stop-content
+
+        // Dashed connector to next stop
+        if (idx < stops.length - 1) html += '<div class="batch-stop-connector"><div class="batch-connector-line"></div></div>';
         html += '</div>';
     });
     html += '</div>';

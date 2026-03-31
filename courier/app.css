@@ -5838,3 +5838,105 @@ input {
     color: #9ca3af;
     font-weight: 400;
 }
+
+/* ============================================
+   Batch Detail Fixes v3
+   ============================================ */
+
+/* Payout in header with label */
+.batch-payout-top {
+    text-align: right;
+}
+
+.batch-payout-top-label {
+    font-size: 0.62rem;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.batch-payout-top-amount {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #059669;
+    letter-spacing: -0.02em;
+}
+
+/* Stop content wrapper */
+.batch-stop-content {
+    padding: 12px 0;
+}
+
+/* Top row: label + badge */
+.batch-stop-top-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+/* Item count as badge */
+.batch-item-badge {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: #7c3aed;
+    background: #f5f3ff;
+    border: 1px solid #e9d5ff;
+    padding: 2px 8px;
+    border-radius: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+/* Name row: icon aligned with name */
+.batch-stop-name-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.batch-stop-icon {
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.batch-stop-name-info {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Dashed connector between stops — full height */
+.batch-stop-connector {
+    display: flex;
+    justify-content: center;
+    padding: 0 0 0 26px;
+}
+
+.batch-connector-line {
+    width: 2px;
+    height: 24px;
+    border-left: 2px dashed #d1d5db;
+}
+
+/* Expanded stop details — full width card */
+.batch-stop-details {
+    margin-top: 8px;
+    margin-left: 0;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    overflow: hidden;
+    background: white;
+}
+
+.batch-stop-order {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 14px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.batch-stop-order:last-child {
+    border-bottom: none;
+}
