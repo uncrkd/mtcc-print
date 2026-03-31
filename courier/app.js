@@ -3161,6 +3161,30 @@ function showBatchDetail(batchId, mode) {
     var pickupCount = 0;
     stops.forEach(function(s) { if (s.type === 'pickup') pickupCount++; });
 
+    // Map with stats bar — at top, before stops
+    html += '<div class="bv7-map-block">';
+    if (batch.route && (batch.route.distance_km || batch.route.duration_min)) {
+        html += '<div class="bv7-stats-bar">';
+        html += '<span class="bv7-stats-title">Route</span>';
+        html += '<span class="bv7-stats-sep">|</span>';
+        html += '<span class="bv7-stat"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg> <strong>' + (batch.route.distance_km || '?') + ' km</strong></span>';
+        html += '<span class="bv7-stat-dot">\u2022</span>';
+        html += '<span class="bv7-stat"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> <strong>~' + (batch.route.duration_min || '?') + ' min</strong></span>';
+        html += '<span class="bv7-stat-dot">\u2022</span>';
+        html += '<span class="bv7-stat"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> <strong>' + pickupCount + ' stop' + (pickupCount !== 1 ? 's' : '') + '</strong></span>';
+        html += '</div>';
+    }
+    if (mapAddresses.length >= 1) {
+        html += '<div class="bv7-map-embed"><iframe src="' + buildMapEmbed(mapAddresses) + '" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>';
+    }
+    if (mapAddresses.length >= 2) {
+        html += '<div class="route-map-buttons' + (isAppleDevice() ? '' : ' single') + '">';
+        html += '<a class="route-app-btn google" href="' + buildGoogleNavUrl(mapAddresses) + '" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg> Google Maps</a>';
+        if (isAppleDevice()) html += '<a class="route-app-btn apple" href="' + buildAppleNavUrl(mapAddresses) + '" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Apple Maps</a>';
+        html += '</div>';
+    }
+    html += '</div>';
+
     // ═══ STOPS with vertical connector ═══
     html += '<div class="batch-timeline-v7">';
     var pickupNum = 0;
@@ -3233,30 +3257,7 @@ function showBatchDetail(batchId, mode) {
     });
     html += '</div>';
 
-    // Map with stats bar attached to top
-    html += '<div class="bv7-map-block">';
-    // Stats bar — attached to map top
-    if (batch.route && (batch.route.distance_km || batch.route.duration_min)) {
-        html += '<div class="bv7-stats-bar">';
-        html += '<span class="bv7-stats-title">Route</span>';
-        html += '<span class="bv7-stats-sep">|</span>';
-        html += '<span class="bv7-stat"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg> <strong>' + (batch.route.distance_km || '?') + ' km</strong></span>';
-        html += '<span class="bv7-stat-dot">\u2022</span>';
-        html += '<span class="bv7-stat"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> <strong>~' + (batch.route.duration_min || '?') + ' min</strong></span>';
-        html += '<span class="bv7-stat-dot">\u2022</span>';
-        html += '<span class="bv7-stat"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> <strong>' + pickupCount + ' stop' + (pickupCount !== 1 ? 's' : '') + '</strong></span>';
-        html += '</div>';
-    }
-    if (mapAddresses.length >= 1) {
-        html += '<div class="bv7-map-embed"><iframe src="' + buildMapEmbed(mapAddresses) + '" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>';
-    }
-    if (mapAddresses.length >= 2) {
-        html += '<div class="route-map-buttons' + (isAppleDevice() ? '' : ' single') + '">';
-        html += '<a class="route-app-btn google" href="' + buildGoogleNavUrl(mapAddresses) + '" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg> Google Maps</a>';
-        if (isAppleDevice()) html += '<a class="route-app-btn apple" href="' + buildAppleNavUrl(mapAddresses) + '" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Apple Maps</a>';
-        html += '</div>';
-    }
-    html += '</div>';
+    // (map already rendered above stops)
 
     // Payout card (Fix 4: proper card, not compact)
     if (batch.est_payout) {
