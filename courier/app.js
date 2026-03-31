@@ -3263,7 +3263,7 @@ function showBatchDetail(batchId, mode) {
 
         html += '<div class="bv7-stop">';
 
-        // Left column: icon + dashed line connector
+        // Left column: icon + connector (green when done)
         html += '<div class="bv7-left">';
         html += '<div class="bv7-icon">';
         if (isDone) {
@@ -3274,7 +3274,7 @@ function showBatchDetail(batchId, mode) {
             html += '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
         }
         html += '</div>';
-        if (!isLast) html += '<div class="bv7-line"></div>';
+        if (!isLast) html += '<div class="bv7-line' + (isDone ? ' bv7-line-done' : '') + '"></div>';
         html += '</div>';
 
         // Right column: all content
@@ -3288,10 +3288,27 @@ function showBatchDetail(batchId, mode) {
         if (isCurrent) html += '<span class="batch-current-pill">CURRENT</span>';
         html += '</div>';
 
-        // Name
+        // Name + address
         html += '<div class="bv7-name">' + escapeHtml(stop.name || '') + '</div>';
         if (addr) html += '<div class="bv7-addr">' + escapeHtml(addr) + '</div>';
-        if (vendorPhone) html += '<a class="bv7-phone" href="tel:' + vendorPhone.replace(/[^0-9+]/g, '') + '"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72"/></svg> ' + escapeHtml(vendorPhone) + '</a>';
+
+        // Phone + hours row
+        var vendorHours = stop.vendor_hours || '';
+        if (vendorPhone || vendorHours || !isPickup) {
+            html += '<div class="bv7-contact-row">';
+            if (vendorPhone) {
+                html += '<a class="bv7-phone" href="tel:' + vendorPhone.replace(/[^0-9+]/g, '') + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg> ' + escapeHtml(vendorPhone) + '</a>';
+            }
+            if (vendorPhone && vendorHours) html += '<span class="bv7-vdivider"></span>';
+            if (vendorHours) {
+                html += '<span class="bv7-hours"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ' + escapeHtml(vendorHours) + '</span>';
+            }
+            // MTCC phone for dropoff stops
+            if (!isPickup) {
+                html += '<a class="bv7-phone" href="tel:' + SUPPORT_PHONES.mtcc.number.replace(/[^0-9+]/g, '') + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg> ' + SUPPORT_PHONES.mtcc.number + '</a>';
+            }
+            html += '</div>';
+        }
 
         // Nav button
         if (addr) html += '<a class="bv7-nav" href="https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(addr) + '" target="_blank" rel="noopener"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg></a>';
@@ -3301,16 +3318,19 @@ function showBatchDetail(batchId, mode) {
             html += '<div class="bv7-items">';
             stop.order_refs.forEach(function(oRef) {
                 var o = orders.find(function(x) { return x.ref === oRef; }) || {};
-                var specs = [];
-                if (o.material) specs.push(o.material);
-                if (o.size) specs.push(o.size);
-                if (o.quantity && o.quantity > 1) specs.push(o.quantity + ' boxes');
+                var qty = o.quantity || 1;
                 html += '<div class="bv7-item">';
-                html += '<div class="bv7-item-row1"><span class="bv7-item-ref">' + escapeHtml(oRef) + '</span> <span class="bv7-item-name">' + escapeHtml(o.customer_name || '') + '</span></div>';
-                if (specs.length) html += '<div class="bv7-item-spec">' + escapeHtml(specs.join(' \u00b7 ')) + '</div>';
-                html += '<div class="bv7-item-row3"><span class="bv7-item-vref">Vendor Ref: ' + escapeHtml(o.vendor_order_number || 'N/A') + '</span>';
-                if (typeof CourierIssues !== 'undefined') html += '<button class="bv7-item-issue" onclick="CourierIssues.open(\'' + escapeAttr(oRef) + '\')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Issue</button>';
-                html += '</div></div>';
+                // Labeled fields
+                html += '<div class="bv7-item-field"><span class="bv7-item-label">Order ID</span><span class="bv7-item-ref">' + escapeHtml(oRef) + '</span></div>';
+                html += '<div class="bv7-item-field"><span class="bv7-item-label">Customer</span><span class="bv7-item-name">' + escapeHtml(o.customer_name || '') + '</span></div>';
+                if (o.material) html += '<div class="bv7-item-field"><span class="bv7-item-label">Material</span><span class="bv7-item-val">' + escapeHtml(o.material) + '</span></div>';
+                if (o.size) html += '<div class="bv7-item-field"><span class="bv7-item-label">Size</span><span class="bv7-item-val">' + escapeHtml(o.size) + '</span></div>';
+                html += '<div class="bv7-item-field"><span class="bv7-item-label">Vendor Ref</span><span class="bv7-item-val">' + escapeHtml(o.vendor_order_number || 'N/A') + '</span></div>';
+                // Box count divider
+                html += '<div class="bv7-item-boxes"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg> ' + qty + ' box' + (qty !== 1 ? 'es' : '') + '</div>';
+                // Issue button
+                if (typeof CourierIssues !== 'undefined') html += '<button class="bv7-item-issue" onclick="CourierIssues.open(\'' + escapeAttr(oRef) + '\')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Report Issue</button>';
+                html += '</div>';
             });
             html += '</div>';
         }
@@ -3360,11 +3380,10 @@ function showBatchDetail(batchId, mode) {
         html += '<button class="release-btn bt-full-btn" style="border-color:#d97706;color:#d97706;" onclick="CourierIssues.open(\'' + escapeAttr(orders[0] ? orders[0].ref : batch.batch_id) + '\')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Report Issue</button>';
     }
 
-    // Contacts — horizontal buttons, phone icon left, name + number
-    var phoneIconSvg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>';
+    // Contacts — Call + Chat (Print Stuff only, MTCC phone is under dropoff)
     html += '<div class="bv7-contacts">';
-    html += '<a class="bv7-contact" href="tel:' + SUPPORT_PHONES.admin.number.replace(/[^0-9+]/g, '') + '">' + phoneIconSvg + '<div class="bv7-contact-info"><span class="bv7-contact-name">Print Stuff</span><span class="bv7-contact-num">' + SUPPORT_PHONES.admin.number + '</span></div></a>';
-    html += '<a class="bv7-contact" href="tel:' + SUPPORT_PHONES.mtcc.number.replace(/[^0-9+]/g, '') + '">' + phoneIconSvg + '<div class="bv7-contact-info"><span class="bv7-contact-name">MTCC</span><span class="bv7-contact-num">' + SUPPORT_PHONES.mtcc.number + '</span></div></a>';
+    html += '<a class="bv7-contact" href="tel:' + SUPPORT_PHONES.admin.number.replace(/[^0-9+]/g, '') + '"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg><div class="bv7-contact-info"><span class="bv7-contact-name">Call Print Stuff</span><span class="bv7-contact-num">' + SUPPORT_PHONES.admin.number + '</span></div></a>';
+    html += '<a class="bv7-contact" href="https://tawk.to/chat/69bcadcf600a121c36fa7a4b/1jk4gdsmg" target="_blank" rel="noopener"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><div class="bv7-contact-info"><span class="bv7-contact-name">Live Chat</span><span class="bv7-contact-num">Print Stuff Support</span></div></a>';
     html += '</div>';
 
     // Release — at very bottom

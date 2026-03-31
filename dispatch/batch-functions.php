@@ -451,11 +451,33 @@ function batch_buildStops($formattedOrders) {
         
         // Group pickups by vendor
         if (!isset($pickups[$vendorKey])) {
+            // Look up vendor hours
+            $vendorHours = '';
+            if (!empty($order['vendor_id'])) {
+                $vendorsFile = dirname(__DIR__) . '/data/vendors.json';
+                if (file_exists($vendorsFile)) {
+                    $vData = json_decode(file_get_contents($vendorsFile), true);
+                    foreach ($vData['vendors'] ?? [] as $v) {
+                        if (($v['id'] ?? '') === $order['vendor_id']) {
+                            $hrs = $v['business_hours'] ?? [];
+                            $todayDay = strtolower(date('l'));
+                            $todayHrs = $hrs[$todayDay] ?? null;
+                            if ($todayHrs && empty($todayHrs['closed'])) {
+                                $vendorHours = ($todayHrs['open'] ?? '9:00') . ' - ' . ($todayHrs['close'] ?? '18:00');
+                            } elseif ($todayHrs && !empty($todayHrs['closed'])) {
+                                $vendorHours = 'Closed today';
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
             $pickups[$vendorKey] = [
                 'type' => 'pickup',
                 'name' => $vendorKey,
                 'address' => $vendorAddr,
                 'vendor_phone' => $order['vendor_phone'] ?? '',
+                'vendor_hours' => $vendorHours,
                 'order_refs' => [],
                 'order_details' => [],
                 'coords' => null,
@@ -1224,6 +1246,7 @@ function batch_formatOrder($orderData, $ref) {
         'destination_instructions' => $dest['instructions'] ?? '',
         // Vendor / Pickup
         'vendor_name' => $vendorName,
+        'vendor_id' => $vendorInfo['vendor_id'] ?? '',
         'vendor_address' => $vendorAddress,
         'vendor_phone' => $vendorPhone,
         // Due info
@@ -1283,10 +1306,16 @@ function batch_formatForApp($batch) {
     
     // Build order summaries
     $orderSummaries = [];
+    // Load preflight log for vendor order numbers
+    $preflightLogFile = dirname(__DIR__) . '/data/preflight-log.json';
+    $preflightLog = file_exists($preflightLogFile) ? (json_decode(file_get_contents($preflightLogFile), true) ?: []) : [];
+    $pfEntries = $preflightLog['entries'] ?? [];
+
     foreach ($refs as $ref) {
         $order = dispatch_loadOrder($ref);
         if ($order) {
             $fmt = batch_formatOrder($order, $ref);
+            $pfEntry = $pfEntries[$ref] ?? [];
             $orderSummaries[] = [
                 'ref' => $ref,
                 'customer_name' => $fmt['customer_name'] ?? '',
@@ -1295,6 +1324,7 @@ function batch_formatForApp($batch) {
                 'size' => $fmt['size'] ?? '',
                 'quantity' => $fmt['quantity'] ?? 1,
                 'status' => $fmt['status'] ?? '',
+                'vendor_order_number' => $pfEntry['vendor_order_number'] ?? $order['vendor_order_number'] ?? '',
             ];
         }
     }

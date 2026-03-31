@@ -6763,3 +6763,84 @@ input {
     display: block;
     border-radius: 8px 8px 0 0;
 }
+
+/* ============================================
+   Phase 2 — Pickup indicators, labels, hours
+   ============================================ */
+
+/* Done connector — solid green */
+.bv7-line-done {
+    border-left-style: solid;
+    border-left-color: #059669;
+}
+
+/* Phone + hours row */
+.bv7-contact-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+}
+
+.bv7-vdivider {
+    width: 1px;
+    height: 14px;
+    background: #d1d5db;
+}
+
+.bv7-hours {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.72rem;
+    color: #6b7280;
+}
+
+/* Labeled item fields */
+.bv7-item-field {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 3px 0;
+}
+
+.bv7-item-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    flex-shrink: 0;
+    min-width: 70px;
+}
+
+.bv7-item-ref {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #7c3aed;
+}
+
+.bv7-item-name {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #1a1625;
+}
+
+.bv7-item-val {
+    font-size: 0.8rem;
+    color: #374151;
+}
+
+/* Box count with divider */
+.bv7-item-boxes {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #6b7280;
+    padding-top: 8px;
+    margin-top: 6px;
+    border-top: 1px solid #f3f4f6;
+}
