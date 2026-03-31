@@ -6254,8 +6254,10 @@ input {
     padding: 8px 16px 0;
 }
 
-.bt-stop {
-    padding: 0;
+.bt-stops-section .bt-stop {
+    display: block !important;
+    padding: 0 !important;
+    align-items: initial !important;
 }
 
 .bt-divider {
@@ -6334,9 +6336,11 @@ input {
 
 .bt-nav:active { background: #ede9fe; }
 
-/* Items always visible */
+/* Items always visible — below the name row */
 .bt-items-visible {
     margin: 10px 0 4px 34px;
+    display: block;
+    clear: both;
 }
 
 .bt-item-card {
