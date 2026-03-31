@@ -1626,9 +1626,9 @@ function fetchRouteInfo(ref) {
         // Update route badge in detail panel if visible
         var badge = document.querySelector('.route-info-badge');
         if (badge) {
-            badge.innerHTML = '<span class="route-info-dist">' + result.route.distance_km + ' km</span>' +
+            badge.innerHTML = '<span class="route-info-dist">Distance: ' + result.route.distance_km + ' km</span>' +
                               '<span class="route-info-sep">\u00b7</span>' +
-                              '<span class="route-info-eta">~' + result.route.duration_min + ' min drive</span>';
+                              '<span class="route-info-eta">Drive time: ~' + result.route.duration_min + ' min</span>';
             badge.classList.add('loaded');
         }
     });
@@ -2476,7 +2476,7 @@ function acceptDelivery(ref, btnEl) {
             showToast(result.error || 'Failed to accept', 'error');
             if (btnEl) {
                 btnEl.disabled = false;
-                btnEl.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Accept Delivery';
+                btnEl.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Accept Delivery';
             }
         }
     });
@@ -3014,8 +3014,8 @@ function renderBatchCard(batch, mode) {
     if (batch.route && (batch.route.distance_km || batch.route.duration_min)) {
         html += '<div class="batch-route-bar">';
         html += '<span class="batch-route-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>';
-        if (batch.route.distance_km) html += '<span>' + batch.route.distance_km + ' km</span>';
-        if (batch.route.duration_min) html += '<span class="batch-route-sep">\u00b7</span><span>~' + batch.route.duration_min + ' min</span>';
+        if (batch.route.distance_km) html += '<span>Distance: ' + batch.route.distance_km + ' km</span>';
+        if (batch.route.duration_min) html += '<span class="batch-route-sep">\u00b7</span><span>Drive time: ~' + batch.route.duration_min + ' min</span>';
         html += '<span class="batch-route-sep">\u00b7</span><span>' + stops.length + ' stops</span>';
         html += '</div>';
     }
@@ -3182,7 +3182,7 @@ function showBatchDetail(batchId, mode) {
 
     // Route stats bar
     if (batch.route && (batch.route.distance_km || batch.route.duration_min)) {
-        html += '<div class="route-info-badge"><span class="route-info-stat">' + (batch.route.distance_km || '?') + ' km \u00b7 ~' + (batch.route.duration_min || '?') + ' min \u00b7 ' + stops.length + ' stops</span></div>';
+        html += '<div class="route-info-badge"><span class="route-info-stat">Distance: ' + (batch.route.distance_km || '?') + ' km \u00b7 Drive time: ~' + (batch.route.duration_min || '?') + ' min \u00b7 ' + stops.length + ' stops</span></div>';
     }
 
     // Stops timeline — clean: type, name, address, nav button only
