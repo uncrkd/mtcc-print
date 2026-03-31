@@ -1854,7 +1854,7 @@ function showTransitView(ref, mode) {
     else if (urgency.level === 'orange') urgCls = ' urgency-orange';
 
     // Phone icon SVG
-    var icoPhone = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>';
+    var icoPhone = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>';
 
     // ============ BUILD HTML ============
     var html = '<div class="tv-shell">';
@@ -2360,16 +2360,16 @@ function showOrderDetail(ref, mode) {
 
     // Release button for courier's own dispatched orders
     if (mode === 'delivery' && order.status === 'dispatched' && currentUser.role === 'courier') {
-        html += '<div class="release-action" style="padding:0 16px 8px;">';
-        html += '<button class="release-btn" onclick="releaseDelivery(\'' + escapeAttr(order.ref) + '\', this)" style="width:100%;padding:10px;border:1.5px solid #ef4444;border-radius:10px;background:#fff;color:#ef4444;font-size:0.85rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">';
+        html += '<div class="release-action">';
+        html += '<button class="release-btn" onclick="releaseDelivery(\'' + escapeAttr(order.ref) + '\', this)">';
         html += '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>';
         html += 'Release Order</button>';
         html += '</div>';
     }
     // Admin force-release for dispatched or shipped orders
     if (mode === 'delivery' && (order.status === 'dispatched' || order.status === 'shipped') && (currentUser.role === 'admin' || currentUser.role === 'mtcc_staff')) {
-        html += '<div class="release-action" style="padding:0 16px 8px;">';
-        html += '<button class="release-btn" onclick="releaseDelivery(\'' + escapeAttr(order.ref) + '\', this)" style="width:100%;padding:10px;border:1.5px solid #ef4444;border-radius:10px;background:#fff;color:#ef4444;font-size:0.85rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">';
+        html += '<div class="release-action">';
+        html += '<button class="release-btn" onclick="releaseDelivery(\'' + escapeAttr(order.ref) + '\', this)">';
         html += '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>';
         html += 'Unassign Order</button>';
         html += '</div>';
@@ -2671,38 +2671,38 @@ function showScanResult(result) {
 
     var html = '<div class="scan-result-card">';
 
-    // Fix 1: Warn if scanned order doesn't match the order card they came from
+    // Warn if scanned order doesn't match the order card they came from
     if (scanExpectedRef && order.ref && order.ref.toUpperCase() !== scanExpectedRef.toUpperCase()) {
-        html += '<div class="scan-warning" style="background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:10px 12px;margin:0 0 10px 0;display:flex;align-items:center;gap:8px;">';
-        html += '<span style="font-size:1.3rem;">&#9888;</span>';
-        html += '<div><strong style="color:#92400e;">Wrong item scanned</strong>';
-        html += '<div style="color:#78350f;font-size:0.8rem;">Expected ' + escapeHtml(scanExpectedRef) + ' but scanned ' + escapeHtml(order.ref) + '</div></div></div>';
+        html += '<div class="scan-warning scan-warning-wrong">';
+        html += '<span class="scan-warning-icon">&#9888;</span>';
+        html += '<div><strong>Wrong item scanned</strong>';
+        html += '<div class="scan-warning-detail">Expected ' + escapeHtml(scanExpectedRef) + ' but scanned ' + escapeHtml(order.ref) + '</div></div></div>';
         haptic.warning();
     }
 
-    // Fix 2: Warn if order is assigned to a different courier
+    // Warn if order is assigned to a different courier
     if (currentUser && currentUser.role === 'courier' && order.courier_pin && order.courier_pin !== currentUser.pin) {
-        html += '<div class="scan-warning" style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 12px;margin:0 0 10px 0;display:flex;align-items:center;gap:8px;">';
-        html += '<span style="font-size:1.3rem;">&#128721;</span>';
-        html += '<div><strong style="color:#991b1b;">Assigned to another courier</strong>';
-        html += '<div style="color:#7f1d1d;font-size:0.8rem;">This order is assigned to ' + escapeHtml(order.courier_name || 'another courier') + '</div></div></div>';
+        html += '<div class="scan-warning scan-warning-other">';
+        html += '<span class="scan-warning-icon">&#128721;</span>';
+        html += '<div><strong>Assigned to another courier</strong>';
+        html += '<div class="scan-warning-detail">This order is assigned to ' + escapeHtml(order.courier_name || 'another courier') + '</div></div></div>';
         haptic.warning();
     }
 
-    // Vendor behind warning: order hasn't been marked ready yet but courier has the item
+    // Vendor behind warning
     if (result.vendor_behind && result.vendor_warning) {
-        html += '<div class="scan-warning" style="background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:10px 12px;margin:0 0 10px 0;display:flex;align-items:center;gap:8px;">';
-        html += '<span style="font-size:1.3rem;">&#9888;</span>';
-        html += '<div><strong style="color:#92400e;">Vendor hasn\'t updated status</strong>';
-        html += '<div style="color:#78350f;font-size:0.8rem;">' + escapeHtml(result.vendor_warning) + '</div></div></div>';
+        html += '<div class="scan-warning scan-warning-vendor">';
+        html += '<span class="scan-warning-icon">&#9888;</span>';
+        html += '<div><strong>Vendor hasn\'t updated status</strong>';
+        html += '<div class="scan-warning-detail">' + escapeHtml(result.vendor_warning) + '</div></div></div>';
     }
 
-    // Fix 2b: Note if order is unassigned (ready status, no courier)
+    // Note if order is unassigned
     if (currentUser && currentUser.role === 'courier' && order.status === 'ready' && !order.courier_pin) {
-        html += '<div class="scan-warning" style="background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;padding:10px 12px;margin:0 0 10px 0;display:flex;align-items:center;gap:8px;">';
-        html += '<span style="font-size:1.3rem;">&#8505;</span>';
-        html += '<div><strong style="color:#1e40af;">Unassigned order</strong>';
-        html += '<div style="color:#1e3a8a;font-size:0.8rem;">This order hasn\'t been assigned yet. Accept it to add to your deliveries.</div></div></div>';
+        html += '<div class="scan-warning scan-warning-info">';
+        html += '<span class="scan-warning-icon">&#8505;</span>';
+        html += '<div><strong>Unassigned order</strong>';
+        html += '<div class="scan-warning-detail">This order hasn\'t been assigned yet. Accept it to add to your deliveries.</div></div></div>';
     }
 
     html += '<div class="scan-result-header"><span class="scan-result-ref">' + escapeHtml(order.ref) + '</span>';
@@ -2756,7 +2756,7 @@ function showScanResult(result) {
 
 function showScanError(msg) {
     var el = document.getElementById('scanResult');
-    el.innerHTML = '<div class="scan-result-card"><div class="scan-result-header" style="background:#fef2f2;border-color:#fecaca;"><span class="scan-result-ref" style="color:#dc2626;">Not Found</span></div><div class="scan-result-body"><p style="color:#6b7280;font-size:0.85rem;">' + escapeHtml(msg) + '</p></div></div>';
+    el.innerHTML = '<div class="scan-result-card scan-error-card"><div class="scan-result-header scan-error-header"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg><span class="scan-result-ref">Not Found</span></div><div class="scan-result-body"><p class="scan-error-msg">' + escapeHtml(msg) + '</p></div></div>';
     el.style.display = 'block';
 }
 

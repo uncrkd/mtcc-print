@@ -4313,10 +4313,10 @@ input {
 }
 .scan-sticky-btn {
     width: 100%;
-    padding: 16px 20px;
+    padding: 14px 16px;
     border: none;
-    border-radius: 14px;
-    font-size: 1.05rem;
+    border-radius: 12px;
+    font-size: 0.9rem;
     font-weight: 700;
     cursor: pointer;
     display: flex;
@@ -5443,3 +5443,138 @@ input {
 .card-due-bar .due-label,
 .card-due-bar .due-sep-by { color: rgba(255,255,255,0.7); }
 .card-due-bar .due-bar-countdown { color: white; }
+
+/* ============================================
+   Courier Polish — Release, Scan Warnings, Error, Payout
+   ============================================ */
+
+/* Release/Unassign button */
+.release-action {
+    padding: 0 16px 8px;
+}
+
+.release-btn {
+    width: 100%;
+    padding: 12px;
+    border: 1.5px solid #ef4444;
+    border-radius: 12px;
+    background: white;
+    color: #ef4444;
+    font-size: 0.85rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.15s;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.release-btn:active {
+    background: #fef2f2;
+    transform: scale(0.98);
+}
+
+/* Scan warning banners */
+.scan-warning {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px;
+    border-radius: 12px;
+    margin-bottom: 10px;
+    border: 1.5px solid;
+}
+
+.scan-warning strong {
+    font-size: 0.82rem;
+    display: block;
+    margin-bottom: 2px;
+}
+
+.scan-warning-detail {
+    font-size: 0.78rem;
+    line-height: 1.4;
+}
+
+.scan-warning-icon {
+    font-size: 1.2rem;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+.scan-warning-wrong {
+    background: #fef3c7;
+    border-color: #f59e0b;
+    color: #78350f;
+}
+
+.scan-warning-wrong strong { color: #92400e; }
+
+.scan-warning-other {
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #7f1d1d;
+}
+
+.scan-warning-other strong { color: #991b1b; }
+
+.scan-warning-vendor {
+    background: #fef3c7;
+    border-color: #f59e0b;
+    color: #78350f;
+}
+
+.scan-warning-vendor strong { color: #92400e; }
+
+.scan-warning-info {
+    background: #eff6ff;
+    border-color: #93c5fd;
+    color: #1e3a8a;
+}
+
+.scan-warning-info strong { color: #1e40af; }
+
+/* Scan error card */
+.scan-error-card {
+    border-color: #fecaca;
+}
+
+.scan-error-header {
+    background: #fef2f2 !important;
+    border-color: #fecaca !important;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.scan-error-header .scan-result-ref {
+    color: #dc2626;
+}
+
+.scan-error-msg {
+    color: #6b7280;
+    font-size: 0.85rem;
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Card payout (courier cards) */
+.card-payout-area {
+    text-align: right;
+}
+
+.card-payout-big {
+    font-size: 1rem;
+    font-weight: 800;
+    color: #059669;
+    letter-spacing: -0.02em;
+}
+
+.card-payout-bonus {
+    font-size: 0.68rem;
+    color: #10b981;
+    font-weight: 600;
+}
