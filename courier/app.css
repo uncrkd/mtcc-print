@@ -5145,6 +5145,7 @@ input {
 
 .mtcc-detail-header {
     padding: 16px 20px 18px;
+    margin: 0 -20px; /* break out of .detail-content padding */
     background: var(--mtcc-header-color, #64748b);
     display: flex;
     justify-content: space-between;

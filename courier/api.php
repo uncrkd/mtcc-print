@@ -683,12 +683,11 @@ function loadActiveEvents() {
     if (!file_exists($eventsFile)) return [];
     $data = json_decode(file_get_contents($eventsFile), true);
     if (!$data) return [];
-    // Support both flat array and {active: [...]} formats
-    $events = $data['active'] ?? $data;
+    // Events in the "active" array are active by definition
+    // (archived events are in the "archived" array)
+    $events = $data['active'] ?? [];
     if (!is_array($events)) return [];
-    return array_filter($events, function($e) {
-        return ($e['status'] ?? '') === 'active';
-    });
+    return array_values($events);
 }
 
 // ============================================
