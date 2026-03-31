@@ -3166,8 +3166,8 @@ function showBatchDetail(batchId, mode) {
         html += '</div>';
     }
 
-    // ═══ STOPS — the hero section ═══
-    html += '<div class="bt-stops-section">';
+    // ═══ STOPS with vertical connector ═══
+    html += '<div class="batch-timeline-v7">';
     stops.forEach(function(stop, idx) {
         var isDone = (stop.status === 'completed');
         var isCurrent = (isActive && idx === (batch.current_stop_index || 0) && !isDone);
@@ -3177,23 +3177,11 @@ function showBatchDetail(batchId, mode) {
         var isLast = (idx === stops.length - 1);
         var vendorPhone = stop.vendor_phone || '';
 
-        // Divider between stops
-        if (idx > 0) html += '<div class="bt-divider"></div>';
+        html += '<div class="bv7-stop">';
 
-        html += '<div class="bt-stop' + (isDone ? ' bt-stop-done' : '') + (isCurrent ? ' bt-stop-current' : '') + '">';
-
-        // Label row: type + badges
-        html += '<div class="bt-label-row">';
-        html += '<span class="route-stop-label">' + stop.type.toUpperCase() + '</span>';
-        if (refCount > 0) html += '<span class="batch-item-badge">' + refCount + ' item' + (refCount !== 1 ? 's' : '') + '</span>';
-        if (isCurrent) html += '<span class="batch-current-pill">CURRENT</span>';
-        html += '</div>';
-
-        // Name row: icon + name + nav button (all aligned)
-        html += '<div class="bt-name-row">';
-
-        // Icon — aligned with name
-        html += '<div class="bt-stop-icon">';
+        // Left column: icon + dashed line connector
+        html += '<div class="bv7-left">';
+        html += '<div class="bv7-icon">';
         if (isDone) {
             html += '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
         } else if (isPickup) {
@@ -3202,41 +3190,50 @@ function showBatchDetail(batchId, mode) {
             html += '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
         }
         html += '</div>';
-
-        // Name + address + phone
-        html += '<div class="bt-name-info">';
-        html += '<div class="bt-name">' + escapeHtml(stop.name || '') + '</div>';
-        if (addr) html += '<div class="bt-addr">' + escapeHtml(addr) + '</div>';
-        if (vendorPhone) html += '<a class="bt-phone" href="tel:' + vendorPhone.replace(/[^0-9+]/g, '') + '"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72"/></svg> ' + escapeHtml(vendorPhone) + '</a>';
+        if (!isLast) html += '<div class="bv7-line"></div>';
         html += '</div>';
 
-        // Nav button — aligned with name
-        if (addr) html += '<a class="bt-nav" href="https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(addr) + '" target="_blank" rel="noopener"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg></a>';
+        // Right column: all content
+        html += '<div class="bv7-right">';
 
-        html += '</div>'; // bt-name-row
+        // Label + badges
+        html += '<div class="bv7-label">';
+        html += '<span class="route-stop-label">' + stop.type.toUpperCase() + '</span>';
+        if (refCount > 0) html += '<span class="batch-item-badge">' + refCount + ' item' + (refCount !== 1 ? 's' : '') + '</span>';
+        if (isCurrent) html += '<span class="batch-current-pill">CURRENT</span>';
+        html += '</div>';
 
-        // Items — always visible (no collapsing)
+        // Name
+        html += '<div class="bv7-name">' + escapeHtml(stop.name || '') + '</div>';
+        if (addr) html += '<div class="bv7-addr">' + escapeHtml(addr) + '</div>';
+        if (vendorPhone) html += '<a class="bv7-phone" href="tel:' + vendorPhone.replace(/[^0-9+]/g, '') + '"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72"/></svg> ' + escapeHtml(vendorPhone) + '</a>';
+
+        // Nav button
+        if (addr) html += '<a class="bv7-nav" href="https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(addr) + '" target="_blank" rel="noopener"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg></a>';
+
+        // Items — always visible
         if (isPickup && stop.order_refs && stop.order_refs.length > 0) {
-            html += '<div class="bt-items-visible">';
+            html += '<div class="bv7-items">';
             stop.order_refs.forEach(function(oRef) {
                 var o = orders.find(function(x) { return x.ref === oRef; }) || {};
                 var specs = [];
                 if (o.material) specs.push(o.material);
                 if (o.size) specs.push(o.size);
                 if (o.quantity && o.quantity > 1) specs.push(o.quantity + ' boxes');
-                html += '<div class="bt-item-card">';
-                html += '<div class="bt-item-top"><span class="bt-item-ref">' + escapeHtml(oRef) + '</span><span class="bt-item-customer">' + escapeHtml(o.customer_name || '') + '</span></div>';
-                html += '<div class="bt-item-meta">' + escapeHtml(specs.join(' \u00b7 ') || '') + '</div>';
-                html += '<div class="bt-item-bottom"><span class="bt-item-vendorref">Vendor Ref: ' + escapeHtml(o.vendor_order_number || 'N/A') + '</span>';
-                if (typeof CourierIssues !== 'undefined') html += '<button class="bt-item-issue" onclick="CourierIssues.open(\'' + escapeAttr(oRef) + '\')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Issue</button>';
+                html += '<div class="bv7-item">';
+                html += '<div class="bv7-item-row1"><span class="bv7-item-ref">' + escapeHtml(oRef) + '</span> <span class="bv7-item-name">' + escapeHtml(o.customer_name || '') + '</span></div>';
+                if (specs.length) html += '<div class="bv7-item-spec">' + escapeHtml(specs.join(' \u00b7 ')) + '</div>';
+                html += '<div class="bv7-item-row3"><span class="bv7-item-vref">Vendor Ref: ' + escapeHtml(o.vendor_order_number || 'N/A') + '</span>';
+                if (typeof CourierIssues !== 'undefined') html += '<button class="bv7-item-issue" onclick="CourierIssues.open(\'' + escapeAttr(oRef) + '\')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Issue</button>';
                 html += '</div></div>';
             });
             html += '</div>';
         }
 
-        html += '</div>'; // bt-stop
+        html += '</div>'; // bv7-right
+        html += '</div>'; // bv7-stop
     });
-    html += '</div>'; // bt-stops-section
+    html += '</div>';
 
     // Map — below stops
     html += '<div class="bt-map-section">';
