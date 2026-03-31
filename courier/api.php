@@ -503,7 +503,7 @@ function handleGetMTCCDashboard() {
 
     // Load active events to filter
     $activeEvents = loadActiveEvents();
-    $activeAcronyms = array_column($activeEvents, 'acronym');
+    // Event filtering handled client-side
 
     $waitingForPickup = 0;
     $pickedUpToday = 0;
@@ -518,7 +518,7 @@ function handleGetMTCCDashboard() {
 
         // Check if order belongs to an active event
         $eventPrefix = explode('-', $ref)[0] ?? '';
-        if (!empty($activeAcronyms) && !in_array($eventPrefix, $activeAcronyms)) continue;
+        // Event filtering handled client-side via filter pills
 
         if ($status === 'delivered') {
             $waitingForPickup++;
@@ -568,7 +568,7 @@ function handleGetMTCCDashboard() {
     foreach ($statuses as $ref => $status) {
         if ($status !== 'pickedup') continue;
         $eventPrefix = explode('-', $ref)[0] ?? '';
-        if (!empty($activeAcronyms) && !in_array($eventPrefix, $activeAcronyms)) continue;
+        // Event filtering handled client-side via filter pills
         $order = courier_loadOrder($ref);
         if (!$order) continue;
         $pickupTime = $order['dispatch']['pickedup_at'] ?? '';
@@ -591,7 +591,7 @@ function handleGetMTCCDashboard() {
     foreach ($statuses as $ref => $status) {
         if ($status !== 'delivered') continue;
         $eventPrefix = explode('-', $ref)[0] ?? '';
-        if (!empty($activeAcronyms) && !in_array($eventPrefix, $activeAcronyms)) continue;
+        // Event filtering handled client-side via filter pills
         $eventCounts[$eventPrefix] = ($eventCounts[$eventPrefix] ?? 0) + 1;
     }
 
@@ -615,7 +615,7 @@ function handleGetMTCCDashboard() {
 function handleGetCompleted() {
     $statuses = courier_loadStatuses();
     $activeEvents = loadActiveEvents();
-    $activeAcronyms = array_column($activeEvents, 'acronym');
+    // Event filtering handled client-side
     $completed = [];
 
     foreach ($statuses as $ref => $status) {
@@ -623,7 +623,7 @@ function handleGetCompleted() {
 
         // Filter to active events only
         $eventPrefix = explode('-', $ref)[0] ?? '';
-        if (!empty($activeAcronyms) && !in_array($eventPrefix, $activeAcronyms)) continue;
+        // Event filtering handled client-side via filter pills
 
         $order = courier_loadOrder($ref);
         if (!$order) continue;
@@ -644,7 +644,7 @@ function handleGetCompleted() {
 function handleGetUpcomingMTCC() {
     $statuses = courier_loadStatuses();
     $activeEvents = loadActiveEvents();
-    $activeAcronyms = array_column($activeEvents, 'acronym');
+    // Event filtering handled client-side
     $orders = [];
 
     $pipelineStatuses = ['preflight', 'printing', 'ready', 'dispatched', 'shipped'];
@@ -653,7 +653,7 @@ function handleGetUpcomingMTCC() {
         if (empty($ref) || !in_array($status, $pipelineStatuses)) continue;
 
         $eventPrefix = explode('-', $ref)[0] ?? '';
-        if (!empty($activeAcronyms) && !in_array($eventPrefix, $activeAcronyms)) continue;
+        // Event filtering handled client-side via filter pills
 
         $order = courier_loadOrder($ref);
         if (!$order) continue;
@@ -678,16 +678,51 @@ function handleGetUpcomingMTCC() {
 /**
  * Load active events from admin/events.json
  */
+/**
+ * Load active events from admin/events.json.
+ * Returns both active events AND any event acronyms found in current orders
+ * so the filter pills show all relevant events.
+ */
 function loadActiveEvents() {
     $eventsFile = __DIR__ . '/../admin/events.json';
-    if (!file_exists($eventsFile)) return [];
-    $data = json_decode(file_get_contents($eventsFile), true);
-    if (!$data) return [];
-    // Events in the "active" array are active by definition
-    // (archived events are in the "archived" array)
-    $events = $data['active'] ?? [];
-    if (!is_array($events)) return [];
-    return array_values($events);
+    $events = [];
+    $eventMap = []; // acronym => event data
+
+    if (file_exists($eventsFile)) {
+        $data = json_decode(file_get_contents($eventsFile), true);
+        if ($data) {
+            // Active events
+            foreach ($data['active'] ?? [] as $e) {
+                $acr = $e['acronym'] ?? '';
+                if ($acr) $eventMap[$acr] = $e;
+            }
+            // Archived events (needed for orders that reference them)
+            foreach ($data['archived'] ?? [] as $e) {
+                $acr = $e['acronym'] ?? '';
+                if ($acr && !isset($eventMap[$acr])) $eventMap[$acr] = $e;
+            }
+        }
+    }
+
+    // Also scan orders for event prefixes not in events.json
+    $statuses = courier_loadStatuses();
+    foreach ($statuses as $ref => $status) {
+        $prefix = explode('-', $ref)[0] ?? '';
+        if ($prefix && !isset($eventMap[$prefix])) {
+            $eventMap[$prefix] = ['acronym' => $prefix, 'name' => $prefix];
+        }
+    }
+
+    return array_values($eventMap);
+}
+
+/**
+ * Get just the acronyms from active events.
+ * Returns empty array (meaning: don't filter) so all orders show.
+ */
+function getActiveAcronyms() {
+    // Return empty = show all orders regardless of event
+    return [];
 }
 
 // ============================================
