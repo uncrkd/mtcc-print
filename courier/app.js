@@ -3248,6 +3248,9 @@ function showBatchDetail(batchId, mode) {
         html += '</div>';
     }
 
+    // Divider between map section and stops
+    html += '<div style="height:1px;background:#e5e7eb;margin:16px 16px;"></div>';
+
     // ═══ STOPS with vertical connector ═══
     html += '<div class="batch-timeline-v7">';
     var pickupNum = 0;
@@ -3284,7 +3287,7 @@ function showBatchDetail(batchId, mode) {
         html += '<div class="bv7-label">';
         var stopLabel = isPickup ? 'PICKUP' + (pickupCount > 1 ? ' #' + pickupNum : '') : 'DROPOFF';
         html += '<span class="route-stop-label">' + stopLabel + '</span>';
-        if (refCount > 0) html += '<span class="batch-item-badge">' + refCount + ' item' + (refCount !== 1 ? 's' : '') + '</span>';
+        if (refCount > 0) html += '<span class="batch-item-badge">' + refCount + ' order' + (refCount !== 1 ? 's' : '') + '</span>';
         if (isCurrent) html += '<span class="batch-current-pill">CURRENT</span>';
         html += '</div>';
 
@@ -3301,11 +3304,42 @@ function showBatchDetail(batchId, mode) {
             }
             if (vendorPhone && vendorHours) html += '<span class="bv7-vdivider"></span>';
             if (vendorHours) {
-                html += '<span class="bv7-hours"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ' + escapeHtml(vendorHours) + '</span>';
+                // Determine if currently open
+                var hoursOpenClosed = '';
+                if (vendorHours === 'Closed today') {
+                    hoursOpenClosed = '<span class="bv7-hours-divider"></span><span class="bv7-hours-status closed">Closed</span>';
+                } else if (vendorHours.indexOf(' - ') !== -1) {
+                    var parts = vendorHours.split(' - ');
+                    var now = new Date();
+                    var nowMins = now.getHours() * 60 + now.getMinutes();
+                    var openParts = (parts[0] || '9:00').split(':');
+                    var closeParts = (parts[1] || '18:00').split(':');
+                    var openMins = parseInt(openParts[0]) * 60 + parseInt(openParts[1] || 0);
+                    var closeMins = parseInt(closeParts[0]) * 60 + parseInt(closeParts[1] || 0);
+                    if (nowMins >= openMins && nowMins < closeMins) {
+                        hoursOpenClosed = '<span class="bv7-hours-divider"></span><span class="bv7-hours-status open">Open</span>';
+                    } else {
+                        hoursOpenClosed = '<span class="bv7-hours-divider"></span><span class="bv7-hours-status closed">Closed</span>';
+                    }
+                }
+                html += '<span class="bv7-hours"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ' + escapeHtml(vendorHours) + hoursOpenClosed + '</span>';
             }
-            // MTCC phone for dropoff stops
+            // MTCC phone + hours for dropoff stops
             if (!isPickup) {
-                html += '<a class="bv7-phone" href="tel:' + SUPPORT_PHONES.mtcc.number.replace(/[^0-9+]/g, '') + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg> ' + SUPPORT_PHONES.mtcc.number + '</a>';
+                html += '<a class="bv7-phone" href="tel:' + SUPPORT_PHONES.mtcc.number.replace(/[^0-9+]/g, '') + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg> ' + SUPPORT_PHONES.mtcc.number + '</a>';
+                html += '<span class="bv7-vdivider"></span>';
+                // MTCC hours: Mon-Fri 9am-4pm
+                var mtccHoursText = '9:00 - 16:00';
+                var mtccDay = new Date().getDay();
+                var isMTCCWeekday = (mtccDay >= 1 && mtccDay <= 5);
+                var mtccNow = new Date();
+                var mtccNowMins = mtccNow.getHours() * 60 + mtccNow.getMinutes();
+                if (!isMTCCWeekday) {
+                    html += '<span class="bv7-hours"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Closed weekends<span class="bv7-hours-divider"></span><span class="bv7-hours-status closed">Closed</span></span>';
+                } else {
+                    var mtccOpen = (mtccNowMins >= 540 && mtccNowMins < 960);
+                    html += '<span class="bv7-hours"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ' + mtccHoursText + '<span class="bv7-hours-divider"></span><span class="bv7-hours-status ' + (mtccOpen ? 'open' : 'closed') + '">' + (mtccOpen ? 'Open' : 'Closed') + '</span></span>';
+                }
             }
             html += '</div>';
         }

@@ -1896,10 +1896,10 @@ input {
 
 .route-stop-label {
     font-size: 0.62rem;
-    font-weight: 800;
+    font-weight: 600;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: var(--gray-400);
+    color: #7c3aed;
     margin-bottom: 2px;
 }
 
@@ -5878,7 +5878,7 @@ input {
 
 /* Item count as badge */
 .batch-item-badge {
-    font-size: 0.65rem;
+    font-size: 0.58rem;
     font-weight: 700;
     color: #7c3aed;
     background: #f5f3ff;
@@ -6566,7 +6566,7 @@ input {
 .bv7-item {
     background: white;
     border: 1px solid #e5e7eb;
-    border-radius: 12px;
+    border-radius: 8px;
     padding: 12px 14px;
     margin-bottom: 8px;
 }
@@ -6630,9 +6630,9 @@ input {
 
 /* Stats bar attached to map top */
 .bv7-map-block {
-    margin: 0;
-    border-top: 1px solid #e5e7eb;
-    border-bottom: 1px solid #e5e7eb;
+    margin: 0 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
     overflow: hidden;
 }
 
@@ -6778,15 +6778,25 @@ input {
 .bv7-contact-row {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     margin-top: 6px;
     flex-wrap: wrap;
+}
+
+.bv7-contact-row .bv7-phone {
+    color: #374151;
+    font-weight: 400;
+}
+
+.bv7-contact-row .bv7-phone svg {
+    stroke: #7c3aed;
 }
 
 .bv7-vdivider {
     width: 1px;
     height: 14px;
     background: #d1d5db;
+    margin: 0 4px;
 }
 
 .bv7-hours {
@@ -6794,7 +6804,27 @@ input {
     align-items: center;
     gap: 4px;
     font-size: 0.72rem;
-    color: #6b7280;
+    color: #374151;
+    font-weight: 400;
+}
+
+.bv7-hours svg {
+    stroke: #7c3aed;
+}
+
+.bv7-hours-status {
+    font-size: 0.68rem;
+    font-weight: 700;
+}
+
+.bv7-hours-status.open { color: #059669; }
+.bv7-hours-status.closed { color: #dc2626; }
+
+.bv7-hours-divider {
+    width: 1px;
+    height: 12px;
+    background: #d1d5db;
+    margin: 0 4px;
 }
 
 /* Labeled item fields */
@@ -6832,17 +6862,18 @@ input {
     color: #374151;
 }
 
-/* Box count with divider */
+/* Box count — matches bv7-icon style */
 .bv7-item-boxes {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: 5px;
     font-size: 0.72rem;
     font-weight: 600;
     color: #6b7280;
-    padding-top: 8px;
-    margin-top: 6px;
-    border-top: 1px solid #f3f4f6;
+}
+
+.bv7-item-boxes svg {
+    stroke: #3b82f6;
 }
 
 /* Item card fixes — vendor ref bold, bottom row */
