@@ -451,8 +451,10 @@ function batch_buildStops($formattedOrders) {
         
         // Group pickups by vendor
         if (!isset($pickups[$vendorKey])) {
-            // Look up vendor hours
+            // Look up vendor hours (fall back to default Mon-Fri 9-6)
             $vendorHours = '';
+            $todayDay = strtolower(date('l'));
+            $hrs = [];
             if (!empty($order['vendor_id'])) {
                 $vendorsFile = dirname(__DIR__) . '/data/vendors.json';
                 if (file_exists($vendorsFile)) {
@@ -460,16 +462,25 @@ function batch_buildStops($formattedOrders) {
                     foreach ($vData['vendors'] ?? [] as $v) {
                         if (($v['id'] ?? '') === $order['vendor_id']) {
                             $hrs = $v['business_hours'] ?? [];
-                            $todayDay = strtolower(date('l'));
-                            $todayHrs = $hrs[$todayDay] ?? null;
-                            if ($todayHrs && empty($todayHrs['closed'])) {
-                                $vendorHours = ($todayHrs['open'] ?? '9:00') . ' - ' . ($todayHrs['close'] ?? '18:00');
-                            } elseif ($todayHrs && !empty($todayHrs['closed'])) {
-                                $vendorHours = 'Closed today';
-                            }
                             break;
                         }
                     }
+                }
+            }
+            // Use default hours if vendor has none stored (Mon-Fri 9-6, weekends closed)
+            if (empty($hrs)) {
+                $weekdays = ['monday','tuesday','wednesday','thursday','friday'];
+                $weekend = ['saturday','sunday'];
+                $hrs = [];
+                foreach ($weekdays as $d) $hrs[$d] = ['open' => '09:00', 'close' => '18:00', 'closed' => false];
+                foreach ($weekend as $d) $hrs[$d] = ['open' => '', 'close' => '', 'closed' => true];
+            }
+            if (!empty($hrs)) {
+                $todayHrs = $hrs[$todayDay] ?? null;
+                if ($todayHrs && empty($todayHrs['closed'])) {
+                    $vendorHours = ($todayHrs['open'] ?? '9:00') . ' - ' . ($todayHrs['close'] ?? '18:00');
+                } elseif ($todayHrs && !empty($todayHrs['closed'])) {
+                    $vendorHours = 'Closed today';
                 }
             }
             $pickups[$vendorKey] = [

@@ -5884,7 +5884,7 @@ input {
     background: #f5f3ff;
     border: 1px solid #e9d5ff;
     padding: 2px 8px;
-    border-radius: 10px;
+    border-radius: 4px;
     text-transform: uppercase;
     letter-spacing: 0.03em;
 }
@@ -6630,9 +6630,9 @@ input {
 
 /* Stats bar attached to map top */
 .bv7-map-block {
-    margin: 0 16px;
-    border: 1px solid #e5e7eb;
-    border-radius: 10px;
+    margin: 0;
+    border-top: 1px solid #e5e7eb;
+    border-bottom: 1px solid #e5e7eb;
     overflow: hidden;
 }
 
@@ -6843,4 +6843,26 @@ input {
     padding-top: 8px;
     margin-top: 6px;
     border-top: 1px solid #f3f4f6;
+}
+
+/* Item card fixes — vendor ref bold, bottom row */
+.bv7-item-vref-bold {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #1a1625;
+}
+
+.bv7-item-bottom-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 8px;
+    margin-top: 6px;
+    border-top: 1px solid #f3f4f6;
+}
+
+.bv7-item-bottom-row .bv7-item-boxes {
+    padding-top: 0;
+    margin-top: 0;
+    border-top: none;
 }

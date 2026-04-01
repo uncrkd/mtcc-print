@@ -3320,16 +3320,14 @@ function showBatchDetail(batchId, mode) {
                 var o = orders.find(function(x) { return x.ref === oRef; }) || {};
                 var qty = o.quantity || 1;
                 html += '<div class="bv7-item">';
-                // Labeled fields
                 html += '<div class="bv7-item-field"><span class="bv7-item-label">Order ID</span><span class="bv7-item-ref">' + escapeHtml(oRef) + '</span></div>';
-                html += '<div class="bv7-item-field"><span class="bv7-item-label">Customer</span><span class="bv7-item-name">' + escapeHtml(o.customer_name || '') + '</span></div>';
-                if (o.material) html += '<div class="bv7-item-field"><span class="bv7-item-label">Material</span><span class="bv7-item-val">' + escapeHtml(o.material) + '</span></div>';
-                if (o.size) html += '<div class="bv7-item-field"><span class="bv7-item-label">Size</span><span class="bv7-item-val">' + escapeHtml(o.size) + '</span></div>';
-                html += '<div class="bv7-item-field"><span class="bv7-item-label">Vendor Ref</span><span class="bv7-item-val">' + escapeHtml(o.vendor_order_number || 'N/A') + '</span></div>';
-                // Box count divider
-                html += '<div class="bv7-item-boxes"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg> ' + qty + ' box' + (qty !== 1 ? 'es' : '') + '</div>';
-                // Issue button
-                if (typeof CourierIssues !== 'undefined') html += '<button class="bv7-item-issue" onclick="CourierIssues.open(\'' + escapeAttr(oRef) + '\')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Report Issue</button>';
+                html += '<div class="bv7-item-field"><span class="bv7-item-label">Customer</span><span class="bv7-item-val">' + escapeHtml(o.customer_name || '') + '</span></div>';
+                html += '<div class="bv7-item-field"><span class="bv7-item-label">Vendor Ref</span><span class="bv7-item-vref-bold">' + escapeHtml(o.vendor_order_number || 'N/A') + '</span></div>';
+                // Box count + issue on same row
+                html += '<div class="bv7-item-bottom-row">';
+                html += '<span class="bv7-item-boxes"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg> ' + qty + ' box' + (qty !== 1 ? 'es' : '') + '</span>';
+                if (typeof CourierIssues !== 'undefined') html += '<button class="bv7-item-issue" onclick="CourierIssues.open(\'' + escapeAttr(oRef) + '\')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Issue</button>';
+                html += '</div>';
                 html += '</div>';
             });
             html += '</div>';
