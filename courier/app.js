@@ -2080,7 +2080,7 @@ function renderMTCCDetailPanel(order, mode) {
     var timeStr = (order.due_time_formatted && order.due_time_formatted !== 'Anytime') ? order.due_time_formatted : 'Anytime';
     html += '<div class="mtcc-detail-header">';
     if (dueStr) {
-        html += '<div class="mtcc-detail-due"><span class="mtcc-due-label">DUE DATE</span><span class="mtcc-due-value">' + escapeHtml(dueStr) + '  |  by: ' + escapeHtml(timeStr) + '</span></div>';
+        html += '<div class="mtcc-detail-due"><span class="mtcc-due-label">DUE DATE</span><span class="mtcc-due-value">' + escapeHtml(dueStr) + '  |  <span class="detail-due-by">by:</span> ' + escapeHtml(timeStr) + '</span></div>';
     }
     html += '<span class="order-status-badge ' + badgeClass + ' mtcc-header-badge">' + (statusLabels[order.status] || order.status) + '</span>';
     html += '</div>';
@@ -2135,14 +2135,13 @@ function renderMTCCDetailPanel(order, mode) {
     }
     html += '</div>';
 
-    // Support buttons — 50/50 row (Fix 5)
-    html += '<div class="mtcc-support-row">';
-    html += '<a class="mtcc-support-btn" href="tel:+14378828822">';
-    html += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>';
-    html += '<span>Call Support</span></a>';
-    html += '<a class="mtcc-support-btn" href="https://tawk.to/chat/69bcadcf600a121c36fa7a4b/1jk4gdsmg" target="_blank" rel="noopener">';
-    html += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
-    html += '<span>Live Chat</span></a>';
+    // Quick connect — label + icon buttons (matching courier style)
+    html += '<div class="bv7-quick-connect">';
+    html += '<div class="bv7-qc-label"><span class="bv7-qc-name">Print Stuff Support</span><span class="bv7-qc-num">(437) 882-8822</span></div>';
+    html += '<div class="bv7-qc-buttons">';
+    html += '<a class="bv7-qc-btn" href="https://tawk.to/chat/69bcadcf600a121c36fa7a4b/1jk4gdsmg" target="_blank" rel="noopener" title="Live Chat"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></a>';
+    html += '<a class="bv7-qc-btn" href="tel:+14378828822" title="Call"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg></a>';
+    html += '</div>';
     html += '</div>';
 
     return html;
@@ -2249,7 +2248,7 @@ function showOrderDetail(ref, mode) {
         html += '<div class="detail-due-bar">';
         html += '<div class="detail-due-left">';
         html += '<span class="detail-due-heading">DUE DATE</span>';
-        html += '<span class="detail-due-date">' + escapeHtml(dueStr) + '  |  by: ' + escapeHtml(timeStr) + '</span>';
+        html += '<span class="detail-due-date">' + escapeHtml(dueStr) + '  |  <span class="detail-due-by">by:</span> ' + escapeHtml(timeStr) + '</span>';
         html += '</div>';
         html += '<span class="order-status-badge ' + badgeClass + ' mtcc-header-badge">' + (statusLabels[order.status] || order.status) + '</span>';
         html += '</div>';
@@ -3179,7 +3178,7 @@ function showBatchDetail(batchId, mode) {
         html += '<div class="detail-due-bar">';
         html += '<div class="detail-due-left">';
         html += '<span class="detail-due-heading">DUE DATE</span>';
-        html += '<span class="detail-due-date">' + escapeHtml(batch.due_date_formatted) + '  |  by: ' + escapeHtml(batchTimeLabel) + '</span>';
+        html += '<span class="detail-due-date">' + escapeHtml(batch.due_date_formatted) + '  |  <span class="detail-due-by">by:</span> ' + escapeHtml(batchTimeLabel) + '</span>';
         html += '</div>';
         html += '<span class="order-status-badge badge-' + batch.status + ' mtcc-header-badge">' + batchStatus + '</span>';
         html += '</div>';
@@ -3412,10 +3411,13 @@ function showBatchDetail(batchId, mode) {
         html += '<button class="release-btn bt-full-btn" style="border-color:#d97706;color:#d97706;" onclick="CourierIssues.open(\'' + escapeAttr(orders[0] ? orders[0].ref : batch.batch_id) + '\')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Report Issue</button>';
     }
 
-    // Contacts — Call + Chat (Print Stuff only, MTCC phone is under dropoff)
-    html += '<div class="bv7-contacts">';
-    html += '<a class="bv7-contact" href="tel:' + SUPPORT_PHONES.admin.number.replace(/[^0-9+]/g, '') + '"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg><div class="bv7-contact-info"><span class="bv7-contact-name">Call Print Stuff</span><span class="bv7-contact-num">' + SUPPORT_PHONES.admin.number + '</span></div></a>';
-    html += '<a class="bv7-contact" href="https://tawk.to/chat/69bcadcf600a121c36fa7a4b/1jk4gdsmg" target="_blank" rel="noopener"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><div class="bv7-contact-info"><span class="bv7-contact-name">Live Chat</span><span class="bv7-contact-num">Print Stuff Support</span></div></a>';
+    // Quick connect — label left, icon buttons right
+    html += '<div class="bv7-quick-connect">';
+    html += '<div class="bv7-qc-label"><span class="bv7-qc-name">Print Stuff Support</span><span class="bv7-qc-num">' + SUPPORT_PHONES.admin.number + '</span></div>';
+    html += '<div class="bv7-qc-buttons">';
+    html += '<a class="bv7-qc-btn" href="https://tawk.to/chat/69bcadcf600a121c36fa7a4b/1jk4gdsmg" target="_blank" rel="noopener" title="Live Chat"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></a>';
+    html += '<a class="bv7-qc-btn" href="tel:' + SUPPORT_PHONES.admin.number.replace(/[^0-9+]/g, '') + '" title="Call"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg></a>';
+    html += '</div>';
     html += '</div>';
 
     // Release — at very bottom

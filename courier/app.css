@@ -5295,6 +5295,7 @@ input {
     border: 1px solid rgba(255,255,255,0.5) !important;
     font-size: 0.65rem !important;
     flex-shrink: 0;
+    align-self: flex-end;
 }
 
 .mtcc-detail-id-section {
@@ -6896,4 +6897,61 @@ input {
     padding-top: 0;
     margin-top: 0;
     border-top: none;
+}
+
+/* Due bar "by" lighter weight */
+.detail-due-by {
+    font-weight: 400;
+    opacity: 0.7;
+}
+
+/* Quick connect — label left, icon buttons right */
+.bv7-quick-connect {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    margin: 8px 16px;
+}
+
+.bv7-qc-label {
+    display: flex;
+    flex-direction: column;
+}
+
+.bv7-qc-name {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #1a1625;
+}
+
+.bv7-qc-num {
+    font-size: 0.72rem;
+    color: #7c3aed;
+}
+
+.bv7-qc-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.bv7-qc-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    background: white;
+    border: 1px solid #e9d5ff;
+    text-decoration: none;
+    transition: background 0.15s;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.bv7-qc-btn:active {
+    background: #f5f3ff;
 }
