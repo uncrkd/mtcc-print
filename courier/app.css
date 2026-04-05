@@ -6955,3 +6955,127 @@ input {
 .bv7-qc-btn:active {
     background: #f5f3ff;
 }
+
+/* ============================================
+   Batch Scan Mode
+   ============================================ */
+
+.batch-scan-banner {
+    background: linear-gradient(135deg, #7c3aed, #6d28d9);
+    color: white;
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin: 0 0 12px;
+}
+
+.bsb-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.bsb-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.bsb-exit {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: white;
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 6px;
+    padding: 4px 12px;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.bsb-exit:active { background: rgba(255,255,255,0.3); }
+
+.bsb-progress-bar {
+    height: 6px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.bsb-progress-fill {
+    height: 100%;
+    background: #22c55e;
+    border-radius: 3px;
+    transition: width 0.4s ease;
+}
+
+.bsb-count {
+    font-size: 0.78rem;
+    font-weight: 600;
+    opacity: 0.9;
+}
+
+.bsb-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.bsb-item-done {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: #a7f3d0;
+    background: rgba(255,255,255,0.1);
+    padding: 3px 8px;
+    border-radius: 4px;
+}
+
+.bsb-item-done svg { stroke: #a7f3d0; }
+
+/* Scan feedback flash */
+.batch-scan-feedback {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    border-radius: 12px;
+    animation: bsf-flash 0.3s ease;
+}
+
+.bsf-success {
+    background: #ecfdf5;
+    border: 2px solid #059669;
+}
+
+.bsf-error {
+    background: #fef2f2;
+    border: 2px solid #dc2626;
+}
+
+.bsf-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.bsf-text strong {
+    font-size: 0.9rem;
+    color: #1a1625;
+}
+
+.bsf-text span {
+    font-size: 0.78rem;
+    color: #6b7280;
+}
+
+@keyframes bsf-flash {
+    0% { transform: scale(0.95); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}

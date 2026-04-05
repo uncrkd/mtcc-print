@@ -15,6 +15,7 @@ var pinCode = '';
 var scannerActive = false;
 var scanLocked = false;  // Lock scanner while awaiting status action
 var scanExpectedRef = null; // Set when scanning from an order card (for validation)
+var batchScanMode = null; // { batchId, orderRefs: [], scannedRefs: [] } when scanning batch items
 var courierLocation = null; // Cached GPS coordinates {lat, lng}
 var autoRefreshInterval = null;
 var capturedPhoto = null;
@@ -2638,12 +2639,149 @@ function processScannedCode(code) {
         if (!result.success) {
             haptic.error();
             showScanError(result.error || 'Order not found');
-            scanLocked = false; // Unlock scanner so user can try again
+            scanLocked = false;
             return;
         }
+
+        // Batch scan mode — auto-confirm pickup
+        if (batchScanMode) {
+            var scannedRef = result.order.ref;
+            // Check if this order is in the batch
+            if (batchScanMode.orderRefs.indexOf(scannedRef) === -1) {
+                haptic.error();
+                showBatchScanFeedback(scannedRef, false, 'Not in this batch');
+                scanLocked = false;
+                return;
+            }
+            // Check if already scanned
+            if (batchScanMode.scannedRefs.indexOf(scannedRef) !== -1) {
+                haptic.warning();
+                showBatchScanFeedback(scannedRef, false, 'Already scanned');
+                scanLocked = false;
+                return;
+            }
+            // Auto-confirm: update status to shipped
+            apiCall('update_status', { ref: scannedRef, status: 'shipped' }, function(statusResult) {
+                if (statusResult.success) {
+                    batchScanMode.scannedRefs.push(scannedRef);
+                    haptic.confirm();
+                    showBatchScanFeedback(scannedRef, true, 'Picked up');
+                    updateBatchScanProgress();
+                    // Check if all items scanned
+                    if (batchScanMode.scannedRefs.length >= batchScanMode.orderRefs.length) {
+                        setTimeout(function() {
+                            haptic.success();
+                            showToast('All items picked up!', 'success');
+                            exitBatchScan();
+                            refreshTab('deliveries');
+                        }, 1200);
+                    } else {
+                        // Unlock for next scan
+                        scanLocked = false;
+                    }
+                } else {
+                    haptic.error();
+                    showBatchScanFeedback(scannedRef, false, statusResult.error || 'Update failed');
+                    scanLocked = false;
+                }
+            });
+            return;
+        }
+
+        // Normal scan mode — show result card
         haptic.success();
         showScanResult(result);
     });
+}
+
+// ============================================
+// Batch Scan Mode
+// ============================================
+
+function startBatchScan(batchId, orderRefs) {
+    // Determine which refs are already shipped
+    var alreadyShipped = [];
+    orderRefs.forEach(function(ref) {
+        var o = orderCache[ref];
+        if (o && (o.status === 'shipped' || o.status === 'delivered')) {
+            alreadyShipped.push(ref);
+        }
+    });
+
+    batchScanMode = {
+        batchId: batchId,
+        orderRefs: orderRefs,
+        scannedRefs: alreadyShipped.slice() // pre-fill already shipped
+    };
+
+    closeDetailPanel();
+    switchTab('scan');
+
+    // Render batch progress banner
+    setTimeout(function() { updateBatchScanProgress(); }, 200);
+}
+
+function updateBatchScanProgress() {
+    var banner = document.getElementById('batchScanBanner');
+    if (!batchScanMode) {
+        if (banner) banner.remove();
+        return;
+    }
+
+    var total = batchScanMode.orderRefs.length;
+    var done = batchScanMode.scannedRefs.length;
+    var pct = total > 0 ? Math.round((done / total) * 100) : 0;
+
+    if (!banner) {
+        banner = document.createElement('div');
+        banner.id = 'batchScanBanner';
+        banner.className = 'batch-scan-banner';
+        var scanContent = document.getElementById('scanContent') || document.getElementById('tab-scan');
+        if (scanContent) scanContent.insertBefore(banner, scanContent.firstChild);
+    }
+
+    var html = '<div class="bsb-header">';
+    html += '<div class="bsb-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg> Batch ' + escapeHtml(batchScanMode.batchId) + '</div>';
+    html += '<button class="bsb-exit" onclick="exitBatchScan()">Done</button>';
+    html += '</div>';
+    html += '<div class="bsb-progress-bar"><div class="bsb-progress-fill" style="width:' + pct + '%"></div></div>';
+    html += '<div class="bsb-count">' + done + ' of ' + total + ' items picked up</div>';
+
+    // Show scanned items as mini checkmarks
+    if (done > 0) {
+        html += '<div class="bsb-items">';
+        batchScanMode.scannedRefs.forEach(function(ref) {
+            html += '<span class="bsb-item-done"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> ' + escapeHtml(ref) + '</span>';
+        });
+        html += '</div>';
+    }
+
+    banner.innerHTML = html;
+}
+
+function showBatchScanFeedback(ref, success, message) {
+    var el = document.getElementById('scanResult');
+    if (!el) return;
+
+    var cls = success ? 'bsf-success' : 'bsf-error';
+    var icon = success
+        ? '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>'
+        : '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+
+    el.innerHTML = '<div class="batch-scan-feedback ' + cls + '">' + icon + '<div class="bsf-text"><strong>' + escapeHtml(ref) + '</strong><span>' + escapeHtml(message) + '</span></div></div>';
+    el.style.display = 'block';
+
+    // Auto-hide after 1.5s
+    setTimeout(function() {
+        if (el) { el.style.display = 'none'; el.innerHTML = ''; }
+    }, 1500);
+}
+
+function exitBatchScan() {
+    batchScanMode = null;
+    var banner = document.getElementById('batchScanBanner');
+    if (banner) banner.remove();
+    hideScanResult();
 }
 
 function showScanResult(result) {
@@ -3404,6 +3542,18 @@ function showBatchDetail(batchId, mode) {
         html += '<button class="status-action-btn btn-accept bt-full-btn" onclick="acceptBatch(\'' + escapeAttr(batch.batch_id) + '\', this)">';
         html += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
         html += ' Accept Batch (' + batch.order_count + ' orders)</button>';
+    }
+
+    // Scan Batch Items — for accepted/active batches
+    if (isActive && currentUser && currentUser.role === 'courier') {
+        var batchRefs = [];
+        orders.forEach(function(o) { if (o.ref) batchRefs.push(o.ref); });
+        var alreadyScanned = orders.filter(function(o) { return o.status === 'shipped' || o.status === 'delivered'; }).length;
+        html += '<div class="courier-sticky-action">';
+        html += '<button class="status-action-btn btn-scan-goto bt-full-btn" onclick="startBatchScan(\'' + escapeAttr(batch.batch_id) + '\', ' + escapeAttr(JSON.stringify(batchRefs)) + ')">';
+        html += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="6" y1="8" x2="6" y2="16"/><line x1="10" y1="8" x2="10" y2="16"/><line x1="14" y1="8" x2="14" y2="16"/><line x1="18" y1="8" x2="18" y2="16"/></svg>';
+        html += ' Scan Batch Items (' + alreadyScanned + '/' + batchRefs.length + ' picked up)</button>';
+        html += '</div>';
     }
 
     // Report Issue — full width
