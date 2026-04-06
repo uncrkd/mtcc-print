@@ -3630,18 +3630,6 @@ function showBatchDetail(batchId, mode) {
         html += ' Accept Batch (' + batch.order_count + ' orders)</button>';
     }
 
-    // Scan Batch Items — for accepted/active batches
-    if (isActive && currentUser && currentUser.role === 'courier') {
-        var batchRefs = [];
-        orders.forEach(function(o) { if (o.ref) batchRefs.push(o.ref); });
-        var alreadyScanned = orders.filter(function(o) { return o.status === 'shipped' || o.status === 'delivered'; }).length;
-        html += '<div class="courier-sticky-action">';
-        html += '<button class="status-action-btn btn-scan-goto bt-full-btn" onclick="startBatchScan(\'' + escapeAttr(batch.batch_id) + '\', ' + escapeAttr(JSON.stringify(batchRefs)) + ')">';
-        html += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="6" y1="8" x2="6" y2="16"/><line x1="10" y1="8" x2="10" y2="16"/><line x1="14" y1="8" x2="14" y2="16"/><line x1="18" y1="8" x2="18" y2="16"/></svg>';
-        html += ' Scan Batch Items (' + alreadyScanned + '/' + batchRefs.length + ' picked up)</button>';
-        html += '</div>';
-    }
-
     // Report Issue — opens batch order selection
     if (typeof CourierIssues !== 'undefined' && isActive) {
         // Store batch orders in global for onclick access (avoids JSON escaping issues)
@@ -3673,6 +3661,21 @@ function showBatchDetail(batchId, mode) {
     }
 
     html += '</div>'; // bt-bottom-actions
+
+    // Scan Batch Items — sticky at very bottom, above everything
+    if (isActive && currentUser && currentUser.role === 'courier') {
+        var batchRefs = [];
+        orders.forEach(function(o) { if (o.ref) batchRefs.push(o.ref); });
+        var alreadyScanned = orders.filter(function(o) { return o.status === 'shipped' || o.status === 'delivered'; }).length;
+        // Store refs in global to avoid JSON escaping issues in onclick
+        window._batchScanRefs = batchRefs;
+        window._batchScanId = batch.batch_id;
+        html += '<div class="courier-sticky-action">';
+        html += '<button class="status-action-btn btn-scan-goto" onclick="startBatchScan(window._batchScanId, window._batchScanRefs)">';
+        html += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="6" y1="8" x2="6" y2="16"/><line x1="10" y1="8" x2="10" y2="16"/><line x1="14" y1="8" x2="14" y2="16"/><line x1="18" y1="8" x2="18" y2="16"/></svg>';
+        html += ' Scan Batch Items (' + alreadyScanned + '/' + batchRefs.length + ' picked up)</button>';
+        html += '</div>';
+    }
 
     content.innerHTML = html;
     panel.classList.add('active');
