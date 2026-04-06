@@ -3300,7 +3300,7 @@ function showBatchDetail(batchId, mode) {
     panel.classList.add('mtcc-panel');
 
     var isAvailable = (mode === 'available');
-    var isActive = (batch.status === 'accepted' || batch.status === 'in_progress');
+    var isActive = (batch.status === 'accepted' || batch.status === 'dispatched' || batch.status === 'in_progress');
     var stops = batch.stops || [];
     var orders = batch.orders || [];
     var statusLabelsMap = { pending: 'Pending', dispatched: 'Dispatched', accepted: 'Accepted', in_progress: 'In Transit', completed: 'Completed', cancelled: 'Cancelled', suggested: 'Suggested' };

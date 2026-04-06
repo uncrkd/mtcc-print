@@ -203,7 +203,7 @@ function dispatch_getDueInfo($orderData) {
     if ($dueDate) {
         $dateObj = new DateTime($dueDate);
         $today = new DateTime('today');
-        $result['date_formatted'] = $dateObj->format('M j');
+        $result['date_formatted'] = $dateObj->format('l, M j');
         $result['is_today'] = ($dateObj->format('Y-m-d') === $today->format('Y-m-d'));
     }
     
