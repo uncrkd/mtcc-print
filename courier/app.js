@@ -2340,7 +2340,7 @@ function showOrderDetail(ref, mode) {
             html += '<button class="status-action-btn btn-accept" onclick="acceptDelivery(\'' + escapeAttr(order.ref) + '\', this)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Accept Delivery</button>';
             html += '</div>';
         } else if (mode === 'delivery' && order.status === 'dispatched' && currentUser.role === 'courier') {
-            // Fix 8: Scan button sticky, release+issue 50/50
+            // Release + issue row
             html += '<div class="courier-detail-actions">';
             html += '<div class="courier-btn-row">';
             html += '<button class="release-btn" onclick="releaseDelivery(\'' + escapeAttr(order.ref) + '\', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg> Release</button>';
@@ -2348,10 +2348,9 @@ function showOrderDetail(ref, mode) {
                 html += '<button class="release-btn" style="border-color:#d97706;color:#d97706;" onclick="CourierIssues.open(\'' + escapeAttr(order.ref) + '\')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Report Issue</button>';
             }
             html += '</div>';
-            html += '<div class="courier-sticky-action">';
-            html += '<button class="status-action-btn btn-scan-goto" onclick="scanOrigin={type:\'order\',id:\'' + escapeAttr(order.ref) + '\',label:\'' + escapeAttr(order.ref) + ' Details\'}; scanExpectedRef=\'' + escapeAttr(order.ref) + '\'; closeDetailPanel(); switchTab(\'scan\')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="6" y1="8" x2="6" y2="16"/><line x1="10" y1="8" x2="10" y2="16"/><line x1="14" y1="8" x2="14" y2="16"/><line x1="18" y1="8" x2="18" y2="16"/></svg> Scan Barcode to Confirm Pickup</button>';
             html += '</div>';
-            html += '</div>';
+            // Scan button stored for sticky rendering after contacts
+            window._orderScanRef = order.ref;
         } else if (mode !== 'completed') {
             var transitions = getStatusTransitions(order.status);
             if (transitions.length > 0) {
@@ -2386,6 +2385,17 @@ function showOrderDetail(ref, mode) {
     }
     html += '<a class="courier-contact-btn" href="tel:' + SUPPORT_PHONES.mtcc.number.replace(/[^0-9+]/g, '') + '"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>MTCC</span></a>';
     html += '</div>';
+
+    // Sticky scan button for dispatched single orders (after all content)
+    if (window._orderScanRef && mode === 'delivery' && order.status === 'dispatched' && currentUser.role === 'courier') {
+        var _ref = window._orderScanRef;
+        html += '<div class="courier-sticky-action">';
+        html += '<button class="status-action-btn btn-scan-goto" onclick="scanOrigin={type:\'order\',id:\'' + escapeAttr(_ref) + '\',label:\'' + escapeAttr(_ref) + ' Details\'}; scanExpectedRef=\'' + escapeAttr(_ref) + '\'; closeDetailPanel(); switchTab(\'scan\')">';
+        html += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="6" y1="8" x2="6" y2="16"/><line x1="10" y1="8" x2="10" y2="16"/><line x1="14" y1="8" x2="14" y2="16"/><line x1="18" y1="8" x2="18" y2="16"/></svg>';
+        html += ' Scan to Confirm Pickup</button>';
+        html += '</div>';
+        window._orderScanRef = null;
+    }
 
     content.innerHTML = html;
     panel.classList.add('active');
