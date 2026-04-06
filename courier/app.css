@@ -7196,3 +7196,60 @@ input {
     stroke: white !important;
     filter: drop-shadow(0 1px 2px rgba(0,0,0,0.15));
 }
+
+/* ============================================
+   Unified Card Footer + Batch Card Icons
+   ============================================ */
+
+/* Order card footer — distance left, qty right */
+.order-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-footer-left, .card-footer-right {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.card-footer-left .card-meta svg {
+    vertical-align: -2px;
+}
+
+/* Batch card — label above, icon + name below */
+.batch-stop-label-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding-left: 30px;
+    margin-bottom: 2px;
+}
+
+.batch-stop-label-text {
+    font-size: 0.58rem;
+    font-weight: 600;
+    color: #7c3aed;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.batch-stop-name-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.batch-stop-name-row .batch-stop-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 20px;
+    flex-shrink: 0;
+}
+
+.batch-stop-name-row .batch-stop-info {
+    flex: 1;
+    min-width: 0;
+}

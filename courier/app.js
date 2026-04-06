@@ -1799,19 +1799,23 @@ function renderOrderCard(order, mode) {
         html += '</div></div></div>';
     }
 
-    // Footer: pkgs · size (status badge now in due bar for all cards)
+    // Footer: distance/duration left, qty/size right
     if (!isMTCCCard) {
         html += '<div class="order-card-footer">';
+        // Left: route info (if available)
+        html += '<div class="card-footer-left">';
+        if (order.route_distance_km) {
+            html += '<span class="card-meta"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg> ' + order.route_distance_km + ' km</span>';
+            if (order.route_duration_min) html += '<span class="card-footer-dot">\u00b7</span><span class="card-meta"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ~' + order.route_duration_min + ' min</span>';
+        }
+        html += '</div>';
+        // Right: qty + size
+        html += '<div class="card-footer-right">';
         var qty = order.quantity || 1;
         html += '<span class="card-meta">\ud83d\udce6 ' + qty + '</span>';
-        if (order.size) {
-            html += '<span class="card-footer-dot">\u00b7</span>';
-            html += '<span class="card-meta">\ud83d\udcd0 ' + escapeHtml(order.size) + '</span>';
-        }
-        if (order.has_issue) {
-            html += '<span class="card-footer-spacer"></span>';
-            html += '<span class="order-issue-badge">⚠️ Issue</span>';
-        }
+        if (order.size) html += '<span class="card-footer-dot">\u00b7</span><span class="card-meta">' + escapeHtml(order.size) + '</span>';
+        if (order.has_issue) html += '<span class="order-issue-badge">\u26a0 Issue</span>';
+        html += '</div>';
         html += '</div>';
     }
 
@@ -2418,13 +2422,13 @@ function renderRouteCard(order) {
     var dropoffAddr = (order.destination_address || '').replace(/\r\n/g, ', ').replace(/\n/g, ', ');
     var instructions = order.destination_instructions || '';
 
-    // Map block (matching batch layout)
+    var html = '';
     var singleAddrs = [];
     if (pickupAddr) singleAddrs.push(pickupAddr);
     if (dropoffAddr) singleAddrs.push(dropoffAddr);
 
+    // Map block (matching batch layout)
     html += '<div class="bv7-map-block">';
-    // Stats bar
     html += '<div class="bv7-stats-bar">';
     html += '<span class="bv7-stats-title">Route</span>';
     html += '<span class="bv7-stats-sep">|</span>';
@@ -2432,51 +2436,74 @@ function renderRouteCard(order) {
     html += '</div>';
     if (singleAddrs.length > 0) {
         var orderPolyline = order.route_polyline || null;
-        var singleStaticUrl = buildStaticMapUrl(singleAddrs, 600, 250, orderPolyline);
-        var singleNavUrl = singleAddrs.length >= 2 ? buildGoogleNavUrl(singleAddrs) : 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(singleAddrs[0]);
-        html += '<a class="bv7-map-link" href="' + singleNavUrl + '" target="_blank" rel="noopener"><img class="bv7-map-img" id="orderMapImg_' + escapeAttr(order.ref) + '" src="' + singleStaticUrl + '" alt="Route" loading="lazy"></a>';
+        var staticUrl = buildStaticMapUrl(singleAddrs, 600, 250, orderPolyline);
+        var navUrl = singleAddrs.length >= 2 ? buildGoogleNavUrl(singleAddrs) : 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(singleAddrs[0]);
+        html += '<a class="bv7-map-link" href="' + navUrl + '" target="_blank" rel="noopener"><img class="bv7-map-img" id="orderMapImg_' + escapeAttr(order.ref) + '" src="' + staticUrl + '" alt="Route" loading="lazy"></a>';
     }
     html += '</div>';
-    // Map buttons
     if (singleAddrs.length > 0) {
         html += '<div class="route-map-buttons' + (isAppleDevice() ? '' : ' single') + '" style="margin:8px 0 0;">';
         html += '<a class="route-app-btn google" href="' + buildGoogleNavUrl(singleAddrs) + '" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg> Google Maps</a>';
-        if (isAppleDevice()) {
-            html += '<a class="route-app-btn apple" href="' + buildAppleNavUrl(singleAddrs) + '" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Apple Maps</a>';
+        if (isAppleDevice()) html += '<a class="route-app-btn apple" href="' + buildAppleNavUrl(singleAddrs) + '" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Apple Maps</a>';
+        html += '</div>';
+    }
+    html += '<div style="height:1px;background:#e5e7eb;margin:16px 16px;"></div>';
+
+    // Stops timeline (matching batch bv7 layout)
+    html += '<div class="batch-timeline-v7">';
+    // Pickup
+    html += '<div class="bv7-stop">';
+    html += '<div class="bv7-left"><div class="bv7-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div><div class="bv7-line"></div></div>';
+    html += '<div class="bv7-right">';
+    html += '<div class="bv7-label"><span class="route-stop-label">PICKUP</span></div>';
+    html += '<div class="bv7-name">' + escapeHtml(pickup) + '</div>';
+    if (pickupAddr) html += '<div class="bv7-addr">' + escapeHtml(pickupAddr) + '</div>';
+    // Vendor phone + hours
+    if (order.vendor_phone) {
+        html += '<div class="bv7-contact-row">';
+        html += '<a class="bv7-phone" href="tel:' + order.vendor_phone.replace(/[^0-9+]/g, '') + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72"/></svg> ' + escapeHtml(order.vendor_phone) + '</a>';
+        // Default vendor hours Mon-Fri 9-6
+        var vDay = new Date().getDay();
+        var vIsWeekday = (vDay >= 1 && vDay <= 5);
+        var vNowMins = new Date().getHours() * 60 + new Date().getMinutes();
+        html += '<span class="bv7-vdivider"></span>';
+        if (!vIsWeekday) {
+            html += '<span class="bv7-hours"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Closed weekends<span class="bv7-hours-divider"></span><span class="bv7-hours-status closed">Closed</span></span>';
+        } else {
+            var vOpen = (vNowMins >= 540 && vNowMins < 1080);
+            html += '<span class="bv7-hours"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 9:00 - 18:00<span class="bv7-hours-divider"></span><span class="bv7-hours-status ' + (vOpen ? 'open' : 'closed') + '">' + (vOpen ? 'Open' : 'Closed') + '</span></span>';
         }
         html += '</div>';
     }
-
-    // Divider
-    html += '<div style="height:1px;background:#e5e7eb;margin:16px 16px;"></div>';
-
-    // Stops — matching batch timeline layout (bv7)
-    var html_route = '<div class="batch-timeline-v7">';
-    // Pickup
-    html_route += '<div class="bv7-stop">';
-    html_route += '<div class="bv7-left"><div class="bv7-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div><div class="bv7-line"></div></div>';
-    html_route += '<div class="bv7-right">';
-    html_route += '<div class="bv7-label"><span class="route-stop-label">PICKUP</span></div>';
-    html_route += '<div class="bv7-name">' + escapeHtml(pickup) + '</div>';
-    if (pickupAddr) html_route += '<div class="bv7-addr">' + escapeHtml(pickupAddr) + '</div>';
-    if (order.vendor_phone) html_route += '<div class="bv7-contact-row"><a class="bv7-phone" href="tel:' + order.vendor_phone.replace(/[^0-9+]/g, '') + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72"/></svg> ' + escapeHtml(order.vendor_phone) + '</a></div>';
-    if (pickupAddr) html_route += '<a class="bv7-nav" href="https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(pickupAddr) + '" target="_blank" rel="noopener"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg></a>';
-    html_route += '</div></div>';
+    if (pickupAddr) html += '<a class="bv7-nav" href="https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(pickupAddr) + '" target="_blank" rel="noopener"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg></a>';
+    html += '</div></div>';
 
     // Dropoff
-    html_route += '<div class="bv7-stop">';
-    html_route += '<div class="bv7-left"><div class="bv7-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div></div>';
-    html_route += '<div class="bv7-right">';
-    html_route += '<div class="bv7-label"><span class="route-stop-label">DROPOFF</span></div>';
-    html_route += '<div class="bv7-name">' + escapeHtml(dropoff) + '</div>';
-    if (dropoffAddr) html_route += '<div class="bv7-addr">' + escapeHtml(dropoffAddr) + '</div>';
-    if (instructions) html_route += '<div class="bv7-addr" style="color:#3b82f6;font-style:italic;">' + escapeHtml(instructions) + '</div>';
-    html_route += '<div class="bv7-contact-row"><a class="bv7-phone" href="tel:' + SUPPORT_PHONES.mtcc.number.replace(/[^0-9+]/g, '') + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72"/></svg> ' + SUPPORT_PHONES.mtcc.number + '</a></div>';
-    if (dropoffAddr) html_route += '<a class="bv7-nav" href="https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(dropoffAddr) + '" target="_blank" rel="noopener"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg></a>';
-    html_route += '</div></div>';
-    html_route += '</div>';
+    html += '<div class="bv7-stop">';
+    html += '<div class="bv7-left"><div class="bv7-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div></div>';
+    html += '<div class="bv7-right">';
+    html += '<div class="bv7-label"><span class="route-stop-label">DROPOFF</span></div>';
+    html += '<div class="bv7-name">' + escapeHtml(dropoff) + '</div>';
+    if (dropoffAddr) html += '<div class="bv7-addr">' + escapeHtml(dropoffAddr) + '</div>';
+    if (instructions) html += '<div class="bv7-addr" style="color:#3b82f6;font-style:italic;">' + escapeHtml(instructions) + '</div>';
+    // MTCC phone + hours
+    html += '<div class="bv7-contact-row">';
+    html += '<a class="bv7-phone" href="tel:' + SUPPORT_PHONES.mtcc.number.replace(/[^0-9+]/g, '') + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72"/></svg> ' + SUPPORT_PHONES.mtcc.number + '</a>';
+    html += '<span class="bv7-vdivider"></span>';
+    var mDay = new Date().getDay();
+    var mIsWeekday = (mDay >= 1 && mDay <= 5);
+    var mNowMins = new Date().getHours() * 60 + new Date().getMinutes();
+    if (!mIsWeekday) {
+        html += '<span class="bv7-hours"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Closed weekends<span class="bv7-hours-divider"></span><span class="bv7-hours-status closed">Closed</span></span>';
+    } else {
+        var mOpen = (mNowMins >= 540 && mNowMins < 960);
+        html += '<span class="bv7-hours"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 9:00 - 16:00<span class="bv7-hours-divider"></span><span class="bv7-hours-status ' + (mOpen ? 'open' : 'closed') + '">' + (mOpen ? 'Open' : 'Closed') + '</span></span>';
+    }
+    html += '</div>';
+    if (dropoffAddr) html += '<a class="bv7-nav" href="https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(dropoffAddr) + '" target="_blank" rel="noopener"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg></a>';
+    html += '</div></div>';
+    html += '</div>';
 
-    var html = html_route;
     return html;
 }
 
@@ -3238,23 +3265,29 @@ function renderBatchCard(batch, mode) {
         if (isCurrent) stopCls += ' current';
 
         html += '<div class="' + stopCls + '">';
-        // Dot + connector
+        // Label row (above icon)
+        html += '<div class="batch-stop-label-row">';
+        html += '<span class="batch-stop-label-text">' + stop.type.toUpperCase() + '</span>';
+        if (isDone) html += '<span class="bs-done">\u2713</span>';
+        if (isSkipped) html += '<span class="bs-skipped">Skipped</span>';
+        html += '</div>';
+        // Icon + name row (icon aligned with name)
+        html += '<div class="batch-stop-name-row">';
         html += '<div class="batch-stop-col">';
         if (isDone) {
-            html += '<div class="batch-stop-dot done"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>';
+            html += '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
         } else if (stop.type === 'pickup') {
-            html += '<div class="batch-stop-dot pickup"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/></svg></div>';
+            html += '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>';
         } else {
-            html += '<div class="batch-stop-dot dropoff"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>';
+            html += '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
         }
         if (idx < stops.length - 1) html += '<div class="batch-stop-line"></div>';
         html += '</div>';
-        // Info
         html += '<div class="batch-stop-info">';
-        html += '<div class="batch-stop-label">' + stop.type.toUpperCase() + (isDone ? ' <span class="bs-done">\u2713</span>' : '') + (isSkipped ? ' <span class="bs-skipped">Skipped</span>' : '') + '</div>';
         html += '<div class="batch-stop-name">' + escapeHtml(stop.name || '') + '</div>';
         html += '</div>';
-        html += '</div>';
+        html += '</div>'; // batch-stop-name-row
+        html += '</div>'; // stopCls
     });
     html += '</div>';
     } else {
