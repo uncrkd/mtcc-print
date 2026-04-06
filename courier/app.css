@@ -7151,3 +7151,28 @@ input {
 .scan-close-btn:active {
     background: rgba(124, 58, 237, 0.1);
 }
+
+/* ============================================
+   Scan Button — Primary Action (stands out)
+   ============================================ */
+
+.courier-sticky-action .btn-scan-goto {
+    background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%) !important;
+    color: white !important;
+    border: none !important;
+    padding: 18px 20px !important;
+    font-size: 1rem !important;
+    font-weight: 700 !important;
+    border-radius: 14px !important;
+    box-shadow: 0 4px 16px rgba(124, 58, 237, 0.35) !important;
+    letter-spacing: 0.02em;
+}
+
+.courier-sticky-action .btn-scan-goto:active {
+    transform: scale(0.98);
+    box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3) !important;
+}
+
+.courier-sticky-action .btn-scan-goto svg {
+    stroke: white;
+}
