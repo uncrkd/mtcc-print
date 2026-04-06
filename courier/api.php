@@ -935,6 +935,24 @@ function handleUpdateStatus() {
     echo json_encode(['success' => true, 'message' => $message, 'skipped_steps' => $skippedSteps, 'order' => formatOrderForApp($order, $ref, $newStatus)]);
 }
 
+function orderHasOpenIssue($ref) {
+    static $issuesCache = null;
+    if ($issuesCache === null) {
+        $issuesFile = dirname(__DIR__) . '/data/delivery-issues.json';
+        $issuesCache = [];
+        if (file_exists($issuesFile)) {
+            $data = json_decode(file_get_contents($issuesFile), true) ?: [];
+            foreach ($data['issues'] ?? [] as $issue) {
+                if (($issue['status'] ?? '') === 'open') {
+                    $issueRef = $issue['reference_code'] ?? '';
+                    if ($issueRef) $issuesCache[$issueRef] = true;
+                }
+            }
+        }
+    }
+    return isset($issuesCache[$ref]);
+}
+
 function handleReportIssue() {
     $user = getCurrentUser();
     $ref = trim($_POST['ref'] ?? '');
@@ -1292,6 +1310,8 @@ function formatOrderForApp($order, $ref = null, $statusOverride = null) {
         'delivered_at' => $dispatch['delivered_at'] ?? '',
         'delivery_photo' => $dispatch['delivery_photo'] ?? '',
         'notes' => $order['specialInstructions'] ?? '',
+        // Issue tracking
+        'has_issue' => orderHasOpenIssue($ref),
         // Vendor fulfillment details
         'vendor_order_number' => $vendorInfo ? ($vendorInfo['vendor_order_number'] ?? '') : '',
         'packing' => $vendorInfo ? ($vendorInfo['packing'] ?? 'none') : 'none',

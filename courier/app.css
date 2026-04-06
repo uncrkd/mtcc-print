@@ -7079,3 +7079,19 @@ input {
     0% { transform: scale(0.95); opacity: 0; }
     100% { transform: scale(1); opacity: 1; }
 }
+
+/* Issue reported indicator */
+.bv7-item-issue-reported {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #dc2626;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 6px;
+    padding: 4px 10px;
+}
+
+.bv7-item-issue-reported svg { stroke: #dc2626; }

@@ -1336,6 +1336,7 @@ function batch_formatForApp($batch) {
                 'quantity' => $fmt['quantity'] ?? 1,
                 'status' => $fmt['status'] ?? '',
                 'vendor_order_number' => $pfEntry['vendor_order_number'] ?? $order['vendor_order_number'] ?? '',
+                'has_issue' => function_exists('orderHasOpenIssue') ? orderHasOpenIssue($ref) : false,
             ];
         }
     }
