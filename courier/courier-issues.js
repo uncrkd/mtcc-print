@@ -35,6 +35,9 @@ var CourierIssues = (function() {
     ];
 
     var _currentRef = null;
+    var _currentRefs = []; // multi-select for batch
+    var _batchId = null;
+    var _batchOrders = []; // [{ref, customer_name}]
     var _selectedType = null;
     var _photoData = null;
     var _isSubmitting = false;
@@ -147,6 +150,126 @@ var CourierIssues = (function() {
         });
     }
 
+    function openBatch(batchId, orders) {
+        _batchId = batchId;
+        _batchOrders = orders || [];
+        _currentRef = null;
+        _currentRefs = [];
+        _selectedType = null;
+        _photoData = null;
+        _isSubmitting = false;
+
+        if (typeof haptic !== 'undefined') haptic.tap();
+
+        var container = document.getElementById('issueModalContainer');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'issueModalContainer';
+            document.body.appendChild(container);
+        }
+        container.innerHTML = getBatchSelectHTML(batchId, _batchOrders);
+
+        requestAnimationFrame(function() {
+            var overlay = document.getElementById('issueModalOverlay');
+            if (overlay) overlay.classList.add('visible');
+        });
+    }
+
+    function getBatchSelectHTML(batchId, orders) {
+        var html = '<div class="issue-modal-overlay" id="issueModalOverlay" onclick="CourierIssues.close()">';
+        html += '<div class="issue-modal" onclick="event.stopPropagation()">';
+
+        // Header
+        html += '<div class="issue-modal-header">';
+        html += '<div class="issue-modal-title">';
+        html += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+        html += '<span>Report Issue</span>';
+        html += '</div>';
+        html += '<div class="issue-modal-ref">' + escapeHtml(batchId) + '</div>';
+        html += '<button class="issue-modal-close" onclick="CourierIssues.close()">';
+        html += '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+        html += '</button>';
+        html += '</div>';
+
+        // Order selection step
+        html += '<div class="issue-step" id="issueBatchSelect">';
+        html += '<div class="issue-step-label">Which orders have an issue?</div>';
+        html += '<div class="issue-batch-list">';
+        orders.forEach(function(o) {
+            var ref = o.ref || o;
+            var name = o.customer_name || '';
+            html += '<label class="issue-batch-item">';
+            html += '<input type="checkbox" value="' + escapeAttr(ref) + '" onchange="CourierIssues.updateBatchSelection()">';
+            html += '<span class="issue-batch-check"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>';
+            html += '<div class="issue-batch-info"><span class="issue-batch-ref">' + escapeHtml(ref) + '</span>';
+            if (name) html += '<span class="issue-batch-name">' + escapeHtml(name) + '</span>';
+            html += '</div></label>';
+        });
+        // Entire batch option
+        html += '<label class="issue-batch-item issue-batch-all">';
+        html += '<input type="checkbox" value="__batch__" onchange="CourierIssues.toggleBatchAll(this)">';
+        html += '<span class="issue-batch-check"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>';
+        html += '<div class="issue-batch-info"><span class="issue-batch-ref">Entire Batch</span>';
+        html += '<span class="issue-batch-name">General issue (vendor, route, etc.)</span></div></label>';
+        html += '</div>';
+
+        html += '<button class="issue-batch-next" id="issueBatchNextBtn" disabled onclick="CourierIssues.proceedFromBatchSelect()">';
+        html += 'Next <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></button>';
+        html += '</div>';
+
+        html += '</div></div>';
+        html += '<input type="file" id="issuePhotoInput" accept="image/*" capture="environment" style="display:none" onchange="CourierIssues.onPhotoSelected(this)">';
+        return html;
+    }
+
+    function updateBatchSelection() {
+        var checks = document.querySelectorAll('#issueBatchSelect input[type=checkbox]:checked');
+        var btn = document.getElementById('issueBatchNextBtn');
+        if (btn) btn.disabled = (checks.length === 0);
+    }
+
+    function toggleBatchAll(el) {
+        var checks = document.querySelectorAll('#issueBatchSelect .issue-batch-list input[type=checkbox]');
+        checks.forEach(function(cb) {
+            if (cb.value !== '__batch__') cb.checked = el.checked;
+        });
+        updateBatchSelection();
+    }
+
+    function proceedFromBatchSelect() {
+        var checks = document.querySelectorAll('#issueBatchSelect input[type=checkbox]:checked');
+        _currentRefs = [];
+        var isEntireBatch = false;
+        checks.forEach(function(cb) {
+            if (cb.value === '__batch__') {
+                isEntireBatch = true;
+            } else {
+                _currentRefs.push(cb.value);
+            }
+        });
+
+        if (isEntireBatch && _currentRefs.length === 0) {
+            // Entire batch only — use batch ID as ref
+            _currentRef = _batchId;
+            _currentRefs = [_batchId];
+        } else if (_currentRefs.length === 0) {
+            return;
+        } else {
+            _currentRef = _currentRefs[0];
+        }
+
+        // Show the issue type selection (reuse existing modal)
+        var container = document.getElementById('issueModalContainer');
+        container.innerHTML = getModalHTML(_currentRefs.length > 1
+            ? _currentRefs.length + ' orders selected'
+            : _currentRef);
+
+        requestAnimationFrame(function() {
+            var overlay = document.getElementById('issueModalOverlay');
+            if (overlay) overlay.classList.add('visible');
+        });
+    }
+
     function close() {
         var overlay = document.getElementById('issueModalOverlay');
         if (overlay) {
@@ -157,6 +280,9 @@ var CourierIssues = (function() {
             }, 300);
         }
         _currentRef = null;
+        _currentRefs = [];
+        _batchId = null;
+        _batchOrders = [];
         _selectedType = null;
         _photoData = null;
     }
@@ -248,38 +374,52 @@ var CourierIssues = (function() {
 
         var notes = (document.getElementById('issueNotes') || {}).value || '';
 
-        var postData = {
-            action: 'report_issue',
-            ref: _currentRef,
-            issue_type: _selectedType.id,
-            issue_label: _selectedType.label,
-            notes: notes
-        };
-        if (_photoData) {
-            postData.photo = _photoData;
-        }
+        // Submit one issue per selected ref (or single ref)
+        var refsToSubmit = _currentRefs.length > 0 ? _currentRefs : [_currentRef];
+        var submitted = 0;
+        var failed = 0;
 
-        apiCall('report_issue', postData, function(result) {
-            _isSubmitting = false;
-            if (result.success) {
-                // If issue type sets missing status, update order status too
-                if (_selectedType && _selectedType.setsMissing) {
-                    apiCall('update_status', { ref: _currentRef, status: 'missing' }, function() {});
+        refsToSubmit.forEach(function(ref) {
+            var postData = {
+                action: 'report_issue',
+                ref: ref,
+                issue_type: _selectedType.id,
+                issue_label: _selectedType.label,
+                notes: notes
+            };
+            if (_photoData) postData.photo = _photoData;
+
+            apiCall('report_issue', postData, function(result) {
+                if (result.success) {
+                    submitted++;
+                    if (_selectedType && _selectedType.setsMissing) {
+                        apiCall('update_status', { ref: ref, status: 'missing' }, function() {});
+                    }
+                } else {
+                    failed++;
                 }
-                if (typeof haptic !== 'undefined') haptic.success();
-                if (typeof showToast === 'function') showToast('Issue reported successfully', 'success');
-                close();
-                if (typeof closeDetailPanel === 'function') closeDetailPanel();
-                // Refresh current tab to show updated status
-                if (typeof refreshTab === 'function' && typeof currentTab !== 'undefined') {
-                    refreshTab(currentTab);
+
+                // All done?
+                if (submitted + failed >= refsToSubmit.length) {
+                    _isSubmitting = false;
+                    if (submitted > 0) {
+                        if (typeof haptic !== 'undefined') haptic.success();
+                        var msg = submitted === 1 ? 'Issue reported' : submitted + ' issues reported';
+                        if (failed > 0) msg += ' (' + failed + ' failed)';
+                        if (typeof showToast === 'function') showToast(msg, 'success');
+                        close();
+                        if (typeof closeDetailPanel === 'function') closeDetailPanel();
+                        if (typeof refreshTab === 'function' && typeof currentTab !== 'undefined') {
+                            refreshTab(currentTab);
+                        }
+                    } else {
+                        if (typeof haptic !== 'undefined') haptic.error();
+                        if (typeof showToast === 'function') showToast('Failed to report issues', 'error');
+                        btn.disabled = false;
+                        btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2L15 22L11 13L2 9L22 2Z"/></svg><span>Submit Issue Report</span>';
+                    }
                 }
-            } else {
-                if (typeof haptic !== 'undefined') haptic.error();
-                if (typeof showToast === 'function') showToast(result.error || 'Failed to report issue', 'error');
-                btn.disabled = false;
-                btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2L15 22L11 13L2 9L22 2Z"/></svg><span>Submit Issue Report</span>';
-            }
+            });
         });
     }
 
@@ -304,12 +444,16 @@ var CourierIssues = (function() {
     // Public API
     return {
         open: open,
+        openBatch: openBatch,
         close: close,
         selectType: selectType,
         backToTypes: backToTypes,
         capturePhoto: capturePhoto,
         onPhotoSelected: onPhotoSelected,
         removePhoto: removePhoto,
+        updateBatchSelection: updateBatchSelection,
+        toggleBatchAll: toggleBatchAll,
+        proceedFromBatchSelect: proceedFromBatchSelect,
         submit: submit,
         getReportButtonHTML: getReportButtonHTML,
         ISSUE_TYPES: ISSUE_TYPES

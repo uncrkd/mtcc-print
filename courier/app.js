@@ -3562,9 +3562,10 @@ function showBatchDetail(batchId, mode) {
         html += '</div>';
     }
 
-    // Report Issue — full width
+    // Report Issue — opens batch order selection
     if (typeof CourierIssues !== 'undefined' && isActive) {
-        html += '<button class="release-btn bt-full-btn" style="border-color:#d97706;color:#d97706;" onclick="CourierIssues.open(\'' + escapeAttr(orders[0] ? orders[0].ref : batch.batch_id) + '\')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Report Issue</button>';
+        var batchOrderList = JSON.stringify(orders.map(function(o) { return { ref: o.ref, customer_name: o.customer_name }; }));
+        html += '<button class="release-btn bt-full-btn" style="border-color:#d97706;color:#d97706;" onclick="CourierIssues.openBatch(\'' + escapeAttr(batch.batch_id) + '\', ' + escapeAttr(batchOrderList) + ')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Report Issue</button>';
     }
 
     // Quick connect — label left, icon buttons right

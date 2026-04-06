@@ -346,3 +346,113 @@
     color: #dc2626;
     margin-left: 4px;
 }
+
+/* ============================================
+   Batch Issue — Order Selection
+   ============================================ */
+
+.issue-batch-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 16px;
+}
+
+.issue-batch-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.issue-batch-item:active {
+    background: #f8fafc;
+}
+
+.issue-batch-item input {
+    display: none;
+}
+
+.issue-batch-check {
+    width: 22px;
+    height: 22px;
+    border-radius: 4px;
+    border: 2px solid #d1d5db;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.15s;
+}
+
+.issue-batch-check svg {
+    opacity: 0;
+    stroke: white;
+}
+
+.issue-batch-item input:checked ~ .issue-batch-check {
+    background: #7c3aed;
+    border-color: #7c3aed;
+}
+
+.issue-batch-item input:checked ~ .issue-batch-check svg {
+    opacity: 1;
+}
+
+.issue-batch-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.issue-batch-ref {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #7c3aed;
+}
+
+.issue-batch-name {
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+.issue-batch-all {
+    border-style: dashed;
+    border-color: #d1d5db;
+}
+
+.issue-batch-all .issue-batch-ref {
+    color: #374151;
+}
+
+.issue-batch-next {
+    width: 100%;
+    padding: 12px;
+    background: #7c3aed;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: opacity 0.15s;
+}
+
+.issue-batch-next:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.issue-batch-next:not(:disabled):active {
+    opacity: 0.8;
+}
