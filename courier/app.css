@@ -5585,14 +5585,17 @@ input {
 .courier-sticky-action {
     position: sticky;
     bottom: 0;
-    padding: 12px 16px;
+    padding: 14px 16px;
     background: white;
-    border-top: 1px solid #f3f4f6;
+    border-top: 1px solid #e5e7eb;
     z-index: 10;
+    box-shadow: 0 -4px 12px rgba(0,0,0,0.06);
 }
 
 .courier-sticky-action .status-action-btn {
     width: 100%;
+    padding: 16px;
+    font-size: 0.95rem;
 }
 
 /* Actions container */
@@ -7095,3 +7098,56 @@ input {
 }
 
 .bv7-item-issue-reported svg { stroke: #dc2626; }
+
+/* ============================================
+   Scan Back Navigation Bar
+   ============================================ */
+
+.scan-back-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    margin: 0 0 8px;
+    background: rgba(124, 58, 237, 0.08);
+    border: 1px solid rgba(124, 58, 237, 0.15);
+    border-radius: 10px;
+}
+
+.scan-back-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #7c3aed;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    padding: 6px 8px;
+    border-radius: 6px;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.scan-back-btn:active {
+    background: rgba(124, 58, 237, 0.1);
+}
+
+.scan-close-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: none;
+    border: 1px solid rgba(124, 58, 237, 0.2);
+    cursor: pointer;
+    color: #9ca3af;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.scan-close-btn:active {
+    background: rgba(124, 58, 237, 0.1);
+}

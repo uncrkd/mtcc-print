@@ -16,6 +16,7 @@ var scannerActive = false;
 var scanLocked = false;  // Lock scanner while awaiting status action
 var scanExpectedRef = null; // Set when scanning from an order card (for validation)
 var batchScanMode = null; // { batchId, orderRefs: [], scannedRefs: [] } when scanning batch items
+var scanOrigin = null; // { type: 'batch'|'order', id: batchId|orderRef, label: string } for back navigation
 var courierLocation = null; // Cached GPS coordinates {lat, lng}
 var autoRefreshInterval = null;
 var capturedPhoto = null;
@@ -484,9 +485,17 @@ function switchTab(tabId) {
     }
 
     // Auto-start scanner when entering scan tab
-    // Called directly from click handler so user-gesture context is preserved
     if (tabId === 'scan' && !scannerActive) {
         startScanner();
+    }
+
+    // Show/hide scan back bar
+    if (tabId === 'scan') {
+        renderScanBackBar();
+    } else {
+        removeScanBackBar();
+        // Clear scan origin when leaving scan tab (unless going to a detail)
+        if (tabId !== 'scan') scanOrigin = null;
     }
 
     // Load content for other tabs
@@ -2340,7 +2349,7 @@ function showOrderDetail(ref, mode) {
             }
             html += '</div>';
             html += '<div class="courier-sticky-action">';
-            html += '<button class="status-action-btn btn-scan-goto" onclick="scanExpectedRef=\'' + escapeAttr(order.ref) + '\'; closeDetailPanel(); switchTab(\'scan\')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="6" y1="8" x2="6" y2="16"/><line x1="10" y1="8" x2="10" y2="16"/><line x1="14" y1="8" x2="14" y2="16"/><line x1="18" y1="8" x2="18" y2="16"/></svg> Scan Barcode to Confirm Pickup</button>';
+            html += '<button class="status-action-btn btn-scan-goto" onclick="scanOrigin={type:\'order\',id:\'' + escapeAttr(order.ref) + '\',label:\'' + escapeAttr(order.ref) + ' Details\'}; scanExpectedRef=\'' + escapeAttr(order.ref) + '\'; closeDetailPanel(); switchTab(\'scan\')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="6" y1="8" x2="6" y2="16"/><line x1="10" y1="8" x2="10" y2="16"/><line x1="14" y1="8" x2="14" y2="16"/><line x1="18" y1="8" x2="18" y2="16"/></svg> Scan Barcode to Confirm Pickup</button>';
             html += '</div>';
             html += '</div>';
         } else if (mode !== 'completed') {
@@ -2699,6 +2708,9 @@ function processScannedCode(code) {
 // ============================================
 
 function startBatchScan(batchId, orderRefs) {
+    // Set scan origin for back navigation
+    scanOrigin = { type: 'batch', id: batchId, label: batchId + ' Details' };
+
     // Determine which refs are already shipped
     var alreadyShipped = [];
     orderRefs.forEach(function(ref) {
@@ -2782,6 +2794,74 @@ function exitBatchScan() {
     var banner = document.getElementById('batchScanBanner');
     if (banner) banner.remove();
     hideScanResult();
+    // Return to batch detail if we have origin
+    if (scanOrigin && scanOrigin.type === 'batch') {
+        var batchId = scanOrigin.id;
+        scanOrigin = null;
+        removeScanBackBar();
+        switchTab('deliveries');
+        setTimeout(function() {
+            if (batchCache[batchId]) showBatchDetail(batchId, 'delivery');
+        }, 300);
+        return;
+    }
+    scanOrigin = null;
+    removeScanBackBar();
+}
+
+// ============================================
+// Scan Back Navigation Bar
+// ============================================
+
+function renderScanBackBar() {
+    removeScanBackBar();
+    if (!scanOrigin) return;
+
+    var bar = document.createElement('div');
+    bar.id = 'scanBackBar';
+    bar.className = 'scan-back-bar';
+
+    var backLabel = scanOrigin.label || 'Back';
+    bar.innerHTML = '<button class="scan-back-btn" onclick="navigateBackFromScan()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg> ' + escapeHtml(backLabel) + '</button>' +
+        '<button class="scan-close-btn" onclick="closeScanAndReturn()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>';
+
+    var scanContent = document.getElementById('scanContent') || document.getElementById('tab-scan');
+    if (scanContent) scanContent.insertBefore(bar, scanContent.firstChild);
+}
+
+function removeScanBackBar() {
+    var bar = document.getElementById('scanBackBar');
+    if (bar) bar.remove();
+}
+
+function navigateBackFromScan() {
+    if (!scanOrigin) { switchTab('deliveries'); return; }
+    var origin = scanOrigin;
+    scanOrigin = null;
+    removeScanBackBar();
+    stopScanner();
+    hideScanResult();
+
+    if (origin.type === 'batch' && batchCache[origin.id]) {
+        switchTab('deliveries');
+        setTimeout(function() { showBatchDetail(origin.id, 'delivery'); }, 200);
+    } else if (origin.type === 'order' && orderCache[origin.id]) {
+        switchTab('deliveries');
+        setTimeout(function() { showOrderDetail(origin.id, 'delivery'); }, 200);
+    } else {
+        switchTab('deliveries');
+    }
+}
+
+function closeScanAndReturn() {
+    scanOrigin = null;
+    batchScanMode = null;
+    removeScanBackBar();
+    var banner = document.getElementById('batchScanBanner');
+    if (banner) banner.remove();
+    stopScanner();
+    hideScanResult();
+    switchTab('deliveries');
 }
 
 function showScanResult(result) {
@@ -3564,8 +3644,10 @@ function showBatchDetail(batchId, mode) {
 
     // Report Issue — opens batch order selection
     if (typeof CourierIssues !== 'undefined' && isActive) {
-        var batchOrderList = JSON.stringify(orders.map(function(o) { return { ref: o.ref, customer_name: o.customer_name }; }));
-        html += '<button class="release-btn bt-full-btn" style="border-color:#d97706;color:#d97706;" onclick="CourierIssues.openBatch(\'' + escapeAttr(batch.batch_id) + '\', ' + escapeAttr(batchOrderList) + ')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Report Issue</button>';
+        // Store batch orders in global for onclick access (avoids JSON escaping issues)
+        window._batchIssueOrders = orders.map(function(o) { return { ref: o.ref, customer_name: o.customer_name }; });
+        window._batchIssueId = batch.batch_id;
+        html += '<button class="release-btn bt-full-btn" style="border-color:#d97706;color:#d97706;" onclick="CourierIssues.openBatch(window._batchIssueId, window._batchIssueOrders)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Report Issue</button>';
     }
 
     // Quick connect — label left, icon buttons right
