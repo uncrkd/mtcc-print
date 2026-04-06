@@ -1634,13 +1634,12 @@ function fetchRouteInfo(ref) {
             orderCache[ref].route_polyline = result.route.polyline;
         }
 
-        // Update route badge in detail panel if visible
-        var badge = document.querySelector('.route-info-badge');
-        if (badge) {
-            badge.innerHTML = '<span class="route-info-dist">Distance: ' + result.route.distance_km + ' km</span>' +
-                              '<span class="route-info-sep">\u00b7</span>' +
-                              '<span class="route-info-eta">Drive time: ~' + result.route.duration_min + ' min</span>';
-            badge.classList.add('loaded');
+        // Update route stats in detail panel
+        var statEl = document.getElementById('orderRouteStat_' + ref);
+        if (statEl) {
+            statEl.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg> <strong>' + result.route.distance_km + ' km</strong>' +
+                '<span class="bv7-stat-dot">\u2022</span>' +
+                '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> <strong>~' + result.route.duration_min + ' min</strong>';
         }
         // Update static map with real polyline
         if (result.route.polyline) {
@@ -1788,11 +1787,13 @@ function renderOrderCard(order, mode) {
         var dropoffAddr = (order.destination_address || '').replace(/\r\n/g, ', ').replace(/\n/g, ', ');
 
         html += '<div class="card-route-vertical">';
-        html += '<div class="card-route-stop"><div class="card-route-dot-col"><div class="card-route-emoji">\ud83d\udce6</div><div class="card-route-line-v"></div></div>';
+        // Pickup — blue box SVG
+        html += '<div class="card-route-stop"><div class="card-route-dot-col"><svg class="card-route-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg><div class="card-route-line-v"></div></div>';
         html += '<div class="card-route-info"><div class="card-route-label">PICKUP</div><div class="card-route-name">' + escapeHtml(pickup) + '</div>';
         if (pickupAddr) html += '<div class="card-route-addr">' + escapeHtml(pickupAddr) + '</div>';
         html += '</div></div>';
-        html += '<div class="card-route-stop"><div class="card-route-dot-col"><div class="card-route-emoji">\ud83d\udccd</div></div>';
+        // Dropoff — green pin SVG
+        html += '<div class="card-route-stop"><div class="card-route-dot-col"><svg class="card-route-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>';
         html += '<div class="card-route-info"><div class="card-route-label">DROPOFF</div><div class="card-route-name">' + escapeHtml(dropoff) + '</div>';
         if (dropoffAddr) html += '<div class="card-route-addr">' + escapeHtml(dropoffAddr) + '</div>';
         html += '</div></div></div>';
@@ -2290,9 +2291,16 @@ function showOrderDetail(ref, mode) {
         html += '</div></div>';
     }
 
-    // Header — order ID + tracking (badge moved to due bar)
+    // Header — ORDER label + ID + payout (matching batch layout)
     html += '<div class="detail-order-header">';
-    html += '<div><div class="detail-order-ref">' + escapeHtml(order.ref) + '</div><div class="detail-order-tracking">' + escapeHtml(order.tracking) + '</div></div>';
+    html += '<div>';
+    html += '<div class="batch-id-label">ORDER</div>';
+    html += '<div class="detail-order-ref">' + escapeHtml(order.ref) + '</div>';
+    html += '<div class="detail-order-tracking">' + escapeHtml(order.tracking) + '</div>';
+    html += '</div>';
+    if (order.est_payout) {
+        html += '<div class="batch-payout-top"><div class="batch-payout-top-label">Est. Payout</div><div class="batch-payout-top-amount">$' + parseFloat(order.est_payout).toFixed(2) + '</div></div>';
+    }
     html += '</div>';
 
     // Route Card
@@ -2377,13 +2385,13 @@ function showOrderDetail(ref, mode) {
         }
     }
 
-    // Fix 2: Quick contacts as 3 buttons in a row (Print Stuff, Vendor, MTCC)
-    html += '<div class="courier-contact-row">';
-    html += '<a class="courier-contact-btn" href="tel:' + SUPPORT_PHONES.admin.number.replace(/[^0-9+]/g, '') + '"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72"/></svg><span>Print Stuff</span></a>';
-    if (order.vendor_phone) {
-        html += '<a class="courier-contact-btn" href="tel:' + order.vendor_phone.replace(/[^0-9+]/g, '') + '"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg><span>' + escapeHtml(order.vendor_name || 'Vendor') + '</span></a>';
-    }
-    html += '<a class="courier-contact-btn" href="tel:' + SUPPORT_PHONES.mtcc.number.replace(/[^0-9+]/g, '') + '"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>MTCC</span></a>';
+    // Quick connect — matching batch layout (label + icon buttons)
+    html += '<div class="bv7-quick-connect">';
+    html += '<div class="bv7-qc-label"><span class="bv7-qc-name">Print Stuff Support</span><span class="bv7-qc-num">' + SUPPORT_PHONES.admin.number + '</span></div>';
+    html += '<div class="bv7-qc-buttons">';
+    html += '<a class="bv7-qc-btn" href="https://tawk.to/chat/69bcadcf600a121c36fa7a4b/1jk4gdsmg" target="_blank" rel="noopener" title="Live Chat"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></a>';
+    html += '<a class="bv7-qc-btn" href="tel:' + SUPPORT_PHONES.admin.number.replace(/[^0-9+]/g, '') + '" title="Call"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg></a>';
+    html += '</div>';
     html += '</div>';
 
     // Sticky scan button for dispatched single orders (after all content)
@@ -2410,58 +2418,65 @@ function renderRouteCard(order) {
     var dropoffAddr = (order.destination_address || '').replace(/\r\n/g, ', ').replace(/\n/g, ', ');
     var instructions = order.destination_instructions || '';
 
-    var html = '<div class="route-card">';
-    html += '<div class="route-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Route</div>';
-
-    // Static map with route
+    // Map block (matching batch layout)
     var singleAddrs = [];
     if (pickupAddr) singleAddrs.push(pickupAddr);
     if (dropoffAddr) singleAddrs.push(dropoffAddr);
+
+    html += '<div class="bv7-map-block">';
+    // Stats bar
+    html += '<div class="bv7-stats-bar">';
+    html += '<span class="bv7-stats-title">Route</span>';
+    html += '<span class="bv7-stats-sep">|</span>';
+    html += '<span class="bv7-stat" id="orderRouteStat_' + escapeAttr(order.ref) + '"><span class="route-info-loading">Calculating...</span></span>';
+    html += '</div>';
     if (singleAddrs.length > 0) {
         var orderPolyline = order.route_polyline || null;
         var singleStaticUrl = buildStaticMapUrl(singleAddrs, 600, 250, orderPolyline);
         var singleNavUrl = singleAddrs.length >= 2 ? buildGoogleNavUrl(singleAddrs) : 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(singleAddrs[0]);
-        html += '<div class="route-map-container"><a href="' + singleNavUrl + '" target="_blank" rel="noopener"><img class="route-static-img" id="orderMapImg_' + escapeAttr(order.ref) + '" src="' + singleStaticUrl + '" alt="Route" loading="lazy"></a></div>';
-        html += '<div class="route-info-badge"><span class="route-info-loading">Calculating route...</span></div>';
+        html += '<a class="bv7-map-link" href="' + singleNavUrl + '" target="_blank" rel="noopener"><img class="bv7-map-img" id="orderMapImg_' + escapeAttr(order.ref) + '" src="' + singleStaticUrl + '" alt="Route" loading="lazy"></a>';
     }
-
-    // Fix 6: Consistent pickup/dropoff icons (box blue, pin green, dashed line)
-    html += '<div class="route-stops">';
-
-    // Pickup — box icon (blue)
-    html += '<div class="route-stop">';
-    html += '<div class="route-icon-col"><svg class="route-icon-pickup" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg><div class="route-dashed-line"></div></div>';
-    html += '<div class="route-stop-info"><div class="route-stop-label">PICKUP</div><div class="route-stop-name">' + escapeHtml(pickup) + '</div>';
-    if (pickupAddr) html += '<div class="route-stop-addr">' + escapeHtml(pickupAddr) + '</div>';
     html += '</div>';
-    if (pickupAddr) html += '<a class="route-nav-link" href="https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(pickupAddr) + '" target="_blank" rel="noopener">Navigate</a>';
-    html += '</div>';
-
-    // Dropoff — pin icon (green)
-    html += '<div class="route-stop">';
-    html += '<div class="route-icon-col"><svg class="route-icon-dropoff" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>';
-    html += '<div class="route-stop-info"><div class="route-stop-label">DROPOFF</div><div class="route-stop-name">' + escapeHtml(dropoff) + '</div>';
-    if (dropoffAddr) html += '<div class="route-stop-addr">' + escapeHtml(dropoffAddr) + '</div>';
-    if (instructions) html += '<div class="route-stop-instructions">' + escapeHtml(instructions) + '</div>';
-    html += '</div>';
-    if (dropoffAddr) html += '<a class="route-nav-link" href="https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(dropoffAddr) + '" target="_blank" rel="noopener">Navigate</a>';
-    html += '</div>';
-    html += '</div>';
-
-    // Open in Maps button
-    var navAddrs = [];
-    if (pickupAddr) navAddrs.push(pickupAddr);
-    if (dropoffAddr) navAddrs.push(dropoffAddr);
-    if (navAddrs.length > 0) {
-        html += '<div class="route-map-buttons' + (isAppleDevice() ? '' : ' single') + '">';
-        html += '<a class="route-app-btn google" href="' + buildGoogleNavUrl(navAddrs) + '" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg> Google Maps</a>';
+    // Map buttons
+    if (singleAddrs.length > 0) {
+        html += '<div class="route-map-buttons' + (isAppleDevice() ? '' : ' single') + '" style="margin:8px 0 0;">';
+        html += '<a class="route-app-btn google" href="' + buildGoogleNavUrl(singleAddrs) + '" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg> Google Maps</a>';
         if (isAppleDevice()) {
-            html += '<a class="route-app-btn apple" href="' + buildAppleNavUrl(navAddrs) + '" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Apple Maps</a>';
+            html += '<a class="route-app-btn apple" href="' + buildAppleNavUrl(singleAddrs) + '" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Apple Maps</a>';
         }
         html += '</div>';
     }
 
-    html += '</div>';
+    // Divider
+    html += '<div style="height:1px;background:#e5e7eb;margin:16px 16px;"></div>';
+
+    // Stops — matching batch timeline layout (bv7)
+    var html_route = '<div class="batch-timeline-v7">';
+    // Pickup
+    html_route += '<div class="bv7-stop">';
+    html_route += '<div class="bv7-left"><div class="bv7-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div><div class="bv7-line"></div></div>';
+    html_route += '<div class="bv7-right">';
+    html_route += '<div class="bv7-label"><span class="route-stop-label">PICKUP</span></div>';
+    html_route += '<div class="bv7-name">' + escapeHtml(pickup) + '</div>';
+    if (pickupAddr) html_route += '<div class="bv7-addr">' + escapeHtml(pickupAddr) + '</div>';
+    if (order.vendor_phone) html_route += '<div class="bv7-contact-row"><a class="bv7-phone" href="tel:' + order.vendor_phone.replace(/[^0-9+]/g, '') + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72"/></svg> ' + escapeHtml(order.vendor_phone) + '</a></div>';
+    if (pickupAddr) html_route += '<a class="bv7-nav" href="https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(pickupAddr) + '" target="_blank" rel="noopener"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg></a>';
+    html_route += '</div></div>';
+
+    // Dropoff
+    html_route += '<div class="bv7-stop">';
+    html_route += '<div class="bv7-left"><div class="bv7-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div></div>';
+    html_route += '<div class="bv7-right">';
+    html_route += '<div class="bv7-label"><span class="route-stop-label">DROPOFF</span></div>';
+    html_route += '<div class="bv7-name">' + escapeHtml(dropoff) + '</div>';
+    if (dropoffAddr) html_route += '<div class="bv7-addr">' + escapeHtml(dropoffAddr) + '</div>';
+    if (instructions) html_route += '<div class="bv7-addr" style="color:#3b82f6;font-style:italic;">' + escapeHtml(instructions) + '</div>';
+    html_route += '<div class="bv7-contact-row"><a class="bv7-phone" href="tel:' + SUPPORT_PHONES.mtcc.number.replace(/[^0-9+]/g, '') + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72"/></svg> ' + SUPPORT_PHONES.mtcc.number + '</a></div>';
+    if (dropoffAddr) html_route += '<a class="bv7-nav" href="https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(dropoffAddr) + '" target="_blank" rel="noopener"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg></a>';
+    html_route += '</div></div>';
+    html_route += '</div>';
+
+    var html = html_route;
     return html;
 }
 
