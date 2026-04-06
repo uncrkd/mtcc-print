@@ -3254,7 +3254,7 @@ function renderBatchCard(batch, mode) {
     var stops = batch.stops || [];
     var currentIdx = batch.current_stop_index || 0;
     if (stops.length > 0) {
-    html += '<div class="batch-stops-timeline">';
+    html += '<div class="card-route-vertical">';
     stops.forEach(function(stop, idx) {
         var isDone = (stop.status === 'completed');
         var isSkipped = (stop.status === 'skipped');
@@ -3265,29 +3265,24 @@ function renderBatchCard(batch, mode) {
         if (isCurrent) stopCls += ' current';
 
         html += '<div class="' + stopCls + '">';
-        // Label row (above icon)
-        html += '<div class="batch-stop-label-row">';
-        html += '<span class="batch-stop-label-text">' + stop.type.toUpperCase() + '</span>';
-        if (isDone) html += '<span class="bs-done">\u2713</span>';
-        if (isSkipped) html += '<span class="bs-skipped">Skipped</span>';
-        html += '</div>';
-        // Icon + name row (icon aligned with name)
-        html += '<div class="batch-stop-name-row">';
-        html += '<div class="batch-stop-col">';
+        // Same structure as single order card (card-route-*)
+        html += '<div class="card-route-stop">';
+        html += '<div class="card-route-dot-col">';
         if (isDone) {
-            html += '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
+            html += '<svg class="card-route-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
         } else if (stop.type === 'pickup') {
-            html += '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>';
+            html += '<svg class="card-route-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>';
         } else {
-            html += '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+            html += '<svg class="card-route-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
         }
-        if (idx < stops.length - 1) html += '<div class="batch-stop-line"></div>';
+        if (idx < stops.length - 1) html += '<div class="card-route-line-v"></div>';
         html += '</div>';
-        html += '<div class="batch-stop-info">';
-        html += '<div class="batch-stop-name">' + escapeHtml(stop.name || '') + '</div>';
+        html += '<div class="card-route-info">';
+        html += '<div class="card-route-label">' + stop.type.toUpperCase() + (isDone ? ' \u2713' : '') + '</div>';
+        html += '<div class="card-route-name">' + escapeHtml(stop.name || '') + '</div>';
         html += '</div>';
-        html += '</div>'; // batch-stop-name-row
-        html += '</div>'; // stopCls
+        html += '</div>';
+        html += '</div>';
     });
     html += '</div>';
     } else {
