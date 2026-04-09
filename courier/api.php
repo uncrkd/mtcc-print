@@ -255,10 +255,10 @@ function getTabsForRole($role) {
     switch ($role) {
         case 'courier':
             return [
-                ['id' => 'deliveries', 'label' => 'My Deliveries', 'icon' => 'deliveries'],
+                ['id' => 'deliveries', 'label' => 'Deliveries', 'icon' => 'deliveries'],
                 ['id' => 'available', 'label' => 'Available', 'icon' => 'available'],
                 ['id' => 'scan', 'label' => 'Scan', 'icon' => 'scan'],
-                ['id' => 'earnings', 'label' => 'Earnings', 'icon' => 'earnings'],
+                ['id' => 'account', 'label' => 'Account', 'icon' => 'account'],
             ];
         case 'mtcc_staff':
             return [

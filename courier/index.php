@@ -80,115 +80,12 @@ $cacheBust = time();
     <!-- App Header -->
     <header class="app-header">
         <div class="app-header-left">
-            <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleDrawer()">
-                <span></span><span></span><span></span>
-            </button>
-        </div>
-        <div class="app-header-center">
             <img src="../logo.png" alt="MTCC" class="header-logo-img" onerror="this.style.display='none'">
         </div>
         <div class="app-header-right">
             <span class="role-pill" id="headerRole"></span>
         </div>
     </header>
-
-    <!-- Slide-out Drawer -->
-    <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
-    <nav class="drawer" id="drawer">
-        <div class="drawer-header">
-            <div class="drawer-profile">
-                <div class="drawer-avatar" id="drawerAvatar"></div>
-                <div class="drawer-user-info">
-                    <div class="drawer-name" id="drawerName"></div>
-                    <div class="drawer-role" id="drawerRole"></div>
-                </div>
-            </div>
-            <button class="drawer-close-btn" onclick="closeDrawer()">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-            </button>
-        </div>
-
-        <div class="drawer-body" id="drawerBody">
-            <!-- Courier-only: Availability Toggle -->
-            <div class="drawer-section drawer-courier-only">
-                <div class="drawer-item drawer-toggle-item">
-                    <div class="drawer-item-left">
-                        <div class="drawer-item-icon status-icon"><div class="availability-dot" id="availabilityDot"></div></div>
-                        <span>Availability</span>
-                    </div>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="availabilityToggle" onchange="toggleAvailability(this.checked)">
-                        <span class="toggle-slider"></span>
-                    </label>
-                </div>
-            </div>
-
-            <!-- Courier-only: Navigation -->
-            <div class="drawer-section drawer-courier-only">
-                <div class="drawer-section-label">Navigation</div>
-                <button class="drawer-item" onclick="drawerNav('deliveries')">
-                    <div class="drawer-item-left">
-                        <div class="drawer-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5a2 2 0 01-2 2"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div>
-                        <span>My Deliveries</span>
-                    </div>
-                </button>
-                <button class="drawer-item" onclick="drawerNav('earnings')">
-                    <div class="drawer-item-left">
-                        <div class="drawer-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
-                        <span>Earnings</span>
-                    </div>
-                </button>
-            </div>
-
-            <!-- Courier-only: Support -->
-            <div class="drawer-section drawer-courier-only">
-                <div class="drawer-section-label">Support</div>
-                <a class="drawer-item" href="tel:+14168008632">
-                    <div class="drawer-item-left">
-                        <div class="drawer-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72"/></svg></div>
-                        <span>Call Dispatch</span>
-                    </div>
-                    <span class="drawer-item-meta">416-800-8632</span>
-                </a>
-                <a class="drawer-item" href="tel:+14165855000">
-                    <div class="drawer-item-left">
-                        <div class="drawer-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
-                        <span>Call MTCC</span>
-                    </div>
-                    <span class="drawer-item-meta">416-585-5000</span>
-                </a>
-            </div>
-
-            <!-- MTCC Staff: Support (Print Stuff only) -->
-            <div class="drawer-section drawer-mtcc-only" style="display:none;">
-                <div class="drawer-section-label">Print Stuff Support</div>
-                <a class="drawer-item" href="tel:+14378828822">
-                    <div class="drawer-item-left">
-                        <div class="drawer-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72"/></svg></div>
-                        <span>Call Print Stuff</span>
-                    </div>
-                    <span class="drawer-item-meta">(437) 882-8822</span>
-                </a>
-                <a class="drawer-item" href="mailto:orders@printstuff.ca">
-                    <div class="drawer-item-left">
-                        <div class="drawer-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
-                        <span>Email Support</span>
-                    </div>
-                    <span class="drawer-item-meta">orders@printstuff.ca</span>
-                </a>
-            </div>
-        </div>
-
-        <div class="drawer-footer">
-            <button class="drawer-item drawer-logout" onclick="doLogout()">
-                <div class="drawer-item-left">
-                    <div class="drawer-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></div>
-                    <span>Sign Out</span>
-                </div>
-            </button>
-            <div class="drawer-version">MTCC Courier v2.0</div>
-        </div>
-    </nav>
     
     <!-- Weather Bar -->
     <div id="weatherBar" class="weather-bar" style="display:none;">
@@ -297,10 +194,18 @@ $cacheBust = time();
         
         <!-- NEARBY TAB removed — merged into Available tab as map view -->
         
-        <!-- EARNINGS TAB (Courier) -->
+        <!-- ACCOUNT TAB (Courier) -->
+        <div class="tab-pane" id="tab-account">
+            <div class="tab-body" id="accountContent">
+                <div class="loading-state"><div class="spinner-ring"></div><span>Loading...</span></div>
+            </div>
+        </div>
+
+        <!-- EARNINGS SUB-VIEW (opened from Account) -->
         <div class="tab-pane" id="tab-earnings">
             <div class="tab-header">
-                <h2>Earnings</h2>
+                <button class="back-to-account" onclick="switchTab('account')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg> Account</button>
+                <h2>Earnings & Performance</h2>
             </div>
             <div class="tab-body" id="earningsContent">
                 <div class="loading-state"><div class="spinner-ring"></div><span>Loading earnings...</span></div>

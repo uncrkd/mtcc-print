@@ -470,33 +470,12 @@ function showApp() {
     document.getElementById('loginScreen').classList.remove('active');
     document.getElementById('appScreen').classList.add('active');
 
-    // Set user info in header and drawer
+    // Set user info in header
     var roleEl = document.getElementById('headerRole');
     if (roleEl) {
         roleEl.textContent = currentUser.role_label;
         roleEl.className = 'role-pill role-' + currentUser.role;
     }
-
-    // Populate drawer
-    var drawerName = document.getElementById('drawerName');
-    var drawerRole = document.getElementById('drawerRole');
-    var drawerAvatar = document.getElementById('drawerAvatar');
-    var availToggle = document.getElementById('availabilityToggle');
-    var availDot = document.getElementById('availabilityDot');
-    if (drawerName) drawerName.textContent = currentUser.name;
-    if (drawerRole) drawerRole.textContent = currentUser.role_label;
-    if (drawerAvatar) drawerAvatar.textContent = (currentUser.name || '?').charAt(0).toUpperCase();
-    if (availToggle) availToggle.checked = true;
-    if (availDot) availDot.classList.add('online');
-
-    // Role-based drawer visibility
-    var isMTCC = currentUser.role === 'mtcc_staff';
-    document.querySelectorAll('.drawer-courier-only').forEach(function(el) {
-        el.style.display = isMTCC ? 'none' : '';
-    });
-    document.querySelectorAll('.drawer-mtcc-only').forEach(function(el) {
-        el.style.display = isMTCC ? '' : 'none';
-    });
 
     // Set role-specific status labels for badge rendering
     if (currentUser.role === 'mtcc_staff') {
@@ -672,6 +651,7 @@ function refreshTab(tabId) {
             else loadAvailable();
             break;
         case 'pickup': loadPickupQueue(); break;
+        case 'account': loadAccount(); break;
         case 'earnings': loadEarnings(); break;
         case 'history': loadHistory(); break;
         case 'activity': loadActivity(); break;
@@ -1214,6 +1194,14 @@ function loadMTCCDashboard() {
             html += '</div></div>';
         }
 
+        // Support + Sign out (replaces drawer for MTCC)
+        html += '<div class="mtcc-dash-section"><div class="mtcc-section-header">Support</div>';
+        html += '<div class="acct-link-group">';
+        html += '<a class="acct-link" href="tel:' + SUPPORT_PHONES.admin.number.replace(/[^0-9+]/g, '') + '"><div class="acct-link-left"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72"/></svg><span>Call Print Stuff</span></div><span class="acct-link-meta">' + SUPPORT_PHONES.admin.number + '</span></a>';
+        html += '<a class="acct-link" href="mailto:orders@printstuff.ca"><div class="acct-link-left"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><span>Email Support</span></div><span class="acct-link-meta">orders@printstuff.ca</span></a>';
+        html += '</div></div>';
+        html += '<div style="text-align:center;padding:16px 0;"><button class="acct-signout" onclick="doLogout()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Sign Out</button></div>';
+
         el.innerHTML = html;
     });
 }
@@ -1239,6 +1227,104 @@ function loadCompleted() {
         }
         cachedCompleteOrders = result.orders || [];
         renderCompleteFromCache();
+    });
+}
+
+// ============================================
+// Account Page (Courier)
+// ============================================
+
+function loadAccount() {
+    var el = document.getElementById('accountContent');
+    if (!el) return;
+
+    // Fetch earnings data for the summary card
+    apiCall('get_earnings', null, function(result) {
+        var s = (result.success && result.summary) ? result.summary : { today: 0, week: 0, deliveries_today: 0 };
+        var p = (result.success && result.performance) ? result.performance : { total_completed: 0, on_time_rate: 0, avg_delivery_min: 0 };
+
+        // Update ticker
+        updateEarningsTicker(s.today);
+
+        var name = currentUser ? currentUser.name : '';
+        var role = currentUser ? (currentUser.role_label || currentUser.role) : '';
+        var initial = (name || '?').charAt(0).toUpperCase();
+
+        var html = '';
+
+        // Profile header
+        html += '<div class="acct-profile">';
+        html += '<div class="acct-avatar">' + escapeHtml(initial) + '</div>';
+        html += '<div class="acct-info">';
+        html += '<div class="acct-name">' + escapeHtml(name) + '</div>';
+        html += '<div class="acct-role">' + escapeHtml(role) + '</div>';
+        html += '</div>';
+        html += '</div>';
+
+        // Availability toggle
+        html += '<div class="acct-section">';
+        html += '<div class="acct-toggle-row">';
+        html += '<div class="acct-toggle-left"><div class="availability-dot" id="acctAvailDot"></div><span>Availability</span></div>';
+        html += '<label class="toggle-switch"><input type="checkbox" id="acctAvailToggle" onchange="toggleAvailability(this.checked)"><span class="toggle-slider"></span></label>';
+        html += '</div>';
+        html += '</div>';
+
+        // Earnings card — tap to drill into full earnings view
+        html += '<div class="acct-section">';
+        html += '<div class="acct-section-label">Earnings</div>';
+        html += '<button class="acct-card acct-earnings-card" onclick="switchTab(\'earnings\')">';
+        html += '<div class="acct-earnings-row">';
+        html += '<div class="acct-earn-block"><div class="acct-earn-value">$' + s.today.toFixed(2) + '</div><div class="acct-earn-label">Today</div></div>';
+        html += '<div class="acct-earn-divider"></div>';
+        html += '<div class="acct-earn-block"><div class="acct-earn-value">$' + s.week.toFixed(2) + '</div><div class="acct-earn-label">This Week</div></div>';
+        html += '<div class="acct-earn-divider"></div>';
+        html += '<div class="acct-earn-block"><div class="acct-earn-value">' + s.deliveries_today + '</div><div class="acct-earn-label">Deliveries</div></div>';
+        html += '</div>';
+        html += '<div class="acct-card-footer">View Earnings & Performance <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>';
+        html += '</button>';
+        html += '</div>';
+
+        // Performance quick stats
+        var rateClass = p.on_time_rate >= 90 ? 'perf-green' : (p.on_time_rate >= 70 ? 'perf-amber' : 'perf-red');
+        html += '<div class="acct-section">';
+        html += '<div class="acct-section-label">Performance</div>';
+        html += '<div class="acct-stats-row">';
+        html += '<div class="acct-stat"><div class="acct-stat-value">' + p.total_completed + '</div><div class="acct-stat-label">Total Deliveries</div></div>';
+        html += '<div class="acct-stat"><div class="acct-stat-value ' + rateClass + '">' + p.on_time_rate + '%</div><div class="acct-stat-label">On Time</div></div>';
+        html += '<div class="acct-stat"><div class="acct-stat-value">' + (p.avg_delivery_min || '\u2014') + '<span class="perf-unit">min</span></div><div class="acct-stat-label">Avg Time</div></div>';
+        html += '</div>';
+        html += '</div>';
+
+        // Support section
+        html += '<div class="acct-section">';
+        html += '<div class="acct-section-label">Support</div>';
+        html += '<a class="acct-link" href="tel:' + SUPPORT_PHONES.admin.number.replace(/[^0-9+]/g, '') + '">';
+        html += '<div class="acct-link-left"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72"/></svg><span>Call Dispatch</span></div>';
+        html += '<span class="acct-link-meta">' + SUPPORT_PHONES.admin.number + '</span>';
+        html += '</a>';
+        html += '<a class="acct-link" href="tel:' + SUPPORT_PHONES.mtcc.number.replace(/[^0-9+]/g, '') + '">';
+        html += '<div class="acct-link-left"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Call MTCC</span></div>';
+        html += '<span class="acct-link-meta">' + SUPPORT_PHONES.mtcc.number + '</span>';
+        html += '</a>';
+        html += '<a class="acct-link" href="https://tawk.to/chat/69bcadcf600a121c36fa7a4b/1jk4gdsmg" target="_blank" rel="noopener">';
+        html += '<div class="acct-link-left"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Live Chat</span></div>';
+        html += '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>';
+        html += '</a>';
+        html += '</div>';
+
+        // App info + sign out
+        html += '<div class="acct-section acct-footer-section">';
+        html += '<div class="acct-app-version">MTCC Courier v2.1</div>';
+        html += '<button class="acct-signout" onclick="doLogout()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Sign Out</button>';
+        html += '</div>';
+
+        el.innerHTML = html;
+
+        // Set availability toggle state
+        var toggle = document.getElementById('acctAvailToggle');
+        var dot = document.getElementById('acctAvailDot');
+        if (toggle) toggle.checked = true;
+        if (dot) dot.classList.add('online');
     });
 }
 
@@ -4724,6 +4810,7 @@ function getTabIcon(iconId) {
         dashboard: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>',
         upcoming: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
         complete: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+        account: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
     };
     return icons[iconId] || '';
 }
@@ -4974,37 +5061,12 @@ function initPanelSwipe() {
 // Slide-out Drawer
 // ============================================
 
-function toggleDrawer() {
-    var drawer = document.getElementById('drawer');
-    var overlay = document.getElementById('drawerOverlay');
-    if (drawer.classList.contains('open')) {
-        closeDrawer();
-    } else {
-        drawer.classList.add('open');
-        overlay.classList.add('open');
-        document.getElementById('hamburgerBtn').classList.add('open');
-        document.body.style.overflow = 'hidden';
-    }
-}
-
-function closeDrawer() {
-    document.getElementById('drawer').classList.remove('open');
-    document.getElementById('drawerOverlay').classList.remove('open');
-    document.getElementById('hamburgerBtn').classList.remove('open');
-    document.body.style.overflow = '';
-}
-
-function drawerNav(tabId) {
-    closeDrawer();
-    switchTab(tabId);
-}
-
 function toggleAvailability(isOnline) {
-    var dot = document.getElementById('availabilityDot');
-    if (dot) {
+    // Update all availability dots (account page)
+    document.querySelectorAll('.availability-dot').forEach(function(dot) {
         dot.classList.toggle('online', isOnline);
         dot.classList.toggle('offline', !isOnline);
-    }
+    });
     apiCall('set_availability', { status: isOnline ? 'online' : 'offline' }, function(result) {
         if (result.success) {
             showToast(isOnline ? 'You are now online' : 'You are now offline', 'success');
@@ -5013,7 +5075,6 @@ function toggleAvailability(isOnline) {
 }
 
 function doLogout() {
-    closeDrawer();
     apiCall('logout', null, function() {
         currentUser = null;
         stopAutoRefresh();
