@@ -226,7 +226,7 @@ function getPackingLabel($type, $custom = '') {
     return ['tube' => 'Tube', 'box' => 'Box', 'flat' => 'Flat', 'none' => 'None'][$type ?? 'none'] ?? ucfirst($type ?? 'None');
 }
 function getPackingIcon($type) {
-    return ['tube' => '&#9645;', 'box' => '&#128230;', 'flat' => '&#128196;', 'none' => '&mdash;', 'custom' => '&#9881;'][$type ?? 'none'] ?? '&mdash;';
+    return ['tube' => '&#9645;', 'box' => ICON_PACKAGE, 'flat' => '&#128196;', 'none' => '&mdash;', 'custom' => '&#9881;'][$type ?? 'none'] ?? '&mdash;';
 }
 
 // ============================================
@@ -942,7 +942,7 @@ foreach ($vendorOrders as $refCode => $order) {
             </table>
             </div>
             <?php elseif (empty($split['batched'])): ?>
-            <div class="vp-empty"><div class="vp-empty-icon">&#128230;</div><h3>Nothing ready</h3><p>Printed orders will appear here.</p></div>
+            <div class="vp-empty"><div class="vp-empty-icon"><?= ICON_PACKAGE ?></div><h3>Nothing ready</h3><p>Printed orders will appear here.</p></div>
             <?php endif; ?>
         </div>
 
@@ -1879,7 +1879,7 @@ function savePacking(ref) {
                 row.dataset.packing = packing;
                 var packTd = row.querySelector('.vp-col-pack');
                 if (packTd) {
-                    var icons = {'tube':'&#9645;','box':'&#128230;','flat':'&#128196;','none':'&mdash;','custom':'&#9881;'};
+                    var icons = {'tube':'&#9645;','box':'<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:-0.125em;"><path d="M16.5 9.4l-9-5.19M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>','flat':'&#128196;','none':'&mdash;','custom':'&#9881;'};
                     var labels = {'tube':'Tube','box':'Box','flat':'Flat','none':'None'};
                     var label = packing === 'custom' && packingCustom ? packingCustom : (labels[packing] || packing);
                     packTd.innerHTML = (icons[packing] || '&mdash;') + ' ' + label;

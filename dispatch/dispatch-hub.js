@@ -335,7 +335,7 @@ function updateBatchSubmitText() {
         var name = courier.options[courier.selectedIndex].getAttribute('data-name');
         btn.innerHTML = '&#128666; Create Batch & Dispatch to ' + escapeHtml(name);
     } else {
-        btn.innerHTML = '&#128230; Create Batch (Assign Later)';
+        btn.innerHTML = '<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:-0.125em;"><path d="M16.5 9.4l-9-5.19M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg> Create Batch (Assign Later)';
     }
 }
 
@@ -895,7 +895,7 @@ function renderSuggestions(container, suggestions) {
         // Route row: pickup → dropoff (horizontal)
         html += '<div class="sg-route-row">';
         html += '<div class="sg-endpoint">';
-        html += '<svg class="sg-endpoint-icon sg-icon-pickup" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>';
+        html += '<svg class="sg-endpoint-icon sg-icon-pickup" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16.5 9.4l-9-5.19M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>';
         html += '<div class="sg-endpoint-text"><div class="sg-endpoint-label">Pickup</div>';
         html += '<div class="sg-endpoint-name">' + escapeHtml(s.vendor || 'Multiple') + '</div></div>';
         html += '</div>';
@@ -945,7 +945,7 @@ function getSuggestionLabel(type) {
 function getSuggestionIcon(type) {
     switch (type) {
         case 'same_vendor_dest': return '&#127919;';  // &#127919;
-        case 'same_vendor':     return '&#128230;';  // &#128230;
+        case 'same_vendor':     return '<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:-0.125em;"><path d="M16.5 9.4l-9-5.19M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>';
         case 'same_dest':       return '&#128205;';  // &#128205;
         case 'urgent_cluster':  return '&#9888;&#65039;';   // ⚠️
         default:                return '&#9889;';    // ⚡

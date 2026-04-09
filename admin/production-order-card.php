@@ -122,7 +122,7 @@ if (function_exists('getVendorDeadlineForOrder') && $hasPreflight) {
     <?php if (!$hasPreflight): ?>
     <!-- NOT YET SENT TO VENDOR -->
     <div style="text-align: center; padding: 20px 0;">
-      <div style="font-size: 2rem; margin-bottom: 10px;">&#128230;</div>
+      <div style="font-size: 2rem; margin-bottom: 10px;"><?= ICON_PACKAGE ?></div>
       <div style="color: #6b7280; font-size: 0.9rem; margin-bottom: 15px;">
         This order has not been sent to a vendor yet.
       </div>

@@ -302,11 +302,11 @@ function formatVendorDeadlineNotification($deadlineInfo) {
         'urgent'   => '&#128680;',
         'rush'     => '&#9889;',
         'standard' => '&#128203;',
-        'normal'   => '&#128230;',
+        'normal'   => ICON_PACKAGE,
     ];
     
     $urgency = $deadlineInfo['urgency'];
-    $icon = $icons[$urgency['level']] ?? '&#128230;';
+    $icon = $icons[$urgency['level']] ?? ICON_PACKAGE;
     $label = $urgency['label'];
     $deadline = $deadlineInfo['deadline_formatted'];
     $hours = $deadlineInfo['production_hours'];

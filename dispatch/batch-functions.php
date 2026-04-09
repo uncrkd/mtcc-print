@@ -1238,10 +1238,21 @@ function batch_formatOrder($orderData, $ref) {
     
     $customerInfo = $orderData['customerInfo'] ?? [];
     $dimensions = $orderData['dimensions'] ?? [];
-    $event = $orderData['event'] ?? [];
-    
+    $event = $orderData['event'] ?? $orderData['event_select'] ?? [];
+
+    // Build tracking number (same logic as courier formatOrderForApp)
+    $eventPrefix = $event['acronym'] ?? '';
+    $orderNum = '001';
+    if (preg_match('/(\d+)$/', $ref, $m)) $orderNum = $m[1];
+    $dateStr = $orderData['selectedDate'] ?? date('Y-m-d');
+    try { $d = new \DateTime($dateStr); } catch (\Exception $e) { $d = new \DateTime(); }
+    $tracking = $eventPrefix
+        ? 'MTCC' . strtoupper($eventPrefix) . str_pad($orderNum, 3, '0', STR_PAD_LEFT) . $d->format('ymd')
+        : 'MTCC' . $d->format('ymd') . str_pad($orderNum, 3, '0', STR_PAD_LEFT);
+
     return [
         'ref' => $ref,
+        'tracking' => $tracking,
         'status' => $status,
         'customer_name' => $customerInfo['name'] ?? '',
         'customer_phone' => $customerInfo['phone'] ?? '',

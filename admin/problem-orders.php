@@ -86,7 +86,7 @@ function prodSection($title, $icon, $countClass, $items, $columns, $rowRenderer,
         <div class="prob-stat-divider"></div><div class="prob-stat-count"><?= $grandCritical ?></div>
     </div>
     <div class="prob-stat-card warning clickable" data-section="sec-prod-divider">
-        <div class="prob-stat-left"><span class="prob-stat-icon">&#128230;</span><span class="prob-stat-label"><a href="problem-production.php<?= $eventFilter ? '?event=' . urlencode($eventFilter) : '' ?>">Production</a></span></div>
+        <div class="prob-stat-left"><span class="prob-stat-icon"><?= ICON_PACKAGE ?></span><span class="prob-stat-label"><a href="problem-production.php<?= $eventFilter ? '?event=' . urlencode($eventFilter) : '' ?>">Production</a></span></div>
         <div class="prob-stat-divider"></div><div class="prob-stat-count"><?= $prodTotal ?></div>
     </div>
     <div class="prob-stat-card dispatch clickable" data-section="sec-disp-divider">
@@ -103,7 +103,7 @@ function prodSection($title, $icon, $countClass, $items, $columns, $rowRenderer,
 
 <!-- ========== PRODUCTION ========== -->
 <?php if ($prodTotal > 0): ?>
-<div class="prob-divider" id="sec-prod-divider">&#128230; Production Issues (<?= $prodTotal ?>)</div>
+<div class="prob-divider" id="sec-prod-divider"><?= ICON_PACKAGE ?> Production Issues (<?= $prodTotal ?>)</div>
 
 <?php
 // Confirmation Critical

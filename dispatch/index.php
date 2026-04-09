@@ -450,7 +450,7 @@ $issueCount = count($openIssues);
     <!-- Bulk Action Bar (hidden until items selected) -->
     <div class="bulk-action-bar" id="bulkActionBar" style="display: none;">
         <span class="bulk-count"><span id="bulkCount">0</span> selected</span>
-        <button class="bulk-btn bulk-btn-batch" onclick="batchSelected()">&#128230; Batch Together</button>
+        <button class="bulk-btn bulk-btn-batch" onclick="batchSelected()"><?= ICON_PACKAGE ?> Batch Together</button>
         <div class="bulk-assign-group">
             <select id="bulkAssignCourier" class="bulk-assign-select">
                 <option value="">Assign All &#9660;</option>
@@ -472,7 +472,7 @@ $issueCount = count($openIssues);
 
         <?php if (empty($readyQueue)): ?>
         <div class="empty-state">
-            <div class="empty-icon">&#128230;</div>
+            <div class="empty-icon"><?= ICON_PACKAGE ?></div>
             <div class="empty-text">No orders ready for dispatch</div>
             <div class="empty-subtext">Orders will appear here when vendors mark them as Ready to Ship</div>
         </div>
@@ -528,8 +528,8 @@ $issueCount = count($openIssues);
                             <?php
                                 $pkgInfo = $order['packaging'] ?? null;
                                 if ($pkgInfo):
-                                    $pkgIcons = ['tube'=>'&#128207;','flat_box'=>'&#128230;','roll'=>'&#128220;','envelope'=>'&#9993;&#65039;'];
-                                    $pkgIcon = $pkgIcons[$pkgInfo['type'] ?? ''] ?? '&#128230;';
+                                    $pkgIcons = ['tube'=>'&#128207;','flat_box'=>ICON_PACKAGE,'roll'=>'&#128220;','envelope'=>'&#9993;&#65039;'];
+                                    $pkgIcon = $pkgIcons[$pkgInfo['type'] ?? ''] ?? ICON_PACKAGE;
                             ?>
                             <span class="pkg-badge"><?= $pkgIcon ?> <?= intval($pkgInfo['qty'] ?? 1) ?>x <?= ucfirst(str_replace('_',' ',$pkgInfo['type'] ?? '')) ?></span>
                             <?php else: ?>
@@ -571,7 +571,7 @@ $issueCount = count($openIssues);
         <div class="batch-card" data-batch-id="<?= htmlspecialchars($batch['batch_id']) ?>">
             <div class="batch-card-header">
                 <div class="batch-card-id">
-                    &#128230; <?= htmlspecialchars($batch['batch_id']) ?>
+                    <?= ICON_PACKAGE ?> <?= htmlspecialchars($batch['batch_id']) ?>
                     <span class="batch-order-count"><?= $batch['order_count'] ?> orders</span>
                 </div>
                 <div class="batch-card-meta">
@@ -716,7 +716,7 @@ $issueCount = count($openIssues);
     <div class="batch-modal-overlay" id="batchModal" style="display:none;" onclick="closeBatchModal(event)">
         <div class="batch-modal" onclick="event.stopPropagation()">
             <div class="batch-modal-header">
-                <h2 class="batch-modal-title">&#128230; Batch Builder</h2>
+                <h2 class="batch-modal-title"><?= ICON_PACKAGE ?> Batch Builder</h2>
                 <button class="batch-modal-close" onclick="closeBatchModal()">&times;</button>
             </div>
             <div class="batch-modal-body">
@@ -760,7 +760,7 @@ $issueCount = count($openIssues);
             <div class="batch-modal-footer">
                 <button class="batch-modal-btn batch-modal-cancel" onclick="closeBatchModal()">Cancel</button>
                 <button class="batch-modal-btn batch-modal-create" id="batchModalSubmit" onclick="submitBatch()">
-                    &#128230; Create Batch & Dispatch
+                    <?= ICON_PACKAGE ?> Create Batch & Dispatch
                 </button>
             </div>
         </div>

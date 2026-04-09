@@ -620,7 +620,7 @@ if ($activeFilter === 'production') {
             </div>
             
             <div class="summary-card warning <?= $activeFilter === 'uncollected' ? 'active' : '' ?>" onclick="filterProblems('uncollected')">
-                <div class="card-icon">&#128230;</div>
+                <div class="card-icon"><?= ICON_PACKAGE ?></div>
                 <div class="card-count"><?= count($problems['uncollected']) ?></div>
                 <div class="card-label">Uncollected</div>
             </div>
@@ -823,7 +823,7 @@ if ($activeFilter === 'production') {
         <div class="problem-section" data-type="uncollected">
             <div class="section-header" onclick="toggleSection(this)">
                 <div class="section-title">
-                    &#128230; Uncollected (Event Ended)
+                    <?= ICON_PACKAGE ?> Uncollected (Event Ended)
                     <span class="section-badge warning"><?= count($problems['uncollected']) ?></span>
                 </div>
                 <span class="section-toggle">▼</span>

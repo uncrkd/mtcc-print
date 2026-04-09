@@ -66,7 +66,7 @@ require_once __DIR__ . '/../includes/problem-data.php';
 
 <div class="prob-stats">
     <div class="prob-stat-card info">
-        <div class="prob-stat-left"><span class="prob-stat-icon">&#128230;</span><span class="prob-stat-label">Total Production</span></div>
+        <div class="prob-stat-left"><span class="prob-stat-icon"><?= ICON_PACKAGE ?></span><span class="prob-stat-label">Total Production</span></div>
         <div class="prob-stat-divider"></div><div class="prob-stat-count"><?= $prodTotal ?></div>
     </div>
     <div class="prob-stat-card critical clickable" data-section="sec-confirm-critical">

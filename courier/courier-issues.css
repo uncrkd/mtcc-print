@@ -293,6 +293,7 @@
 .issue-submit-btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+    transform: none;
 }
 .btn-spinner {
     width: 18px;
@@ -449,8 +450,9 @@
 }
 
 .issue-batch-next:disabled {
-    opacity: 0.4;
+    opacity: 0.5;
     cursor: not-allowed;
+    transform: none;
 }
 
 .issue-batch-next:not(:disabled):active {

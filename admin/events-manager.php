@@ -211,7 +211,7 @@ $canViewAnalytics = hasPermission('events_analytics');
 			</div>
             <div class="stat-card">
                 <div class="stat-header">
-                    <div class="stat-icon">&#128230;</div>
+                    <div class="stat-icon"><?= ICON_PACKAGE ?></div>
                     <div class="stat-title">Total Orders</div>
                 </div>
                 <div class="stat-number" id="totalOrdersCount">0</div>

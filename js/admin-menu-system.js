@@ -307,7 +307,7 @@ function updateTableStatusBadge(referenceCode, newStatus) {
     'file_issue': '&#128065;',  // &#128065;
     'printing': '&#128424;',    // &#128424;
     'shipped': '&#128666;',     // &#128666;
-    'delivered': '&#128230;',   // &#128230;
+    'delivered': '<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:-0.125em;"><path d="M16.5 9.4l-9-5.19M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>',   // 3D box
     'pickedup': '&#9989;',      // &#9989;
     'unclaimed': '&#128236;',   // &#128236;
     'missing': '&#9888;',       // &#9888;

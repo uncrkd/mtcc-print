@@ -67,7 +67,7 @@ $statusConfig = [
     ],
     'ready' => [
         'label' => 'Preparing to Ship',
-        'icon' => '&#128230;',
+        'icon' => ICON_PACKAGE,
         'color' => '#d97706',
         'message' => 'Your poster has been printed and is ready for delivery.',
         'step' => 3
@@ -88,7 +88,7 @@ $statusConfig = [
     ],
     'delivered' => [
         'label' => 'Ready for Pickup',
-        'icon' => '&#128230;',
+        'icon' => ICON_PACKAGE,
         'color' => '#059669',
         'message' => 'Your poster has arrived and is ready for pickup at the delivery location.',
         'step' => 5
@@ -135,7 +135,7 @@ $progressSteps = [
     1 => ['label' => 'Order Placed', 'icon' => '&#128269;'],
     2 => ['label' => 'Processing', 'icon' => '&#9881;'],
     3 => ['label' => 'Printing', 'icon' => '&#128424;'],
-    4 => ['label' => 'Ready/Shipped', 'icon' => '&#128230;'],
+    4 => ['label' => 'Ready/Shipped', 'icon' => ICON_PACKAGE],
     5 => ['label' => 'Complete', 'icon' => '&#9989;']
 ];
 

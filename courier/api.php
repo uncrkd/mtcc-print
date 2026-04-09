@@ -77,10 +77,15 @@ switch ($action) {
     case 'get_earnings':       requireAuth(); handleGetEarnings(); break;
     // Routes & Maps
     case 'get_route_info':     requireAuth(); handleGetRouteInfo(); break;
+    case 'optimize_route':     requireAuth(); handleOptimizeRoute(); break;
     case 'get_nearby_orders':  requireAuth(); handleGetNearbyOrders(); break;
     case 'geocode_vendors':    requireAuth(); handleGeocodeVendors(); break;
+    // Live Tracking
+    case 'update_location':    requireAuth(); handleUpdateLocation(); break;
+    case 'get_tracking':       handleGetTracking(); break; // public — no auth needed
     // Weather
     case 'get_weather':        requireAuth(); handleGetWeather(); break;
+    case 'get_notifications':  requireAuth(); handleGetNotifications(); break;
     // Batch Orders
     case 'accept_batch':       requireAuth(); handleAcceptBatch(); break;
     case 'update_batch_stop':  requireAuth(); handleUpdateBatchStop(); break;
@@ -92,6 +97,7 @@ switch ($action) {
     case 'release_batch':      requireAuth(); handleReleaseBatch(); break;
     case 'set_availability':   requireAuth(); handleSetAvailability(); break;
     case 'report_issue':       requireAuth(); handleReportIssue(); break;
+    case 'send_quick_message': requireAuth(); handleSendQuickMessage(); break;
 
     default:
         echo json_encode(['success' => false, 'error' => 'Unknown action: ' . $action]);
@@ -252,7 +258,6 @@ function getTabsForRole($role) {
                 ['id' => 'deliveries', 'label' => 'My Deliveries', 'icon' => 'deliveries'],
                 ['id' => 'available', 'label' => 'Available', 'icon' => 'available'],
                 ['id' => 'scan', 'label' => 'Scan', 'icon' => 'scan'],
-                ['id' => 'nearby', 'label' => 'Nearby', 'icon' => 'nearby'],
                 ['id' => 'earnings', 'label' => 'Earnings', 'icon' => 'earnings'],
             ];
         case 'mtcc_staff':
@@ -1013,6 +1018,84 @@ function handleReportIssue() {
     echo json_encode(['success' => true, 'message' => 'Issue reported successfully']);
 }
 
+function handleSendQuickMessage() {
+    $user = getCurrentUser();
+    $messageType = trim($_POST['message_type'] ?? '');
+    $messageText = trim($_POST['message_text'] ?? '');
+    $ref = trim($_POST['ref'] ?? '');
+    $customNote = trim($_POST['custom_note'] ?? '');
+
+    if (!$messageType || !$messageText) {
+        echo json_encode(['success' => false, 'error' => 'Message type required']);
+        return;
+    }
+
+    $title = $user['name'] . ' (' . ($user['role_label'] ?? 'Courier') . ')';
+    $msg = $messageText;
+    if ($ref) $msg .= ' — ' . $ref;
+    if ($customNote) $msg .= ' | Note: ' . $customNote;
+
+    // Store as dispatch notification
+    if (function_exists('dispatch_createNotification')) {
+        dispatch_createNotification('courier_message', $title, $msg, [
+            'ref' => $ref,
+            'courier_pin' => $user['pin'],
+            'courier_name' => $user['name'],
+            'message_type' => $messageType,
+            'action' => $ref ? 'view_order' : null,
+        ]);
+    }
+
+    // Also log to activity
+    logCourierActivity($ref ?: 'SYSTEM', 'quick_message', $messageType . ': ' . $msg, $user);
+
+    echo json_encode(['success' => true, 'message' => 'Message sent to dispatch']);
+}
+
+function handleGetNotifications() {
+    $user = getCurrentUser();
+    $pin = $user['pin'];
+    $since = $_POST['since'] ?? null; // ISO timestamp — only return newer notifications
+
+    if (!function_exists('dispatch_getNotifications')) {
+        echo json_encode(['success' => true, 'notifications' => []]);
+        return;
+    }
+
+    $notifications = dispatch_getNotifications();
+    $filtered = [];
+
+    foreach ($notifications as $n) {
+        // Filter to courier-relevant notification types
+        $relevantTypes = ['order_dispatched', 'batch_dispatched', 'batch_created', 'courier_message', 'weather_alert', 'status_change'];
+        if (!in_array($n['type'] ?? '', $relevantTypes)) continue;
+
+        // Only show notifications for this courier's orders or general broadcasts
+        $ctx = $n['context'] ?? [];
+        $courierPin = $ctx['courier_pin'] ?? null;
+        if ($courierPin && $courierPin !== $pin) continue;
+
+        // Time filter
+        if ($since && isset($n['created_at'])) {
+            if (strtotime($n['created_at']) <= strtotime($since)) continue;
+        }
+
+        $filtered[] = [
+            'id' => $n['id'] ?? '',
+            'type' => $n['type'] ?? '',
+            'title' => $n['title'] ?? '',
+            'message' => $n['message'] ?? '',
+            'created_at' => $n['created_at'] ?? '',
+            'context' => $ctx,
+        ];
+    }
+
+    // Return most recent 20
+    $filtered = array_slice($filtered, 0, 20);
+
+    echo json_encode(['success' => true, 'notifications' => $filtered]);
+}
+
 function handleScanOrder() {
     $user = getCurrentUser();
     $tracking = trim($_POST['tracking'] ?? '');
@@ -1090,6 +1173,25 @@ function handleGetEarnings() {
         if ($d >= $monthStart) $monthTotal += $amt;
     }
     
+    // Build 7-day chart
+    $dailyChart = [];
+    for ($i = 6; $i >= 0; $i--) {
+        $dayDate = date('Y-m-d', strtotime("-{$i} days"));
+        $dayLabel = ($i === 0) ? 'Today' : date('D', strtotime($dayDate));
+        $dayAmt = 0;
+        $dayCount = 0;
+        foreach ($myEarnings as $entry) {
+            if (substr($entry['date'] ?? '', 0, 10) === $dayDate) {
+                $dayAmt += floatval($entry['amount'] ?? 0);
+                $dayCount++;
+            }
+        }
+        $dailyChart[] = ['date' => $dayDate, 'label' => $dayLabel, 'amount' => round($dayAmt, 2), 'count' => $dayCount];
+    }
+
+    // Performance metrics — scan this courier's completed deliveries
+    $performance = buildCourierPerformance($pin, $myEarnings);
+
     echo json_encode([
         'success' => true,
         'summary' => [
@@ -1099,8 +1201,64 @@ function handleGetEarnings() {
             'all_time' => round($allTimeTotal, 2),
             'deliveries_today' => $deliveriesToday,
         ],
+        'daily_chart' => $dailyChart,
+        'performance' => $performance,
         'recent' => array_slice(array_reverse($myEarnings), 0, 20),
     ]);
+}
+
+function buildCourierPerformance($pin, $earnings) {
+    $totalCompleted = count($earnings);
+    $onTimeCount = 0;
+    $totalDurationMin = 0;
+    $durCount = 0;
+
+    // Scan order files for delivery timing data
+    $ordersDir = __DIR__ . '/../uploads/orders/';
+    if (is_dir($ordersDir)) {
+        $files = glob($ordersDir . '*-order.json');
+        foreach ($files as $file) {
+            $order = @json_decode(file_get_contents($file), true);
+            if (!$order) continue;
+            $dispatch = $order['dispatch'] ?? [];
+            // Only orders assigned to this courier
+            if (($dispatch['courier_pin'] ?? '') != $pin) continue;
+            if (!in_array($order['status'] ?? '', ['delivered', 'pickedup'])) continue;
+
+            // On-time check: compare delivery time to due date/time
+            $deliveredAt = $dispatch['delivered_at'] ?? $dispatch['pickedup_at'] ?? null;
+            if ($deliveredAt) {
+                $dueDate = $order['selectedDate'] ?? $order['due_date'] ?? null;
+                $dueTime = $order['deliveryTime'] ?? $order['due_time'] ?? 'anytime';
+                if ($dueDate) {
+                    $timeMap = ['anytime' => '18:00', '9am' => '09:00', '12pm' => '12:00', '3pm' => '15:00', '6pm' => '18:00'];
+                    $dueHour = $timeMap[$dueTime] ?? '18:00';
+                    $dueTimestamp = strtotime($dueDate . ' ' . $dueHour);
+                    $deliveredTimestamp = strtotime($deliveredAt);
+                    if ($deliveredTimestamp && $dueTimestamp && $deliveredTimestamp <= $dueTimestamp) {
+                        $onTimeCount++;
+                    }
+                }
+            }
+
+            // Delivery duration: dispatched_at → delivered_at
+            $dispatchedAt = $dispatch['dispatched_at'] ?? null;
+            if ($dispatchedAt && $deliveredAt) {
+                $dur = (strtotime($deliveredAt) - strtotime($dispatchedAt)) / 60;
+                if ($dur > 0 && $dur < 480) { // sanity check: under 8 hours
+                    $totalDurationMin += $dur;
+                    $durCount++;
+                }
+            }
+        }
+    }
+
+    return [
+        'total_completed' => $totalCompleted,
+        'on_time_count' => $onTimeCount,
+        'on_time_rate' => $totalCompleted > 0 ? round(($onTimeCount / $totalCompleted) * 100) : 0,
+        'avg_delivery_min' => $durCount > 0 ? round($totalDurationMin / $durCount) : 0,
+    ];
 }
 
 function recordCourierEarning($pin, $ref, $order) {
@@ -1274,6 +1432,8 @@ function formatOrderForApp($order, $ref = null, $statusOverride = null) {
         'customer_phone' => $customerInfo['phone'] ?? '',
         'material' => $order['material'] ?? '',
         'size' => ($dimensions['width'] ?? '') . '" x ' . ($dimensions['height'] ?? '') . '"',
+        'width' => floatval($dimensions['width'] ?? 0),
+        'height' => floatval($dimensions['height'] ?? 0),
         'quantity' => $order['quantity'] ?? 1,
         'event' => $event['name'] ?? '',
         'event_acronym' => $event['acronym'] ?? '',
@@ -1316,6 +1476,10 @@ function formatOrderForApp($order, $ref = null, $statusOverride = null) {
         'vendor_order_number' => $vendorInfo ? ($vendorInfo['vendor_order_number'] ?? '') : '',
         'packing' => $vendorInfo ? ($vendorInfo['packing'] ?? 'none') : 'none',
         'packing_details' => $vendorInfo ? ($vendorInfo['packing_details'] ?? []) : [],
+        // Route info (saved by get_route_info endpoint)
+        'route_distance_km' => $order['route_info']['distance_km'] ?? $order['route_distance_km'] ?? null,
+        'route_duration_min' => $order['route_info']['duration_min'] ?? $order['route_duration_min'] ?? null,
+        'route_polyline' => $order['route_info']['polyline'] ?? null,
     ];
 }
 
@@ -1618,10 +1782,11 @@ function handleGetRouteInfo() {
     // Generate directions link
     $directionsUrl = $routes->getDirectionsUrl($pickupCoords, $dropoffCoords);
     
-    // Save route info to order for future payout calculations
+    // Save route info to order (including polyline for map rendering)
     $order['route_info'] = [
         'distance_km' => $routeInfo['distance_km'],
         'duration_min' => $routeInfo['duration_min'],
+        'polyline' => $routeInfo['polyline'] ?? null,
         'calculated_at' => date('c'),
         'pickup_coords' => $pickupCoords,
         'dropoff_coords' => $dropoffCoords
@@ -1642,6 +1807,60 @@ function handleGetRouteInfo() {
     ]);
 }
 
+// ============================================
+// ACTION: Optimize Route (from courier GPS to all stops)
+// ============================================
+function handleOptimizeRoute() {
+    $lat = floatval($_POST['lat'] ?? 0);
+    $lng = floatval($_POST['lng'] ?? 0);
+    $stops = json_decode($_POST['stops'] ?? '[]', true);
+
+    if (!$lat || !$lng || empty($stops)) {
+        echo json_encode(['success' => false, 'error' => 'Missing location or stops']);
+        return;
+    }
+
+    $routes = new RoutesAPI();
+    $origin = ['lat' => $lat, 'lng' => $lng];
+
+    // Last stop is the final destination, rest are intermediates
+    $destination = end($stops);
+    $waypoints = array_slice($stops, 0, -1);
+
+    // If only one stop, just get simple route
+    if (count($stops) === 1) {
+        $result = $routes->getDistance($origin, $stops[0]);
+        if (!$result) {
+            echo json_encode(['success' => false, 'error' => 'Route calculation failed']);
+            return;
+        }
+        echo json_encode([
+            'success' => true,
+            'optimized_order' => [0],
+            'distance_km' => $result['distance_km'],
+            'duration_min' => $result['duration_min'],
+            'polyline' => $result['polyline']
+        ]);
+        return;
+    }
+
+    // Multiple stops — optimize waypoint order
+    $result = $routes->calculateRoute($origin, $destination, $waypoints, true);
+    if (!$result) {
+        echo json_encode(['success' => false, 'error' => 'Route optimization failed']);
+        return;
+    }
+
+    echo json_encode([
+        'success' => true,
+        'optimized_order' => $result['optimized_order'],
+        'distance_km' => $result['distance_km'],
+        'duration_min' => $result['duration_min'],
+        'polyline' => $result['polyline'],
+        'legs' => $result['legs']
+    ]);
+}
+
 /**
  * Get nearby available orders with distances from courier's location.
  * Courier sends their lat/lng, we return orders sorted by distance.
@@ -1658,15 +1877,15 @@ function handleGetNearbyOrders() {
     
     $routes = new RoutesAPI();
     
-    // Get all available orders (ready + dispatched unassigned)
+    // Get available orders only (ready = unassigned, available for pickup)
     $statusesFile = defined('COURIER_STATUSES_FILE') ? COURIER_STATUSES_FILE : __DIR__ . '/../data/statuses.json';
     $statuses = file_exists($statusesFile) ? json_decode(file_get_contents($statusesFile), true) : [];
-    
+
     $nearbyOrders = [];
-    
+
     foreach ($statuses as $ref => $status) {
         if (!is_string($status)) continue;
-        if (!in_array($status, ['ready', 'dispatched'])) continue;
+        if ($status !== 'ready') continue;
         
         $order = courier_loadOrder($ref);
         if (!$order) continue;
@@ -1948,4 +2167,110 @@ function handleReleaseBatch() {
     // Disband the batch (returns all orders to ready)
     $result = batch_disband($batchId, $user['name'] . ' (' . ($reason ?: 'released') . ')');
     echo json_encode($result);
+}
+
+// ============================================
+// ACTION: Update Courier Location (for live tracking)
+// ============================================
+function handleUpdateLocation() {
+    $user = getCurrentUser();
+    $lat = floatval($_POST['lat'] ?? 0);
+    $lng = floatval($_POST['lng'] ?? 0);
+    if (!$lat || !$lng) {
+        echo json_encode(['success' => false, 'error' => 'Missing coordinates']);
+        return;
+    }
+    $file = dirname(__DIR__) . '/data/courier-locations.json';
+    $locations = file_exists($file) ? json_decode(file_get_contents($file), true) : [];
+    $locations[$user['pin'] ?? 'unknown'] = [
+        'lat' => $lat,
+        'lng' => $lng,
+        'name' => $user['name'] ?? '',
+        'updated_at' => date('c')
+    ];
+    file_put_contents($file, json_encode($locations, JSON_PRETTY_PRINT), LOCK_EX);
+    echo json_encode(['success' => true]);
+}
+
+// ============================================
+// ACTION: Get Tracking (public — for customer tracking page)
+// ============================================
+function handleGetTracking() {
+    $ref = $_POST['ref'] ?? '';
+    if (empty($ref)) { echo json_encode(['success' => false]); return; }
+
+    // Find the order to get the courier assignment
+    $order = courier_loadOrder($ref);
+    if (!$order) { echo json_encode(['success' => false]); return; }
+
+    $dispatch = $order['dispatch'] ?? [];
+    $courierPin = $dispatch['courier_pin'] ?? $dispatch['courier_id'] ?? '';
+    $status = $dispatch['status'] ?? ($order['status'] ?? 'unknown');
+
+    // Look up courier's last known location
+    $file = dirname(__DIR__) . '/data/courier-locations.json';
+    $locations = file_exists($file) ? json_decode(file_get_contents($file), true) : [];
+    $loc = $locations[$courierPin] ?? null;
+
+    if (!$loc) { echo json_encode(['success' => true, 'status' => $status, 'lat' => null, 'lng' => null]); return; }
+
+    // Check if location is stale (>5 min)
+    $updatedAt = strtotime($loc['updated_at'] ?? '');
+    $stale = $updatedAt && (time() - $updatedAt > 300);
+
+    // Calculate ETA from courier's position to destination
+    $etaMin = null;
+    $etaDistKm = null;
+    if (!$stale && $loc['lat'] && $loc['lng']) {
+        // Get destination coordinates
+        $dest = dispatch_getDestination($order);
+        $destAddr = $dest['address'] ?? '';
+        if ($destAddr) {
+            // Check for cached ETA (avoid excessive API calls — cache for 60s)
+            $etaCacheFile = dirname(__DIR__) . '/data/eta-cache.json';
+            $etaCache = file_exists($etaCacheFile) ? json_decode(file_get_contents($etaCacheFile), true) : [];
+            $etaCacheKey = $ref . '_' . round($loc['lat'], 3) . '_' . round($loc['lng'], 3);
+            $cached = $etaCache[$etaCacheKey] ?? null;
+
+            if ($cached && (time() - ($cached['ts'] ?? 0)) < 60) {
+                $etaMin = $cached['eta_min'];
+                $etaDistKm = $cached['distance_km'];
+            } else {
+                require_once __DIR__ . '/routes-api.php';
+                $routes = new RoutesAPI();
+                $origin = ['lat' => $loc['lat'], 'lng' => $loc['lng']];
+                $destCoords = $routes->geocodeAddress($destAddr);
+                if ($destCoords) {
+                    $result = $routes->getDistance($origin, $destCoords);
+                    if ($result) {
+                        $etaMin = $result['duration_min'];
+                        $etaDistKm = $result['distance_km'];
+                        // Cache result
+                        $etaCache[$etaCacheKey] = [
+                            'eta_min' => $etaMin,
+                            'distance_km' => $etaDistKm,
+                            'ts' => time()
+                        ];
+                        // Keep cache small — only last 50 entries
+                        if (count($etaCache) > 50) {
+                            $etaCache = array_slice($etaCache, -50, null, true);
+                        }
+                        file_put_contents($etaCacheFile, json_encode($etaCache, JSON_PRETTY_PRINT), LOCK_EX);
+                    }
+                }
+            }
+        }
+    }
+
+    echo json_encode([
+        'success' => true,
+        'status' => $status,
+        'lat' => $loc['lat'],
+        'lng' => $loc['lng'],
+        'courier_name' => $loc['name'] ?? '',
+        'updated_at' => $loc['updated_at'] ?? '',
+        'stale' => $stale,
+        'eta_min' => $etaMin,
+        'distance_km' => $etaDistKm
+    ]);
 }

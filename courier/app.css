@@ -43,6 +43,7 @@
     --radius: 12px;
     --radius-sm: 8px;
     --radius-xs: 6px;
+    --radius-xl: 20px;
     --shadow-sm: rgba(0, 0, 0, 0.12) 0px 1px 3px;
     --shadow-md: rgba(0, 0, 0, 0.12) 0px 1px 3px, rgba(0, 0, 0, 0.24) 0px 1px 2px;
     --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
@@ -604,6 +605,36 @@ input {
     letter-spacing: -0.01em;
 }
 
+/* List/Map view mode toggle */
+.view-mode-toggle {
+    display: flex;
+    gap: 2px;
+    background: var(--gray-100);
+    border-radius: var(--radius-sm);
+    padding: 2px;
+}
+
+.view-mode-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 32px;
+    border-radius: var(--radius-xs);
+    color: var(--gray-400);
+    transition: all 0.2s ease;
+}
+
+.view-mode-btn.active {
+    background: var(--card);
+    color: var(--primary);
+    box-shadow: var(--shadow-sm);
+}
+
+.view-mode-btn:not(.active):active {
+    background: var(--gray-200);
+}
+
 .refresh-btn {
     width: 34px;
     height: 34px;
@@ -696,14 +727,6 @@ input {
     max-width: 260px;
 }
 
-.coming-soon-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 80px 24px;
-    text-align: center;
-}
 
 .coming-soon-icon {
     width: 80px;
@@ -717,19 +740,6 @@ input {
     box-shadow: 0 0 0 8px rgba(124,58,237,0.06);
 }
 
-.coming-soon-state h3 {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: var(--primary);
-    margin-bottom: 8px;
-}
-
-.coming-soon-state p {
-    font-size: 0.85rem;
-    color: var(--subtext);
-    line-height: 1.6;
-    max-width: 280px;
-}
 
 /* ============================================
    ORDER CARDS
@@ -748,7 +758,7 @@ input {
     border-radius: var(--radius);
     border: 1px solid var(--border);
     box-shadow: var(--shadow-sm);
-    padding: 14px;
+    padding: 14px 14px 10px 14px;
     margin-bottom: 10px;
     transition: all 0.2s ease;
     cursor: pointer;
@@ -768,19 +778,24 @@ input {
 
 /* Left border removed — all cards use status-colored due bar header instead */
 
-.order-card-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 10px;
-}
-
 .order-ref {
     font-size: 0.9rem;
     font-weight: 700;
     color: var(--text);
     letter-spacing: -0.01em;
 }
+/* ID text color matches card status */
+.status-ready .order-ref { color: #b45309; }
+.status-dispatched .order-ref { color: #6d28d9; }
+.status-shipped .order-ref { color: #0f766e; }
+.status-delivered .order-ref { color: #047857; }
+.status-pickedup .order-ref { color: #15803d; }
+.status-accepted .order-ref { color: #6d28d9; }
+.status-missing .order-ref { color: #991b1b; }
+.status-in_progress .order-ref { color: #5b21b6; }
+/* Batch cards use data-mode, inherit from parent status class */
+.batch-card .order-ref { color: #6d28d9; }
+.batch-card.batch-in-progress .order-ref { color: #0f766e; }
 .ref-label {
     color: var(--gray-400);
     font-size: 0.62rem;
@@ -1199,8 +1214,9 @@ input {
     right: 0;
     bottom: 0;
     max-height: 85vh;
-    background: white;
-    border-radius: 20px 20px 0 0;
+    background: var(--mtcc-header-color, #7c3aed);
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    overflow: hidden;
     z-index: 501;
     transform: translateY(100%);
     transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
@@ -1214,33 +1230,25 @@ input {
 }
 
 
-.detail-handle {
-    display: flex;
-    justify-content: center;
-    padding: 12px 0 8px;
-    cursor: pointer;
+/* Panel header — fixed at top, never scrolls */
+.detail-panel-header {
     flex-shrink: 0;
-    touch-action: none;
-}
-
-.handle-bar {
-    width: 40px;
-    height: 4px;
-    background: var(--gray-300);
-    border-radius: 4px;
 }
 
 .detail-content {
     flex: 1;
     overflow-y: auto;
-    padding: 0 20px 24px;
+    overflow-x: hidden;
+    padding: 0 20px;
     -webkit-overflow-scrolling: touch;
+    background: white;
 }
 
 .detail-order-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
+    padding-top: 16px;
     margin-bottom: 16px;
 }
 
@@ -1411,6 +1419,50 @@ input {
 }
 
 /* ============================================
+   PERFORMANCE SCORECARD
+   ============================================ */
+.perf-scorecard {
+    display: flex;
+    justify-content: space-around;
+    padding: 16px 12px;
+    margin: 0 14px 12px;
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+}
+
+.perf-stat {
+    text-align: center;
+}
+
+.perf-stat-value {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1.2;
+}
+
+.perf-stat-value .perf-unit {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--subtext);
+    margin-left: 2px;
+}
+
+.perf-stat-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--subtext);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-top: 4px;
+}
+
+.perf-green { color: #059669; }
+.perf-amber { color: #d97706; }
+.perf-red { color: #dc2626; }
+
+/* ============================================
    EARNINGS DISPLAY
    ============================================ */
 .earnings-summary {
@@ -1558,8 +1610,8 @@ input {
    BOTTOM NAVIGATION
    ============================================ */
 .bottom-nav {
-    height: var(--nav-height);
-    padding-bottom: var(--safe-bottom);
+    padding: 8px 0;
+    padding-bottom: calc(8px + var(--safe-bottom));
     background: white;
     border-top: 1px solid var(--border);
     display: flex;
@@ -1568,6 +1620,7 @@ input {
     flex-shrink: 0;
     z-index: 100;
     box-shadow: 0 -2px 10px rgba(0,0,0,0.04);
+    overflow: visible;
 }
 
 .nav-item {
@@ -1576,14 +1629,23 @@ input {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 3px;
+    gap: 2px;
     color: var(--gray-400);
-    font-size: 0.62rem;
+    font-size: 0.58rem;
     font-weight: 600;
-    letter-spacing: 0.02em;
+    letter-spacing: 0;
     transition: all 0.2s ease;
     position: relative;
-    padding: 0 4px;
+    padding: 0 2px;
+    min-width: 0;
+}
+.nav-label {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    display: block;
+    text-align: center;
 }
 
 .nav-item.active {
@@ -1795,11 +1857,11 @@ input {
 .status-action-btn.btn-accept {
     background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
     color: white;
-    box-shadow: 0 2px 8px rgba(34,197,94,0.3);
-    font-size: 0.95rem;
-    padding: 14px 20px;
-    border-radius: var(--radius-sm);
-    font-weight: 800;
+    box-shadow: 0 6px 20px rgba(34,197,94,0.35), 0 2px 6px rgba(34,197,94,0.2);
+    font-size: 1.05rem;
+    font-weight: 700;
+    padding: 18px 24px;
+    border-radius: 30px;
     letter-spacing: 0.02em;
     gap: 10px;
 }
@@ -1851,8 +1913,7 @@ input {
 .route-map-iframe {
     width: 100%;
     height: 100%;
-    border: 0 !important;
-    border: none !important;
+    border: none;
     outline: none;
     display: block;
     -webkit-appearance: none;
@@ -2154,13 +2215,13 @@ input {
    IN-TRANSIT HERO CARD (Purple)
    ============================================ */
 
-.in-transit-card {
-    border: 2px solid #0d9488 !important;
-    background: linear-gradient(135deg, rgba(13,148,136,0.06) 0%, var(--card) 40%) !important;
-    box-shadow: 0 4px 20px rgba(13,148,136,0.18) !important;
+.order-card.in-transit-card {
+    border-color: #0d9488;
+    background: linear-gradient(135deg, rgba(13,148,136,0.04) 0%, var(--card) 40%);
+    box-shadow: 0 2px 12px rgba(13,148,136,0.15);
 }
 .in-transit-card::before {
-    display: none !important;
+    display: none;
 }
 
 @keyframes transit-blink {
@@ -2207,20 +2268,29 @@ input {
    ============================================ */
 
 .card-route-vertical {
-    padding: 6px 0 2px;
+    padding: 8px 0 2px;
+    margin-top: 6px;
+    border-top: 1px dashed #e5e7eb;
+}
+/* Batch cards have no card-level padding, add horizontal buffer */
+.batch-card .card-route-vertical {
+    padding-left: 14px;
+    padding-right: 14px;
+    margin-left: 0;
+    margin-right: 0;
 }
 .card-route-stop {
     display: flex;
-    gap: 10px;
-    align-items: flex-start;
+    gap: 12px;
+    align-items: stretch;
 }
 .card-route-dot-col {
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 22px;
+    width: 24px;
     flex-shrink: 0;
-    padding-top: 1px;
+    padding-top: 14px; /* align icon with destination NAME, not the label above it */
 }
 .card-route-emoji {
     font-size: 1.1rem;
@@ -2231,19 +2301,23 @@ input {
 }
 
 .card-route-line-v {
-    width: 2px;
+    width: 0;
     flex: 1;
-    min-height: 16px;
-    background: var(--gray-200);
-    margin: 3px 0;
+    min-height: 20px;
+    border-left: 2px dashed var(--gray-300);
+    margin: 3px 0 0;
 }
 .card-route-info {
     min-width: 0;
     flex: 1;
-    padding-bottom: 4px;
+    padding-bottom: 10px;
+}
+/* Last stop doesn't need bottom padding (no line to next icon) */
+.card-route-stop:last-child .card-route-info {
+    padding-bottom: 2px;
 }
 .card-route-label {
-    font-size: 0.58rem;
+    font-size: 0.62rem;
     font-weight: 700;
     color: var(--gray-400);
     letter-spacing: 0.06em;
@@ -2261,29 +2335,30 @@ input {
     line-height: 1.3;
     margin-top: 1px;
 }
+.bv7-item-barcode {
+    /* inherits same font as customer name / vendor ref */
+}
+.card-route-instructions {
+    color: #3b82f6;
+    font-style: italic;
+}
+.card-route-notes {
+    color: #d97706;
+    font-style: italic;
+}
 
 /* ============================================
    CARD FOOTER — icon separators
    ============================================ */
-
-.order-card-footer {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding-top: 6px;
-    border-top: 1px solid var(--gray-100);
-    margin-top: 4px;
-    flex-wrap: wrap;
-}
 .card-meta {
     display: inline-flex;
     align-items: center;
     gap: 3px;
-    font-size: 0.68rem;
+    font-size: 0.78rem;
     font-weight: 600;
-    color: var(--subtext);
+    color: #374151;
 }
-.card-meta svg { opacity: 0.6; }
+.card-meta svg { stroke: rgb(124, 58, 237); }
 .badge-sm {
     font-size: 0.58rem !important;
     padding: 2px 6px !important;
@@ -2351,8 +2426,7 @@ input {
 .batch-card .card-due-bar {
     margin: 0;
     border-radius: 0;
-    padding: 7px 14px;
-    border-bottom: 1px solid rgba(0,0,0,0.06);
+    padding: 8px 14px;
 }
 
 /* ============================================
@@ -2971,15 +3045,34 @@ input {
 
 /* in-transit due bar: consolidated above */
 
-/* Detail panel flush due bar — inherits panel header color */
+/* Detail panel flush due bar — fixed header, never scrolls */
 .detail-due-bar {
     display: flex;
     align-items: flex-start;
-    padding: 14px 20px;
-    margin: 0 -20px 14px;
+    padding: 18px 20px 14px;
     background: linear-gradient(135deg, var(--mtcc-header-color, #7c3aed), var(--mtcc-header-color-end, #6d28d9));
     color: white;
     gap: 0;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    position: relative;
+    cursor: pointer;
+}
+.detail-due-bar::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 4px;
+    border-radius: 3px;
+    background: rgba(255,255,255,0.4);
+}
+.detail-due-bar .detail-due-left {
+    padding-top: 6px;
+}
+.detail-due-bar .mtcc-header-badge {
+    margin-top: 6px;
 }
 .detail-due-left, .detail-due-right {
     display: flex;
@@ -3055,12 +3148,7 @@ input {
     box-shadow: 0 0 6px rgba(74,222,128,0.6);
     animation: transit-blink 1.2s ease-in-out infinite;
 }
-.in-transit-card .card-due-bar {
-    margin-top: 0;
-    border-radius: 0;
-    background: rgba(13,148,136,0.08);
-    color: #0d9488;
-}
+/* in-transit card due bar — consolidated below at .in-transit-card section */
 
 /* ============================================
    PAYOUT SECTION (Detail Panel)
@@ -3124,8 +3212,13 @@ input {
 
 
 /* ============================================
-   NEARBY ORDERS TAB
+   NEARBY ORDERS (Map view within Available tab)
    ============================================ */
+
+.available-map-view {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
 
 .nearby-map {
     width: 100%;
@@ -3140,12 +3233,30 @@ input {
 }
 
 .nearby-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     font-size: 0.76rem;
     font-weight: 700;
     color: var(--subtext);
     text-transform: uppercase;
     letter-spacing: 0.06em;
     padding: 8px 16px 6px;
+}
+.nearby-show-all {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--primary);
+    background: var(--primary-light, #f5f3ff);
+    border: 1px solid rgba(124,58,237,0.2);
+    border-radius: var(--radius-xs);
+    padding: 3px 10px;
+    cursor: pointer;
+    text-transform: none;
+    letter-spacing: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+.nearby-show-all:active { transform: scale(0.97); }
 }
 
 .nearby-location-notice {
@@ -3160,10 +3271,11 @@ input {
 .nearby-card {
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    padding: 12px 16px;
-    margin: 0 12px 8px;
+    gap: 0;
+    padding: 0;
+    margin: 0 12px 10px;
     background: var(--card);
+    overflow: hidden;
     border: 1px solid var(--border);
     border-radius: var(--radius);
     cursor: pointer;
@@ -3178,16 +3290,13 @@ input {
 .nearby-card-top {
     display: flex;
     align-items: center;
-    gap: 10px;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 10px 14px 0;
 }
 
-.nearby-card-num {
-    width: 26px;
-    height: 26px;
-    border-radius: 50%;
-    background: #22c55e;
-    color: white;
-    font-size: 0.68rem;
+/* Legacy .nearby-card-num — no longer used */
+.nearby-card-num { display: none; }
     font-weight: 800;
     display: flex;
     align-items: center;
@@ -3236,27 +3345,63 @@ input {
     font-weight: 500;
 }
 
-.nearby-card-dest {
-    font-size: 0.72rem;
-    color: var(--subtext);
-    padding-left: 36px;
-}
-
-.nearby-dest-arrow {
-    color: var(--gray-300);
-}
-
-.nearby-card-meta {
-    color: var(--gray-400);
-    font-size: 0.66rem;
-}
+/* Legacy nearby-card-dest — replaced by nearby-route-row */
 
 .nearby-card-payout {
-    font-size: 0.78rem;
+    font-size: 1rem;
     font-weight: 800;
-    color: #16a34a;
-    padding-left: 36px;
+    color: #059669;
+    flex-shrink: 0;
 }
+
+/* Nearby due bar — thin color strip */
+.nearby-due-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 14px;
+    font-size: 0.65rem;
+    font-weight: 600;
+}
+.nearby-due-bar.due-available { color: white; background: linear-gradient(135deg, #d97706, #b45309); }
+.nearby-due-bar.due-red { color: white; background: linear-gradient(135deg, #dc2626, #b91c1c); }
+.nearby-due-bar.due-orange { color: white; background: linear-gradient(135deg, #d97706, #b45309); }
+
+/* Nearby route row — pickup arrow dropoff */
+.nearby-route-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    font-size: 0.75rem;
+    color: var(--text);
+}
+.nearby-route-name {
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+}
+.nearby-route-arrow {
+    color: var(--gray-300);
+    flex-shrink: 0;
+    font-size: 0.85rem;
+}
+
+/* Nearby footer — split left/right like order cards */
+.nearby-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 14px 10px;
+    border-top: 1px solid #e5e7eb;
+    margin-top: 4px;
+}
+
+/* Urgency borders */
+.nearby-card.nearby-urgent-red { border-color: rgba(220,38,38,0.3); }
+.nearby-card.nearby-urgent-orange { border-color: rgba(217,119,6,0.3); }
 
 /* ============================================
    ROUTE INFO BADGE (Detail Panel)
@@ -3562,43 +3707,17 @@ input {
 /* Batch card container */
 .batch-card {
     background: #fff;
-    border-radius: 16px;
-    margin-bottom: 18px;
-    box-shadow:
-        0 2px 8px rgba(0,0,0,0.08),
-        0 4px 0 -1px #fff,
-        0 4px 0 0 rgba(124,58,237,0.15),
-        0 8px 0 -1px #fff,
-        0 8px 0 0 rgba(124,58,237,0.08);
+    border-radius: var(--radius);
+    margin-bottom: 10px;
+    box-shadow: var(--shadow-sm);
     overflow: hidden;
     cursor: pointer;
     transition: transform 0.15s, box-shadow 0.15s;
-    border: 2px solid rgba(124,58,237,0.12);
+    border: 1px solid var(--border);
     position: relative;
 }
 .batch-card:active {
     transform: scale(0.98);
-}
-.batch-card.batch-in-progress {
-    border-color: rgba(20, 184, 166, 0.25);
-    box-shadow:
-        0 2px 8px rgba(0,0,0,0.08),
-        0 4px 0 -1px #fff,
-        0 4px 0 0 rgba(20,184,166,0.15),
-        0 8px 0 -1px #fff,
-        0 8px 0 0 rgba(20,184,166,0.08);
-}
-.batch-card.batch-urgency-red {
-    border-color: rgba(239,68,68,0.2);
-    box-shadow:
-        0 2px 8px rgba(0,0,0,0.08),
-        4px 4px 0 -1px #fff,
-        4px 4px 0 0 rgba(239,68,68,0.15),
-        8px 8px 0 -1px #fff,
-        8px 8px 0 0 rgba(239,68,68,0.08);
-}
-.batch-card.batch-urgency-orange {
-    border-color: rgba(245,158,11,0.2);
 }
 
 /* Batch type banner */
@@ -3609,7 +3728,7 @@ input {
     padding: 8px 14px;
     background: linear-gradient(135deg, #7c3aed, #6d28d9);
     color: #fff;
-    font-size: 0.78rem;
+    font-size: 0.75rem;
     font-weight: 600;
     letter-spacing: 0.2px;
 }
@@ -3626,25 +3745,39 @@ input {
     align-items: center;
     gap: 6px;
 }
-.batch-type-banner .btb-event {
-    background: rgba(255,255,255,0.2);
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 0.65rem;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-}
-.batch-type-banner .btb-payout {
-    font-size: 0.9rem;
-    font-weight: 700;
+/* Batch card ID row padding (batch-card has no card-level padding) */
+.batch-card .order-card-top {
+    padding: 10px 14px 0;
 }
 
-/* Active/in-progress batch styling */
-.batch-card.batch-active .batch-type-banner {
-    background: linear-gradient(135deg, #6d28d9, #5b21b6);
+.batch-type-banner .btb-orders {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    opacity: 0.9;
 }
+.batch-banner-divider {
+    height: 1px;
+    background: rgba(109, 40, 217, 0.75);
+}
+/* In-transit single order: remove gap between header and due bar */
+.in-transit-card .transit-hero-banner {
+    margin-bottom: 0;
+    border-radius: var(--radius) var(--radius) 0 0;
+}
+.in-transit-card .card-due-bar {
+    border-top: 1px solid rgba(13, 148, 136, 0.2);
+    margin-top: 0;
+    border-radius: 0;
+}
+
+/* Consistent gradient across all batch card states */
+.batch-type-banner,
+.batch-card.batch-active .batch-type-banner,
 .batch-card.batch-in-progress .batch-type-banner {
-    background: linear-gradient(135deg, #5b21b6, #4c1d95);
+    background: linear-gradient(135deg, #7c3aed, #6d28d9);
 }
 
 /* Legacy hero banner (keep for backward compat) */
@@ -3667,23 +3800,7 @@ input {
     opacity: 0.85;
 }
 
-/* Batch ID pill in card */
-.batch-id-pill {
-    display: inline-block;
-    background: var(--primary);
-    color: #fff;
-    font-size: 0.7rem;
-    font-weight: 700;
-    padding: 3px 8px;
-    border-radius: 6px;
-    letter-spacing: 0.3px;
-    font-family: 'SF Mono', 'Fira Code', monospace;
-}
-
-.batch-pkg-count {
-    background: rgba(124,58,237,0.08) !important;
-    color: #7c3aed !important;
-}
+/* (Legacy batch-id-pill and batch-pkg-count removed — no longer used) */
 
 /* Batch Orders Grouped by Vendor */
 .batch-orders-grouped {
@@ -3754,23 +3871,7 @@ input {
     font-size: 0.72rem;
     color: var(--gray-400);
 }
-.batch-count-badge {
-    font-size: 0.75rem;
-    color: var(--gray-500);
-    font-weight: 600;
-}
 
-.batch-event-tag {
-    display: inline-block;
-    background: #dbeafe;
-    color: #1e40af;
-    font-size: 0.65rem;
-    font-weight: 700;
-    padding: 2px 6px;
-    border-radius: 4px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
 
 /* Batch stops timeline (card view) */
 .batch-stops-timeline {
@@ -3785,12 +3886,7 @@ input {
 .batch-stop-item.done {
     opacity: 0.45;
 }
-.batch-stop-item.current {
-    background: rgba(124, 58, 237, 0.04);
-    margin: 0 -16px;
-    padding: 0 16px;
-    border-radius: 8px;
-}
+
 
 .batch-stop-col {
     display: flex;
@@ -3884,18 +3980,16 @@ input {
     font-family: 'SF Mono', 'Fira Code', monospace;
 }
 
-/* Route summary bar */
+/* Route summary bar — matches single order footer */
 .batch-route-bar {
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 8px 16px;
-    background: #f9fafb;
-    border-top: 1px solid #f3f4f6;
+    padding: 8px 14px 10px;
+    border-top: 1px solid #e5e7eb;
     font-size: 0.78rem;
-    color: #6b7280;
-    font-weight: 500;
-    border-radius: 0 0 14px 14px;
+    color: #374151;
+    font-weight: 600;
 }
 .batch-route-icon {
     display: flex;
@@ -3903,6 +3997,24 @@ input {
 }
 .batch-route-sep {
     color: #d1d5db;
+}
+.batch-route-stat {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: 600;
+    color: #374151;
+}
+.batch-route-stat + .batch-route-stat::before {
+    content: '\2022';
+    color: #d1d5db;
+    margin-right: 2px;
+}
+.batch-route-pkgs {
+    margin-left: auto;
+}
+.batch-route-pkgs::before {
+    display: none !important;
 }
 
 
@@ -5245,28 +5357,39 @@ input {
 /* Panel — gradient color flows from handle through header */
 .detail-panel.mtcc-panel {
     background: linear-gradient(135deg, var(--mtcc-header-color, #64748b), var(--mtcc-header-color-end, #475569));
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
 }
 
-.detail-panel.mtcc-panel .detail-handle {
-    background: linear-gradient(135deg, var(--mtcc-header-color, #64748b), var(--mtcc-header-color-end, #475569));
-    border-radius: 20px 20px 0 0;
-}
+/* Handle is now embedded in the due date bar */
 
-.detail-panel.mtcc-panel .handle-bar {
-    background: rgba(255,255,255,0.4);
-}
 
-.detail-panel.mtcc-panel .detail-content {
-    background: white;
-}
 
 .mtcc-detail-header {
     padding: 16px 20px 18px;
-    margin: 0 -20px; /* break out of .detail-content padding */
     background: var(--mtcc-header-color, #64748b);
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    position: relative;
+    cursor: pointer;
+}
+.mtcc-detail-header::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 4px;
+    border-radius: 3px;
+    background: rgba(255,255,255,0.4);
+}
+.mtcc-detail-header .mtcc-detail-due {
+    padding-top: 4px;
+}
+.mtcc-detail-header .mtcc-header-badge {
+    margin-bottom: 2px;
 }
 
 .mtcc-detail-due {
@@ -5581,21 +5704,24 @@ input {
    Courier Detail Panel v2
    ============================================ */
 
-/* Sticky action button (accept, scan) */
+/* Sticky action button (accept, scan) — flush to all edges */
 .courier-sticky-action {
     position: sticky;
-    bottom: 0;
-    padding: 14px 16px;
+    bottom: -1px; /* prevent sub-pixel gap */
+    padding: 14px 20px;
+    padding-bottom: calc(24px + var(--safe-bottom, 0px));
+    margin: 12px -20px 0;
     background: white;
     border-top: 1px solid #e5e7eb;
     z-index: 10;
-    box-shadow: 0 -4px 12px rgba(0,0,0,0.06);
+    box-shadow: 0 -8px 20px rgba(0,0,0,0.1);
 }
 
 .courier-sticky-action .status-action-btn {
     width: 100%;
     padding: 16px;
     font-size: 0.95rem;
+    border-radius: 50px !important;
 }
 
 /* Actions container */
@@ -6530,6 +6656,36 @@ input {
     line-height: 1.4;
 }
 
+/* Building wayfinding callout — prominent directions for indoor navigation */
+.bv7-wayfinding {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: 8px;
+    padding: 10px 12px;
+    background: linear-gradient(135deg, #eff6ff, #dbeafe);
+    border-left: 3px solid #3b82f6;
+    border-radius: 0 var(--radius-xs) var(--radius-xs) 0;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #1e40af;
+    line-height: 1.4;
+}
+
+.bv7-wayfinding svg {
+    flex-shrink: 0;
+    margin-top: 1px;
+    color: #3b82f6;
+}
+
+/* Card-level instructions (on preview cards) */
+.card-route-instructions {
+    color: #2563eb !important;
+    font-weight: 600;
+    font-style: italic;
+    font-size: 0.72rem !important;
+}
+
 .bv7-phone {
     display: inline-flex;
     align-items: center;
@@ -6634,7 +6790,6 @@ input {
 
 /* Stats bar attached to map top */
 .bv7-map-block {
-    margin: 0 16px;
     border: 1px solid #e5e7eb;
     border-radius: 10px;
     overflow: hidden;
@@ -6901,6 +7056,11 @@ input {
     margin-top: 0;
     border-top: none;
 }
+.bv7-item-meta {
+    font-size: 0.72rem;
+    color: #9ca3af;
+    font-weight: 500;
+}
 
 /* Due bar "by" lighter weight */
 .detail-due-by {
@@ -6917,7 +7077,7 @@ input {
     background: #f8fafc;
     border: 1px solid #e5e7eb;
     border-radius: 12px;
-    margin: 8px 16px;
+    margin: 8px 16px 20px;
 }
 
 .bv7-qc-label {
@@ -6929,6 +7089,9 @@ input {
     font-size: 0.82rem;
     font-weight: 600;
     color: #1a1625;
+}
+.bv7-qc-name-lg {
+    font-size: 0.95rem;
 }
 
 .bv7-qc-num {
@@ -7164,7 +7327,7 @@ input {
     padding: 18px 24px !important;
     font-size: 1.05rem !important;
     font-weight: 700 !important;
-    border-radius: 16px !important;
+    border-radius: 30px !important;
     box-shadow: 0 6px 20px rgba(124, 58, 237, 0.4), 0 2px 6px rgba(124, 58, 237, 0.2) !important;
     letter-spacing: 0.03em;
     transition: all 0.2s ease !important;
@@ -7206,16 +7369,17 @@ input {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    padding: 8px 0 2px;
+    border-top: 1px solid #e5e7eb;
+    margin: 6px -14px 0;
+    padding-left: 14px;
+    padding-right: 14px;
 }
 
 .card-footer-left, .card-footer-right {
     display: flex;
     align-items: center;
-    gap: 4px;
-}
-
-.card-footer-left .card-meta svg {
-    vertical-align: -2px;
+    gap: 6px;
 }
 
 /* Batch card — label above, icon + name below */
@@ -7252,4 +7416,485 @@ input {
 .batch-stop-name-row .batch-stop-info {
     flex: 1;
     min-width: 0;
+}
+
+/* ============================================
+   TRACK COURIER / SHARE TRACKING BUTTONS
+   ============================================ */
+.track-courier-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0;
+    background: linear-gradient(135deg, #14b8a6, #0d9488);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-decoration: none;
+    text-align: center;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+.track-courier-btn:active { transform: scale(0.97); opacity: 0.9; }
+.track-courier-btn svg { stroke: white; }
+
+.share-tracking-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    padding: 10px;
+    margin: 4px 0 8px;
+    background: white;
+    color: var(--primary);
+    border: 1.5px solid var(--primary);
+    border-radius: var(--radius-sm);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+.share-tracking-btn:active { transform: scale(0.97); background: #f5f3ff; }
+
+/* ============================================
+   ROUTE OPTIMIZE BUTTON
+   ============================================ */
+.route-optimize-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    padding: 10px;
+    border: 1.5px solid var(--primary);
+    border-radius: var(--radius-sm);
+    background: var(--primary-light, #f5f3ff);
+    color: var(--primary);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    -webkit-tap-highlight-color: transparent;
+}
+.route-optimize-btn:active {
+    transform: scale(0.97);
+    background: #ede9fe;
+}
+.route-optimize-btn:disabled {
+    opacity: 0.6;
+}
+.route-optimize-btn .spin {
+    animation: issueSpinner 0.8s linear infinite;
+}
+@keyframes issueSpinner {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* ============================================
+   DELIVERY PHOTO PREVIEW (on delivered cards)
+   ============================================ */
+.card-photo-preview {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 0 2px;
+    border-top: 1px solid var(--gray-100);
+    margin-top: 6px;
+}
+.card-photo-preview img {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+    border: 1px solid var(--gray-200);
+}
+.card-photo-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--gray-400);
+}
+
+/* ============================================
+   GLOBAL INTERACTIVE STATE STANDARDS
+   ============================================ */
+
+/* Unified disabled state */
+button:disabled,
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* Unified tap highlight removal */
+button,
+a,
+.order-card,
+.batch-card,
+.nav-item,
+.filter-pill,
+.toggle-btn {
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Skeleton loading placeholder */
+@keyframes skeleton-pulse {
+    0% { opacity: 0.6; }
+    50% { opacity: 0.3; }
+    100% { opacity: 0.6; }
+}
+.skeleton {
+    background: linear-gradient(90deg, var(--gray-100) 25%, var(--gray-50) 50%, var(--gray-100) 75%);
+    background-size: 200% 100%;
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+    border-radius: var(--radius-sm);
+}
+.skeleton-text { height: 12px; margin-bottom: 8px; }
+.skeleton-text-sm { height: 10px; width: 60%; margin-bottom: 6px; }
+.skeleton-title { height: 18px; width: 40%; margin-bottom: 10px; }
+.skeleton-block { height: 120px; margin-bottom: 12px; }
+.skeleton-card {
+    padding: 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 10px;
+}
+
+/* Delivery confirmation animation */
+@keyframes delivery-success-pop {
+    0% { transform: scale(0); opacity: 0; }
+    50% { transform: scale(1.1); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+}
+@keyframes delivery-success-fade {
+    0% { opacity: 1; }
+    70% { opacity: 1; }
+    100% { opacity: 0; }
+}
+.delivery-success-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(255,255,255,0.95);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    animation: delivery-success-fade 2.5s ease forwards;
+}
+.delivery-success-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: delivery-success-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    box-shadow: 0 8px 30px rgba(34,197,94,0.4);
+}
+.delivery-success-icon svg { stroke: white; }
+.delivery-success-text {
+    margin-top: 20px;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #16a34a;
+    animation: delivery-success-pop 0.5s 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+.delivery-success-sub {
+    font-size: 0.85rem;
+    color: var(--subtext);
+    margin-top: 6px;
+    animation: delivery-success-pop 0.5s 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+
+/* Running earnings ticker */
+.earnings-ticker {
+    position: fixed;
+    top: var(--header-height);
+    right: 12px;
+    background: linear-gradient(135deg, #059669, #047857);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+    font-size: 0.72rem;
+    font-weight: 700;
+    z-index: 90;
+    box-shadow: 0 2px 8px rgba(5,150,105,0.3);
+    display: none;
+}
+.earnings-ticker.visible { display: block; }
+
+/* Geofence auto-arrival prompt */
+.arrival-prompt {
+    position: fixed;
+    top: calc(var(--header-height) + 8px);
+    left: 12px;
+    right: 12px;
+    z-index: 9998;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from { transform: translateY(-20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.arrival-prompt-content {
+    background: linear-gradient(135deg, #059669, #047857);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    box-shadow: var(--shadow-xl);
+    color: white;
+}
+
+.arrival-prompt-text {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.arrival-prompt-text svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.arrival-prompt-text div {
+    display: flex;
+    flex-direction: column;
+}
+
+.arrival-prompt-text strong {
+    font-size: 0.88rem;
+    font-weight: 700;
+}
+
+.arrival-prompt-text span {
+    font-size: 0.75rem;
+    opacity: 0.85;
+    margin-top: 2px;
+}
+
+.arrival-prompt-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.arrival-btn-confirm {
+    flex: 1;
+    padding: 10px;
+    background: white;
+    color: #047857;
+    border-radius: var(--radius-sm);
+    font-weight: 700;
+    font-size: 0.82rem;
+}
+
+.arrival-btn-dismiss {
+    padding: 10px 16px;
+    background: rgba(255,255,255,0.15);
+    color: white;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 0.82rem;
+}
+
+/* ============================================
+   QUICK MESSAGE TO DISPATCH
+   ============================================ */
+.quick-msg-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 10000;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    animation: fadeIn 0.15s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.quick-msg-sheet {
+    width: 100%;
+    max-width: 480px;
+    background: var(--card);
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    padding: 0 0 calc(16px + var(--safe-bottom));
+    animation: sheetUp 0.25s ease;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+@keyframes sheetUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+}
+
+.quick-msg-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px 12px;
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--text);
+}
+
+.quick-msg-header button {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--gray-100);
+    color: var(--gray-500);
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.quick-msg-ref {
+    padding: 0 20px 12px;
+    font-size: 0.75rem;
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.quick-msg-list {
+    padding: 0 12px;
+}
+
+.quick-msg-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: var(--radius-sm);
+    text-align: left;
+    transition: background 0.15s;
+}
+
+.quick-msg-item:active {
+    background: var(--gray-100);
+}
+
+.quick-msg-icon {
+    font-size: 1.2rem;
+    flex-shrink: 0;
+    width: 28px;
+    text-align: center;
+}
+
+.quick-msg-text {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.3;
+}
+
+.quick-msg-custom {
+    padding: 8px 16px 0;
+}
+
+.quick-msg-input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 0.82rem;
+    background: var(--gray-50);
+    color: var(--text);
+}
+
+.quick-msg-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(124,58,237,0.1);
+}
+
+/* Offline sync indicator (pending actions count) */
+.sync-indicator {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    position: fixed;
+    top: var(--header-height);
+    left: 12px;
+    padding: 4px 10px;
+    background: linear-gradient(135deg, #d97706, #b45309);
+    color: white;
+    border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+    font-size: 0.72rem;
+    font-weight: 700;
+    z-index: 90;
+    box-shadow: 0 2px 8px rgba(217,119,6,0.3);
+    animation: pulse-subtle 2s ease-in-out infinite;
+}
+
+.sync-indicator svg {
+    animation: spin 1.5s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes pulse-subtle {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
+}
+
+/* Offline indicator bar */
+.offline-bar {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: #374151;
+    color: white;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-align: center;
+    z-index: 9999;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+}
+
+/* Nav tab badge (order count) */
+.nav-badge {
+    position: absolute;
+    top: 2px;
+    right: 50%;
+    transform: translateX(calc(50% + 10px));
+    min-width: 16px;
+    height: 16px;
+    background: #ef4444;
+    color: white;
+    font-size: 0.55rem;
+    font-weight: 700;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    line-height: 1;
 }

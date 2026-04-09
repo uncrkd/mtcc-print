@@ -95,18 +95,47 @@ var haptic = {
     vibrateSupported: ('vibrate' in navigator),
     audioCtx: null,
     audioEnabled: true,
+    initialized: false,
+    // Pool of reusable Audio elements for iOS compatibility
+    _audioPool: [],
+    _poolSize: 4,
+    _poolIdx: 0,
+    _clickReady: false,
 
-    // Initialize audio context (must be called after user interaction)
+    // Initialize — create audio pool + AudioContext
     initAudio: function() {
+        if (this.initialized) return;
+        // AudioContext for beep tones
         if (!this.audioCtx) {
             try {
                 this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                console.log('Audio context initialized');
             } catch (e) {
-                console.warn('Audio not supported:', e);
                 this.audioEnabled = false;
             }
         }
+        if (this.audioCtx && this.audioCtx.state === 'suspended') {
+            this.audioCtx.resume();
+        }
+        // HTML Audio pool for click sounds (reliable on iOS)
+        // Tiny 1-sample silent mp3 to unlock audio playback, then swap src
+        if (!this._clickReady) {
+            for (var i = 0; i < this._poolSize; i++) {
+                var a = new Audio();
+                a.volume = 0.3;
+                // Play silence to unlock iOS audio
+                a.src = 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAABhgC7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAAAAAAAAAAAAYYoRwMHAAAAAAD/+1DEAAAB8ANX9AAABXiKrf8wYAAAE0AAAAATAGQAAADQAAAA0A';
+                try { a.play().catch(function(){}); } catch(e) {}
+                a.pause();
+                a.currentTime = 0;
+                this._audioPool.push(a);
+            }
+            this._clickReady = true;
+        }
+        this.initialized = true;
+    },
+
+    _ensureAudio: function() {
+        if (!this.initialized) this.initAudio();
         if (this.audioCtx && this.audioCtx.state === 'suspended') {
             this.audioCtx.resume();
         }
@@ -114,6 +143,7 @@ var haptic = {
 
     // Play a beep tone with frequency (Hz), duration (ms), volume (0-1)
     beep: function(frequency, duration, volume) {
+        this._ensureAudio();
         frequency = frequency || 800;
         duration = duration || 100;
         volume = volume || 0.3;
@@ -135,15 +165,51 @@ var haptic = {
 
             oscillator.start(this.audioCtx.currentTime);
             oscillator.stop(this.audioCtx.currentTime + duration / 1000);
-        } catch (e) {
-            console.warn('Beep failed:', e);
+        } catch (e) {}
+    },
+
+    // iOS native haptic via <input type="checkbox" switch> + <label> trick
+    // iOS 18+ fires Taptic Engine when a switch checkbox is toggled via its label
+    _hapticInput: null,
+    _hapticLabel: null,
+    _hapticReady: false,
+
+    _initHaptic: function() {
+        if (this._hapticReady) return;
+        var input = document.createElement('input');
+        input.type = 'checkbox';
+        input.setAttribute('switch', '');
+        input.id = '_haptic_switch';
+        input.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0;pointer-events:none;';
+        input.setAttribute('aria-hidden', 'true');
+        input.setAttribute('tabindex', '-1');
+
+        var label = document.createElement('label');
+        label.setAttribute('for', '_haptic_switch');
+        label.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0;pointer-events:none;';
+        label.setAttribute('aria-hidden', 'true');
+
+        document.body.appendChild(input);
+        document.body.appendChild(label);
+        this._hapticInput = input;
+        this._hapticLabel = label;
+        this._hapticReady = true;
+    },
+
+    // Trigger native iOS haptic by clicking the label (toggles the switch)
+    _iosHaptic: function() {
+        if (!this._hapticReady) this._initHaptic();
+        if (this._hapticLabel) {
+            this._hapticLabel.click();
         }
     },
 
-    // Light tap - for button presses, keypad
+    // Light tap — native haptic on iOS (switch toggle) + vibrate on Android
     tap: function() {
         if (this.vibrateSupported) {
-            navigator.vibrate(15);
+            navigator.vibrate(10);
+        } else {
+            this._iosHaptic();
         }
     },
 
@@ -151,6 +217,8 @@ var haptic = {
     success: function() {
         if (this.vibrateSupported) {
             navigator.vibrate(100);
+        } else {
+            this._iosHaptic();
         }
         this.beep(1200, 150, 0.3);
     },
@@ -159,6 +227,10 @@ var haptic = {
     error: function() {
         if (this.vibrateSupported) {
             navigator.vibrate([100, 50, 100]);
+        } else {
+            var self = this;
+            this._iosHaptic();
+            setTimeout(function() { self._iosHaptic(); }, 100);
         }
         var self = this;
         this.beep(400, 150, 0.4);
@@ -169,6 +241,11 @@ var haptic = {
     warning: function() {
         if (this.vibrateSupported) {
             navigator.vibrate([50, 30, 50, 30, 50]);
+        } else {
+            var self = this;
+            this._iosHaptic();
+            setTimeout(function() { self._iosHaptic(); }, 80);
+            setTimeout(function() { self._iosHaptic(); }, 160);
         }
         var self = this;
         this.beep(600, 80, 0.3);
@@ -176,10 +253,12 @@ var haptic = {
         setTimeout(function() { self.beep(600, 80, 0.3); }, 240);
     },
 
-    // Confirm - status change confirmed (most satisfying ascending tone)
+    // Confirm - status change confirmed
     confirm: function() {
         if (this.vibrateSupported) {
             navigator.vibrate(200);
+        } else {
+            this._iosHaptic();
         }
         var self = this;
         this.beep(800, 100, 0.3);
@@ -190,6 +269,8 @@ var haptic = {
     scanDetected: function() {
         if (this.vibrateSupported) {
             navigator.vibrate(50);
+        } else {
+            this._iosHaptic();
         }
         this.beep(1500, 80, 0.25);
     },
@@ -206,7 +287,76 @@ var haptic = {
 // ============================================
 // API Helper
 // ============================================
-function apiCall(action, data, callback) {
+// ============================================
+// Offline Action Queue
+// ============================================
+var offlineQueue = [];
+var QUEUE_STORAGE_KEY = 'mtcc_courier_offline_queue';
+// Actions that should be queued when offline (critical status updates)
+var QUEUEABLE_ACTIONS = ['update_status', 'accept_delivery', 'accept_batch', 'report_issue', 'update_location'];
+
+function loadOfflineQueue() {
+    try {
+        var stored = localStorage.getItem(QUEUE_STORAGE_KEY);
+        offlineQueue = stored ? JSON.parse(stored) : [];
+    } catch (e) { offlineQueue = []; }
+    updateSyncIndicator();
+}
+
+function saveOfflineQueue() {
+    try {
+        localStorage.setItem(QUEUE_STORAGE_KEY, JSON.stringify(offlineQueue));
+    } catch (e) { /* storage full — degrade gracefully */ }
+    updateSyncIndicator();
+}
+
+function queueOfflineAction(action, data) {
+    offlineQueue.push({
+        action: action,
+        data: data,
+        timestamp: Date.now(),
+        id: Date.now() + '_' + Math.random().toString(36).substr(2, 5)
+    });
+    saveOfflineQueue();
+}
+
+function processOfflineQueue() {
+    if (offlineQueue.length === 0 || !navigator.onLine) return;
+    var item = offlineQueue[0];
+    apiCall(item.action, item.data, function(result) {
+        if (result.success || !result.offline) {
+            // Processed (success or server-side error) — remove from queue
+            offlineQueue.shift();
+            saveOfflineQueue();
+            if (result.success) {
+                showToast('Synced: ' + item.action.replace(/_/g, ' '), 'success');
+            }
+            // Process next item
+            if (offlineQueue.length > 0) {
+                setTimeout(processOfflineQueue, 500);
+            }
+        }
+        // If still offline, stop processing — will retry on reconnect
+    }, true); // skipQueue flag
+}
+
+function updateSyncIndicator() {
+    var el = document.getElementById('syncIndicator');
+    if (offlineQueue.length > 0) {
+        if (!el) {
+            el = document.createElement('div');
+            el.id = 'syncIndicator';
+            el.className = 'sync-indicator';
+            document.body.appendChild(el);
+        }
+        el.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg> ' + offlineQueue.length + ' pending';
+        el.style.display = 'flex';
+    } else if (el) {
+        el.style.display = 'none';
+    }
+}
+
+function apiCall(action, data, callback, skipQueue) {
     var formData = new FormData();
     formData.append('action', action);
     if (data) {
@@ -226,7 +376,14 @@ function apiCall(action, data, callback) {
         })
         .catch(function(err) {
             console.error('API error:', err);
-            if (callback) callback({ success: false, error: 'Network error' });
+            // Queue critical actions for retry when back online
+            if (!skipQueue && QUEUEABLE_ACTIONS.indexOf(action) !== -1) {
+                queueOfflineAction(action, data);
+                showToast('Saved offline — will sync when connected', 'info');
+                if (callback) callback({ success: true, offline_queued: true });
+            } else {
+                if (callback) callback({ success: false, error: 'Network error' });
+            }
         });
 }
 
@@ -358,12 +515,17 @@ function showApp() {
     // Build nav tabs
     buildNavTabs(currentUser.tabs);
 
+    // Start location reporting for live tracking
+    startLocationReporting();
+
     // Switch to first tab
     var firstTab = currentUser.tabs[0];
     if (firstTab) switchTab(firstTab.id);
 
     startAutoRefresh();
     startCountdownTimers();
+    startEarningsTickerPolling();
+    startNotificationPolling();
     loadWeather();
     startGeoWatch();
 
@@ -505,12 +667,14 @@ function switchTab(tabId) {
 function refreshTab(tabId) {
     switch(tabId) {
         case 'deliveries': loadMyDeliveries(); break;
-        case 'available': loadAvailable(); break;
+        case 'available':
+            if (availableMode === 'map') loadNearby();
+            else loadAvailable();
+            break;
         case 'pickup': loadPickupQueue(); break;
         case 'earnings': loadEarnings(); break;
         case 'history': loadHistory(); break;
         case 'activity': loadActivity(); break;
-        case 'nearby': loadNearby(); break;
         case 'mtcc_dashboard': loadMTCCDashboard(); break;
         case 'upcoming_mtcc': loadUpcomingMTCC(); break;
         case 'complete': loadCompleted(); break;
@@ -523,6 +687,9 @@ function refreshTab(tabId) {
 // ============================================
 
 function loadMyDeliveries() {
+    // Show skeleton while loading
+    var el = document.getElementById('deliveriesContent');
+    if (el && cachedActive.length === 0) el.innerHTML = renderSkeletonCards(3);
     apiCall('get_my_deliveries', null, function(result) {
         if (result.success) {
             cachedActive = result.active || [];
@@ -530,6 +697,15 @@ function loadMyDeliveries() {
         console.log('[LoadDeliveries] Got ' + cachedActive.length + ' active orders');
         cachedActive.forEach(function(o) { console.log('  - ' + o.ref + ' status=' + o.status); });
         renderDeliveriesView();
+        updateNavBadges();
+        // Start proximity alerts if courier has in-transit orders
+        var hasTransit = cachedActive.some(function(o) { return o.status === 'shipped'; });
+        if (hasTransit && currentUser && currentUser.role === 'courier') startProximityWatch();
+        else stopProximityWatch();
+        // Request notification permission
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
         // Auto-launch transit view (DoorDash/Uber pattern)
         console.log('[LoadDeliveries] Calling autoLaunchTransit...');
         autoLaunchTransit();
@@ -567,7 +743,19 @@ function renderDeliveriesView() {
     html += '</div>';
     
     if (activeOrders.length > 0) {
-        activeOrders.forEach(function(o) {
+        // Group in-transit single orders into one Active Route card
+        var inTransitSingles = activeOrders.filter(function(o) { return o.type !== 'batch' && o.status === 'shipped'; });
+        var otherOrders = activeOrders.filter(function(o) { return !(o.type !== 'batch' && o.status === 'shipped'); });
+
+        // Render Active Route card if multiple in-transit singles
+        if (inTransitSingles.length > 1) {
+            html += renderActiveRouteCard(inTransitSingles);
+        } else if (inTransitSingles.length === 1) {
+            html += renderOrderCard(inTransitSingles[0], 'delivery');
+        }
+
+        // Render remaining orders (batches + non-transit singles)
+        otherOrders.forEach(function(o) {
             if (o.type === 'batch') {
                 html += renderBatchCard(o, 'delivery');
             } else {
@@ -609,10 +797,14 @@ function setDeliveryFilter(filter) {
 
 
 var availableView = 'all'; // 'all', 'active', 'upcoming'
+var availableMode = 'list'; // 'list' or 'map'
 var cachedAvailActive = [];
 var cachedAvailUpcoming = [];
 
 function loadAvailable() {
+    // Show skeleton while loading
+    var availEl = document.getElementById('availableContent');
+    if (availEl && cachedAvailActive.length === 0 && cachedAvailUpcoming.length === 0) availEl.innerHTML = renderSkeletonCards(3);
     var loaded = { active: false, upcoming: false };
 
     apiCall('get_available', null, function(result) {
@@ -628,7 +820,10 @@ function loadAvailable() {
         if (result.success) {
             cachedAvailUpcoming = result.orders || [];
         }
-        if (loaded.active) renderAvailableView();
+        if (loaded.active) {
+            renderAvailableView();
+            updateNavBadges();
+        }
     });
 }
 
@@ -680,6 +875,30 @@ function setAvailableView(view) {
     availableView = view;
     haptic.tap();
     renderAvailableView();
+}
+
+function setAvailableMode(mode) {
+    if (mode === availableMode) return;
+    availableMode = mode;
+    haptic.tap();
+
+    var listView = document.getElementById('availableContent');
+    var mapView = document.getElementById('availableMapView');
+
+    // Toggle views
+    if (mode === 'map') {
+        if (listView) listView.style.display = 'none';
+        if (mapView) mapView.style.display = '';
+        loadNearby();
+    } else {
+        if (listView) listView.style.display = '';
+        if (mapView) mapView.style.display = 'none';
+    }
+
+    // Update toggle buttons
+    document.querySelectorAll('.view-mode-btn').forEach(function(btn) {
+        btn.classList.toggle('active', btn.getAttribute('data-mode') === mode);
+    });
 }
 
 
@@ -1035,7 +1254,23 @@ function loadEarnings() {
             return;
         }
         var s = result.summary;
-        var html = '<div class="earnings-summary">';
+        var p = result.performance || {};
+        // Update running earnings ticker
+        updateEarningsTicker(s.today);
+
+        var html = '';
+
+        // Performance scorecard
+        var onTimeRate = p.on_time_rate || 0;
+        var rateClass = onTimeRate >= 90 ? 'perf-green' : (onTimeRate >= 70 ? 'perf-amber' : 'perf-red');
+        html += '<div class="perf-scorecard">';
+        html += '<div class="perf-stat"><div class="perf-stat-value">' + (p.total_completed || 0) + '</div><div class="perf-stat-label">Deliveries</div></div>';
+        html += '<div class="perf-stat"><div class="perf-stat-value ' + rateClass + '">' + onTimeRate + '%</div><div class="perf-stat-label">On Time</div></div>';
+        html += '<div class="perf-stat"><div class="perf-stat-value">' + (p.avg_delivery_min || '—') + '<span class="perf-unit">min</span></div><div class="perf-stat-label">Avg Time</div></div>';
+        html += '</div>';
+
+        // Earnings summary
+        html += '<div class="earnings-summary">';
         html += '<div class="earning-card primary"><div class="earning-label">Today</div><div class="earning-value">$' + s.today.toFixed(2) + '</div><div class="earning-sub">' + s.deliveries_today + ' deliver' + (s.deliveries_today !== 1 ? 'ies' : 'y') + '</div></div>';
         html += '<div class="earning-card"><div class="earning-label">This Week</div><div class="earning-value">$' + s.week.toFixed(2) + '</div></div>';
         html += '<div class="earning-card"><div class="earning-label">This Month</div><div class="earning-value">$' + s.month.toFixed(2) + '</div></div>';
@@ -1349,9 +1584,9 @@ var lastSearchCenter = null;
 var searchAreaBtn = null;
 
 function loadNearby() {
-    var el = document.getElementById('nearbyContent');
+    var el = document.getElementById('availableMapView');
     if (!el) return;
-    
+
     // Show loading state
     var listEl = document.getElementById('nearbyList');
     if (listEl) listEl.innerHTML = '<div class="loading-state"><div class="spinner-ring"></div><span>Getting your location...</span></div>';
@@ -1475,120 +1710,200 @@ function fetchNearbyOrders(location) {
 function renderNearbyOrders(orders, courierLoc) {
     var listEl = document.getElementById('nearbyList');
     if (!listEl) return;
-    
+
     // Clear old markers
     nearbyMarkers.forEach(function(m) { m.setMarker ? m.setMarker(null) : m.setMap(null); });
     nearbyMarkers = [];
-    
+
     if (orders.length === 0) {
         listEl.innerHTML = '<div class="empty-state"><p>No available orders within 15 km.</p></div>';
         return;
     }
-    
+
     var bounds = new google.maps.LatLngBounds();
     bounds.extend(courierLoc);
-    
-    var html = '<div class="nearby-header">' + orders.length + ' order' + (orders.length !== 1 ? 's' : '') + ' nearby</div>';
-    
-    orders.forEach(function(order, i) {
-        // Add map marker
-        if (order.pickup_coords) {
-            var markerPos = { lat: order.pickup_coords.lat, lng: order.pickup_coords.lng };
-            bounds.extend(markerPos);
-            
-            var marker = new google.maps.Marker({
-                position: markerPos,
-                map: nearbyMap,
-                title: order.vendor_name + ' — ' + order.ref,
-                label: {
-                    text: String(i + 1),
-                    color: '#fff',
-                    fontSize: '11px',
-                    fontWeight: '700'
-                },
-                icon: {
-                    path: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z',
-                    fillColor: '#22c55e',
-                    fillOpacity: 1,
-                    strokeColor: '#ffffff',
-                    strokeWeight: 2,
-                    scale: 1.5,
-                    anchor: new google.maps.Point(12, 24),
-                    labelOrigin: new google.maps.Point(12, 9)
-                }
-            });
-            
-            // Info window on click
-            (function(o, m) {
-                m.addListener('click', function() {
-                    nearbyInfoWindow.setContent(
-                        '<div style="font-family:system-ui;padding:4px;">' +
-                        '<strong>' + escapeHtml(o.ref) + '</strong><br>' +
-                        '<span style="color:#666;">' + escapeHtml(o.vendor_name || 'Vendor') + '</span><br>' +
-                        '<span style="color:#16a34a;font-weight:600;">' + (o.distance_from_courier_km || '?') + ' km &middot; ~' + (o.est_pickup_min || '?') + ' min</span>' +
-                        '</div>'
-                    );
-                    nearbyInfoWindow.open(nearbyMap, m);
-                });
-            })(order, marker);
-            
-            nearbyMarkers.push(marker);
-        }
-        
-        // Dropoff marker (smaller, red)
-        if (order.dropoff_coords) {
-            bounds.extend({ lat: order.dropoff_coords.lat, lng: order.dropoff_coords.lng });
-        }
-        
-        // List card
-        var urgency = getUrgencyInfo(order);
+
+    // Group orders by vendor location (cluster overlapping pins)
+    var clusters = {};
+    orders.forEach(function(order) {
         orderCache[order.ref] = order;
-        
-        html += '<div class="nearby-card" data-ref="' + escapeHtml(order.ref) + '" data-mode="delivery" data-transit="0">';
+        if (!order.pickup_coords) return;
+        // Round coords to ~50m grid for clustering
+        var key = (Math.round(order.pickup_coords.lat * 2000) / 2000) + ',' + (Math.round(order.pickup_coords.lng * 2000) / 2000);
+        if (!clusters[key]) clusters[key] = { lat: order.pickup_coords.lat, lng: order.pickup_coords.lng, vendor: order.vendor_name || 'Vendor', orders: [] };
+        clusters[key].orders.push(order);
+    });
+
+    // Create clustered markers
+    Object.keys(clusters).forEach(function(key) {
+        var cluster = clusters[key];
+        var pos = { lat: cluster.lat, lng: cluster.lng };
+        bounds.extend(pos);
+        var count = cluster.orders.length;
+        var labelText = count > 1 ? String(count) : cluster.orders[0].ref.split('-').pop();
+        var pinColor = count > 1 ? '#7c3aed' : '#22c55e';
+        var pinScale = count > 1 ? 1.8 : 1.5;
+
+        var marker = new google.maps.Marker({
+            position: pos,
+            map: nearbyMap,
+            title: count > 1 ? count + ' orders at ' + cluster.vendor : cluster.orders[0].ref,
+            label: { text: labelText, color: '#fff', fontSize: count > 1 ? '12px' : '10px', fontWeight: '700' },
+            icon: {
+                path: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z',
+                fillColor: pinColor, fillOpacity: 1, strokeColor: '#ffffff', strokeWeight: 2,
+                scale: pinScale, anchor: new google.maps.Point(12, 24), labelOrigin: new google.maps.Point(12, 9)
+            }
+        });
+
+        (function(c, m, clusterKey) {
+            m.addListener('click', function() {
+                haptic.tap();
+                var infoHtml = '<div style="font-family:Montserrat,system-ui;padding:6px 8px;min-width:200px;">';
+                infoHtml += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">';
+                infoHtml += '<strong style="font-size:13px;">' + escapeHtml(c.vendor) + '</strong>';
+                infoHtml += '<span onclick="nearbyInfoWindow.close()" style="display:flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:#f3f4f6;cursor:pointer;font-size:14px;color:#6b7280;margin-left:8px;">&times;</span>';
+                infoHtml += '</div>';
+                infoHtml += '<div style="font-size:11px;color:#6b7280;margin-bottom:2px;">' + c.orders.length + ' order' + (c.orders.length !== 1 ? 's' : '') + ' at this location</div>';
+                c.orders.forEach(function(o) {
+                    infoHtml += '<div style="margin-top:6px;padding-top:6px;border-top:1px solid #f3f4f6;display:flex;justify-content:space-between;align-items:center;">';
+                    infoHtml += '<div><span style="font-weight:700;font-size:12px;">' + escapeHtml(o.ref) + '</span><br><span style="color:#666;font-size:11px;">\u2192 ' + escapeHtml(o.destination || 'MTCC') + '</span></div>';
+                    infoHtml += '<span style="color:#059669;font-weight:700;font-size:12px;">$' + parseFloat(o.est_payout || 0).toFixed(2) + '</span>';
+                    infoHtml += '</div>';
+                });
+                infoHtml += '</div>';
+                nearbyInfoWindow.setContent(infoHtml);
+                nearbyInfoWindow.open(nearbyMap, m);
+
+                // Filter card list to show only this vendor's orders
+                filterNearbyByCluster(clusterKey);
+            });
+        })(cluster, marker, key);
+
+        nearbyMarkers.push(marker);
+    });
+
+    // Build card list — sorted by distance
+    orders.sort(function(a, b) { return (a.distance_from_courier_km || 99) - (b.distance_from_courier_km || 99); });
+
+    var html = '<div class="nearby-header">' + orders.length + ' order' + (orders.length !== 1 ? 's' : '') + ' nearby</div>';
+
+    orders.forEach(function(order) {
+        var urgency = getUrgencyInfo(order);
+        var urgCls = urgency.level === 'red' ? ' nearby-urgent-red' : (urgency.level === 'orange' ? ' nearby-urgent-orange' : '');
+        var qty = order.quantity || 1;
+
+        html += '<div class="nearby-card' + urgCls + '" data-ref="' + escapeHtml(order.ref) + '">';
+
+        // Due bar — available status color with date AND time
+        var nearbyTimeLabel = (order.due_time_formatted && order.due_time_formatted !== 'Anytime') ? order.due_time_formatted : 'Anytime';
+        var barCls = 'nearby-due-bar due-available';
+        if (urgency.level === 'red') barCls = 'nearby-due-bar due-red';
+        else if (urgency.level === 'orange') barCls = 'nearby-due-bar due-orange';
+        html += '<div class="' + barCls + '">';
+        html += '<span>Due ' + escapeHtml(order.due_date_formatted || 'TBD') + '  |  by: ' + escapeHtml(nearbyTimeLabel) + '</span>';
+        html += '<span class="order-status-badge badge-ready badge-sm due-bar-badge">Available</span>';
+        html += '</div>';
+
+        // Top row — ID + payout
         html += '<div class="nearby-card-top">';
-        html += '<div class="nearby-card-num">' + (i + 1) + '</div>';
         html += '<div class="nearby-card-info">';
-        html += '<div class="nearby-card-ref"><span class="ref-label">ID:</span> ' + escapeHtml(order.ref) + '</div>';
-        html += '<div class="nearby-card-vendor">' + escapeHtml(order.vendor_name || 'Vendor') + '</div>';
+        html += '<div class="order-ref"><span class="ref-label">ID:</span> ' + escapeHtml(order.ref) + '</div>';
         html += '</div>';
-        html += '<div class="nearby-card-dist">';
-        html += '<div class="nearby-dist-km">' + (order.distance_from_courier_km || '—') + ' <small>km</small></div>';
-        html += '<div class="nearby-dist-min">~' + (order.est_pickup_min || '?') + ' min</div>';
-        html += '</div>';
-        html += '</div>';
-        
-        // Destination
-        html += '<div class="nearby-card-dest">';
-        html += '<span class="nearby-dest-arrow">\u2192</span> ' + escapeHtml(order.destination || 'MTCC');
-        if (order.size) html += ' <span class="nearby-card-meta">\u00b7 ' + escapeHtml(order.size) + '</span>';
-        html += '</div>';
-        
-        // Payout
         if (order.est_payout) {
             html += '<div class="nearby-card-payout">$' + parseFloat(order.est_payout).toFixed(2) + '</div>';
         }
-        
+        html += '</div>';
+
+        // Route — pickup to dropoff (single line)
+        html += '<div class="nearby-route-row">';
+        html += '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M16.5 9.4l-9-5.19M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>';
+        html += '<span class="nearby-route-name">' + escapeHtml(order.vendor_name || 'Vendor') + '</span>';
+        html += '<span class="nearby-route-arrow">\u2192</span>';
+        html += '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+        html += '<span class="nearby-route-name">' + escapeHtml(order.destination || 'MTCC') + '</span>';
+        html += '</div>';
+
+        // Footer — left: distance/time, right: package/size
+        html += '<div class="nearby-card-footer">';
+        html += '<div class="card-footer-left">';
+        html += '<span class="card-meta"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgb(124,58,237)" stroke-width="2"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg> ' + (order.distance_from_courier_km || '?') + ' km</span>';
+        html += '<span class="card-footer-dot">\u00b7</span>';
+        html += '<span class="card-meta"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgb(124,58,237)" stroke-width="2"><line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="15" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/></svg> ~' + (order.est_pickup_min || '?') + ' min</span>';
+        html += '</div>';
+        html += '<div class="card-footer-right">';
+        html += '<span class="card-meta"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgb(124,58,237)" stroke-width="2"><path d="M16.5 9.4l-9-5.19M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg> ' + qty + '</span>';
+        if (order.size) {
+            html += '<span class="card-footer-dot">\u00b7</span>';
+            html += '<span class="card-meta"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgb(124,58,237)" stroke-width="2"><path d="M10 15v-3"/><path d="M14 15v-3"/><path d="M18 15v-3"/><path d="M2 8V4"/><path d="M22 6H2"/><path d="M22 8V4"/><path d="M6 15v-3"/><rect x="2" y="12" width="20" height="8" rx="2"/></svg> ' + escapeHtml(order.size) + '</span>';
+        }
+        html += '</div>';
+        html += '</div>';
+
         html += '</div>';
     });
-    
+
     listEl.innerHTML = html;
-    
+
     // Fit map to bounds
     if (nearbyMap && bounds) {
         nearbyMap.fitBounds(bounds, { padding: 40 });
     }
-    
-    // Make nearby cards clickable (open detail panel)
+
+    // Store for filtering
+    window._nearbyAllOrders = orders;
+    window._nearbyClusters = clusters;
+
+    // Make nearby cards clickable
     listEl.querySelectorAll('.nearby-card').forEach(function(card) {
         card.addEventListener('click', function() {
+            haptic.tap();
             var ref = card.getAttribute('data-ref');
-            if (ref && orderCache[ref]) {
-                showOrderDetail(ref, 'delivery');
-            }
+            if (ref && orderCache[ref]) showOrderDetail(ref, 'available');
         });
     });
 }
 
+// Filter nearby cards to show only orders from a specific vendor cluster
+function filterNearbyByCluster(clusterKey) {
+    var listEl = document.getElementById('nearbyList');
+    if (!listEl || !window._nearbyClusters || !window._nearbyClusters[clusterKey]) return;
+    var cluster = window._nearbyClusters[clusterKey];
+    var refs = cluster.orders.map(function(o) { return o.ref; });
+
+    // Hide cards not in this cluster, show matching ones
+    var cards = listEl.querySelectorAll('.nearby-card');
+    var shown = 0;
+    cards.forEach(function(card) {
+        var ref = card.getAttribute('data-ref');
+        if (refs.indexOf(ref) !== -1) {
+            card.style.display = '';
+            shown++;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+
+    // Update header with filter info + show all button
+    var header = listEl.querySelector('.nearby-header');
+    if (header) {
+        header.innerHTML = '<span>' + shown + ' order' + (shown !== 1 ? 's' : '') + ' at ' + escapeHtml(cluster.vendor) + '</span>' +
+            '<button class="nearby-show-all" onclick="haptic.tap(); clearNearbyFilter()">Show All</button>';
+    }
+}
+
+function clearNearbyFilter() {
+    var listEl = document.getElementById('nearbyList');
+    if (!listEl) return;
+    // Show all cards
+    listEl.querySelectorAll('.nearby-card').forEach(function(card) { card.style.display = ''; });
+    // Reset header
+    var total = window._nearbyAllOrders ? window._nearbyAllOrders.length : 0;
+    var header = listEl.querySelector('.nearby-header');
+    if (header) header.innerHTML = total + ' order' + (total !== 1 ? 's' : '') + ' nearby';
+    // Close info window
+    if (nearbyInfoWindow) nearbyInfoWindow.close();
+}
 
 function getStatusTransitions(currentStatus) {
     var role = currentUser ? currentUser.role : '';
@@ -1637,9 +1952,9 @@ function fetchRouteInfo(ref) {
         // Update route stats in detail panel
         var statEl = document.getElementById('orderRouteStat_' + ref);
         if (statEl) {
-            statEl.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg> <strong>' + result.route.distance_km + ' km</strong>' +
+            statEl.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg> <strong>' + result.route.distance_km + ' km</strong>' +
                 '<span class="bv7-stat-dot">\u2022</span>' +
-                '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> <strong>~' + result.route.duration_min + ' min</strong>';
+                '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="15" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/></svg> <strong>~' + result.route.duration_min + ' min</strong>';
         }
         // Update static map with real polyline
         if (result.route.polyline) {
@@ -1650,6 +1965,10 @@ function fetchRouteInfo(ref) {
                 if (orderCache[ref].destination_address) addrs.push(orderCache[ref].destination_address);
                 if (addrs.length > 0) mapImg.src = buildStaticMapUrl(addrs, 600, 250, result.route.polyline);
             }
+        }
+        // Start live ETA countdown for in-transit orders
+        if (result.route.duration_min && orderCache[ref] && orderCache[ref].status === 'shipped') {
+            startETACountdown(ref, result.route.duration_min);
         }
     });
 }
@@ -1787,15 +2106,20 @@ function renderOrderCard(order, mode) {
         var dropoffAddr = (order.destination_address || '').replace(/\r\n/g, ', ').replace(/\n/g, ', ');
 
         html += '<div class="card-route-vertical">';
-        // Pickup — blue box SVG
-        html += '<div class="card-route-stop"><div class="card-route-dot-col"><svg class="card-route-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg><div class="card-route-line-v"></div></div>';
-        html += '<div class="card-route-info"><div class="card-route-label">PICKUP</div><div class="card-route-name">' + escapeHtml(pickup) + '</div>';
-        if (pickupAddr) html += '<div class="card-route-addr">' + escapeHtml(pickupAddr) + '</div>';
-        html += '</div></div>';
-        // Dropoff — green pin SVG
+        if (!isInTransit) {
+            // Pickup — only shown when not yet in transit
+            html += '<div class="card-route-stop"><div class="card-route-dot-col"><svg class="card-route-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M16.5 9.4l-9-5.19M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg><div class="card-route-line-v"></div></div>';
+            html += '<div class="card-route-info"><div class="card-route-label">PICKUP</div><div class="card-route-name">' + escapeHtml(pickup) + '</div>';
+            if (pickupAddr) html += '<div class="card-route-addr">' + escapeHtml(pickupAddr) + '</div>';
+            html += '</div></div>';
+        }
+        // Dropoff — always shown, label changes for in-transit
+        var dropLabel = isInTransit ? 'DELIVERING TO' : 'DROPOFF';
         html += '<div class="card-route-stop"><div class="card-route-dot-col"><svg class="card-route-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>';
-        html += '<div class="card-route-info"><div class="card-route-label">DROPOFF</div><div class="card-route-name">' + escapeHtml(dropoff) + '</div>';
+        html += '<div class="card-route-info"><div class="card-route-label">' + dropLabel + '</div><div class="card-route-name">' + escapeHtml(dropoff) + '</div>';
         if (dropoffAddr) html += '<div class="card-route-addr">' + escapeHtml(dropoffAddr) + '</div>';
+        if (order.destination_instructions) html += '<div class="card-route-addr card-route-instructions">' + escapeHtml(order.destination_instructions) + '</div>';
+        if (order.notes) html += '<div class="card-route-addr card-route-notes">' + escapeHtml(order.notes) + '</div>';
         html += '</div></div></div>';
     }
 
@@ -1805,24 +2129,216 @@ function renderOrderCard(order, mode) {
         // Left: route info (if available)
         html += '<div class="card-footer-left">';
         if (order.route_distance_km) {
-            html += '<span class="card-meta"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg> ' + order.route_distance_km + ' km</span>';
-            if (order.route_duration_min) html += '<span class="card-footer-dot">\u00b7</span><span class="card-meta"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ~' + order.route_duration_min + ' min</span>';
+            html += '<span class="card-meta"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg> ' + order.route_distance_km + ' km</span>';
+            if (order.route_duration_min) html += '<span class="card-footer-dot">\u00b7</span><span class="card-meta"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="15" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/></svg> ~' + order.route_duration_min + ' min</span>';
         }
         html += '</div>';
-        // Right: qty + size
+        // Right: qty + packing size (ruler icon)
         html += '<div class="card-footer-right">';
         var qty = order.quantity || 1;
-        html += '<span class="card-meta">\ud83d\udce6 ' + qty + '</span>';
-        if (order.size) html += '<span class="card-footer-dot">\u00b7</span><span class="card-meta">' + escapeHtml(order.size) + '</span>';
+        html += '<span class="card-meta"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M16.5 9.4l-9-5.19M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg> ' + qty + '</span>';
+        // Packing size: box dims, tube shortest x 3", or print size fallback
+        var packingSize = '', packingWeight = '';
+        if (order.packing === 'box' && order.packing_details && order.packing_details.boxes && order.packing_details.boxes.length > 0) {
+            var b = order.packing_details.boxes[0];
+            packingSize = b.l + '" x ' + b.w + '" x ' + b.h + '"';
+            if (b.weight) packingWeight = b.weight;
+        } else if (order.packing === 'tube' && order.width && order.height) {
+            var shortest = Math.min(order.width, order.height);
+            packingSize = shortest + '" x 3" tube';
+        } else if (order.size) {
+            packingSize = order.size;
+        }
+        if (packingSize) html += '<span class="card-footer-dot">\u00b7</span><span class="card-meta"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M10 15v-3"/><path d="M14 15v-3"/><path d="M18 15v-3"/><path d="M2 8V4"/><path d="M22 6H2"/><path d="M22 8V4"/><path d="M6 15v-3"/><rect x="2" y="12" width="20" height="8" rx="2"/></svg> ' + escapeHtml(packingSize) + '</span>';
+        if (packingWeight) html += '<span class="card-footer-dot">\u00b7</span><span class="card-meta"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><circle cx="12" cy="5" r="3"/><path d="M6.5 8a2 2 0 0 0-1.905 1.46L2.1 18.5A2 2 0 0 0 4 21h16a2 2 0 0 0 1.925-2.54L19.4 9.5A2 2 0 0 0 17.48 8Z"/></svg> ' + escapeHtml(packingWeight) + '</span>';
         if (order.has_issue) html += '<span class="order-issue-badge">\u26a0 Issue</span>';
         html += '</div>';
         html += '</div>';
+    }
+
+    // Delivery photo thumbnail (shown on delivered orders)
+    if (order.delivery_photo && (order.status === 'delivered' || order.status === 'pickedup')) {
+        html += '<div class="card-photo-preview"><img src="' + escapeHtml(order.delivery_photo) + '" alt="Delivery photo" loading="lazy"><span class="card-photo-label"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg> Photo</span></div>';
     }
 
     html += '</div>';
     return html;
 }
 
+
+// ============================================
+// Active Route Card (grouped in-transit orders)
+// ============================================
+
+function renderActiveRouteCard(orders) {
+    // Group by destination
+    var destinations = {};
+    var totalPkgs = 0;
+    orders.forEach(function(o) {
+        orderCache[o.ref] = o;
+        var destKey = o.destination || 'Unknown';
+        if (!destinations[destKey]) destinations[destKey] = { name: destKey, address: o.destination_address || '', instructions: o.destination_instructions || '', orders: [] };
+        destinations[destKey].orders.push(o);
+        totalPkgs += (o.quantity || 1);
+    });
+    var destList = Object.keys(destinations).map(function(k) { return destinations[k]; });
+
+    var html = '<div class="order-card in-transit-card status-shipped" data-ref="active-route" data-mode="delivery" data-transit="1" onclick="showActiveRouteDetail()">';
+
+    // Transit banner
+    html += '<div class="transit-hero-banner">';
+    html += '<div class="thb-left"><span class="transit-pulse"></span> <strong>ACTIVE ROUTE</strong></div>';
+    html += '<div class="thb-right">' + orders.length + ' orders \u203A</div>';
+    html += '</div>';
+
+    // Due bar — use earliest due date
+    var earliestDue = orders[0];
+    if (earliestDue.due_date_formatted) {
+        var timeStr = earliestDue.due_time_formatted || 'Anytime';
+        html += '<div class="card-due-bar due-status-shipped">';
+        html += '<span class="due-text-mtcc">Due ' + escapeHtml(earliestDue.due_date_formatted) + '  |  by: ' + escapeHtml(timeStr) + '</span>';
+        html += '<span class="order-status-badge badge-shipped badge-sm due-bar-badge">In Transit</span>';
+        html += '</div>';
+    }
+
+    // Destinations only (no pickups)
+    html += '<div class="card-route-vertical">';
+    destList.forEach(function(dest, idx) {
+        var destAddr = (dest.address || '').replace(/\r\n/g, ', ').replace(/\n/g, ', ');
+        html += '<div class="card-route-stop"><div class="card-route-dot-col"><svg class="card-route-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+        if (idx < destList.length - 1) html += '<div class="card-route-line-v"></div>';
+        html += '</div>';
+        html += '<div class="card-route-info"><div class="card-route-label">DELIVERING TO</div><div class="card-route-name">' + escapeHtml(dest.name) + '</div>';
+        if (destAddr) html += '<div class="card-route-addr">' + escapeHtml(destAddr) + '</div>';
+        if (dest.instructions) html += '<div class="card-route-addr card-route-instructions">' + escapeHtml(dest.instructions) + '</div>';
+        html += '<div class="card-route-addr" style="color:#6b7280;">' + dest.orders.length + ' order' + (dest.orders.length !== 1 ? 's' : '') + '</div>';
+        html += '</div></div>';
+    });
+    html += '</div>';
+
+    // Footer
+    html += '<div class="order-card-footer">';
+    html += '<div class="card-footer-left">';
+    html += '<span class="card-meta"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M18 8c0 3.613-3.869 7.429-5.393 8.795a1 1 0 0 1-1.214 0C9.87 15.429 6 11.613 6 8a6 6 0 0 1 12 0"/><circle cx="12" cy="8" r="2"/><path d="M8.714 14h-3.71a1 1 0 0 0-.948.683l-2.004 6A1 1 0 0 0 3 22h18a1 1 0 0 0 .948-1.316l-2-6a1 1 0 0 0-.949-.684h-3.712"/></svg> ' + destList.length + ' stop' + (destList.length !== 1 ? 's' : '') + '</span>';
+    html += '</div>';
+    html += '<div class="card-footer-right">';
+    html += '<span class="card-meta"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M16.5 9.4l-9-5.19M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg> ' + totalPkgs + ' pkg' + (totalPkgs !== 1 ? 's' : '') + '</span>';
+    html += '</div>';
+    html += '</div>';
+
+    html += '</div>';
+    return html;
+}
+
+// Store grouped in-transit orders for detail view
+window._activeRouteOrders = [];
+
+function showActiveRouteDetail() {
+    var orders = cachedActive ? cachedActive.filter(function(o) { return o.type !== 'batch' && o.status === 'shipped'; }) : [];
+    if (orders.length === 0) return;
+    if (orders.length === 1) { showOrderDetail(orders[0].ref, 'delivery'); return; }
+
+    haptic.tap();
+    var panel = document.getElementById('detailPanel');
+    var overlay = document.getElementById('detailOverlay');
+    var content = document.getElementById('detailContent');
+    var panelHeader = document.getElementById('detailPanelHeader');
+    panel.style.transition = '';
+    panel.style.transform = '';
+    overlay.style.transition = '';
+    overlay.style.opacity = '';
+
+    var courierColor = '#14b8a6';
+    setPanelGradient(panel, courierColor);
+    panel.classList.add('mtcc-panel');
+
+    // Header — fixed
+    var headerHtml = '<div class="detail-due-bar" onclick="closeDetailPanel()">';
+    headerHtml += '<div class="detail-due-left">';
+    headerHtml += '<span class="detail-due-heading">ACTIVE ROUTE</span>';
+    headerHtml += '<span class="detail-due-date">' + orders.length + ' orders in transit</span>';
+    headerHtml += '</div>';
+    headerHtml += '<span class="order-status-badge badge-shipped mtcc-header-badge">In Transit</span>';
+    headerHtml += '</div>';
+    if (panelHeader) panelHeader.innerHTML = headerHtml;
+
+    // Content — group by destination
+    var destinations = {};
+    orders.forEach(function(o) {
+        var destKey = o.destination || 'Unknown';
+        if (!destinations[destKey]) destinations[destKey] = { name: destKey, address: o.destination_address || '', instructions: o.destination_instructions || '', orders: [] };
+        destinations[destKey].orders.push(o);
+    });
+    var destList = Object.keys(destinations).map(function(k) { return destinations[k]; });
+
+    var html = '';
+    html += '<div style="padding-top:14px;">';
+
+    // Optimize Route button for multiple destinations
+    if (destList.length >= 2) {
+        window._optimizeStops = destList.map(function(d) {
+            // Use first order's destination data for coords
+            var o = d.orders[0];
+            return { lat: o.destination_lat || 0, lng: o.destination_lng || 0, address: d.address || '' };
+        });
+        html += '<div style="padding:0 0 12px;"><button class="route-optimize-btn" onclick="optimizeRoute(window._optimizeStops, this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg> Optimize Route</button></div>';
+    }
+
+    destList.forEach(function(dest, dIdx) {
+        var destAddr = (dest.address || '').replace(/\r\n/g, ', ').replace(/\n/g, ', ');
+        html += '<div class="batch-timeline-v7">';
+        html += '<div class="bv7-stop">';
+        html += '<div class="bv7-left"><div class="bv7-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div></div>';
+        html += '<div class="bv7-right">';
+        html += '<div class="bv7-label"><span class="route-stop-label">DELIVERING TO</span></div>';
+        html += '<div class="bv7-name">' + escapeHtml(dest.name) + '</div>';
+        if (destAddr) html += '<div class="bv7-addr">' + escapeHtml(destAddr) + '</div>';
+        if (dest.instructions) html += '<div class="bv7-addr" style="color:#3b82f6;font-style:italic;">' + escapeHtml(dest.instructions) + '</div>';
+
+        // MTCC phone + hours
+        html += '<div class="bv7-contact-row">';
+        html += '<a class="bv7-phone" href="tel:' + SUPPORT_PHONES.mtcc.number.replace(/[^0-9+]/g, '') + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"/></svg> ' + SUPPORT_PHONES.mtcc.number + '</a>';
+        html += '</div>';
+        if (destAddr) html += '<a class="bv7-nav" href="https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(destAddr) + '" target="_blank" rel="noopener"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg></a>';
+
+        // Orders for this destination
+        html += '<div class="bv7-items">';
+        dest.orders.forEach(function(o) {
+            var qty = o.quantity || 1;
+            html += '<div class="bv7-item">';
+            html += '<div class="bv7-item-field"><span class="bv7-item-label">Order</span><span class="bv7-item-ref">' + escapeHtml(o.ref) + '</span></div>';
+            html += '<div class="bv7-item-field"><span class="bv7-item-label">Customer</span><span class="bv7-item-val">' + escapeHtml(o.customer_name || '') + '</span></div>';
+            html += '<div class="bv7-item-field"><span class="bv7-item-label">Vendor Ref</span><span class="bv7-item-vref-bold">' + escapeHtml(o.vendor_order_number || 'N/A') + '</span></div>';
+            if (o.tracking) html += '<div class="bv7-item-field"><span class="bv7-item-label">Barcode</span><span class="bv7-item-val bv7-item-barcode">' + escapeHtml(o.tracking) + '</span></div>';
+            html += '<div class="bv7-item-bottom-row">';
+            html += '<span class="bv7-item-boxes"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><path d="M16.5 9.4l-9-5.19M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg> ' + qty + ' box' + (qty !== 1 ? 'es' : '') + '</span>';
+            if (o.material || o.size) html += '<span class="bv7-item-meta">' + escapeHtml(o.material || '') + (o.size ? ' \u00b7 ' + escapeHtml(o.size) : '') + '</span>';
+            html += '</div>';
+            html += '</div>';
+        });
+        html += '</div>';
+
+        html += '</div></div>'; // bv7-right, bv7-stop
+        html += '</div>'; // batch-timeline-v7
+
+        if (dIdx < destList.length - 1) html += '<div style="height:1px;background:#e5e7eb;margin:8px 0;"></div>';
+    });
+
+    html += '</div>';
+
+    // Quick connect
+    html += '<div class="bv7-quick-connect">';
+    html += '<div class="bv7-qc-label"><span class="bv7-qc-name bv7-qc-name-lg">Print Stuff Support</span></div>';
+    html += '<div class="bv7-qc-buttons">';
+    html += '<a class="bv7-qc-btn" href="https://tawk.to/chat/69bcadcf600a121c36fa7a4b/1jk4gdsmg" target="_blank" rel="noopener" title="Live Chat"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></a>';
+    html += '<a class="bv7-qc-btn" href="tel:' + SUPPORT_PHONES.admin.number.replace(/[^0-9+]/g, '') + '" title="Call"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"/></svg></a>';
+    html += '</div>';
+    html += '</div>';
+
+    content.innerHTML = html;
+    panel.classList.add('active');
+    overlay.classList.add('active');
+}
 
 // ============================================
 // Full-Page Transit View
@@ -2090,15 +2606,17 @@ function renderMTCCDetailPanel(order, mode) {
     else if (order.status === 'pickedup') phaseColor = '#22c55e';
     else if (order.status === 'missing') phaseColor = '#dc2626';
 
-    // Due date header — colored by status phase (Fix 2)
+    // Due date header — goes into fixed panel header
     var dueStr = order.due_date_formatted || order.due_date || '';
     var timeStr = (order.due_time_formatted && order.due_time_formatted !== 'Anytime') ? order.due_time_formatted : 'Anytime';
-    html += '<div class="mtcc-detail-header">';
+    var headerHtml = '<div class="mtcc-detail-header" onclick="closeDetailPanel()">';
     if (dueStr) {
-        html += '<div class="mtcc-detail-due"><span class="mtcc-due-label">DUE DATE</span><span class="mtcc-due-value">' + escapeHtml(dueStr) + '  |  <span class="detail-due-by">by:</span> ' + escapeHtml(timeStr) + '</span></div>';
+        headerHtml += '<div class="mtcc-detail-due"><span class="mtcc-due-label">DUE DATE</span><span class="mtcc-due-value">' + escapeHtml(dueStr) + '  |  <span class="detail-due-by">by:</span> ' + escapeHtml(timeStr) + '</span></div>';
     }
-    html += '<span class="order-status-badge ' + badgeClass + ' mtcc-header-badge">' + (statusLabels[order.status] || order.status) + '</span>';
-    html += '</div>';
+    headerHtml += '<span class="order-status-badge ' + badgeClass + ' mtcc-header-badge">' + (statusLabels[order.status] || order.status) + '</span>';
+    headerHtml += '</div>';
+    var ph = document.getElementById('detailPanelHeader');
+    if (ph) ph.innerHTML = headerHtml;
 
     // Order ID + barcode (Fix 6)
     html += '<div class="mtcc-detail-id-section">';
@@ -2130,6 +2648,13 @@ function renderMTCCDetailPanel(order, mode) {
     }
     html += '</div>';
 
+    // Track Courier button — visible when order is in transit
+    if (order.status === 'shipped' || order.status === 'dispatched') {
+        html += '<button class="track-courier-btn" onclick="haptic.tap(); showCourierTracking(\'' + escapeAttr(order.ref) + '\')">';
+        html += '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+        html += ' Track Courier Live</button>';
+    }
+
     // Actions (Fix 3: 50/50 buttons for pickup, Report Issue always visible)
     html += '<div class="mtcc-detail-actions">';
     if (order.status === 'delivered') {
@@ -2137,7 +2662,7 @@ function renderMTCCDetailPanel(order, mode) {
         html += '<button class="mtcc-action-btn mtcc-btn-confirm" onclick="updateOrderStatus(\'' + escapeAttr(order.ref) + '\', \'pickedup\')">';
         html += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Confirm Pick Up</button>';
         html += '<button class="mtcc-action-btn mtcc-btn-scan" onclick="scanExpectedRef=\'' + escapeAttr(order.ref) + '\'; closeDetailPanel(); switchTab(\'scan\')">';
-        html += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="6" y1="8" x2="6" y2="16"/><line x1="10" y1="8" x2="10" y2="16"/><line x1="14" y1="8" x2="14" y2="16"/><line x1="18" y1="8" x2="18" y2="16"/></svg> Scan to Verify</button>';
+        html += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M8 7v10"/><path d="M12 7v10"/><path d="M17 7v10"/></svg> Scan to Verify</button>';
         html += '</div>';
     }
     // Report Issue — ALWAYS visible for paid+ orders (Fix 1)
@@ -2150,12 +2675,12 @@ function renderMTCCDetailPanel(order, mode) {
     }
     html += '</div>';
 
-    // Quick connect — label + icon buttons (matching courier style)
+    // Quick connect — label left, icon buttons right (no phone number shown)
     html += '<div class="bv7-quick-connect">';
-    html += '<div class="bv7-qc-label"><span class="bv7-qc-name">Print Stuff Support</span><span class="bv7-qc-num">(437) 882-8822</span></div>';
+    html += '<div class="bv7-qc-label"><span class="bv7-qc-name bv7-qc-name-lg">Print Stuff Support</span></div>';
     html += '<div class="bv7-qc-buttons">';
     html += '<a class="bv7-qc-btn" href="https://tawk.to/chat/69bcadcf600a121c36fa7a4b/1jk4gdsmg" target="_blank" rel="noopener" title="Live Chat"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></a>';
-    html += '<a class="bv7-qc-btn" href="tel:+14378828822" title="Call"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg></a>';
+    html += '<a class="bv7-qc-btn" href="tel:+14378828822" title="Call"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"/></svg></a>';
     html += '</div>';
     html += '</div>';
 
@@ -2217,6 +2742,12 @@ function showOrderDetail(ref, mode) {
     var panel = document.getElementById('detailPanel');
     var overlay = document.getElementById('detailOverlay');
     var content = document.getElementById('detailContent');
+    var panelHeader = document.getElementById('detailPanelHeader');
+    // Clear any leftover inline styles from close animation
+    panel.style.transition = '';
+    panel.style.transform = '';
+    overlay.style.transition = '';
+    overlay.style.opacity = '';
 
     // MTCC staff gets a simplified detail panel
     if (currentUser && currentUser.role === 'mtcc_staff') {
@@ -2246,29 +2777,30 @@ function showOrderDetail(ref, mode) {
     setPanelGradient(panel, courierColor);
     panel.classList.add('mtcc-panel');
 
-    // Fetch route info if not already loaded (courier/admin only)
-    if (order && !order.route_distance_km && (mode === 'delivery' || mode === 'available')) {
+    // Fetch route info if polyline missing (for proper map path) or distance unknown
+    if (order && (!order.route_polyline || !order.route_distance_km)) {
         fetchRouteInfo(ref);
     }
     var isPipeline = (mode === 'upcoming');
     var urgency = getUrgencyInfo(order);
     var badgeClass = 'badge-' + order.status;
-    var phoneIcon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>';
-    var html = '';
-
-    // Fix 1+10: Due date bar with time default + status badge in header
+    var phoneIcon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"/></svg>';
+    // Due-bar goes into fixed panel header (never scrolls)
+    var headerHtml = '';
     if (order.due_date && !isPipeline) {
         var dueStr = order.due_date_formatted || order.due_date;
         var timeStr = order.due_time_formatted || 'Anytime';
-        html += '<div class="detail-due-bar">';
-        html += '<div class="detail-due-left">';
-        html += '<span class="detail-due-heading">DUE DATE</span>';
-        html += '<span class="detail-due-date">' + escapeHtml(dueStr) + '  |  <span class="detail-due-by">by:</span> ' + escapeHtml(timeStr) + '</span>';
-        html += '</div>';
-        html += '<span class="order-status-badge ' + badgeClass + ' mtcc-header-badge">' + (statusLabels[order.status] || order.status) + '</span>';
-        html += '</div>';
+        headerHtml += '<div class="detail-due-bar" onclick="closeDetailPanel()">';
+        headerHtml += '<div class="detail-due-left">';
+        headerHtml += '<span class="detail-due-heading">DUE DATE</span>';
+        headerHtml += '<span class="detail-due-date">' + escapeHtml(dueStr) + '  |  <span class="detail-due-by">by:</span> ' + escapeHtml(timeStr) + '</span>';
+        headerHtml += '</div>';
+        headerHtml += '<span class="order-status-badge ' + badgeClass + ' mtcc-header-badge">' + (statusLabels[order.status] || order.status) + '</span>';
+        headerHtml += '</div>';
     }
+    if (panelHeader) panelHeader.innerHTML = headerHtml;
 
+    var html = '';
 
     // Urgency banner (red/orange)
     if (urgency.level === 'red' || urgency.level === 'orange') {
@@ -2300,27 +2832,14 @@ function showOrderDetail(ref, mode) {
     html += '<div>';
     html += '<div class="batch-id-label">ORDER</div>';
     html += '<div class="detail-order-ref">' + escapeHtml(order.ref) + '</div>';
-    html += '<div class="detail-order-tracking">' + escapeHtml(order.tracking) + '</div>';
     html += '</div>';
     if (order.est_payout) {
         html += '<div class="batch-payout-top"><div class="batch-payout-top-label">Est. Payout</div><div class="batch-payout-top-amount">$' + parseFloat(order.est_payout).toFixed(2) + '</div></div>';
     }
     html += '</div>';
 
-    // Route Card
-    html += renderRouteCard(order);
-
-    // Order Details Grid
-    html += '<div class="detail-grid">';
-    html += renderDetailField('Customer', order.customer_name);
-    html += renderDetailField('Event', (order.event || order.event_acronym) + (order.building ? ' \u2014 ' + order.building : ''));
-    html += renderDetailField('Material', order.material);
-    html += renderDetailField('Size', order.size);
-    if (order.quantity > 1) html += renderDetailField('Quantity', order.quantity);
-    if (order.delivery_tier) html += renderDetailField('Tier', order.delivery_tier);
-    if (order.courier_name) html += renderDetailField('Courier', order.courier_name);
-    if (order.notes) html += '<div class="detail-field full-width">' + renderDetailField('Notes', order.notes) + '</div>';
-    html += '</div>';
+    // Route Card (includes customer info inside pickup stop, matching batch layout)
+    html += renderRouteCard(order, mode);
 
     // Payout
     // Payout section
@@ -2359,6 +2878,7 @@ function showOrderDetail(ref, mode) {
             if (typeof CourierIssues !== 'undefined') {
                 html += '<button class="release-btn" style="border-color:#d97706;color:#d97706;" onclick="CourierIssues.open(\'' + escapeAttr(order.ref) + '\')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Report Issue</button>';
             }
+            html += '<button class="release-btn" style="border-color:#3b82f6;color:#3b82f6;" onclick="showQuickMessagePanel(\'' + escapeAttr(order.ref) + '\')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Dispatch</button>';
             html += '</div>';
             html += '</div>';
             // Scan button stored for sticky rendering after contacts
@@ -2389,12 +2909,20 @@ function showOrderDetail(ref, mode) {
         }
     }
 
-    // Quick connect — matching batch layout (label + icon buttons)
+    // Share tracking link — visible when order is in transit
+    if (order.status === 'shipped' && currentUser && currentUser.role === 'courier') {
+        var trackUrl = window.location.origin + '/courier/track.php?ref=' + encodeURIComponent(order.ref);
+        html += '<button class="share-tracking-btn" onclick="haptic.tap(); if(navigator.share){navigator.share({title:\'Track Delivery\',text:\'Track your delivery: ' + escapeAttr(order.ref) + '\',url:\'' + escapeAttr(trackUrl) + '\'})}else{navigator.clipboard.writeText(\'' + escapeAttr(trackUrl) + '\');showToast(\'Tracking link copied!\',\'success\')}">';
+        html += '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>';
+        html += ' Share Tracking Link</button>';
+    }
+
+    // Quick connect — label left, icon buttons right (no phone number shown)
     html += '<div class="bv7-quick-connect">';
-    html += '<div class="bv7-qc-label"><span class="bv7-qc-name">Print Stuff Support</span><span class="bv7-qc-num">' + SUPPORT_PHONES.admin.number + '</span></div>';
+    html += '<div class="bv7-qc-label"><span class="bv7-qc-name bv7-qc-name-lg">Print Stuff Support</span></div>';
     html += '<div class="bv7-qc-buttons">';
     html += '<a class="bv7-qc-btn" href="https://tawk.to/chat/69bcadcf600a121c36fa7a4b/1jk4gdsmg" target="_blank" rel="noopener" title="Live Chat"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></a>';
-    html += '<a class="bv7-qc-btn" href="tel:' + SUPPORT_PHONES.admin.number.replace(/[^0-9+]/g, '') + '" title="Call"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg></a>';
+    html += '<a class="bv7-qc-btn" href="tel:' + SUPPORT_PHONES.admin.number.replace(/[^0-9+]/g, '') + '" title="Call"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"/></svg></a>';
     html += '</div>';
     html += '</div>';
 
@@ -2403,7 +2931,7 @@ function showOrderDetail(ref, mode) {
         var _ref = window._orderScanRef;
         html += '<div class="courier-sticky-action">';
         html += '<button class="status-action-btn btn-scan-goto" onclick="scanOrigin={type:\'order\',id:\'' + escapeAttr(_ref) + '\',label:\'' + escapeAttr(_ref) + ' Details\'}; scanExpectedRef=\'' + escapeAttr(_ref) + '\'; closeDetailPanel(); switchTab(\'scan\')">';
-        html += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="6" y1="8" x2="6" y2="16"/><line x1="10" y1="8" x2="10" y2="16"/><line x1="14" y1="8" x2="14" y2="16"/><line x1="18" y1="8" x2="18" y2="16"/></svg>';
+        html += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M8 7v10"/><path d="M12 7v10"/><path d="M17 7v10"/></svg>';
         html += ' Scan to Confirm Pickup</button>';
         html += '</div>';
         window._orderScanRef = null;
@@ -2415,16 +2943,17 @@ function showOrderDetail(ref, mode) {
 }
 
 // --- Route Card ---
-function renderRouteCard(order) {
+function renderRouteCard(order, mode) {
     var pickup = order.vendor_name || 'Vendor';
     var pickupAddr = (order.vendor_address || '').replace(/\r\n/g, ', ').replace(/\n/g, ', ');
     var dropoff = order.destination || 'Destination';
     var dropoffAddr = (order.destination_address || '').replace(/\r\n/g, ', ').replace(/\n/g, ', ');
     var instructions = order.destination_instructions || '';
+    var isInTransit = (mode === 'delivery' && order.status === 'shipped');
 
     var html = '';
     var singleAddrs = [];
-    if (pickupAddr) singleAddrs.push(pickupAddr);
+    if (!isInTransit && pickupAddr) singleAddrs.push(pickupAddr);
     if (dropoffAddr) singleAddrs.push(dropoffAddr);
 
     // Map block (matching batch layout)
@@ -2432,7 +2961,15 @@ function renderRouteCard(order) {
     html += '<div class="bv7-stats-bar">';
     html += '<span class="bv7-stats-title">Route</span>';
     html += '<span class="bv7-stats-sep">|</span>';
-    html += '<span class="bv7-stat" id="orderRouteStat_' + escapeAttr(order.ref) + '"><span class="route-info-loading">Calculating...</span></span>';
+    // Show route data immediately if available, otherwise show loading
+    if (order.route_distance_km) {
+        html += '<span class="bv7-stat" id="orderRouteStat_' + escapeAttr(order.ref) + '">';
+        html += '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg> <strong>' + order.route_distance_km + ' km</strong>';
+        if (order.route_duration_min) html += '<span class="bv7-stat-dot">\u2022</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="15" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/></svg> <strong>~' + order.route_duration_min + ' min</strong>';
+        html += '</span>';
+    } else {
+        html += '<span class="bv7-stat" id="orderRouteStat_' + escapeAttr(order.ref) + '"><span class="route-info-loading">Calculating...</span></span>';
+    }
     html += '</div>';
     if (singleAddrs.length > 0) {
         var orderPolyline = order.route_polyline || null;
@@ -2451,44 +2988,68 @@ function renderRouteCard(order) {
 
     // Stops timeline (matching batch bv7 layout)
     html += '<div class="batch-timeline-v7">';
-    // Pickup
-    html += '<div class="bv7-stop">';
-    html += '<div class="bv7-left"><div class="bv7-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div><div class="bv7-line"></div></div>';
-    html += '<div class="bv7-right">';
-    html += '<div class="bv7-label"><span class="route-stop-label">PICKUP</span></div>';
-    html += '<div class="bv7-name">' + escapeHtml(pickup) + '</div>';
-    if (pickupAddr) html += '<div class="bv7-addr">' + escapeHtml(pickupAddr) + '</div>';
-    // Vendor phone + hours
-    if (order.vendor_phone) {
-        html += '<div class="bv7-contact-row">';
-        html += '<a class="bv7-phone" href="tel:' + order.vendor_phone.replace(/[^0-9+]/g, '') + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72"/></svg> ' + escapeHtml(order.vendor_phone) + '</a>';
-        // Default vendor hours Mon-Fri 9-6
-        var vDay = new Date().getDay();
-        var vIsWeekday = (vDay >= 1 && vDay <= 5);
-        var vNowMins = new Date().getHours() * 60 + new Date().getMinutes();
-        html += '<span class="bv7-vdivider"></span>';
-        if (!vIsWeekday) {
-            html += '<span class="bv7-hours"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Closed weekends<span class="bv7-hours-divider"></span><span class="bv7-hours-status closed">Closed</span></span>';
-        } else {
-            var vOpen = (vNowMins >= 540 && vNowMins < 1080);
-            html += '<span class="bv7-hours"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 9:00 - 18:00<span class="bv7-hours-divider"></span><span class="bv7-hours-status ' + (vOpen ? 'open' : 'closed') + '">' + (vOpen ? 'Open' : 'Closed') + '</span></span>';
-        }
-        html += '</div>';
-    }
-    if (pickupAddr) html += '<a class="bv7-nav" href="https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(pickupAddr) + '" target="_blank" rel="noopener"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg></a>';
-    html += '</div></div>';
 
-    // Dropoff
+    // Order item info helper
+    var oQty = order.quantity || 1;
+    var itemHtml = '';
+    itemHtml += '<div class="bv7-items">';
+    itemHtml += '<div class="bv7-item">';
+    itemHtml += '<div class="bv7-item-field"><span class="bv7-item-label">Customer</span><span class="bv7-item-val">' + escapeHtml(order.customer_name) + '</span></div>';
+    itemHtml += '<div class="bv7-item-field"><span class="bv7-item-label">Vendor Ref</span><span class="bv7-item-vref-bold">' + escapeHtml(order.vendor_order_number || 'N/A') + '</span></div>';
+    if (order.tracking) itemHtml += '<div class="bv7-item-field"><span class="bv7-item-label">Barcode</span><span class="bv7-item-val bv7-item-barcode">' + escapeHtml(order.tracking) + '</span></div>';
+    itemHtml += '<div class="bv7-item-bottom-row">';
+    itemHtml += '<span class="bv7-item-boxes"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><path d="M16.5 9.4l-9-5.19M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg> ' + oQty + ' box' + (oQty !== 1 ? 'es' : '') + '</span>';
+    if (order.material || order.size) itemHtml += '<span class="bv7-item-meta">' + escapeHtml(order.material || '') + (order.size ? ' \u00b7 ' + escapeHtml(order.size) : '') + '</span>';
+    if (order.has_issue) itemHtml += '<span class="bv7-item-issue-reported"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Issue</span>';
+    itemHtml += '</div>';
+    if (order.notes) itemHtml += '<div class="bv7-item-field" style="margin-top:4px;"><span class="bv7-item-label">Notes</span><span class="bv7-item-val" style="font-style:italic;color:#6b7280;">' + escapeHtml(order.notes) + '</span></div>';
+    itemHtml += '</div>';
+    itemHtml += '</div>';
+
+    // Pickup — only shown when not in transit
+    if (!isInTransit) {
+        html += '<div class="bv7-stop">';
+        html += '<div class="bv7-left"><div class="bv7-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M16.5 9.4l-9-5.19M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div><div class="bv7-line"></div></div>';
+        html += '<div class="bv7-right">';
+        html += '<div class="bv7-label"><span class="route-stop-label">PICKUP</span></div>';
+        html += '<div class="bv7-name">' + escapeHtml(pickup) + '</div>';
+        if (pickupAddr) html += '<div class="bv7-addr">' + escapeHtml(pickupAddr) + '</div>';
+        if (order.vendor_phone) {
+            html += '<div class="bv7-contact-row">';
+            html += '<a class="bv7-phone" href="tel:' + order.vendor_phone.replace(/[^0-9+]/g, '') + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"/></svg> ' + escapeHtml(order.vendor_phone) + '</a>';
+            var vDay = new Date().getDay();
+            var vIsWeekday = (vDay >= 1 && vDay <= 5);
+            var vNowMins = new Date().getHours() * 60 + new Date().getMinutes();
+            html += '<span class="bv7-vdivider"></span>';
+            if (!vIsWeekday) {
+                html += '<span class="bv7-hours"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Closed weekends<span class="bv7-hours-divider"></span><span class="bv7-hours-status closed">Closed</span></span>';
+            } else {
+                var vOpen = (vNowMins >= 540 && vNowMins < 1080);
+                html += '<span class="bv7-hours"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 9:00 - 18:00<span class="bv7-hours-divider"></span><span class="bv7-hours-status ' + (vOpen ? 'open' : 'closed') + '">' + (vOpen ? 'Open' : 'Closed') + '</span></span>';
+            }
+            html += '</div>';
+        }
+        // Order item info under pickup
+        html += itemHtml;
+        if (pickupAddr) html += '<a class="bv7-nav" href="https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(pickupAddr) + '" target="_blank" rel="noopener"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg></a>';
+        html += '</div></div>';
+    }
+
+    // Dropoff (or "Delivering To" when in transit)
     html += '<div class="bv7-stop">';
     html += '<div class="bv7-left"><div class="bv7-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div></div>';
     html += '<div class="bv7-right">';
-    html += '<div class="bv7-label"><span class="route-stop-label">DROPOFF</span></div>';
+    html += '<div class="bv7-label"><span class="route-stop-label">' + (isInTransit ? 'DELIVERING TO' : 'DROPOFF') + '</span></div>';
     html += '<div class="bv7-name">' + escapeHtml(dropoff) + '</div>';
     if (dropoffAddr) html += '<div class="bv7-addr">' + escapeHtml(dropoffAddr) + '</div>';
-    if (instructions) html += '<div class="bv7-addr" style="color:#3b82f6;font-style:italic;">' + escapeHtml(instructions) + '</div>';
-    // MTCC phone + hours
+    if (instructions) {
+        html += '<div class="bv7-wayfinding"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span>' + escapeHtml(instructions) + '</span></div>';
+    }
+    // When in transit, show order items under dropoff instead
+    if (isInTransit) html += itemHtml;
+    // MTCC phone + hours (building icon for business line)
     html += '<div class="bv7-contact-row">';
-    html += '<a class="bv7-phone" href="tel:' + SUPPORT_PHONES.mtcc.number.replace(/[^0-9+]/g, '') + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72"/></svg> ' + SUPPORT_PHONES.mtcc.number + '</a>';
+    html += '<a class="bv7-phone" href="tel:' + SUPPORT_PHONES.mtcc.number.replace(/[^0-9+]/g, '') + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"/></svg> ' + SUPPORT_PHONES.mtcc.number + '</a>';
     html += '<span class="bv7-vdivider"></span>';
     var mDay = new Date().getDay();
     var mIsWeekday = (mDay >= 1 && mDay <= 5);
@@ -2525,17 +3086,27 @@ function renderPayoutCard(order) {
     return html;
 }
 
-function renderDetailField(label, value) {
-    return '<div class="detail-field"><span class="detail-field-label">' + escapeHtml(label) + '</span><span class="detail-field-value">' + escapeHtml(value || '-') + '</span></div>';
-}
 
 function closeDetailPanel() {
     var panel = document.getElementById('detailPanel');
-    panel.style.transition = '';
-    panel.style.transform = '';
-    panel.classList.remove('active');
-    panel.classList.remove('mtcc-panel');
-    document.getElementById('detailOverlay').classList.remove('active');
+    var overlay = document.getElementById('detailOverlay');
+    // Animate out with explicit transform — no class-based transition conflict
+    panel.style.transition = 'transform 0.25s cubic-bezier(0.4, 0, 1, 1)';
+    panel.style.transform = 'translateY(100%)';
+    overlay.classList.remove('active');
+    // Clean up AFTER animation completes
+    setTimeout(function() {
+        panel.classList.remove('active');
+        panel.classList.remove('mtcc-panel');
+        panel.style.transition = '';
+        panel.style.transform = '';
+        panel.style.removeProperty('--mtcc-header-color');
+        panel.style.removeProperty('--mtcc-header-color-end');
+        if (overlay) {
+            overlay.style.transition = '';
+            overlay.style.opacity = '';
+        }
+    }, 250);
 }
 
 // ============================================
@@ -2572,6 +3143,7 @@ function acceptDelivery(ref, btnEl) {
 // ============================================
 
 function updateOrderStatus(ref, newStatus) {
+    haptic.tap();
     // Check if photo needed
     // Photo required for all deliveries
     if (newStatus === 'delivered' && currentUser.role === 'courier') {
@@ -2591,10 +3163,16 @@ function doStatusUpdate(ref, newStatus, photoData) {
     apiCall('update_status', data, function(result) {
         if (result.success) {
             haptic.confirm();
+            // Show celebration animation for delivery/pickup completion
+            if (newStatus === 'delivered' || newStatus === 'pickedup') {
+                var order = orderCache[ref];
+                showDeliverySuccess(ref, order ? order.customer_name : '');
+            }
             showToast(result.message, 'success');
             closeDetailPanel();
             hideScanResult();
             refreshTab(currentTab);
+            updateNavBadges();
         } else {
             haptic.error();
             showToast(result.error || 'Update failed', 'error');
@@ -2805,7 +3383,7 @@ function updateBatchScanProgress() {
     }
 
     var html = '<div class="bsb-header">';
-    html += '<div class="bsb-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg> Batch ' + escapeHtml(batchScanMode.batchId) + '</div>';
+    html += '<div class="bsb-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16.5 9.4l-9-5.19M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg> Batch ' + escapeHtml(batchScanMode.batchId) + '</div>';
     html += '<button class="bsb-exit" onclick="exitBatchScan()">Done</button>';
     html += '</div>';
     html += '<div class="bsb-progress-bar"><div class="bsb-progress-fill" style="width:' + pct + '%"></div></div>';
@@ -2993,7 +3571,7 @@ function showScanResult(result) {
         statuses.forEach(function(s) {
             var label = s, icon = '';
             if (result.receive_mode && s === 'delivered') { label = 'Confirm Received at MTCC'; icon = '\u2705 '; }
-            else if (s === 'shipped') { label = 'Confirm Pickup'; icon = '\ud83d\udce6 '; }
+            else if (s === 'shipped') { label = 'Confirm Pickup'; icon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16.5 9.4l-9-5.19M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg> '; }
             else if (s === 'delivered') { label = 'Mark Delivered'; icon = '\ud83d\udccd '; }
             else if (s === 'pickedup') { label = 'Confirm Pick Up'; icon = '\ud83e\udd1d '; }
             else if (s === 'dispatched') { label = 'Accept Delivery'; icon = '\u2705 '; }
@@ -3152,7 +3730,7 @@ function closePhotoCapture() {
 function startAutoRefresh() {
     stopAutoRefresh();
     autoRefreshInterval = setInterval(function() {
-        if (currentTab && currentTab !== 'scan' && currentTab !== 'nearby') {
+        if (currentTab && currentTab !== 'scan') {
             refreshTab(currentTab);
         }
     }, 30000);
@@ -3168,6 +3746,77 @@ function stopAutoRefresh() {
 // ============================================
 // Toast Notifications
 // ============================================
+
+// ============================================
+// Quick-Action Messages to Dispatch
+// ============================================
+var quickMessageTemplates = [
+    { type: 'vendor_not_ready', text: 'Vendor not ready — order not available for pickup', icon: '&#x23F3;' },
+    { type: 'running_late', text: 'Running late — delayed ETA', icon: '&#x1F552;' },
+    { type: 'cant_find_location', text: 'Cannot find delivery location', icon: '&#x1F50D;' },
+    { type: 'customer_unavailable', text: 'Customer not available at location', icon: '&#x1F6AB;' },
+    { type: 'order_damaged', text: 'Order appears damaged', icon: '&#x26A0;' },
+    { type: 'need_assistance', text: 'Need assistance from dispatch', icon: '&#x1F6A8;' },
+];
+
+function showQuickMessagePanel(ref) {
+    // Remove existing
+    var existing = document.getElementById('quickMsgPanel');
+    if (existing) existing.remove();
+
+    var overlay = document.createElement('div');
+    overlay.id = 'quickMsgPanel';
+    overlay.className = 'quick-msg-overlay';
+    overlay.onclick = function(e) { if (e.target === overlay) closeQuickMessage(); };
+
+    var html = '<div class="quick-msg-sheet">';
+    html += '<div class="quick-msg-header"><span>Message Dispatch</span><button onclick="closeQuickMessage()">&times;</button></div>';
+    if (ref) html += '<div class="quick-msg-ref">Re: ' + escapeHtml(ref) + '</div>';
+    html += '<div class="quick-msg-list">';
+    quickMessageTemplates.forEach(function(t) {
+        html += '<button class="quick-msg-item" onclick="sendQuickMessage(\'' + escapeAttr(t.type) + '\', \'' + escapeAttr(t.text) + '\', \'' + escapeAttr(ref || '') + '\')">';
+        html += '<span class="quick-msg-icon">' + t.icon + '</span>';
+        html += '<span class="quick-msg-text">' + escapeHtml(t.text) + '</span>';
+        html += '</button>';
+    });
+    html += '</div>';
+    html += '<div class="quick-msg-custom">';
+    html += '<input type="text" id="quickMsgCustom" class="quick-msg-input" placeholder="Add a note (optional)" maxlength="200">';
+    html += '</div>';
+    html += '</div>';
+
+    overlay.innerHTML = html;
+    document.body.appendChild(overlay);
+    haptic.tap();
+}
+
+function sendQuickMessage(type, text, ref) {
+    var customNote = '';
+    var input = document.getElementById('quickMsgCustom');
+    if (input) customNote = input.value.trim();
+
+    closeQuickMessage();
+    showToast('Sending to dispatch...', 'info');
+
+    apiCall('send_quick_message', {
+        message_type: type,
+        message_text: text,
+        ref: ref || '',
+        custom_note: customNote
+    }, function(result) {
+        if (result.success) {
+            haptic.confirm();
+            showToast('Message sent to dispatch', 'success');
+        } else {
+            showToast(result.error || 'Failed to send', 'error');
+        }
+    });
+}
+
+function closeQuickMessage() {
+    var el = document.getElementById('quickMsgPanel');
+    if (el) el.remove();
+}
 
 function showToast(message, type) {
     var container = document.getElementById('toastContainer');
@@ -3206,10 +3855,9 @@ function renderBatchCard(batch, mode) {
 
     var html = '<div class="batch-card' + urgClass + (isActive ? ' batch-active' : '') + (isInProgress ? ' batch-in-progress' : '') + '" data-batch-id="' + escapeAttr(batch.batch_id) + '" data-mode="' + mode + '">';
 
-    // Type banner — always visible, distinguishes batch from single order
+    // Type banner — layers icon + order count, no price
     html += '<div class="batch-type-banner">';
     html += '<div class="btb-left">';
-    html += '<span class="btb-icon">\ud83d\udce6</span> ';
     if (isInProgress) {
         html += '<span class="transit-pulse"></span> <strong>BATCH IN TRANSIT</strong>';
     } else {
@@ -3217,12 +3865,12 @@ function renderBatchCard(batch, mode) {
     }
     html += '</div>';
     html += '<div class="btb-right">';
-    if (batch.event_acronym) html += '<span class="btb-event">' + escapeHtml(batch.event_acronym) + '</span>';
-    if (batch.est_payout && mode !== 'pickup') {
-        html += '<span class="btb-payout">$' + parseFloat(batch.est_payout).toFixed(2) + '</span>';
-    }
+    html += '<span class="btb-orders"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z"/><path d="M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12"/><path d="M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17"/></svg> ' + batch.order_count + ' orders</span>';
     html += '</div>';
     html += '</div>';
+
+    // Divider between banner and due bar
+    html += '<div class="batch-banner-divider"></div>';
 
     // Due bar — consistent format
     if (batch.due_date_formatted) {
@@ -3239,20 +3887,35 @@ function renderBatchCard(batch, mode) {
         html += '</div>';
     }
 
-    // Top row: batch ID + order count
-    html += '<div class="order-card-top" style="padding:10px 16px 0 16px;">';
-    html += '<div class="order-card-top-left">';
-    html += '<div class="batch-id-pill">' + escapeHtml(batch.batch_id) + '</div>';
+    // Top row: batch ID (left) + payout (right) — matching single order layout
     var totalPkgs = 0;
     if (batch.orders) batch.orders.forEach(function(o) { totalPkgs += (o.quantity || 1); });
-    html += '<span class="batch-count-badge">' + batch.order_count + ' orders</span>';
-    if (totalPkgs > 0) html += '<span class="batch-count-badge batch-pkg-count">' + totalPkgs + ' pkg' + (totalPkgs !== 1 ? 's' : '') + '</span>';
+    html += '<div class="order-card-top">';
+    html += '<div class="order-card-top-left">';
+    html += '<div class="order-ref"><span class="ref-label">ID:</span> ' + escapeHtml(batch.batch_id) + '</div>';
     html += '</div>';
+    if (batch.est_payout && mode !== 'pickup') {
+        var bBasePay = 0, bBonusTotal = 0;
+        if (batch.est_payout_breakdown && Array.isArray(batch.est_payout_breakdown)) {
+            batch.est_payout_breakdown.forEach(function(b) {
+                if (b.label === 'Base rate') bBasePay = b.amount;
+                else bBonusTotal += b.amount;
+            });
+        }
+        if (bBasePay === 0) bBasePay = batch.est_payout;
+        html += '<div class="card-payout-area"><div class="card-payout-big">$' + parseFloat(bBasePay).toFixed(2) + '</div>';
+        if (bBonusTotal > 0) html += '<div class="card-payout-bonus">+$' + bBonusTotal.toFixed(2) + ' bonus</div>';
+        html += '</div>';
+    }
     html += '</div>';
 
     // Multi-stop route timeline
     var stops = batch.stops || [];
     var currentIdx = batch.current_stop_index || 0;
+    // Count pickups for numbering (Pickup #1, #2, etc.)
+    var totalPickups = 0;
+    stops.forEach(function(s) { if (s.type === 'pickup') totalPickups++; });
+    var pickupNum = 0;
     if (stops.length > 0) {
     html += '<div class="card-route-vertical">';
     stops.forEach(function(stop, idx) {
@@ -3271,15 +3934,25 @@ function renderBatchCard(batch, mode) {
         if (isDone) {
             html += '<svg class="card-route-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
         } else if (stop.type === 'pickup') {
-            html += '<svg class="card-route-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>';
+            html += '<svg class="card-route-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M16.5 9.4l-9-5.19M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>';
         } else {
             html += '<svg class="card-route-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
         }
         if (idx < stops.length - 1) html += '<div class="card-route-line-v"></div>';
         html += '</div>';
         html += '<div class="card-route-info">';
-        html += '<div class="card-route-label">' + stop.type.toUpperCase() + (isDone ? ' \u2713' : '') + '</div>';
+        // Label: number pickups when multiple
+        var stopLabel = stop.type.toUpperCase();
+        if (stop.type === 'pickup') {
+            pickupNum++;
+            if (totalPickups > 1) stopLabel = 'PICKUP #' + pickupNum;
+        }
+        html += '<div class="card-route-label">' + stopLabel + (isDone ? ' \u2713' : '') + '</div>';
         html += '<div class="card-route-name">' + escapeHtml(stop.name || '') + '</div>';
+        // Address under name
+        var stopAddr = (stop.address || '').replace(/\r\n/g, ', ').replace(/\n/g, ', ');
+        if (stopAddr) html += '<div class="card-route-addr">' + escapeHtml(stopAddr) + '</div>';
+        if (stop.destination_instructions) html += '<div class="card-route-addr card-route-instructions">' + escapeHtml(stop.destination_instructions) + '</div>';
         html += '</div>';
         html += '</div>';
         html += '</div>';
@@ -3304,15 +3977,17 @@ function renderBatchCard(batch, mode) {
     html += '</div>';
     }
 
-    // Route summary bar
-    if (batch.route && (batch.route.distance_km || batch.route.duration_min)) {
-        html += '<div class="batch-route-bar">';
-        html += '<span class="batch-route-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>';
-        if (batch.route.distance_km) html += '<span>Distance: ' + batch.route.distance_km + ' km</span>';
-        if (batch.route.duration_min) html += '<span class="batch-route-sep">\u00b7</span><span>Drive time: ~' + batch.route.duration_min + ' min</span>';
-        html += '<span class="batch-route-sep">\u00b7</span><span>' + stops.length + ' stops</span>';
-        html += '</div>';
+    // Route summary bar — icons only, no text labels (matches detail slideout stats bar)
+    var hasRouteBar = batch.route && (batch.route.distance_km || batch.route.duration_min);
+    html += '<div class="batch-route-bar"' + (!hasRouteBar ? ' style="justify-content:flex-end;"' : '') + '>';
+    if (hasRouteBar) {
+        if (batch.route.distance_km) html += '<span class="batch-route-stat"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg> ' + batch.route.distance_km + ' km</span>';
+        if (batch.route.duration_min) html += '<span class="batch-route-stat"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="15" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/></svg> ~' + batch.route.duration_min + ' min</span>';
+        html += '<span class="batch-route-stat"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M18 8c0 3.613-3.869 7.429-5.393 8.795a1 1 0 0 1-1.214 0C9.87 15.429 6 11.613 6 8a6 6 0 0 1 12 0"/><circle cx="12" cy="8" r="2"/><path d="M8.714 14h-3.71a1 1 0 0 0-.948.683l-2.004 6A1 1 0 0 0 3 22h18a1 1 0 0 0 .948-1.316l-2-6a1 1 0 0 0-.949-.684h-3.712"/></svg> ' + stops.length + ' stop' + (stops.length !== 1 ? 's' : '') + '</span>';
     }
+    // Package count — right-aligned
+    if (totalPkgs > 0) html += '<span class="batch-route-stat batch-route-pkgs"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M16.5 9.4l-9-5.19M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg> ' + totalPkgs + ' pkg' + (totalPkgs !== 1 ? 's' : '') + '</span>';
+    html += '</div>';
 
     // Destinations summary (if stops empty but destinations available)
     if (stops.length === 0 && batch.destinations && batch.destinations.length > 0) {
@@ -3423,7 +4098,11 @@ function showBatchDetail(batchId, mode) {
     var panel = document.getElementById('detailPanel');
     var overlay = document.getElementById('detailOverlay');
     var content = document.getElementById('detailContent');
+    var panelHeader = document.getElementById('detailPanelHeader');
     if (!panel || !content) return;
+    // Clear any leftover inline styles from close animation
+    panel.style.transition = '';
+    panel.style.transform = '';
 
     // Fix 4: Batch header handle colored
     var batchColor = '#7c3aed'; // default violet
@@ -3439,21 +4118,23 @@ function showBatchDetail(batchId, mode) {
     var statusLabelsMap = { pending: 'Pending', dispatched: 'Dispatched', accepted: 'Accepted', in_progress: 'In Transit', completed: 'Completed', cancelled: 'Cancelled', suggested: 'Suggested' };
     var batchStatus = statusLabelsMap[batch.status] || batch.status;
     var badgeClass = 'badge-' + batch.status;
-    var phoneIcon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>';
+    var phoneIcon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"/></svg>';
 
-    var html = '';
-
-    // Due date — full day name format with badge
+    // Due date — fixed header (never scrolls)
+    var headerHtml = '';
     if (batch.due_date_formatted) {
         var batchTimeLabel = batch.due_time_formatted || 'Anytime';
-        html += '<div class="detail-due-bar">';
-        html += '<div class="detail-due-left">';
-        html += '<span class="detail-due-heading">DUE DATE</span>';
-        html += '<span class="detail-due-date">' + escapeHtml(batch.due_date_formatted) + '  |  <span class="detail-due-by">by:</span> ' + escapeHtml(batchTimeLabel) + '</span>';
-        html += '</div>';
-        html += '<span class="order-status-badge badge-' + batch.status + ' mtcc-header-badge">' + batchStatus + '</span>';
-        html += '</div>';
+        headerHtml += '<div class="detail-due-bar" onclick="closeDetailPanel()">';
+        headerHtml += '<div class="detail-due-left">';
+        headerHtml += '<span class="detail-due-heading">DUE DATE</span>';
+        headerHtml += '<span class="detail-due-date">' + escapeHtml(batch.due_date_formatted) + '  |  <span class="detail-due-by">by:</span> ' + escapeHtml(batchTimeLabel) + '</span>';
+        headerHtml += '</div>';
+        headerHtml += '<span class="order-status-badge badge-' + batch.status + ' mtcc-header-badge">' + batchStatus + '</span>';
+        headerHtml += '</div>';
     }
+    if (panelHeader) panelHeader.innerHTML = headerHtml;
+
+    var html = '';
 
     // Header — BATCH ID label above ID, payout with label
     html += '<div class="detail-order-header">';
@@ -3484,11 +4165,11 @@ function showBatchDetail(batchId, mode) {
         html += '<div class="bv7-stats-bar">';
         html += '<span class="bv7-stats-title">Route</span>';
         html += '<span class="bv7-stats-sep">|</span>';
-        html += '<span class="bv7-stat"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg> <strong>' + (batch.route.distance_km || '?') + ' km</strong></span>';
+        html += '<span class="bv7-stat"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg> <strong>' + (batch.route.distance_km || '?') + ' km</strong></span>';
         html += '<span class="bv7-stat-dot">\u2022</span>';
-        html += '<span class="bv7-stat"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> <strong>~' + (batch.route.duration_min || '?') + ' min</strong></span>';
+        html += '<span class="bv7-stat"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="15" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/></svg> <strong>~' + (batch.route.duration_min || '?') + ' min</strong></span>';
         html += '<span class="bv7-stat-dot">\u2022</span>';
-        html += '<span class="bv7-stat"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> <strong>' + pickupCount + ' stop' + (pickupCount !== 1 ? 's' : '') + '</strong></span>';
+        html += '<span class="bv7-stat"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M18 8c0 3.613-3.869 7.429-5.393 8.795a1 1 0 0 1-1.214 0C9.87 15.429 6 11.613 6 8a6 6 0 0 1 12 0"/><circle cx="12" cy="8" r="2"/><path d="M8.714 14h-3.71a1 1 0 0 0-.948.683l-2.004 6A1 1 0 0 0 3 22h18a1 1 0 0 0 .948-1.316l-2-6a1 1 0 0 0-.949-.684h-3.712"/></svg> <strong>' + pickupCount + ' stop' + (pickupCount !== 1 ? 's' : '') + '</strong></span>';
         html += '</div>';
     }
     if (mapAddresses.length >= 1) {
@@ -3518,6 +4199,13 @@ function showBatchDetail(batchId, mode) {
         html += '</div>';
     }
 
+    // Optimize Route button (only for active batches with 2+ stops)
+    if (isActive && stops.length >= 2) {
+        // Store stop coords for the optimize function
+        window._optimizeStops = stops.filter(function(s) { return s.coords; }).map(function(s) { return { lat: s.coords.lat || s.coords[0], lng: s.coords.lng || s.coords[1], address: s.address || '' }; });
+        html += '<div style="padding:8px 0;"><button class="route-optimize-btn" onclick="optimizeRoute(window._optimizeStops, this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg> Optimize Route</button></div>';
+    }
+
     // Divider between map section and stops
     html += '<div style="height:1px;background:#e5e7eb;margin:16px 16px;"></div>';
 
@@ -3542,7 +4230,7 @@ function showBatchDetail(batchId, mode) {
         if (isDone) {
             html += '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
         } else if (isPickup) {
-            html += '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>';
+            html += '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M16.5 9.4l-9-5.19M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>';
         } else {
             html += '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
         }
@@ -3570,7 +4258,7 @@ function showBatchDetail(batchId, mode) {
         if (vendorPhone || vendorHours || !isPickup) {
             html += '<div class="bv7-contact-row">';
             if (vendorPhone) {
-                html += '<a class="bv7-phone" href="tel:' + vendorPhone.replace(/[^0-9+]/g, '') + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg> ' + escapeHtml(vendorPhone) + '</a>';
+                html += '<a class="bv7-phone" href="tel:' + vendorPhone.replace(/[^0-9+]/g, '') + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"/></svg> ' + escapeHtml(vendorPhone) + '</a>';
             }
             if (vendorPhone && vendorHours) html += '<span class="bv7-vdivider"></span>';
             if (vendorHours) {
@@ -3596,7 +4284,7 @@ function showBatchDetail(batchId, mode) {
             }
             // MTCC phone + hours for dropoff stops
             if (!isPickup) {
-                html += '<a class="bv7-phone" href="tel:' + SUPPORT_PHONES.mtcc.number.replace(/[^0-9+]/g, '') + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg> ' + SUPPORT_PHONES.mtcc.number + '</a>';
+                html += '<a class="bv7-phone" href="tel:' + SUPPORT_PHONES.mtcc.number.replace(/[^0-9+]/g, '') + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"/></svg> ' + SUPPORT_PHONES.mtcc.number + '</a>';
                 html += '<span class="bv7-vdivider"></span>';
                 // MTCC hours: Mon-Fri 9am-4pm
                 var mtccHoursText = '9:00 - 16:00';
@@ -3627,9 +4315,10 @@ function showBatchDetail(batchId, mode) {
                 html += '<div class="bv7-item-field"><span class="bv7-item-label">Order ID</span><span class="bv7-item-ref">' + escapeHtml(oRef) + '</span></div>';
                 html += '<div class="bv7-item-field"><span class="bv7-item-label">Customer</span><span class="bv7-item-val">' + escapeHtml(o.customer_name || '') + '</span></div>';
                 html += '<div class="bv7-item-field"><span class="bv7-item-label">Vendor Ref</span><span class="bv7-item-vref-bold">' + escapeHtml(o.vendor_order_number || 'N/A') + '</span></div>';
+                if (o.tracking) html += '<div class="bv7-item-field"><span class="bv7-item-label">Barcode</span><span class="bv7-item-val bv7-item-barcode">' + escapeHtml(o.tracking) + '</span></div>';
                 // Box count + issue on same row
                 html += '<div class="bv7-item-bottom-row">';
-                html += '<span class="bv7-item-boxes"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg> ' + qty + ' box' + (qty !== 1 ? 'es' : '') + '</span>';
+                html += '<span class="bv7-item-boxes"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><path d="M16.5 9.4l-9-5.19M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg> ' + qty + ' box' + (qty !== 1 ? 'es' : '') + '</span>';
                 if (typeof CourierIssues !== 'undefined') {
                     if (o.has_issue) {
                         html += '<span class="bv7-item-issue-reported"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Issue Reported</span>';
@@ -3683,35 +4372,33 @@ function showBatchDetail(batchId, mode) {
         html += ' Accept Batch (' + batch.order_count + ' orders)</button>';
     }
 
-    // Report Issue — opens batch order selection
-    if (typeof CourierIssues !== 'undefined' && isActive) {
-        // Store batch orders in global for onclick access (avoids JSON escaping issues)
-        window._batchIssueOrders = orders.map(function(o) { return { ref: o.ref, customer_name: o.customer_name }; });
-        window._batchIssueId = batch.batch_id;
-        html += '<button class="release-btn bt-full-btn" style="border-color:#d97706;color:#d97706;" onclick="CourierIssues.openBatch(window._batchIssueId, window._batchIssueOrders)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Report Issue</button>';
-    }
-
-    // Quick connect — label left, icon buttons right
-    html += '<div class="bv7-quick-connect">';
-    html += '<div class="bv7-qc-label"><span class="bv7-qc-name">Print Stuff Support</span><span class="bv7-qc-num">' + SUPPORT_PHONES.admin.number + '</span></div>';
-    html += '<div class="bv7-qc-buttons">';
-    html += '<a class="bv7-qc-btn" href="https://tawk.to/chat/69bcadcf600a121c36fa7a4b/1jk4gdsmg" target="_blank" rel="noopener" title="Live Chat"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></a>';
-    html += '<a class="bv7-qc-btn" href="tel:' + SUPPORT_PHONES.admin.number.replace(/[^0-9+]/g, '') + '" title="Call"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg></a>';
-    html += '</div>';
-    html += '</div>';
-
-    // Release — at very bottom
+    // Release + Report Issue — same row (matching single order layout)
     var batchPin = batch.courier_pin || (batch.courier ? batch.courier.pin : '') || '';
     var canRelease = false;
     if (batch.status === 'accepted' || batch.status === 'dispatched') {
         if (currentUser.role === 'courier' && batchPin === currentUser.pin) canRelease = true;
         if (currentUser.role === 'admin' || currentUser.role === 'mtcc_staff') canRelease = true;
     }
-    if (canRelease) {
-        html += '<div class="bt-release-section">';
-        html += '<button class="release-btn bt-full-btn" onclick="releaseBatch(\'' + escapeAttr(batch.batch_id) + '\', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg> Release Batch</button>';
+    var hasIssueBtn = (typeof CourierIssues !== 'undefined' && isActive);
+    if (canRelease || hasIssueBtn) {
+        if (hasIssueBtn) {
+            window._batchIssueOrders = orders.map(function(o) { return { ref: o.ref, customer_name: o.customer_name }; });
+            window._batchIssueId = batch.batch_id;
+        }
+        html += '<div class="courier-btn-row" style="margin:8px 14px;">';
+        if (canRelease) html += '<button class="release-btn" onclick="releaseBatch(\'' + escapeAttr(batch.batch_id) + '\', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg> Release</button>';
+        if (hasIssueBtn) html += '<button class="release-btn" style="border-color:#d97706;color:#d97706;" onclick="CourierIssues.openBatch(window._batchIssueId, window._batchIssueOrders)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Report Issue</button>';
         html += '</div>';
     }
+
+    // Quick connect — label left, icon buttons right (no phone number shown)
+    html += '<div class="bv7-quick-connect">';
+    html += '<div class="bv7-qc-label"><span class="bv7-qc-name bv7-qc-name-lg">Print Stuff Support</span></div>';
+    html += '<div class="bv7-qc-buttons">';
+    html += '<a class="bv7-qc-btn" href="https://tawk.to/chat/69bcadcf600a121c36fa7a4b/1jk4gdsmg" target="_blank" rel="noopener" title="Live Chat"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></a>';
+    html += '<a class="bv7-qc-btn" href="tel:' + SUPPORT_PHONES.admin.number.replace(/[^0-9+]/g, '') + '" title="Call"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"/></svg></a>';
+    html += '</div>';
+    html += '</div>';
 
     html += '</div>'; // bt-bottom-actions
 
@@ -3725,7 +4412,7 @@ function showBatchDetail(batchId, mode) {
         window._batchScanId = batch.batch_id;
         html += '<div class="courier-sticky-action">';
         html += '<button class="status-action-btn btn-scan-goto" onclick="startBatchScan(window._batchScanId, window._batchScanRefs)">';
-        html += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="6" y1="8" x2="6" y2="16"/><line x1="10" y1="8" x2="10" y2="16"/><line x1="14" y1="8" x2="14" y2="16"/><line x1="18" y1="8" x2="18" y2="16"/></svg>';
+        html += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M8 7v10"/><path d="M12 7v10"/><path d="M17 7v10"/></svg>';
         html += ' Scan Batch Items (' + alreadyScanned + '/' + batchRefs.length + ' picked up)</button>';
         html += '</div>';
     }
@@ -3790,6 +4477,7 @@ function acceptBatch(batchId, btnEl) {
 // ============================================
 
 function releaseDelivery(ref, btnEl) {
+    haptic.warning();
     if (!confirm('Release this order back to the available queue?\n\nThe order will be unassigned from you and other couriers can pick it up.')) return;
     
     if (btnEl) {
@@ -3828,6 +4516,7 @@ function releaseDelivery(ref, btnEl) {
 }
 
 function releaseBatch(batchId, btnEl) {
+    haptic.warning();
     var batch = batchCache[batchId];
     var count = batch ? batch.order_count : '?';
     if (!confirm('Release this entire batch (' + count + ' orders) back to the available queue?\n\nAll orders will be unassigned.')) return;
@@ -3891,10 +4580,10 @@ function getTabIcon(iconId) {
     var icons = {
         deliveries: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5a2 2 0 0 1-2 2"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>',
         available: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
-        scan: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="17" y2="12"/></svg>',
+        scan: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M8 7v10"/><path d="M12 7v10"/><path d="M17 7v10"/></svg>',
         nearby: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>',
         earnings: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
-        pickup: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>',
+        pickup: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16.5 9.4l-9-5.19M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>',
         activity: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
         history: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
         dashboard: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>',
@@ -3949,8 +4638,13 @@ function isPanelOpen() {
 }
 
 document.addEventListener('touchstart', function(e) {
-    // Block pull if any overlay/panel is open (fixes Chrome iOS bug)
+    // Block pull if any overlay/panel is open
     if (isPanelOpen()) return;
+    // Block pull on login screen
+    var loginScreen = document.getElementById('loginScreen');
+    if (loginScreen && loginScreen.classList.contains('active')) return;
+    // Block pull when map view is active (conflicts with map drag)
+    if (currentTab === 'available' && availableMode === 'map') return;
     var appContent = document.getElementById('appContent');
     if (!appContent) return;
     var activeBody = appContent.querySelector('.tab-pane.active .tab-body');
@@ -4042,55 +4736,102 @@ document.addEventListener('touchend', function() {
 // ============================================
 // Detail Panel Swipe-Down to Close
 // ============================================
+// Industry-standard sheet physics:
+//   - Velocity-based dismiss (fast flick = close even if short distance)
+//   - Progressive resistance (harder to pull the further you go)
+//   - Proportional overlay fade during drag
+//   - Rubber-band upward drag
+//   - Spring overshoot on snap-back
 var panelSwipe = {
     startY: 0,
+    startTime: 0,
     dist: 0,
-    swiping: false,
-    threshold: 80
+    lastY: 0,
+    lastTime: 0,
+    velocity: 0,
+    swiping: false
 };
 
 function initPanelSwipe() {
     var panel = document.getElementById('detailPanel');
-    var handle = panel ? panel.querySelector('.detail-handle') : null;
+    var overlay = document.getElementById('detailOverlay');
     var contentEl = panel ? panel.querySelector('.detail-content') : null;
     if (!panel) return;
 
-    // Start swipe on handle OR if content is scrolled to top
     panel.addEventListener('touchstart', function(e) {
         if (!panel.classList.contains('active')) return;
-        var isHandle = handle && handle.contains(e.target);
+        var headerEl = document.getElementById('detailPanelHeader');
+        var isHandle = headerEl && headerEl.contains(e.target);
         var contentScrolled = contentEl && contentEl.scrollTop > 5;
-        // Allow swipe from handle always, or from content if at scroll top
         if (isHandle || !contentScrolled) {
             panelSwipe.startY = e.touches[0].clientY;
+            panelSwipe.startTime = Date.now();
+            panelSwipe.lastY = panelSwipe.startY;
+            panelSwipe.lastTime = panelSwipe.startTime;
+            panelSwipe.velocity = 0;
             panelSwipe.swiping = true;
             panelSwipe.dist = 0;
             panel.style.transition = 'none';
+            if (overlay) overlay.style.transition = 'none';
         }
     }, { passive: true });
 
     panel.addEventListener('touchmove', function(e) {
         if (!panelSwipe.swiping) return;
-        panelSwipe.dist = e.touches[0].clientY - panelSwipe.startY;
-        if (panelSwipe.dist < 0) { panelSwipe.dist = 0; return; }
-        // Apply elastic drag
-        var elastic = panelSwipe.dist * 0.6;
+        var currentY = e.touches[0].clientY;
+        var now = Date.now();
+        panelSwipe.dist = currentY - panelSwipe.startY;
+
+        // Track velocity (px/ms) using last 2 points
+        var dt = now - panelSwipe.lastTime;
+        if (dt > 0) panelSwipe.velocity = (currentY - panelSwipe.lastY) / dt;
+        panelSwipe.lastY = currentY;
+        panelSwipe.lastTime = now;
+
+        // Progressive resistance — logarithmic curve feels physical
+        var maxDrag = 400;
+        var elastic;
+        if (panelSwipe.dist > 0) {
+            // Downward: progressive resistance (starts easy, gets harder)
+            elastic = maxDrag * Math.log(1 + panelSwipe.dist / maxDrag) * 1.2;
+        } else {
+            // Upward: strong rubber-band (only allows ~20px overshoot)
+            elastic = 20 * Math.log(1 + Math.abs(panelSwipe.dist) / 80) * -1;
+        }
         panel.style.transform = 'translateY(' + elastic + 'px)';
+
+        // Proportional overlay fade (1.0 at top → 0 when near dismiss)
+        if (overlay && panelSwipe.dist > 0) {
+            var progress = Math.min(elastic / 200, 1);
+            overlay.style.opacity = 1 - progress * 0.7;
+        }
     }, { passive: true });
 
     panel.addEventListener('touchend', function() {
         if (!panelSwipe.swiping) return;
         panelSwipe.swiping = false;
-        panel.style.transition = '';
 
-        if (panelSwipe.dist > panelSwipe.threshold) {
+        // Velocity-based dismiss: fast flick (>0.5px/ms) OR distance > 100px
+        var shouldClose = (panelSwipe.velocity > 0.5 && panelSwipe.dist > 20) ||
+                          (panelSwipe.dist > 100);
+
+        if (shouldClose) {
+            // Close: fast exit
+            panel.style.transition = 'transform 0.22s cubic-bezier(0.4, 0, 1, 1)';
+            if (overlay) overlay.style.transition = 'opacity 0.22s ease';
             haptic.tap();
             closeDetailPanel();
         } else {
-            // Snap back
+            // Snap back: spring with slight overshoot
+            panel.style.transition = 'transform 0.35s cubic-bezier(0.32, 0.72, 0, 1)';
             panel.style.transform = 'translateY(0)';
+            if (overlay) {
+                overlay.style.transition = 'opacity 0.3s ease';
+                overlay.style.opacity = '';
+            }
         }
         panelSwipe.dist = 0;
+        panelSwipe.velocity = 0;
     }, { passive: true });
 }
 
@@ -4152,13 +4893,28 @@ function doLogout() {
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize audio on first touch/click (required for iOS)
-    var initOnInteraction = function() {
+    // iOS audio unlock — must happen during direct user gesture
+    // AudioContext for beep tones (success/error/warning/confirm)
+    var audioUnlocked = false;
+    var unlockAudio = function() {
+        if (audioUnlocked) return;
         haptic.initAudio();
-        document.removeEventListener('touchstart', initOnInteraction);
-        document.removeEventListener('click', initOnInteraction);
+        // Create the hidden switch + label for iOS haptic
+        haptic._initHaptic();
+        if (haptic.audioCtx) {
+            haptic.audioCtx.resume().then(function() {
+                if (haptic.audioCtx.state === 'running') {
+                    audioUnlocked = true;
+                    document.removeEventListener('touchstart', unlockAudio);
+                    document.removeEventListener('touchend', unlockAudio);
+                    document.removeEventListener('click', unlockAudio);
+                }
+            }).catch(function(){});
+        }
     };
-    document.addEventListener('touchstart', initOnInteraction, { once: true });
-    document.addEventListener('click', initOnInteraction, { once: true });
+    document.addEventListener('touchstart', unlockAudio, { passive: true });
+    document.addEventListener('touchend', unlockAudio, { passive: true });
+    document.addEventListener('click', unlockAudio);
 
     // Init panel swipe-to-close
     initPanelSwipe();
@@ -4179,6 +4935,594 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').catch(function() {});
 }
 
+// Initialize offline queue
+loadOfflineQueue();
+
+// ============================================
+// Courier Location Reporting (for live tracking)
+// ============================================
+var locationReportInterval = null;
+
+function startLocationReporting() {
+    if (locationReportInterval || !navigator.geolocation) return;
+    if (!currentUser || currentUser.role !== 'courier') return;
+
+    locationReportInterval = setInterval(function() {
+        // Only report if courier has active deliveries
+        var hasActive = cachedActive && cachedActive.some(function(o) {
+            return o.status === 'shipped' || o.status === 'dispatched';
+        });
+        if (!hasActive) return;
+
+        navigator.geolocation.getCurrentPosition(function(pos) {
+            apiCall('update_location', {
+                lat: pos.coords.latitude,
+                lng: pos.coords.longitude
+            }, function() {}); // fire and forget
+        }, null, { enableHighAccuracy: true, timeout: 5000 });
+    }, 30000); // every 30 seconds
+}
+
+function stopLocationReporting() {
+    if (locationReportInterval) {
+        clearInterval(locationReportInterval);
+        locationReportInterval = null;
+    }
+}
+
+// Offline/online indicator
+window.addEventListener('online', function() {
+    var bar = document.getElementById('offlineBar');
+    if (bar) bar.style.display = 'none';
+    // Process any queued offline actions
+    if (offlineQueue.length > 0) {
+        showToast('Back online — syncing ' + offlineQueue.length + ' pending action' + (offlineQueue.length !== 1 ? 's' : ''), 'info');
+        setTimeout(processOfflineQueue, 1000);
+    }
+    // Refresh data when back online
+    if (currentUser) refreshTab(currentTab);
+});
+window.addEventListener('offline', function() {
+    var bar = document.getElementById('offlineBar');
+    if (!bar) {
+        bar = document.createElement('div');
+        bar.id = 'offlineBar';
+        bar.className = 'offline-bar';
+        bar.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/><line x1="1" y1="1" x2="23" y2="23"/></svg> You are offline — showing cached data';
+        document.body.insertBefore(bar, document.body.firstChild);
+    }
+    bar.style.display = 'flex';
+});
+
+// ============================================
+// Delivery Confirmation Animation
+// ============================================
+
+function showDeliverySuccess(ref, customerName) {
+    haptic.confirm();
+    var overlay = document.createElement('div');
+    overlay.className = 'delivery-success-overlay';
+    overlay.innerHTML = '<div class="delivery-success-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>' +
+        '<div class="delivery-success-text">Delivered!</div>' +
+        '<div class="delivery-success-sub">' + escapeHtml(ref) + (customerName ? ' \u2022 ' + escapeHtml(customerName) : '') + '</div>';
+    document.body.appendChild(overlay);
+    setTimeout(function() {
+        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    }, 2600);
+}
+
+// ============================================
+// Skeleton Loading Screens
+// ============================================
+
+function renderSkeletonCards(count) {
+    var html = '';
+    for (var i = 0; i < (count || 3); i++) {
+        html += '<div class="skeleton-card">';
+        html += '<div class="skeleton skeleton-text" style="width:70%;"></div>';
+        html += '<div class="skeleton skeleton-title"></div>';
+        html += '<div class="skeleton skeleton-text-sm"></div>';
+        html += '<div class="skeleton skeleton-block"></div>';
+        html += '<div class="skeleton skeleton-text" style="width:50%;"></div>';
+        html += '</div>';
+    }
+    return html;
+}
+
+// ============================================
+// Order Count Badges on Nav Tabs
+// ============================================
+
+function updateNavBadges() {
+    // Count active deliveries
+    var deliveryCount = cachedActive ? cachedActive.length : 0;
+    var availableCount = (cachedAvailActive ? cachedAvailActive.length : 0) + (cachedAvailUpcoming ? cachedAvailUpcoming.length : 0);
+
+    // Update badge on deliveries tab
+    var navItems = document.querySelectorAll('.nav-item');
+    navItems.forEach(function(item) {
+        var tab = item.getAttribute('data-tab');
+        var existing = item.querySelector('.nav-badge');
+        if (existing) existing.remove();
+
+        var count = 0;
+        if (tab === 'deliveries' && deliveryCount > 0) count = deliveryCount;
+        else if (tab === 'available' && availableCount > 0) count = availableCount;
+
+        if (count > 0) {
+            var badge = document.createElement('span');
+            badge.className = 'nav-badge';
+            badge.textContent = count > 99 ? '99+' : count;
+            item.appendChild(badge);
+        }
+    });
+}
+
+// ============================================
+// Running Earnings Ticker
+// ============================================
+
+var earningsTickerEl = null;
+
+function initEarningsTicker() {
+    if (currentUser && currentUser.role !== 'courier') return;
+    if (earningsTickerEl) return;
+    earningsTickerEl = document.createElement('div');
+    earningsTickerEl.className = 'earnings-ticker';
+    earningsTickerEl.id = 'earningsTicker';
+    document.body.appendChild(earningsTickerEl);
+}
+
+function updateEarningsTicker(amount) {
+    if (!earningsTickerEl) initEarningsTicker();
+    if (!earningsTickerEl) return;
+    if (amount > 0) {
+        earningsTickerEl.textContent = 'Today: $' + parseFloat(amount).toFixed(2);
+        earningsTickerEl.classList.add('visible');
+    } else {
+        earningsTickerEl.classList.remove('visible');
+    }
+}
+
+// Poll earnings ticker every 60 seconds (lightweight — only updates the ticker, not the full earnings tab)
+var earningsTickerInterval = null;
+
+function startEarningsTickerPolling() {
+    if (earningsTickerInterval) return;
+    if (!currentUser || currentUser.role !== 'courier') return;
+    // Initial fetch
+    pollEarningsTicker();
+    // Poll every 60 seconds
+    earningsTickerInterval = setInterval(pollEarningsTicker, 60000);
+}
+
+function pollEarningsTicker() {
+    apiCall('get_earnings', null, function(result) {
+        if (result.success && result.summary) {
+            updateEarningsTicker(result.summary.today);
+        }
+    });
+}
+
+function stopEarningsTickerPolling() {
+    if (earningsTickerInterval) {
+        clearInterval(earningsTickerInterval);
+        earningsTickerInterval = null;
+    }
+}
+
+// ============================================
+// Notification Polling (Push-like alerts)
+// ============================================
+var notifPollInterval = null;
+var lastNotifTimestamp = null;
+var seenNotifIds = {};
+
+function startNotificationPolling() {
+    if (notifPollInterval) return;
+    if (!currentUser || currentUser.role === 'mtcc_staff') return;
+    // Initial timestamp = now (don't show old notifications)
+    lastNotifTimestamp = new Date().toISOString();
+    // Poll every 30 seconds
+    notifPollInterval = setInterval(pollNotifications, 30000);
+}
+
+function pollNotifications() {
+    if (!navigator.onLine) return;
+    var params = {};
+    if (lastNotifTimestamp) params.since = lastNotifTimestamp;
+
+    apiCall('get_notifications', params, function(result) {
+        if (!result.success || !result.notifications) return;
+        var notifs = result.notifications;
+        if (notifs.length === 0) return;
+
+        notifs.forEach(function(n) {
+            if (seenNotifIds[n.id]) return;
+            seenNotifIds[n.id] = true;
+
+            // In-app toast
+            showToast(n.title + (n.message ? ': ' + n.message : ''), 'info');
+            haptic.tap();
+
+            // Browser notification (if permitted)
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification(n.title, {
+                    body: n.message || '',
+                    icon: '../assets/logo.png',
+                    tag: 'notif_' + n.id
+                });
+            }
+        });
+
+        // Update timestamp to latest notification
+        var latest = notifs[0];
+        if (latest && latest.created_at) {
+            lastNotifTimestamp = latest.created_at;
+        }
+    }, true); // skipQueue — don't queue notification polls
+}
+
+function stopNotificationPolling() {
+    if (notifPollInterval) {
+        clearInterval(notifPollInterval);
+        notifPollInterval = null;
+    }
+}
+
+// ============================================
+// Live ETA Countdown
+// ============================================
+
+var etaIntervals = {};
+
+function startETACountdown(ref, durationMin) {
+    if (!durationMin || etaIntervals[ref]) return;
+    var endTime = Date.now() + (durationMin * 60 * 1000);
+    // Try the dedicated ETA element, or fall back to the route stat element
+    var el = document.getElementById('eta_' + ref) || document.getElementById('orderRouteStat_' + ref);
+    if (!el) return;
+
+    etaIntervals[ref] = setInterval(function() {
+        var remaining = endTime - Date.now();
+        if (remaining <= 0) {
+            el.textContent = 'Arriving';
+            el.style.color = '#16a34a';
+            clearInterval(etaIntervals[ref]);
+            delete etaIntervals[ref];
+            return;
+        }
+        var mins = Math.ceil(remaining / 60000);
+        el.textContent = '~' + mins + ' min';
+        if (mins <= 5) el.style.color = '#d97706';
+        if (mins <= 2) el.style.color = '#dc2626';
+    }, 15000); // update every 15s
+}
+
+function clearAllETAs() {
+    Object.keys(etaIntervals).forEach(function(ref) {
+        clearInterval(etaIntervals[ref]);
+    });
+    etaIntervals = {};
+}
+
+// ============================================
+// Route Optimization (GPS-based)
+// ============================================
+
+function optimizeRoute(stops, btnEl) {
+    if (!stops || stops.length < 2) {
+        showToast('Need at least 2 stops to optimize', 'error');
+        return;
+    }
+    haptic.tap();
+
+    if (btnEl) {
+        btnEl.disabled = true;
+        btnEl.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Optimizing...';
+    }
+
+    // Get courier's current GPS position
+    if (!navigator.geolocation) {
+        showToast('GPS not available', 'error');
+        if (btnEl) { btnEl.disabled = false; btnEl.innerHTML = 'Optimize Route'; }
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(function(pos) {
+        var stopCoords = stops.map(function(s) {
+            return { lat: s.lat, lng: s.lng };
+        });
+
+        apiCall('optimize_route', {
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+            stops: JSON.stringify(stopCoords)
+        }, function(result) {
+            if (result.success) {
+                haptic.confirm();
+                showToast('Route optimized! ' + result.distance_km + ' km, ~' + result.duration_min + ' min', 'success');
+
+                // Reorder the stops based on optimized_order
+                if (result.optimized_order && result.optimized_order.length > 0) {
+                    var reordered = result.optimized_order.map(function(idx) { return stops[idx]; });
+                    // Update the map if visible
+                    var mapImg = document.querySelector('.bv7-map-img');
+                    if (mapImg && result.polyline) {
+                        var addrs = reordered.map(function(s) { return s.address; }).filter(Boolean);
+                        if (addrs.length > 0) mapImg.src = buildStaticMapUrl(addrs, 600, 250, result.polyline);
+                    }
+                    // Update stats
+                    var statEl = document.querySelector('.bv7-stats-bar .bv7-stat');
+                    if (statEl) {
+                        statEl.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg> <strong>' + result.distance_km + ' km</strong>' +
+                            '<span class="bv7-stat-dot">\u2022</span>' +
+                            '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="15" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/></svg> <strong>~' + result.duration_min + ' min</strong>';
+                    }
+                }
+
+                if (btnEl) {
+                    btnEl.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Optimized!';
+                    btnEl.style.borderColor = '#059669';
+                    btnEl.style.color = '#059669';
+                }
+            } else {
+                haptic.error();
+                showToast(result.error || 'Optimization failed', 'error');
+                if (btnEl) { btnEl.disabled = false; btnEl.innerHTML = 'Optimize Route'; }
+            }
+        });
+    }, function(err) {
+        haptic.error();
+        showToast('Could not get your location', 'error');
+        if (btnEl) { btnEl.disabled = false; btnEl.innerHTML = 'Optimize Route'; }
+    }, { enableHighAccuracy: true, timeout: 10000 });
+}
+
+// ============================================
+// Smart Proximity Notifications
+// ============================================
+
+var proximityWatchId = null;
+// ============================================
+// In-App Courier Tracking (MTCC Staff)
+// ============================================
+
+var _trackingInterval = null;
+
+function showCourierTracking(ref) {
+    var panel = document.getElementById('detailPanel');
+    var overlay = document.getElementById('detailOverlay');
+    var content = document.getElementById('detailContent');
+    var panelHeader = document.getElementById('detailPanelHeader');
+    panel.style.transition = '';
+    panel.style.transform = '';
+    overlay.style.transition = '';
+    overlay.style.opacity = '';
+
+    setPanelGradient(panel, '#14b8a6');
+    panel.classList.add('mtcc-panel');
+
+    // Header
+    var headerHtml = '<div class="detail-due-bar" onclick="closeDetailPanel()">';
+    headerHtml += '<div class="detail-due-left">';
+    headerHtml += '<span class="detail-due-heading">LIVE TRACKING</span>';
+    headerHtml += '<span class="detail-due-date">' + escapeHtml(ref) + '</span>';
+    headerHtml += '</div>';
+    headerHtml += '<span class="order-status-badge badge-shipped mtcc-header-badge">Live</span>';
+    headerHtml += '</div>';
+    if (panelHeader) panelHeader.innerHTML = headerHtml;
+
+    // Content — map + status
+    var html = '<div style="padding-top:14px;">';
+    html += '<div id="trackingMapContainer" style="width:100%;height:300px;border-radius:var(--radius);overflow:hidden;border:1px solid #e5e7eb;"></div>';
+    html += '<div id="trackingEta" style="text-align:center;padding:16px;font-size:1rem;font-weight:700;color:#7c3aed;">Loading...</div>';
+    html += '<div id="trackingStatus" style="text-align:center;padding:0 16px 8px;font-size:0.78rem;color:#6b7280;"></div>';
+
+    // Back to order button
+    html += '<button class="route-optimize-btn" style="margin-top:8px;" onclick="haptic.tap(); closeDetailPanel(); setTimeout(function(){ showOrderDetail(\'' + escapeAttr(ref) + '\', \'pickup\'); }, 300);">';
+    html += '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg> Back to Order Details</button>';
+    html += '</div>';
+
+    content.innerHTML = html;
+    panel.classList.add('active');
+    overlay.classList.add('active');
+
+    // Initialize map
+    _initTrackingMap(ref);
+}
+
+function _initTrackingMap(ref) {
+    // Stop any existing tracking
+    if (_trackingInterval) { clearInterval(_trackingInterval); _trackingInterval = null; }
+
+    var mapEl = document.getElementById('trackingMapContainer');
+    if (!mapEl || typeof google === 'undefined' || !google.maps) {
+        // Google Maps not loaded — load it dynamically
+        var etaEl = document.getElementById('trackingEta');
+        if (etaEl) etaEl.textContent = 'Map loading...';
+
+        // Use static map as fallback
+        _pollTrackingData(ref, null, null);
+        _trackingInterval = setInterval(function() { _pollTrackingData(ref, null, null); }, 15000);
+        return;
+    }
+
+    var map = new google.maps.Map(mapEl, {
+        zoom: 13,
+        center: { lat: 43.6445, lng: -79.3871 },
+        disableDefaultUI: true,
+        zoomControl: true,
+        styles: [{ featureType: 'poi', stylers: [{ visibility: 'off' }] }]
+    });
+
+    var courierMarker = null;
+    var destMarker = null;
+
+    // Poll immediately then every 15s
+    _pollTrackingData(ref, map, { courier: courierMarker, dest: destMarker });
+    _trackingInterval = setInterval(function() {
+        _pollTrackingData(ref, map, { courier: courierMarker, dest: destMarker });
+    }, 15000);
+}
+
+function _pollTrackingData(ref, map, markers) {
+    apiCall('get_tracking', { ref: ref }, function(data) {
+        var etaEl = document.getElementById('trackingEta');
+        var statusEl = document.getElementById('trackingStatus');
+        if (!etaEl) { if (_trackingInterval) clearInterval(_trackingInterval); return; }
+
+        if (!data.success) {
+            etaEl.textContent = 'Unable to load tracking';
+            return;
+        }
+
+        // Status display
+        if (data.status === 'delivered' || data.status === 'pickedup') {
+            etaEl.innerHTML = '<span style="color:#16a34a;">&#10003; Delivered</span>';
+            statusEl.textContent = '';
+            if (_trackingInterval) clearInterval(_trackingInterval);
+            return;
+        }
+        if (data.status !== 'shipped') {
+            etaEl.textContent = 'Courier has not picked up yet';
+            statusEl.textContent = 'Status: ' + (data.status || 'unknown');
+            return;
+        }
+
+        if (!data.lat || !data.lng) {
+            etaEl.textContent = 'Courier is en route';
+            statusEl.textContent = 'Waiting for location update...';
+            return;
+        }
+
+        // Update map markers
+        if (map && typeof google !== 'undefined') {
+            var pos = { lat: data.lat, lng: data.lng };
+            if (!markers.courier) {
+                markers.courier = new google.maps.Marker({
+                    position: pos, map: map,
+                    icon: { url: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="%237c3aed" stroke="white" stroke-width="1.5"><circle cx="12" cy="12" r="10"/></svg>'), scaledSize: new google.maps.Size(36, 36), anchor: new google.maps.Point(18, 18) }
+                });
+                map.setCenter(pos);
+                map.setZoom(14);
+            } else {
+                markers.courier.setPosition(pos);
+            }
+        }
+
+        // ETA
+        if (data.eta_min !== null && data.eta_min !== undefined) {
+            var text = '';
+            if (data.eta_min <= 1) { text = 'Arriving now!'; etaEl.style.color = '#16a34a'; }
+            else if (data.eta_min <= 5) { text = 'Almost there — ' + data.eta_min + ' min'; etaEl.style.color = '#d97706'; }
+            else { text = '~' + data.eta_min + ' min away'; etaEl.style.color = '#7c3aed'; }
+            if (data.distance_km) text += ' (' + data.distance_km + ' km)';
+            etaEl.textContent = text;
+        } else {
+            etaEl.textContent = 'Courier is en route';
+        }
+
+        if (data.stale) statusEl.textContent = 'Last update: ' + new Date(data.updated_at).toLocaleTimeString();
+        else if (data.courier_name) statusEl.textContent = 'Courier: ' + data.courier_name;
+        else statusEl.textContent = '';
+    });
+}
+
+// Clean up tracking on panel close
+var _origCloseDetail = closeDetailPanel;
+closeDetailPanel = function() {
+    if (_trackingInterval) { clearInterval(_trackingInterval); _trackingInterval = null; }
+    _origCloseDetail();
+};
+
+var notifiedProximity = {};
+
+function startProximityWatch() {
+    if (proximityWatchId || !navigator.geolocation) return;
+    proximityWatchId = navigator.geolocation.watchPosition(function(pos) {
+        var lat = pos.coords.latitude;
+        var lng = pos.coords.longitude;
+
+        // Check distance to each active delivery destination
+        var orders = cachedActive || [];
+        orders.forEach(function(o) {
+            if (o.status !== 'shipped' || notifiedProximity[o.ref]) return;
+            // Simple distance check (Haversine approximation)
+            var destLat = o.destination_lat || 0;
+            var destLng = o.destination_lng || 0;
+            if (!destLat || !destLng) return;
+
+            var dLat = (destLat - lat) * Math.PI / 180;
+            var dLng = (destLng - lng) * Math.PI / 180;
+            var a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat * Math.PI/180) * Math.cos(destLat * Math.PI/180) * Math.sin(dLng/2) * Math.sin(dLng/2);
+            var distKm = 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+            // Within 150m — show auto-arrive prompt
+            if (distKm < 0.15 && !notifiedProximity[o.ref + '_arrived']) {
+                notifiedProximity[o.ref + '_arrived'] = true;
+                haptic.confirm();
+                showArrivalPrompt(o);
+            }
+            // Within 500m — heads-up notification
+            else if (distKm < 0.5 && !notifiedProximity[o.ref]) {
+                notifiedProximity[o.ref] = true;
+                haptic.tap();
+                showToast('Approaching ' + (o.destination || 'destination') + ' — ' + o.ref, 'info');
+                if ('Notification' in window && Notification.permission === 'granted') {
+                    new Notification('Arriving Soon', { body: 'You\'re near ' + (o.destination || 'destination') + ' for ' + o.ref, icon: '../assets/logo.png' });
+                }
+            }
+        });
+    }, null, { enableHighAccuracy: true, maximumAge: 30000 });
+}
+
+function showArrivalPrompt(order) {
+    // Remove any existing prompt
+    var existing = document.getElementById('arrivalPrompt');
+    if (existing) existing.remove();
+
+    var prompt = document.createElement('div');
+    prompt.id = 'arrivalPrompt';
+    prompt.className = 'arrival-prompt';
+    prompt.innerHTML = '<div class="arrival-prompt-content">' +
+        '<div class="arrival-prompt-text">' +
+        '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' +
+        '<div><strong>Arrived at ' + escapeHtml(order.destination || 'destination') + '</strong>' +
+        '<span>' + escapeHtml(order.ref) + '</span></div>' +
+        '</div>' +
+        '<div class="arrival-prompt-actions">' +
+        '<button class="arrival-btn-confirm" onclick="arrivalConfirmDelivery(\'' + escapeAttr(order.ref) + '\')">Confirm Delivery</button>' +
+        '<button class="arrival-btn-dismiss" onclick="dismissArrivalPrompt()">Dismiss</button>' +
+        '</div></div>';
+    document.body.appendChild(prompt);
+
+    // Auto-dismiss after 30 seconds
+    setTimeout(function() {
+        var el = document.getElementById('arrivalPrompt');
+        if (el) el.remove();
+    }, 30000);
+}
+
+function arrivalConfirmDelivery(ref) {
+    dismissArrivalPrompt();
+    // Open the order detail for status update
+    if (orderCache[ref]) {
+        showOrderDetail(ref, 'delivery');
+    }
+}
+
+function dismissArrivalPrompt() {
+    var el = document.getElementById('arrivalPrompt');
+    if (el) el.remove();
+}
+
+function stopProximityWatch() {
+    if (proximityWatchId) {
+        navigator.geolocation.clearWatch(proximityWatchId);
+        proximityWatchId = null;
+    }
+    notifiedProximity = {};
+}
+
 console.log('MTCC Courier App loaded');
-console.log('- Vibration supported:', haptic.vibrateSupported);
-console.log('- Audio will initialize on first interaction');

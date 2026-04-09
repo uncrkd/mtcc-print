@@ -6,6 +6,10 @@
  * Access: mtcc.print-stuff.ca/courier/
  */
 session_start();
+header('Cache-Control: no-cache, no-store, must-revalidate');
+header('Pragma: no-cache');
+header('Expires: 0');
+$cacheBust = time();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -21,8 +25,8 @@ session_start();
     <link rel="icon" type="image/png" href="../assets/logo.png">
     <link rel="apple-touch-icon" href="../assets/logo.png">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="app.css?v=11">
-    <link rel="stylesheet" href="courier-issues.css?v=2">
+    <link rel="stylesheet" href="app.css?v=<?= $cacheBust ?>">
+    <link rel="stylesheet" href="courier-issues.css?v=<?= $cacheBust ?>">
     <!-- QuaggaJS for barcode scanning -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDtsKlcP439gjDYjDOTbd-nd4spGM77fYg&libraries=places,marker&loading=async&callback=Function.prototype"></script>
@@ -217,14 +221,27 @@ session_start();
             </div>
         </div>
         
-        <!-- AVAILABLE TAB (Courier) -->
+        <!-- AVAILABLE TAB (Courier) — List + Map views -->
         <div class="tab-pane" id="tab-available">
             <div class="tab-header">
                 <h2>Available Orders</h2>
-
+                <div class="view-mode-toggle" id="viewModeToggle">
+                    <button class="view-mode-btn active" data-mode="list" onclick="setAvailableMode('list')">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                    </button>
+                    <button class="view-mode-btn" data-mode="map" onclick="setAvailableMode('map')">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    </button>
+                </div>
             </div>
-            <div class="tab-body" id="availableContent">
+            <!-- List view -->
+            <div class="tab-body available-list-view" id="availableContent">
                 <div class="loading-state"><div class="spinner-ring"></div><span>Loading orders...</span></div>
+            </div>
+            <!-- Map view (hidden by default) -->
+            <div class="tab-body available-map-view" id="availableMapView" style="display:none;">
+                <div id="nearbyMap" class="nearby-map"></div>
+                <div id="nearbyList" class="nearby-list"></div>
             </div>
         </div>
         
@@ -278,16 +295,7 @@ session_start();
             </div>
         </div>
         
-        <!-- NEARBY TAB (Courier - Interactive Map) -->
-        <div class="tab-pane" id="tab-nearby">
-            <div class="tab-header">
-                <h2>Nearby</h2>
-            </div>
-            <div class="tab-body" id="nearbyContent">
-                <div id="nearbyMap" class="nearby-map"></div>
-                <div id="nearbyList" class="nearby-list"></div>
-            </div>
-        </div>
+        <!-- NEARBY TAB removed — merged into Available tab as map view -->
         
         <!-- EARNINGS TAB (Courier) -->
         <div class="tab-pane" id="tab-earnings">
@@ -354,7 +362,7 @@ session_start();
     <!-- Order Detail Slide-Up Panel -->
     <div class="detail-overlay" id="detailOverlay" onclick="closeDetailPanel()"></div>
     <div class="detail-panel" id="detailPanel">
-        <div class="detail-handle" onclick="closeDetailPanel()"><div class="handle-bar"></div></div>
+        <div class="detail-panel-header" id="detailPanelHeader"></div>
         <div class="detail-content" id="detailContent"></div>
     </div>
     
@@ -390,7 +398,7 @@ session_start();
 <!-- Full-Page Transit View -->
 <div id="transitView"></div>
 
-<script src="app.js?v=11"></script>
-<script src="courier-issues.js?v=2"></script>
+<script src="app.js?v=<?= $cacheBust ?>"></script>
+<script src="courier-issues.js?v=<?= $cacheBust ?>"></script>
 </body>
 </html>
