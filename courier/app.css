@@ -7700,6 +7700,83 @@ a,
 }
 
 /* ============================================
+   SWIPE-TO-CONFIRM GESTURE
+   ============================================ */
+.swipe-confirm {
+    width: 100%;
+    padding: 0 16px;
+    margin: 8px 0;
+}
+
+.swipe-track {
+    position: relative;
+    height: 56px;
+    background: var(--gray-100);
+    border-radius: 28px;
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+}
+
+.swipe-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 52px;
+    border-radius: 28px;
+    opacity: 0.2;
+    pointer-events: none;
+}
+
+.swipe-thumb {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 48px;
+    height: 48px;
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    z-index: 2;
+    cursor: grab;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.swipe-thumb:active {
+    cursor: grabbing;
+}
+
+.swipe-thumb.at-threshold {
+    transform: scale(1.05);
+}
+
+.swipe-thumb.swipe-confirmed {
+    background: #059669 !important;
+}
+
+.swipe-label {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--gray-500);
+    pointer-events: none;
+    letter-spacing: 0.02em;
+    transition: opacity 0.3s;
+}
+
+/* ============================================
    QUICK MESSAGE TO DISPATCH
    ============================================ */
 .quick-msg-overlay {

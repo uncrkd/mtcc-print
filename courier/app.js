@@ -2866,10 +2866,12 @@ function showOrderDetail(ref, mode) {
     // Actions
     if (!isPipeline) {
         if (mode === 'available' && order.status === 'ready' && currentUser.role === 'courier') {
-            // Accept Delivery — sticky at bottom (Fix 3)
+            // Accept Delivery — swipe to confirm
             html += '<div class="courier-sticky-action">';
-            html += '<button class="status-action-btn btn-accept" onclick="acceptDelivery(\'' + escapeAttr(order.ref) + '\', this)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Accept Delivery</button>';
+            html += renderSwipeConfirm('accept_' + order.ref, 'Slide to Accept Delivery \u2192', '#7c3aed');
             html += '</div>';
+            // Queue init after DOM render
+            (function(ref) { setTimeout(function() { initSwipeConfirm('accept_' + ref, function() { acceptDelivery(ref); }); }, 50); })(order.ref);
         } else if (mode === 'delivery' && order.status === 'dispatched' && currentUser.role === 'courier') {
             // Release + issue row
             html += '<div class="courier-detail-actions">';
@@ -2887,14 +2889,32 @@ function showOrderDetail(ref, mode) {
             var transitions = getStatusTransitions(order.status);
             if (transitions.length > 0) {
                 html += '<div class="detail-actions">';
-                // Photo required for delivery — no checkbox needed
+                var isCourier = currentUser && currentUser.role === 'courier';
+                // Swipe configs for courier critical actions
+                var swipeActions = { 'shipped': { label: 'Slide to Confirm Pickup \u2192', color: '#3b82f6' }, 'delivered': { label: 'Slide to Mark Delivered \u2192', color: '#059669' } };
+                var swipeInits = [];
                 transitions.forEach(function(s) {
-                    var label = s, icon = '';
-                    if (s === 'shipped') { label = 'Confirm Pickup'; icon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> '; }
-                    else if (s === 'delivered') { label = 'Mark Delivered'; icon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> '; }
-                    else if (s === 'pickedup') { label = 'Confirm Pick Up'; icon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> '; }
-                    html += '<button class="status-action-btn btn-' + s + '" onclick="updateOrderStatus(\'' + escapeAttr(order.ref) + '\', \'' + s + '\')">' + icon + label + '</button>';
+                    if (isCourier && swipeActions[s]) {
+                        // Swipe-to-confirm for courier critical actions
+                        html += renderSwipeConfirm(s + '_' + order.ref, swipeActions[s].label, swipeActions[s].color);
+                        swipeInits.push({ id: s + '_' + order.ref, status: s, ref: order.ref });
+                    } else {
+                        // Regular button for staff/admin or non-swipeable transitions
+                        var label = s, icon = '';
+                        if (s === 'shipped') { label = 'Confirm Pickup'; icon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> '; }
+                        else if (s === 'delivered') { label = 'Mark Delivered'; icon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> '; }
+                        else if (s === 'pickedup') { label = 'Confirm Pick Up'; icon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> '; }
+                        html += '<button class="status-action-btn btn-' + s + '" onclick="updateOrderStatus(\'' + escapeAttr(order.ref) + '\', \'' + s + '\')">' + icon + label + '</button>';
+                    }
                 });
+                // Queue swipe inits after DOM render
+                if (swipeInits.length > 0) {
+                    swipeInits.forEach(function(si) {
+                        (function(sid, sStatus, sRef) {
+                            setTimeout(function() { initSwipeConfirm(sid, function() { updateOrderStatus(sRef, sStatus); }); }, 50);
+                        })(si.id, si.status, si.ref);
+                    });
+                }
                 // Release + Issue row for shipped orders
                 if (mode === 'delivery' && order.status === 'shipped') {
                     html += '<div class="courier-btn-row" style="margin-top:8px;">';
@@ -3816,6 +3836,121 @@ function sendQuickMessage(type, text, ref) {
 function closeQuickMessage() {
     var el = document.getElementById('quickMsgPanel');
     if (el) el.remove();
+}
+
+// ============================================
+// Swipe-to-Confirm Gesture
+// Replaces tap buttons for critical actions to prevent accidental triggers
+// ============================================
+
+function renderSwipeConfirm(id, label, color, onConfirm) {
+    // Returns HTML string. Attach listeners after inserting into DOM via initSwipeConfirm()
+    var trackId = 'swipe_' + id;
+    return '<div class="swipe-confirm" id="' + trackId + '" data-color="' + escapeAttr(color) + '">' +
+        '<div class="swipe-track">' +
+        '<div class="swipe-fill"></div>' +
+        '<div class="swipe-thumb"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>' +
+        '<span class="swipe-label">' + escapeHtml(label) + '</span>' +
+        '</div></div>';
+}
+
+function initSwipeConfirm(id, onConfirm) {
+    var trackId = 'swipe_' + id;
+    var el = document.getElementById(trackId);
+    if (!el) return;
+
+    var track = el.querySelector('.swipe-track');
+    var thumb = el.querySelector('.swipe-thumb');
+    var fill = el.querySelector('.swipe-fill');
+    var label = el.querySelector('.swipe-label');
+    var color = el.getAttribute('data-color') || '#059669';
+
+    var trackWidth = 0;
+    var thumbWidth = 52;
+    var startX = 0;
+    var currentX = 0;
+    var dragging = false;
+    var confirmed = false;
+    var threshold = 0.78; // 78% of track width to trigger
+
+    thumb.style.background = color;
+
+    thumb.addEventListener('touchstart', function(e) {
+        if (confirmed) return;
+        e.stopPropagation();
+        dragging = true;
+        trackWidth = track.offsetWidth;
+        startX = e.touches[0].clientX;
+        currentX = 0;
+        thumb.style.transition = 'none';
+        fill.style.transition = 'none';
+    }, { passive: false });
+
+    document.addEventListener('touchmove', function(e) {
+        if (!dragging) return;
+        e.preventDefault();
+        var dx = e.touches[0].clientX - startX;
+        if (dx < 0) dx = 0;
+        var maxDx = trackWidth - thumbWidth;
+        if (dx > maxDx) dx = maxDx;
+        currentX = dx;
+
+        thumb.style.transform = 'translateX(' + dx + 'px)';
+        fill.style.width = (dx + thumbWidth) + 'px';
+        fill.style.background = color;
+
+        // Fade label as thumb approaches
+        var pct = dx / maxDx;
+        label.style.opacity = Math.max(0, 1 - pct * 1.8);
+
+        // Haptic at threshold crossing
+        if (pct >= threshold && !thumb.classList.contains('at-threshold')) {
+            thumb.classList.add('at-threshold');
+            haptic.tap();
+        } else if (pct < threshold) {
+            thumb.classList.remove('at-threshold');
+        }
+    }, { passive: false });
+
+    var onEnd = function() {
+        if (!dragging) return;
+        dragging = false;
+        var maxDx = trackWidth - thumbWidth;
+        var pct = currentX / maxDx;
+
+        if (pct >= threshold && !confirmed) {
+            // Confirmed — snap to end
+            confirmed = true;
+            thumb.style.transition = 'transform 0.2s ease';
+            fill.style.transition = 'width 0.2s ease';
+            thumb.style.transform = 'translateX(' + maxDx + 'px)';
+            fill.style.width = '100%';
+            label.style.opacity = '0';
+            haptic.confirm();
+
+            // Replace thumb with checkmark
+            setTimeout(function() {
+                thumb.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>';
+                thumb.classList.add('swipe-confirmed');
+            }, 150);
+
+            // Fire callback after animation
+            setTimeout(function() {
+                if (onConfirm) onConfirm();
+            }, 400);
+        } else {
+            // Spring back
+            thumb.style.transition = 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)';
+            fill.style.transition = 'width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)';
+            thumb.style.transform = 'translateX(0)';
+            fill.style.width = thumbWidth + 'px';
+            label.style.transition = 'opacity 0.3s';
+            label.style.opacity = '1';
+            thumb.classList.remove('at-threshold');
+        }
+    };
+    document.addEventListener('touchend', onEnd);
+    document.addEventListener('touchcancel', onEnd);
 }
 
 function showToast(message, type) {
