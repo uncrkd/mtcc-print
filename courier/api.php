@@ -84,6 +84,7 @@ switch ($action) {
     case 'update_location':    requireAuth(); handleUpdateLocation(); break;
     case 'get_tracking':       handleGetTracking(); break; // public — no auth needed
     // Weather
+    case 'get_home_data':      requireAuth(); handleGetHomeData(); break;
     case 'get_weather':        requireAuth(); handleGetWeather(); break;
     case 'get_notifications':  requireAuth(); handleGetNotifications(); break;
     // Batch Orders
@@ -255,9 +256,10 @@ function getTabsForRole($role) {
     switch ($role) {
         case 'courier':
             return [
-                ['id' => 'deliveries', 'label' => 'Deliveries', 'icon' => 'deliveries'],
+                ['id' => 'home', 'label' => 'Home', 'icon' => 'home'],
                 ['id' => 'available', 'label' => 'Available', 'icon' => 'available'],
                 ['id' => 'scan', 'label' => 'Scan', 'icon' => 'scan'],
+                ['id' => 'deliveries', 'label' => 'Deliveries', 'icon' => 'deliveries'],
                 ['id' => 'account', 'label' => 'Account', 'icon' => 'account'],
             ];
         case 'mtcc_staff':
@@ -326,6 +328,159 @@ function handleSessionCheck() {
 // ============================================
 // Order Query Handlers
 // ============================================
+
+function handleGetHomeData() {
+    $user = getCurrentUser();
+    $pin = $user['pin'];
+    $today = date('Y-m-d');
+    $statuses = courier_loadStatuses();
+
+    // Active deliveries for this courier (dispatched or shipped)
+    $activeOrders = [];
+    $issueOrders = [];
+    $urgentAvailable = [];
+    $completedToday = 0;
+    $earnedToday = 0;
+    $onTimeCount = 0;
+    $totalDelivered = 0;
+
+    // Scan courier's assigned orders
+    foreach ($statuses as $ref => $status) {
+        if (empty($ref)) continue;
+        $order = courier_loadOrder($ref);
+        if (!$order) continue;
+        $dispatch = $order['dispatch'] ?? [];
+        $courierPin = $dispatch['courier_pin'] ?? $dispatch['courier_id'] ?? '';
+
+        // Active orders for this courier
+        if ($courierPin === $pin && in_array($status, ['dispatched', 'shipped'])) {
+            $formatted = formatOrderForApp($order, $ref, $status);
+            $formatted['type'] = 'single';
+            $activeOrders[] = $formatted;
+
+            // Check for open issues
+            if (orderHasOpenIssue($ref)) {
+                $issueOrders[] = ['ref' => $ref, 'destination' => $formatted['destination'] ?? ''];
+            }
+        }
+
+        // Completed today count
+        if ($courierPin === $pin && in_array($status, ['delivered', 'pickedup'])) {
+            $ts = $dispatch['delivered_at'] ?? $dispatch['picked_up_at'] ?? '';
+            if ($ts && substr($ts, 0, 10) === $today) {
+                $completedToday++;
+                $totalDelivered++;
+            }
+        }
+    }
+
+    // Sort active: in-transit (shipped) first, then by urgency
+    usort($activeOrders, function($a, $b) {
+        $aT = ($a['status'] === 'shipped') ? 0 : 1;
+        $bT = ($b['status'] === 'shipped') ? 0 : 1;
+        if ($aT !== $bT) return $aT - $bT;
+        return ($a['hours_remaining'] ?? 9999) - ($b['hours_remaining'] ?? 9999);
+    });
+
+    // Count available orders + find urgent ones
+    $availableCount = 0;
+    $readyNowCount = 0;
+    $queueItems = dispatch_getReadyQueue();
+    foreach ($queueItems as $item) {
+        $ref = $item['ref'];
+        $order = courier_loadOrder($ref);
+        if (!$order) continue;
+        $dispatch = $order['dispatch'] ?? [];
+        if (!empty($dispatch['courier_id']) || !empty($dispatch['courier_pin'])) continue;
+        if (!empty($dispatch['batch_id'])) continue;
+
+        $availableCount++;
+        $formatted = formatOrderForApp($order, $ref);
+        if (($formatted['status'] ?? '') === 'ready') $readyNowCount++;
+
+        // Urgent: <=4 hours remaining
+        $hr = $formatted['hours_remaining'] ?? null;
+        if ($hr !== null && $hr <= 4) {
+            $urgentAvailable[] = [
+                'ref' => $ref,
+                'hours_remaining' => round($hr, 1),
+                'urgency' => $hr <= 2 ? 'red' : 'orange',
+                'destination' => $formatted['destination'] ?? '',
+                'due_date_formatted' => $formatted['due_date_formatted'] ?? '',
+                'due_time_formatted' => $formatted['due_time_formatted'] ?? '',
+            ];
+        }
+    }
+
+    // Today's earnings
+    $earningsFile = DISPATCH_EARNINGS_FILE;
+    if (file_exists($earningsFile)) {
+        $eData = json_decode(file_get_contents($earningsFile), true) ?: [];
+        foreach ($eData['earnings'][$pin] ?? [] as $entry) {
+            $d = substr($entry['date'] ?? '', 0, 10);
+            if ($d === $today) {
+                $earnedToday += floatval($entry['amount'] ?? 0);
+            }
+        }
+    }
+
+    // On-time rate (from performance calculator)
+    $perf = buildCourierPerformance($pin, $eData['earnings'][$pin] ?? []);
+
+    // Weather
+    $weather = null;
+    try {
+        if (class_exists('WeatherAPI')) {
+            $weatherApi = new WeatherAPI();
+            $wData = $weatherApi->getWeather();
+            if ($wData) {
+                $badWeather = $weatherApi->checkBadWeather($wData);
+                $weather = [
+                    'temp' => $wData['current']['temperature'] ?? $wData['temp'] ?? null,
+                    'description' => $wData['current']['description'] ?? $wData['description'] ?? '',
+                    'icon' => $wData['current']['icon'] ?? $wData['icon'] ?? '',
+                    'wind_kmh' => $wData['current']['wind_speed'] ?? $wData['wind_kmh'] ?? null,
+                    'bad_weather_active' => $badWeather['is_bad'] ?? false,
+                ];
+            }
+        }
+    } catch (Exception $e) { /* weather optional */ }
+
+    // Latest dispatch notification for this courier
+    $latestNotif = null;
+    if (function_exists('dispatch_getNotifications')) {
+        $notifs = dispatch_getNotifications();
+        foreach ($notifs as $n) {
+            $ctx = $n['context'] ?? [];
+            $nPin = $ctx['courier_pin'] ?? null;
+            if ($nPin && $nPin !== $pin) continue;
+            $latestNotif = [
+                'title' => $n['title'] ?? '',
+                'message' => $n['message'] ?? '',
+                'created_at' => $n['created_at'] ?? '',
+            ];
+            break; // Most recent only
+        }
+    }
+
+    echo json_encode([
+        'success' => true,
+        'stats' => [
+            'completed_today' => $completedToday,
+            'earned_today' => round($earnedToday, 2),
+            'on_time_rate' => $perf['on_time_rate'],
+            'total_completed' => $perf['total_completed'],
+        ],
+        'active_orders' => array_slice($activeOrders, 0, 3), // Top 3 for preview
+        'active_count' => count($activeOrders),
+        'available_count' => $availableCount,
+        'ready_now_count' => $readyNowCount,
+        'urgent_orders' => array_slice($urgentAvailable, 0, 5),
+        'issue_orders' => $issueOrders,
+        'weather' => $weather,
+        'latest_notification' => $latestNotif,
+    ]);
+}
 
 function handleGetAvailable() {
     $queueItems = dispatch_getReadyQueue();

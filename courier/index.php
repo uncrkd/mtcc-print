@@ -106,7 +106,14 @@ $cacheBust = time();
     
     <!-- Tab Content Area -->
     <main class="app-content" id="appContent">
-        
+
+        <!-- HOME TAB (Courier) -->
+        <div class="tab-pane" id="tab-home">
+            <div class="tab-body" id="homeContent">
+                <div class="loading-state"><div class="spinner-ring"></div><span>Loading...</span></div>
+            </div>
+        </div>
+
         <!-- MY DELIVERIES TAB (Courier) -->
         <div class="tab-pane" id="tab-deliveries">
             <div class="tab-header">

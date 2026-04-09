@@ -645,6 +645,7 @@ function switchTab(tabId) {
 
 function refreshTab(tabId) {
     switch(tabId) {
+        case 'home': loadHome(); break;
         case 'deliveries': loadMyDeliveries(); break;
         case 'available':
             if (availableMode === 'map') loadNearby();
@@ -665,6 +666,159 @@ function refreshTab(tabId) {
 // ============================================
 // Tab Content Loaders
 // ============================================
+
+function loadHome() {
+    var el = document.getElementById('homeContent');
+    if (!el) return;
+
+    apiCall('get_home_data', null, function(result) {
+        if (!result.success) {
+            el.innerHTML = '<div class="empty-state"><h3>Error</h3><p>' + escapeHtml(result.error || 'Failed to load') + '</p></div>';
+            return;
+        }
+
+        var s = result.stats || {};
+        var name = currentUser ? currentUser.name : '';
+        var hour = new Date().getHours();
+        var greeting = hour < 12 ? 'Good morning' : (hour < 17 ? 'Good afternoon' : 'Good evening');
+
+        var html = '';
+
+        // Status header with greeting + availability
+        html += '<div class="home-header">';
+        html += '<div class="home-greeting">';
+        html += '<h2>' + escapeHtml(greeting) + ', ' + escapeHtml(name.split(' ')[0]) + '</h2>';
+        html += '</div>';
+        html += '<div class="home-avail-toggle">';
+        html += '<div class="availability-dot" id="homeAvailDot"></div>';
+        html += '<label class="toggle-switch"><input type="checkbox" id="homeAvailToggle" onchange="toggleAvailability(this.checked)"><span class="toggle-slider"></span></label>';
+        html += '</div>';
+        html += '</div>';
+
+        // Today's stats
+        html += '<div class="home-stats">';
+        html += '<div class="home-stat"><div class="home-stat-value">' + (s.completed_today || 0) + '</div><div class="home-stat-label">Deliveries</div></div>';
+        html += '<div class="home-stat-divider"></div>';
+        html += '<div class="home-stat"><div class="home-stat-value">$' + (s.earned_today || 0).toFixed(2) + '</div><div class="home-stat-label">Earned</div></div>';
+        html += '<div class="home-stat-divider"></div>';
+        var rateClass = (s.on_time_rate || 0) >= 90 ? 'perf-green' : ((s.on_time_rate || 0) >= 70 ? 'perf-amber' : 'perf-red');
+        html += '<div class="home-stat"><div class="home-stat-value ' + rateClass + '">' + (s.on_time_rate || 0) + '%</div><div class="home-stat-label">On Time</div></div>';
+        html += '</div>';
+
+        // Active delivery card (if carrying orders)
+        var activeOrders = result.active_orders || [];
+        var activeCount = result.active_count || 0;
+        if (activeCount > 0) {
+            html += '<div class="home-section">';
+            html += '<div class="home-section-header"><span class="home-section-dot dot-active"></span>Active Deliver' + (activeCount !== 1 ? 'ies' : 'y') + ' (' + activeCount + ')</div>';
+            activeOrders.forEach(function(o) {
+                orderCache[o.ref] = o;
+                var statusLabel = o.status === 'shipped' ? 'In Transit' : 'Pickup Pending';
+                var statusCls = o.status === 'shipped' ? 'badge-shipped' : 'badge-dispatched';
+                html += '<button class="home-active-card" onclick="switchTab(\'deliveries\')">';
+                html += '<div class="home-active-top"><span class="home-active-ref">' + escapeHtml(o.ref) + '</span><span class="order-status-badge ' + statusCls + ' badge-sm">' + statusLabel + '</span></div>';
+                html += '<div class="home-active-dest">';
+                if (o.status === 'shipped') {
+                    html += '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> ';
+                } else {
+                    html += '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M16.5 9.4l-9-5.19M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg> ';
+                }
+                html += escapeHtml(o.status === 'shipped' ? (o.destination || 'MTCC') : (o.vendor_name || 'Vendor'));
+                html += '</div>';
+                html += '</button>';
+            });
+            if (activeCount > 3) {
+                html += '<button class="home-view-all" onclick="switchTab(\'deliveries\')">View all ' + activeCount + ' deliveries <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></button>';
+            }
+            html += '</div>';
+        }
+
+        // Urgent orders (available, <=4 hours)
+        var urgent = result.urgent_orders || [];
+        if (urgent.length > 0) {
+            html += '<div class="home-section">';
+            html += '<div class="home-section-header"><span class="home-section-dot dot-urgent"></span>Urgent Orders (' + urgent.length + ')</div>';
+            urgent.forEach(function(u) {
+                var urgCls = u.urgency === 'red' ? 'home-urgent-red' : 'home-urgent-orange';
+                html += '<button class="home-urgent-card ' + urgCls + '" onclick="switchTab(\'available\')">';
+                html += '<div class="home-urgent-top"><span class="home-urgent-ref">' + escapeHtml(u.ref) + '</span><span class="home-urgent-time">' + u.hours_remaining + 'h left</span></div>';
+                html += '<div class="home-urgent-detail">Due ' + escapeHtml(u.due_date_formatted || '') + ' | by: ' + escapeHtml(u.due_time_formatted || 'Anytime') + '</div>';
+                html += '</button>';
+            });
+            html += '</div>';
+        }
+
+        // Order issues
+        var issues = result.issue_orders || [];
+        if (issues.length > 0) {
+            html += '<div class="home-section">';
+            html += '<div class="home-section-header"><span class="home-section-dot dot-issue"></span>Open Issues (' + issues.length + ')</div>';
+            issues.forEach(function(iss) {
+                html += '<button class="home-issue-card" onclick="if(orderCache[\'' + escapeAttr(iss.ref) + '\']) showOrderDetail(\'' + escapeAttr(iss.ref) + '\', \'delivery\')">';
+                html += '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+                html += '<span>Issue on <strong>' + escapeHtml(iss.ref) + '</strong></span>';
+                html += '</button>';
+            });
+            html += '</div>';
+        }
+
+        // Available orders summary
+        var availCount = result.available_count || 0;
+        var readyCount = result.ready_now_count || 0;
+        html += '<div class="home-section">';
+        html += '<button class="home-available-card" onclick="switchTab(\'available\')">';
+        html += '<div class="home-avail-left">';
+        html += '<div class="home-avail-count">' + availCount + '</div>';
+        html += '<div class="home-avail-text">order' + (availCount !== 1 ? 's' : '') + ' available' + (readyCount > 0 ? ' <strong>\u00b7 ' + readyCount + ' ready now</strong>' : '') + '</div>';
+        html += '</div>';
+        html += '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>';
+        html += '</button>';
+        html += '</div>';
+
+        // Latest dispatch notification
+        var notif = result.latest_notification;
+        if (notif && notif.title) {
+            html += '<div class="home-section">';
+            html += '<div class="home-section-header">Latest from Dispatch</div>';
+            html += '<div class="home-notif-card">';
+            html += '<div class="home-notif-title">' + escapeHtml(notif.title) + '</div>';
+            if (notif.message) html += '<div class="home-notif-msg">' + escapeHtml(notif.message) + '</div>';
+            if (notif.created_at) {
+                var nTime = new Date(notif.created_at);
+                html += '<div class="home-notif-time">' + nTime.toLocaleTimeString('en-US', {hour: 'numeric', minute: '2-digit'}) + '</div>';
+            }
+            html += '</div>';
+            html += '</div>';
+        }
+
+        // Weather
+        var w = result.weather;
+        if (w && w.temp !== undefined) {
+            html += '<div class="home-section home-weather-section">';
+            html += '<div class="home-weather">';
+            html += '<span class="home-weather-icon">' + (w.icon || '') + '</span>';
+            html += '<span class="home-weather-temp">' + Math.round(w.temp) + '\u00b0C</span>';
+            html += '<span class="home-weather-desc">' + escapeHtml(w.description || '') + '</span>';
+            if (w.wind_kmh) html += '<span class="home-weather-wind">' + Math.round(w.wind_kmh) + ' km/h</span>';
+            html += '</div>';
+            if (w.bad_weather_active) {
+                html += '<div class="home-weather-bonus">Bad weather bonus active</div>';
+            }
+            html += '</div>';
+        }
+
+        el.innerHTML = html;
+
+        // Set availability toggle
+        var toggle = document.getElementById('homeAvailToggle');
+        var dot = document.getElementById('homeAvailDot');
+        if (toggle) toggle.checked = true;
+        if (dot) dot.classList.add('online');
+
+        // Update earnings ticker
+        updateEarningsTicker(s.earned_today || 0);
+    });
+}
 
 function loadMyDeliveries() {
     // Show skeleton while loading
@@ -1261,14 +1415,6 @@ function loadAccount() {
         html += '</div>';
         html += '</div>';
 
-        // Availability toggle
-        html += '<div class="acct-section">';
-        html += '<div class="acct-toggle-row">';
-        html += '<div class="acct-toggle-left"><div class="availability-dot" id="acctAvailDot"></div><span>Availability</span></div>';
-        html += '<label class="toggle-switch"><input type="checkbox" id="acctAvailToggle" onchange="toggleAvailability(this.checked)"><span class="toggle-slider"></span></label>';
-        html += '</div>';
-        html += '</div>';
-
         // Earnings card — tap to drill into full earnings view
         html += '<div class="acct-section">';
         html += '<div class="acct-section-label">Earnings</div>';
@@ -1320,11 +1466,6 @@ function loadAccount() {
 
         el.innerHTML = html;
 
-        // Set availability toggle state
-        var toggle = document.getElementById('acctAvailToggle');
-        var dot = document.getElementById('acctAvailDot');
-        if (toggle) toggle.checked = true;
-        if (dot) dot.classList.add('online');
     });
 }
 
@@ -4810,6 +4951,7 @@ function getTabIcon(iconId) {
         dashboard: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>',
         upcoming: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
         complete: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+        home: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
         account: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
     };
     return icons[iconId] || '';

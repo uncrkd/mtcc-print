@@ -1419,6 +1419,341 @@ input {
 }
 
 /* ============================================
+   HOME TAB
+   ============================================ */
+#tab-home .tab-body {
+    padding: 0 0 calc(var(--nav-height) + 20px);
+}
+
+.home-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 20px 16px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-deeper));
+    color: white;
+}
+
+.home-greeting h2 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: white;
+    margin: 0;
+}
+
+.home-avail-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Today's stats bar */
+.home-stats {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 14px 16px;
+    margin: 0 14px 6px;
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    margin-top: -8px;
+    position: relative;
+    z-index: 1;
+}
+
+.home-stat {
+    text-align: center;
+    flex: 1;
+}
+
+.home-stat-value {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1.2;
+}
+
+.home-stat-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--gray-400);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-top: 3px;
+}
+
+.home-stat-divider {
+    width: 1px;
+    height: 32px;
+    background: var(--border);
+}
+
+/* Sections */
+.home-section {
+    padding: 0 14px;
+    margin-top: 16px;
+}
+
+.home-section-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--gray-500);
+    margin-bottom: 8px;
+    padding-left: 2px;
+}
+
+.home-section-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.dot-active { background: var(--primary); }
+.dot-urgent { background: var(--danger); animation: pulse-dot 1.5s ease-in-out infinite; }
+.dot-issue { background: var(--warning); }
+
+@keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(1.3); }
+}
+
+/* Active delivery cards */
+.home-active-card {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 12px 16px;
+    background: var(--card);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 6px;
+    border-left: 3px solid var(--primary);
+    transition: transform 0.15s;
+}
+
+.home-active-card:active { transform: scale(0.98); }
+
+.home-active-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+
+.home-active-ref {
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--text);
+}
+
+.home-active-dest {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    color: var(--gray-500);
+    font-weight: 500;
+}
+
+.home-view-all {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    width: 100%;
+    padding: 10px;
+    color: var(--primary);
+    font-weight: 600;
+    font-size: 0.78rem;
+    margin-top: 4px;
+}
+
+/* Urgent order cards */
+.home-urgent-card {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 12px 16px;
+    background: var(--card);
+    border-radius: var(--radius-sm);
+    margin-bottom: 6px;
+    transition: transform 0.15s;
+}
+
+.home-urgent-card:active { transform: scale(0.98); }
+.home-urgent-red { border-left: 3px solid var(--danger); }
+.home-urgent-orange { border-left: 3px solid var(--warning); }
+
+.home-urgent-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.home-urgent-ref {
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--text);
+}
+
+.home-urgent-time {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--danger);
+}
+
+.home-urgent-orange .home-urgent-time { color: var(--warning); }
+
+.home-urgent-detail {
+    font-size: 0.72rem;
+    color: var(--gray-400);
+    margin-top: 4px;
+}
+
+/* Issue cards */
+.home-issue-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    text-align: left;
+    padding: 12px 16px;
+    background: var(--warning-bg);
+    border-radius: var(--radius-sm);
+    border-left: 3px solid var(--warning);
+    margin-bottom: 6px;
+    font-size: 0.82rem;
+    color: var(--text);
+    transition: transform 0.15s;
+}
+
+.home-issue-card:active { transform: scale(0.98); }
+.home-issue-card svg { color: var(--warning); flex-shrink: 0; }
+
+/* Available orders card */
+.home-available-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 16px 18px;
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    text-align: left;
+    transition: transform 0.15s;
+}
+
+.home-available-card:active { transform: scale(0.98); }
+
+.home-avail-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.home-avail-count {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--primary);
+    line-height: 1;
+}
+
+.home-avail-text {
+    font-size: 0.82rem;
+    color: var(--gray-500);
+    font-weight: 500;
+}
+
+.home-avail-text strong {
+    color: var(--success);
+}
+
+.home-available-card svg {
+    color: var(--gray-300);
+}
+
+/* Dispatch notification */
+.home-notif-card {
+    padding: 12px 16px;
+    background: var(--card);
+    border-radius: var(--radius-sm);
+    border-left: 3px solid var(--info);
+}
+
+.home-notif-title {
+    font-weight: 700;
+    font-size: 0.82rem;
+    color: var(--text);
+}
+
+.home-notif-msg {
+    font-size: 0.75rem;
+    color: var(--gray-500);
+    margin-top: 4px;
+    line-height: 1.4;
+}
+
+.home-notif-time {
+    font-size: 0.68rem;
+    color: var(--gray-300);
+    margin-top: 6px;
+}
+
+/* Weather section */
+.home-weather-section {
+    margin-top: 12px;
+}
+
+.home-weather {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    background: var(--card);
+    border-radius: var(--radius-sm);
+    font-size: 0.78rem;
+    color: var(--gray-500);
+}
+
+.home-weather-icon {
+    font-size: 1.2rem;
+}
+
+.home-weather-temp {
+    font-weight: 700;
+    color: var(--text);
+    font-size: 0.88rem;
+}
+
+.home-weather-desc {
+    flex: 1;
+}
+
+.home-weather-wind {
+    font-size: 0.72rem;
+    color: var(--gray-400);
+}
+
+.home-weather-bonus {
+    margin-top: 4px;
+    padding: 8px 16px;
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #92400e;
+    text-align: center;
+}
+
+/* ============================================
    ACCOUNT PAGE
    ============================================ */
 #tab-account .tab-body {
