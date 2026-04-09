@@ -531,7 +531,7 @@ function handleGetMTCCDashboard() {
             // Check if picked up today
             $order = courier_loadOrder($ref);
             if ($order) {
-                $pickupTime = $order['dispatch']['pickedup_at'] ?? '';
+                $pickupTime = $order['dispatch']['picked_up_at'] ?? '';
                 if ($pickupTime && substr($pickupTime, 0, 10) === $today) {
                     $pickedUpToday++;
                 }
@@ -576,19 +576,19 @@ function handleGetMTCCDashboard() {
         // Event filtering handled client-side via filter pills
         $order = courier_loadOrder($ref);
         if (!$order) continue;
-        $pickupTime = $order['dispatch']['pickedup_at'] ?? '';
+        $pickupTime = $order['dispatch']['picked_up_at'] ?? '';
         if ($pickupTime && substr($pickupTime, 0, 10) === $today) {
             $recentPickups[] = [
                 'ref' => $ref,
                 'customer_name' => $order['customerInfo']['name'] ?? $order['name'] ?? '',
                 'event' => $order['event']['name'] ?? $order['event_select']['name'] ?? '',
                 'event_acronym' => $order['event']['acronym'] ?? $order['event_select']['acronym'] ?? '',
-                'pickedup_at' => $pickupTime,
+                'picked_up_at' => $pickupTime,
             ];
         }
     }
     usort($recentPickups, function($a, $b) {
-        return strcmp($b['pickedup_at'], $a['pickedup_at']);
+        return strcmp($b['picked_up_at'], $a['picked_up_at']);
     });
 
     // Event breakdown
@@ -638,8 +638,8 @@ function handleGetCompleted() {
 
     // Sort by pickup time (newest first)
     usort($completed, function($a, $b) {
-        $aT = $a['dispatch_pickedup_at'] ?? $a['delivered_at'] ?? '';
-        $bT = $b['dispatch_pickedup_at'] ?? $b['delivered_at'] ?? '';
+        $aT = $a['picked_up_at'] ?? $a['delivered_at'] ?? '';
+        $bT = $b['picked_up_at'] ?? $b['delivered_at'] ?? '';
         return strcmp($bT, $aT);
     });
 
@@ -914,7 +914,7 @@ function handleUpdateStatus() {
             recordCourierEarning($user['pin'], $ref, $order);
         }
     } elseif ($newStatus === 'pickedup') {
-        $order['dispatch']['pickedup_at'] = date('c');
+        $order['dispatch']['picked_up_at'] = date('c');
         $order['dispatch']['pickedup_by'] = $user['name'];
     }
     
@@ -1226,7 +1226,7 @@ function buildCourierPerformance($pin, $earnings) {
             if (!in_array($order['status'] ?? '', ['delivered', 'pickedup'])) continue;
 
             // On-time check: compare delivery time to due date/time
-            $deliveredAt = $dispatch['delivered_at'] ?? $dispatch['pickedup_at'] ?? null;
+            $deliveredAt = $dispatch['delivered_at'] ?? $dispatch['picked_up_at'] ?? null;
             if ($deliveredAt) {
                 $dueDate = $order['selectedDate'] ?? $order['due_date'] ?? null;
                 $dueTime = $order['deliveryTime'] ?? $order['due_time'] ?? 'anytime';
@@ -1468,6 +1468,7 @@ function formatOrderForApp($order, $ref = null, $statusOverride = null) {
         'dispatched_at' => $dispatch['dispatched_at'] ?? '',
         'shipped_at' => $dispatch['shipped_at'] ?? '',
         'delivered_at' => $dispatch['delivered_at'] ?? '',
+        'picked_up_at' => $dispatch['picked_up_at'] ?? '',
         'delivery_photo' => $dispatch['delivery_photo'] ?? '',
         'notes' => $order['specialInstructions'] ?? '',
         // Issue tracking

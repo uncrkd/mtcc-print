@@ -1203,7 +1203,7 @@ function loadMTCCDashboard() {
             html += '<div class="mtcc-dash-section"><div class="mtcc-section-header">Recent Pickups Today</div>';
             html += '<div class="mtcc-dash-list">';
             recent.forEach(function(r) {
-                var pTime = r.pickedup_at ? new Date(r.pickedup_at) : null;
+                var pTime = r.picked_up_at ? new Date(r.picked_up_at) : null;
                 var timeStr = pTime ? pTime.toLocaleTimeString('en-US', {hour: 'numeric', minute: '2-digit'}) : '';
                 html += '<div class="mtcc-recent-item" onclick="if(orderCache[\'' + escapeAttr(r.ref) + '\']) showOrderDetail(\'' + escapeAttr(r.ref) + '\', \'complete\')">';
                 html += '<span class="mtcc-recent-ref">' + escapeHtml(r.ref) + '</span>';

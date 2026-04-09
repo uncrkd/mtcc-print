@@ -3295,15 +3295,6 @@ input {
     padding: 10px 14px 0;
 }
 
-/* Legacy .nearby-card-num — no longer used */
-.nearby-card-num { display: none; }
-    font-weight: 800;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
 .nearby-card-info {
     flex: 1;
     min-width: 0;
@@ -3344,8 +3335,6 @@ input {
     color: var(--subtext);
     font-weight: 500;
 }
-
-/* Legacy nearby-card-dest — replaced by nearby-route-row */
 
 .nearby-card-payout {
     font-size: 1rem;
