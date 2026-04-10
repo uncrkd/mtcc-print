@@ -1079,6 +1079,9 @@ function handleUpdateStatus() {
     } elseif ($newStatus === 'pickedup') {
         $order['dispatch']['picked_up_at'] = date('c');
         $order['dispatch']['pickedup_by'] = $user['name'];
+    } elseif ($newStatus === 'unclaimed') {
+        $order['dispatch']['unclaimed_at'] = date('c');
+        $order['dispatch']['unclaimed_by'] = $user['name'];
     }
     
     courier_saveOrder($ref, $order);

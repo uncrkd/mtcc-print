@@ -3095,6 +3095,16 @@ input {
     border-radius: 10px;
 }
 
+.delivery-toggle-bar.quad {
+    border-radius: 10px;
+    margin: 0 14px 12px;
+}
+.delivery-toggle-bar.quad .toggle-btn {
+    font-size: 0.68rem;
+    padding: 8px 4px;
+    letter-spacing: -0.01em;
+}
+
 /* Filter pills */
 .filter-pills {
     display: flex;
@@ -5409,88 +5419,161 @@ input {
 .ref-status-cancelled .ref-label,
 .ref-status-refunded .ref-label { color: var(--gray-400) !important; }
 
-/* Upcoming status filter pills */
-.upcoming-status-filter {
-    display: flex;
-    gap: 6px;
-    padding: 0 14px 8px;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
+/* Dashboard issues — clean cards, no background container */
+.mtcc-dash-issues {
+    padding: 0 14px;
+    margin-top: 16px;
 }
 
-.upcoming-status-filter::-webkit-scrollbar { display: none; }
-
-.status-filter-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 14px;
-    border-radius: 20px;
-    background: var(--gray-100);
-    color: var(--gray-500);
-    font-size: 0.78rem;
-    font-weight: 600;
-    white-space: nowrap;
-    border: 1.5px solid transparent;
-    transition: all 0.15s;
-    flex-shrink: 0;
+.mtcc-dash-issues .mtcc-section-header {
+    border-bottom: none;
+    padding: 0 4px 8px;
+    margin-bottom: 6px;
 }
 
-.status-filter-pill:active { transform: scale(0.96); }
-
-.status-filter-pill.active {
-    background: var(--card);
-    color: var(--text);
-    border-color: var(--text);
-}
-
-.status-filter-pill.pill-transit.active { color: #14b8a6; border-color: #14b8a6; }
-.status-filter-pill.pill-ready.active { color: #d97706; border-color: #d97706; }
-.status-filter-pill.pill-production.active { color: #6366f1; border-color: #6366f1; }
-
-.pill-count {
-    font-size: 0.7rem;
-    padding: 1px 7px;
-    border-radius: 10px;
-    background: rgba(0,0,0,0.06);
-    font-weight: 700;
-}
-
-.status-filter-pill.active .pill-count {
-    background: rgba(0,0,0,0.1);
-}
-
-/* Issue rows in dashboard */
-.mtcc-issue-row {
+.mtcc-issue-card {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 14px;
+    width: 100%;
+    text-align: left;
+    padding: 14px 16px;
     background: var(--card);
-    border-radius: var(--radius-sm);
-    margin-bottom: 6px;
+    border-radius: var(--radius);
+    margin-bottom: 8px;
     border-left: 3px solid var(--danger);
-    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.15s;
 }
 
-.mtcc-issue-row:active { background: var(--gray-50); }
+.mtcc-issue-card:active { transform: scale(0.98); }
 
 .mtcc-issue-left {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 3px;
 }
 
 .mtcc-issue-ref {
     font-weight: 700;
-    font-size: 0.82rem;
+    font-size: 0.85rem;
     color: var(--text);
 }
 
 .mtcc-issue-name {
-    font-size: 0.72rem;
+    font-size: 0.75rem;
     color: var(--gray-400);
+}
+
+/* Pipeline visual — segmented bar */
+.pipeline-section {
+    margin: 16px 14px 0;
+    padding: 14px 16px;
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
+    transition: transform 0.15s;
+}
+
+.pipeline-section:active { transform: scale(0.99); }
+
+.pipeline-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--gray-500);
+    margin-bottom: 10px;
+}
+
+.pipeline-total {
+    color: var(--text);
+    font-size: 0.85rem;
+}
+
+.pipeline-bar {
+    display: flex;
+    width: 100%;
+    height: 12px;
+    border-radius: 6px;
+    overflow: hidden;
+    background: var(--gray-100);
+    margin-bottom: 12px;
+}
+
+.pipeline-segment {
+    height: 100%;
+    transition: width 0.4s ease;
+}
+
+.seg-production { background: linear-gradient(90deg, #6366f1, #818cf8); }
+.seg-transit { background: linear-gradient(90deg, #14b8a6, #5eead4); }
+
+.pipeline-legend {
+    display: flex;
+    gap: 16px;
+}
+
+.pipeline-leg {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    color: var(--gray-500);
+}
+
+.pipeline-leg strong {
+    color: var(--text);
+}
+
+.leg-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.dot-prod { background: #6366f1; }
+.dot-trans { background: #14b8a6; }
+
+/* Dashboard support row — 3 icon buttons side by side */
+.dash-support-row {
+    display: flex;
+    gap: 10px;
+    padding: 0 14px;
+    margin-top: 20px;
+}
+
+.support-icon-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 16px 8px;
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    color: var(--primary);
+    text-decoration: none;
+    border: none;
+    transition: transform 0.15s;
+}
+
+.support-icon-btn:active {
+    transform: scale(0.96);
+    background: var(--gray-50);
+}
+
+.support-icon-btn span {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text);
 }
 
 .mtcc-stat-number {
@@ -6238,27 +6321,6 @@ input {
     border: 2px solid #7c3aed !important;
 }
 
-.mtcc-btn-unclaimed {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    width: 100%;
-    margin-top: 8px;
-    padding: 10px;
-    background: none;
-    color: var(--gray-400);
-    border: 1px solid var(--border) !important;
-    border-radius: var(--radius-sm);
-    font-size: 0.78rem;
-    font-weight: 600;
-}
-
-.mtcc-btn-unclaimed:active {
-    background: var(--danger-bg);
-    color: var(--danger);
-    border-color: var(--danger) !important;
-}
 
 .mtcc-btn-issue {
     width: 100%;
@@ -8187,10 +8249,12 @@ input {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: 6px;
     width: 100%;
-    padding: 12px;
+    padding: 14px 12px;
     margin: 8px 0;
+    font-size: 0.85rem;
+    font-family: inherit;
     background: linear-gradient(135deg, #14b8a6, #0d9488);
     color: white;
     border: none;

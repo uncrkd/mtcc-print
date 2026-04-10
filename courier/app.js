@@ -1250,12 +1250,12 @@ function renderUpcomingMTCCFromCache() {
 
     var html = buildSearchFilterBar('upcoming_mtcc');
 
-    // Status filter pills
-    html += '<div class="upcoming-status-filter">';
-    html += '<button class="status-filter-pill' + (upcomingStatusFilter === 'all' ? ' active' : '') + '" onclick="setUpcomingStatusFilter(\'all\')">All <span class="pill-count">' + filtered.length + '</span></button>';
-    html += '<button class="status-filter-pill pill-transit' + (upcomingStatusFilter === 'transit' ? ' active' : '') + '" onclick="setUpcomingStatusFilter(\'transit\')">On the Way <span class="pill-count">' + groups.transit.length + '</span></button>';
-    html += '<button class="status-filter-pill pill-ready' + (upcomingStatusFilter === 'ready' ? ' active' : '') + '" onclick="setUpcomingStatusFilter(\'ready\')">Preparing <span class="pill-count">' + groups.ready.length + '</span></button>';
-    html += '<button class="status-filter-pill pill-production' + (upcomingStatusFilter === 'production' ? ' active' : '') + '" onclick="setUpcomingStatusFilter(\'production\')">Production <span class="pill-count">' + groups.production.length + '</span></button>';
+    // Status filter — uses same toggle style as courier login (4 segments, no scroll)
+    html += '<div class="delivery-toggle-bar quad">';
+    html += '<button class="toggle-btn' + (upcomingStatusFilter === 'all' ? ' active' : '') + '" onclick="setUpcomingStatusFilter(\'all\')">All (' + filtered.length + ')</button>';
+    html += '<button class="toggle-btn' + (upcomingStatusFilter === 'transit' ? ' active' : '') + '" onclick="setUpcomingStatusFilter(\'transit\')">On Way (' + groups.transit.length + ')</button>';
+    html += '<button class="toggle-btn' + (upcomingStatusFilter === 'ready' ? ' active' : '') + '" onclick="setUpcomingStatusFilter(\'ready\')">Prep (' + groups.ready.length + ')</button>';
+    html += '<button class="toggle-btn' + (upcomingStatusFilter === 'production' ? ' active' : '') + '" onclick="setUpcomingStatusFilter(\'production\')">Production (' + groups.production.length + ')</button>';
     html += '</div>';
 
     // Determine display set based on status filter
@@ -1328,54 +1328,48 @@ function loadMTCCDashboard() {
         html += '<div class="mtcc-stat-card stat-green" onclick="switchTab(\'complete\')"><div class="mtcc-stat-number">' + s.picked_up_today + '</div><div class="mtcc-stat-label">Picked Up Today</div></div>';
         html += '</div>';
 
-        // Open issues list — always visible (only place issues are surfaced)
-        var issueOrders = result.issue_orders || [];
-        if (issueOrders.length > 0) {
-            html += '<div class="mtcc-dash-section mtcc-issues-section">';
-            html += '<div class="mtcc-section-header"><span><span class="dot-issue-inline"></span>Open Issues</span><span class="mtcc-section-count">' + issueOrders.length + '</span></div>';
-            html += '<div class="mtcc-dash-list">';
-            issueOrders.forEach(function(iss) {
-                var statusLabel = iss.status === 'missing' ? 'Missing' : 'File Issue';
-                var statusCls = iss.status === 'missing' ? 'badge-missing' : 'badge-issue';
-                html += '<div class="mtcc-issue-row" onclick="if(orderCache[\'' + escapeAttr(iss.ref) + '\']) showOrderDetail(\'' + escapeAttr(iss.ref) + '\', \'pickup\')">';
-                html += '<div class="mtcc-issue-left"><span class="mtcc-issue-ref ref-status-' + escapeAttr(iss.status) + '">' + escapeHtml(iss.ref) + '</span><span class="mtcc-issue-name">' + escapeHtml(iss.customer_name) + '</span></div>';
-                html += '<span class="order-status-badge ' + statusCls + ' badge-sm">' + statusLabel + '</span>';
-                html += '</div>';
-            });
-            html += '</div></div>';
-        }
-
-        // Event breakdown — clickable, sets event filter and navigates to pickup
-        // Build acronym → full name lookup from active events
-        var eventNameMap = {};
-        (result.active_events || []).forEach(function(e) {
-            if (e.acronym) eventNameMap[e.acronym] = e.name || e.acronym;
-        });
-
-        var events = result.event_breakdown || {};
-        var eventKeys = Object.keys(events);
-        if (eventKeys.length > 0) {
-            html += '<div class="mtcc-dash-section"><div class="mtcc-section-header">Waiting by Event</div>';
-            html += '<div class="mtcc-event-pills">';
-            eventKeys.forEach(function(ev) {
-                var evName = eventNameMap[ev] || ev;
-                html += '<button class="mtcc-event-pill" onclick="mtccEventFilters=[\'' + escapeAttr(ev) + '\']; switchTab(\'pickup\')">' + escapeHtml(evName) + ': <strong>' + events[ev] + '</strong></button>';
-            });
-            html += '</div></div>';
-        }
-
-        // Pipeline summary — clickable, navigates to upcoming
-        if (s.in_production > 0 || s.in_transit > 0) {
-            html += '<div class="mtcc-dash-section"><div class="mtcc-section-header">Pipeline</div>';
-            html += '<div class="mtcc-pipeline" onclick="switchTab(\'upcoming_mtcc\')">';
-            if (s.in_production > 0) html += '<div class="mtcc-pipeline-item"><span class="mtcc-pipeline-dot dot-amber"></span>' + s.in_production + ' in production</div>';
-            if (s.in_transit > 0) html += '<div class="mtcc-pipeline-item"><span class="mtcc-pipeline-dot dot-blue"></span>' + s.in_transit + ' in transit</div>';
-            html += '</div></div>';
-        }
-
-        // Cache upcoming for click handlers (no longer rendered as full cards)
+        // Cache upcoming + issue orders for click handlers (need full order data for detail panel)
         var upcoming = result.upcoming_deliveries || [];
         upcoming.forEach(function(o) { orderCache[o.ref] = o; });
+
+        // Open issues list — always visible, individual cards (no background container)
+        var issueOrders = result.issue_orders || [];
+        if (issueOrders.length > 0) {
+            html += '<div class="mtcc-dash-issues">';
+            html += '<div class="mtcc-section-header"><span><span class="dot-issue-inline"></span>Open Issues</span><span class="mtcc-section-count">' + issueOrders.length + '</span></div>';
+            issueOrders.forEach(function(iss) {
+                var statusLabel = iss.status === 'missing' ? 'Missing' : (iss.status === 'unclaimed' ? 'Unclaimed' : 'File Issue');
+                var statusCls = iss.status === 'missing' ? 'badge-missing' : (iss.status === 'unclaimed' ? 'badge-unclaimed' : 'badge-issue');
+                // Cache minimal order data so detail panel can open even without full fetch
+                if (!orderCache[iss.ref]) orderCache[iss.ref] = { ref: iss.ref, status: iss.status, customer_name: iss.customer_name, event_acronym: iss.event };
+                html += '<button class="mtcc-issue-card" onclick="showOrderDetail(\'' + escapeAttr(iss.ref) + '\', \'pickup\')">';
+                html += '<div class="mtcc-issue-left">';
+                html += '<span class="mtcc-issue-ref ref-status-' + escapeAttr(iss.status) + '">' + escapeHtml(iss.ref) + '</span>';
+                html += '<span class="mtcc-issue-name">' + escapeHtml(iss.customer_name) + '</span>';
+                html += '</div>';
+                html += '<span class="order-status-badge ' + statusCls + ' badge-sm">' + statusLabel + '</span>';
+                html += '</button>';
+            });
+            html += '</div>';
+        }
+
+        // Pipeline visual — segmented bar showing production vs transit proportions
+        if (s.in_production > 0 || s.in_transit > 0) {
+            var totalPipeline = s.in_production + s.in_transit;
+            var prodPct = totalPipeline > 0 ? (s.in_production / totalPipeline) * 100 : 0;
+            var transitPct = totalPipeline > 0 ? (s.in_transit / totalPipeline) * 100 : 0;
+            html += '<div class="pipeline-section" onclick="switchTab(\'upcoming_mtcc\')">';
+            html += '<div class="pipeline-header"><span>Pipeline</span><span class="pipeline-total">' + totalPipeline + '</span></div>';
+            html += '<div class="pipeline-bar">';
+            if (prodPct > 0) html += '<div class="pipeline-segment seg-production" style="width:' + prodPct + '%;"></div>';
+            if (transitPct > 0) html += '<div class="pipeline-segment seg-transit" style="width:' + transitPct + '%;"></div>';
+            html += '</div>';
+            html += '<div class="pipeline-legend">';
+            if (s.in_production > 0) html += '<div class="pipeline-leg"><span class="leg-dot dot-prod"></span><span><strong>' + s.in_production + '</strong> in production</span></div>';
+            if (s.in_transit > 0) html += '<div class="pipeline-leg"><span class="leg-dot dot-trans"></span><span><strong>' + s.in_transit + '</strong> in transit</span></div>';
+            html += '</div>';
+            html += '</div>';
+        }
 
         // Recent pickups — clickable rows open detail panel
         var recent = result.recent_pickups || [];
@@ -1399,20 +1393,19 @@ function loadMTCCDashboard() {
             html += '</div>';
         }
 
-        // Support section — matches courier Account style
-        html += '<div class="acct-section">';
-        html += '<div class="acct-section-label">Support</div>';
-        html += '<a class="acct-link" href="tel:' + SUPPORT_PHONES.admin.number.replace(/[^0-9+]/g, '') + '">';
-        html += '<div class="acct-link-left"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72"/></svg><span>Call Print Stuff</span></div>';
-        html += '<span class="acct-link-meta">' + SUPPORT_PHONES.admin.number + '</span>';
+        // Support — 3 icon buttons side-by-side (clean, simple)
+        html += '<div class="dash-support-row">';
+        html += '<a class="support-icon-btn" href="tel:' + SUPPORT_PHONES.admin.number.replace(/[^0-9+]/g, '') + '" title="Call Print Stuff">';
+        html += '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72"/></svg>';
+        html += '<span>Call</span>';
         html += '</a>';
-        html += '<a class="acct-link" href="mailto:orders@printstuff.ca">';
-        html += '<div class="acct-link-left"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><span>Email Support</span></div>';
-        html += '<span class="acct-link-meta">orders@printstuff.ca</span>';
+        html += '<a class="support-icon-btn" href="mailto:orders@printstuff.ca" title="Email Support">';
+        html += '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>';
+        html += '<span>Email</span>';
         html += '</a>';
-        html += '<button class="acct-link" onclick="openLiveChat()">';
-        html += '<div class="acct-link-left"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Live Chat</span></div>';
-        html += '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>';
+        html += '<button class="support-icon-btn" onclick="openLiveChat()" title="Live Chat">';
+        html += '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
+        html += '<span>Chat</span>';
         html += '</button>';
         html += '</div>';
 
@@ -2975,9 +2968,6 @@ function renderMTCCDetailPanel(order, mode) {
         html += '<button class="mtcc-action-btn mtcc-btn-scan" onclick="scanExpectedRef=\'' + escapeAttr(order.ref) + '\'; closeDetailPanel(); switchTab(\'scan\')">';
         html += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M8 7v10"/><path d="M12 7v10"/><path d="M17 7v10"/></svg> Scan to Verify</button>';
         html += '</div>';
-        // Mark Unclaimed — secondary action for delivered orders
-        html += '<button class="mtcc-action-btn mtcc-btn-unclaimed" onclick="if(confirm(\'Mark this order as unclaimed? This means the customer did not pick it up.\')) updateOrderStatus(\'' + escapeAttr(order.ref) + '\', \'unclaimed\')">';
-        html += '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> Mark Unclaimed</button>';
     }
     // Report Issue — ALWAYS visible for paid+ orders (Fix 1)
     if (typeof CourierIssues !== 'undefined') {

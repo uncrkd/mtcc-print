@@ -29,7 +29,7 @@ var CourierIssues = (function() {
         { id: 'quality_concern', label: 'Quality Concern', icon: '\ud83d\udd0d', photoRequired: true,
           description: 'Print quality appears poor (colors, alignment, etc.)' },
         { id: 'not_picked_up', label: 'Not Picked Up', icon: '<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:-0.125em;"><path d="M16.5 9.4l-9-5.19M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>', photoRequired: false,
-          description: 'Customer did not pick up after event ended' },
+          description: 'Customer did not pick up after event ended', setsUnclaimed: true },
         { id: 'other', label: 'Other Issue', icon: '\u2753', photoRequired: false,
           description: 'Something else went wrong' }
     ];
@@ -394,6 +394,8 @@ var CourierIssues = (function() {
                     submitted++;
                     if (_selectedType && _selectedType.setsMissing) {
                         apiCall('update_status', { ref: ref, status: 'missing' }, function() {});
+                    } else if (_selectedType && _selectedType.setsUnclaimed) {
+                        apiCall('update_status', { ref: ref, status: 'unclaimed' }, function() {});
                     }
                 } else {
                     failed++;
