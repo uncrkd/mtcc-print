@@ -90,49 +90,73 @@
         display: flex !important;
         justify-content: space-between !important;
         align-items: center !important;
+        flex-wrap: nowrap !important;
         margin-bottom: 8px !important;
-        padding-bottom: 8px !important;
+        padding-bottom: 6px !important;
         border-bottom: 1px solid #e5e7eb !important;
-        gap: 10px !important;
+        gap: 8px !important;
     }
 
     .header-top-left {
         display: flex !important;
         align-items: center !important;
-        gap: 12px !important;
-        flex: 1 !important;
+        flex-wrap: nowrap !important;
+        gap: 8px !important;
+        flex: 1 1 auto !important;
         min-width: 0 !important;
     }
 
     .header-top-right {
         display: flex !important;
         align-items: center !important;
-        gap: 6px !important;
+        flex-wrap: nowrap !important;
+        gap: 4px !important;
         flex-shrink: 0 !important;
+        white-space: nowrap !important;
     }
 
     .current-status-label,
     .priority-tier-label {
-        font-size: 0.7rem !important;
+        font-size: 0.55rem !important;
         color: var(--subtext) !important;
         font-weight: 500 !important;
+        white-space: nowrap !important;
     }
 
     .header-top-divider {
         width: 1px !important;
-        height: 18px !important;
+        height: 14px !important;
         background: #e5e7eb !important;
+        flex-shrink: 0 !important;
     }
 
     .priority-tier-row {
         display: flex !important;
         align-items: center !important;
-        gap: 6px !important;
+        flex-wrap: nowrap !important;
+        gap: 4px !important;
+        white-space: nowrap !important;
     }
 
     .submitted-info {
         text-align: left !important;
-        font-size: 0.7rem !important;
+        font-size: 0.58rem !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        min-width: 0 !important;
+    }
+
+    .submitted-info strong {
+        font-weight: 700 !important;
+    }
+
+    /* Tighten status/priority badges on print */
+    .header-top-row .status-badge-large,
+    .header-top-row .priority-tier-badge {
+        font-size: 0.55rem !important;
+        padding: 0.1rem 0.3rem !important;
+        letter-spacing: 0.2px !important;
     }
 
     .header-main-row {
