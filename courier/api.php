@@ -767,12 +767,8 @@ function handleGetMTCCDashboard() {
             $inProduction++;
         } elseif (in_array($status, ['missing', 'file_issue', 'unclaimed'])) {
             $openIssues++;
-            $issueOrdersList[] = [
-                'ref' => $ref,
-                'status' => $status,
-                'customer_name' => $order['customerInfo']['name'] ?? $order['name'] ?? '',
-                'event' => $eventPrefix,
-            ];
+            // Return FULL formatted order so detail panel has everything it needs
+            $issueOrdersList[] = formatOrderForApp($order, $ref, $status);
         }
     }
 
@@ -805,31 +801,48 @@ function handleGetMTCCDashboard() {
         return strcmp($b['picked_up_at'], $a['picked_up_at']);
     });
 
-    // Determine current active event (event with most activity today/most recent)
-    // Use the active events list as the source of truth — show first one
+    // Active and upcoming events ONLY (excludes past events)
+    $activeAndUpcoming = loadActiveAndUpcomingEvents();
+    $today = date('Y-m-d');
+
+    // Current event = first event whose dates contain today, otherwise first upcoming
     $currentEvent = null;
-    if (!empty($activeEvents)) {
-        $currentEvent = is_array($activeEvents[0])
-            ? ['acronym' => $activeEvents[0]['acronym'] ?? '', 'name' => $activeEvents[0]['name'] ?? '']
-            : ['acronym' => $activeEvents[0], 'name' => $activeEvents[0]];
+    foreach ($activeAndUpcoming as $ev) {
+        $start = $ev['startDate'] ?? null;
+        $end = $ev['endDate'] ?? null;
+        if ($start && $end && $start <= $today && $end >= $today) {
+            $currentEvent = ['acronym' => $ev['acronym'], 'name' => $ev['name'] ?? $ev['acronym']];
+            break;
+        }
+    }
+    // If no event happening today, use the next upcoming
+    if (!$currentEvent && !empty($activeAndUpcoming)) {
+        $currentEvent = ['acronym' => $activeAndUpcoming[0]['acronym'], 'name' => $activeAndUpcoming[0]['name'] ?? $activeAndUpcoming[0]['acronym']];
     }
 
-    // Build per-event progress data (only for active events)
+    // Build per-event progress data (active and upcoming only)
     $eventProgress = [];
-    if (!empty($activeEvents)) {
-        foreach ($activeEvents as $ev) {
-            $acr = is_array($ev) ? ($ev['acronym'] ?? '') : $ev;
-            $name = is_array($ev) ? ($ev['name'] ?? $acr) : $ev;
-            if (!$acr) continue;
-            $totals = $eventTotals[$acr] ?? ['total' => 0, 'waiting' => 0, 'picked_up' => 0];
-            $eventProgress[] = [
-                'acronym' => $acr,
-                'name' => $name,
-                'total' => $totals['total'],
-                'waiting' => $totals['waiting'],
-                'picked_up' => $totals['picked_up'],
-            ];
+    foreach ($activeAndUpcoming as $ev) {
+        $acr = $ev['acronym'] ?? '';
+        if (!$acr) continue;
+        $totals = $eventTotals[$acr] ?? ['total' => 0, 'waiting' => 0, 'picked_up' => 0];
+        $isHappening = false;
+        $start = $ev['startDate'] ?? null;
+        $end = $ev['endDate'] ?? null;
+        if ($start && $end && $start <= $today && $end >= $today) {
+            $isHappening = true;
         }
+        $eventProgress[] = [
+            'acronym' => $acr,
+            'name' => $ev['name'] ?? $acr,
+            'dates' => $ev['dates'] ?? '',
+            'startDate' => $start,
+            'endDate' => $end,
+            'is_happening' => $isHappening,
+            'total' => $totals['total'],
+            'waiting' => $totals['waiting'],
+            'picked_up' => $totals['picked_up'],
+        ];
     }
 
     echo json_encode([
@@ -853,21 +866,26 @@ function handleGetMTCCDashboard() {
 
 function handleGetCompleted() {
     $statuses = courier_loadStatuses();
-    $activeEvents = loadActiveEvents();
-    // Event filtering handled client-side
     $completed = [];
+    // Track totals per event for past events list
+    $eventTotals = [];
 
     foreach ($statuses as $ref => $status) {
         if ($status !== 'pickedup') continue;
 
-        // Filter to active events only
         $eventPrefix = explode('-', $ref)[0] ?? '';
-        // Event filtering handled client-side via filter pills
-
         $order = courier_loadOrder($ref);
         if (!$order) continue;
 
         $completed[] = formatOrderForApp($order, $ref, $status);
+
+        // Tally per event
+        if ($eventPrefix) {
+            if (!isset($eventTotals[$eventPrefix])) {
+                $eventTotals[$eventPrefix] = ['acronym' => $eventPrefix, 'picked_up' => 0];
+            }
+            $eventTotals[$eventPrefix]['picked_up']++;
+        }
     }
 
     // Sort by pickup time (newest first)
@@ -877,7 +895,32 @@ function handleGetCompleted() {
         return strcmp($bT, $aT);
     });
 
-    echo json_encode(['success' => true, 'orders' => $completed, 'count' => count($completed)]);
+    // Build past events archive list
+    $pastEvents = loadPastEvents();
+    $pastEventsList = [];
+    foreach ($pastEvents as $ev) {
+        $acr = $ev['acronym'] ?? '';
+        if (!$acr) continue;
+        $pickedUp = $eventTotals[$acr]['picked_up'] ?? 0;
+        // Only include events that had any pickups
+        if ($pickedUp > 0) {
+            $pastEventsList[] = [
+                'acronym' => $acr,
+                'name' => $ev['name'] ?? $acr,
+                'dates' => $ev['dates'] ?? '',
+                'endDate' => $ev['endDate'] ?? '',
+                'picked_up' => $pickedUp,
+                'total_orders' => $ev['orderCount'] ?? 0,
+            ];
+        }
+    }
+
+    echo json_encode([
+        'success' => true,
+        'orders' => $completed,
+        'count' => count($completed),
+        'past_events' => $pastEventsList,
+    ]);
 }
 
 function handleGetUpcomingMTCC() {
@@ -953,6 +996,85 @@ function loadActiveEvents() {
     }
 
     return array_values($eventMap);
+}
+
+/**
+ * Load only events that are currently active or upcoming (endDate >= today).
+ * Past events are excluded.
+ */
+function loadActiveAndUpcomingEvents() {
+    $eventsFile = __DIR__ . '/../admin/events.json';
+    $today = date('Y-m-d');
+    $eventMap = [];
+
+    if (file_exists($eventsFile)) {
+        $data = json_decode(file_get_contents($eventsFile), true);
+        if ($data) {
+            // Active events list (already filtered by admin)
+            foreach ($data['active'] ?? [] as $e) {
+                $acr = $e['acronym'] ?? '';
+                if (!$acr) continue;
+                $endDate = $e['endDate'] ?? null;
+                // Include if no endDate (always active) OR endDate >= today
+                if (!$endDate || $endDate >= $today) {
+                    $eventMap[$acr] = $e;
+                }
+            }
+            // Also check archived for events that were archived but haven't ended yet
+            foreach ($data['archived'] ?? [] as $e) {
+                $acr = $e['acronym'] ?? '';
+                if (!$acr || isset($eventMap[$acr])) continue;
+                $endDate = $e['endDate'] ?? null;
+                if ($endDate && $endDate >= $today) {
+                    $eventMap[$acr] = $e;
+                }
+            }
+        }
+    }
+
+    // Sort by startDate ascending (earliest upcoming first)
+    $events = array_values($eventMap);
+    usort($events, function($a, $b) {
+        $aStart = $a['startDate'] ?? '9999-12-31';
+        $bStart = $b['startDate'] ?? '9999-12-31';
+        return strcmp($aStart, $bStart);
+    });
+
+    return $events;
+}
+
+/**
+ * Load past events (endDate < today). Used for the Complete tab archive.
+ */
+function loadPastEvents() {
+    $eventsFile = __DIR__ . '/../admin/events.json';
+    $today = date('Y-m-d');
+    $eventMap = [];
+
+    if (file_exists($eventsFile)) {
+        $data = json_decode(file_get_contents($eventsFile), true);
+        if ($data) {
+            // Both active and archived can have past events
+            foreach (array_merge($data['active'] ?? [], $data['archived'] ?? []) as $e) {
+                $acr = $e['acronym'] ?? '';
+                if (!$acr || isset($eventMap[$acr])) continue;
+                $endDate = $e['endDate'] ?? null;
+                if ($endDate && $endDate < $today) {
+                    $eventMap[$acr] = $e;
+                }
+            }
+        }
+    }
+
+    // Sort by endDate descending (most recent first)
+    $events = array_values($eventMap);
+    usort($events, function($a, $b) {
+        $aEnd = $a['endDate'] ?? '0000-00-00';
+        $bEnd = $b['endDate'] ?? '0000-00-00';
+        return strcmp($bEnd, $aEnd);
+    });
+
+    return $events;
 }
 
 /**

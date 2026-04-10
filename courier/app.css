@@ -5682,21 +5682,58 @@ input {
 
 .mtcc-event-top {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
+    gap: 8px;
+}
+
+.mtcc-event-title-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 0;
 }
 
 .mtcc-event-name {
     font-size: 0.88rem;
     font-weight: 700;
     color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .mtcc-event-total {
     font-size: 0.72rem;
     color: var(--gray-400);
     font-weight: 600;
+    flex-shrink: 0;
+}
+
+.mtcc-event-dates {
+    font-size: 0.72rem;
+    color: var(--gray-400);
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+
+.mtcc-event-live {
+    border-left: 3px solid var(--success);
+}
+
+.mtcc-event-live-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    background: var(--success);
+    color: white;
+    border-radius: 10px;
+    font-size: 0.6rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    animation: pulse-dot 1.5s ease-in-out infinite;
+    flex-shrink: 0;
 }
 
 .mtcc-event-bar {
@@ -5826,6 +5863,70 @@ input {
     font-size: 0.7rem;
     color: var(--gray-400);
     margin-top: 2px;
+}
+
+/* Past events archive (Complete tab footer) */
+.past-events-section {
+    margin: 24px 14px 0;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+}
+
+.past-events-header {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--gray-400);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 0 4px 10px;
+}
+
+.past-event-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    text-align: left;
+    padding: 12px 14px;
+    background: var(--card);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 6px;
+    opacity: 0.85;
+    transition: opacity 0.15s, transform 0.15s;
+}
+
+.past-event-card:active {
+    opacity: 1;
+    transform: scale(0.98);
+}
+
+.past-event-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.past-event-name {
+    font-weight: 600;
+    font-size: 0.82rem;
+    color: var(--text);
+}
+
+.past-event-dates {
+    font-size: 0.7rem;
+    color: var(--gray-400);
+    margin-top: 2px;
+}
+
+.past-event-count {
+    font-size: 0.78rem;
+    color: var(--gray-500);
+    flex-shrink: 0;
+    padding-left: 12px;
+}
+
+.past-event-count strong {
+    color: var(--success);
 }
 
 /* Dashboard issues — clean cards, no background container */
