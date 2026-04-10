@@ -149,37 +149,41 @@
 
     .header-barcode-display {
         display: flex !important;
-        flex-direction: column !important;
+        flex-direction: row-reverse !important;
         align-items: center !important;
-        background: white !important;
-        border: 2px solid var(--primary) !important;
-        border-radius: 4px !important;
-        padding: 4px 8px !important;
-        gap: 2px !important;
+        gap: 8px !important;
+        background: none !important;
+        border: none !important;
+        padding: 0 !important;
     }
 
     .header-barcode-display #orderBarcode {
-        display: flex !important;
+        display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
-        min-height: 32px !important;
+        padding: 2px 3px !important;
+        background: white !important;
+        border: 1px solid #e5e7eb !important;
+        border-radius: 2px !important;
+        min-height: 28px !important;
     }
 
     .header-barcode-display #orderBarcode svg {
-        max-height: 32px !important;
+        max-height: 26px !important;
+        display: block !important;
     }
 
     .header-barcode-display .barcode-number {
         font-family: 'Monaco', 'Consolas', monospace !important;
-        font-size: 0.6rem !important;
+        font-size: 0.62rem !important;
         font-weight: 600 !important;
         color: var(--text) !important;
-        letter-spacing: 0.5px !important;
-        text-align: center !important;
-        padding: 1px 4px !important;
-        background: #f8fafc !important;
-        border: 1px solid #e5e7eb !important;
-        border-radius: 2px !important;
+        letter-spacing: 0.4px !important;
+        text-align: right !important;
+        padding: 0 !important;
+        background: none !important;
+        border: none !important;
+        white-space: nowrap !important;
     }
 
     /* Hide old standalone barcode card on print (no longer rendered but safety) */

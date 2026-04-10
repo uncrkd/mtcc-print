@@ -358,37 +358,41 @@ body.edit-mode {
 
 .header-barcode-display {
     display: flex;
-    flex-direction: column;
+    flex-direction: row-reverse;
     align-items: center;
-    background: white;
-    border: 2px solid var(--primary);
-    border-radius: var(--radius-sm);
-    padding: 6px 10px;
-    gap: 4px;
+    gap: 10px;
+    background: none;
+    border: none;
+    padding: 0;
 }
 
 .header-barcode-display #orderBarcode {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-height: 36px;
+    padding: 2px 4px;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 3px;
+    min-height: 32px;
 }
 
 .header-barcode-display #orderBarcode svg {
-    max-height: 36px;
+    max-height: 30px;
+    display: block;
 }
 
 .header-barcode-display .barcode-number {
     font-family: 'Monaco', 'Consolas', monospace;
-    font-size: 0.7rem;
+    font-size: 0.72rem;
     font-weight: 600;
     color: var(--text);
     letter-spacing: 0.5px;
-    text-align: center;
-    padding: 2px 6px;
-    background: #f8fafc;
-    border: 1px solid #e5e7eb;
-    border-radius: 3px;
+    text-align: right;
+    padding: 0;
+    background: none;
+    border: none;
+    white-space: nowrap;
 }
 
 .header-actions {
