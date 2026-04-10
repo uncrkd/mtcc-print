@@ -737,10 +737,25 @@ body.edit-mode {
     font-family: 'Montserrat', sans-serif;
 }
 
-.field-control:focus { 
-    outline: none; 
-    background: var(--primary-light); 
-    border-color: var(--primary); 
+.field-control:focus {
+    outline: none;
+    background: #faf7ff;
+    border-color: #c4b5fd;
+    box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.12);
+}
+
+/* Override browser autofill to a soft purple tint */
+.field-control:-webkit-autofill,
+.field-control:-webkit-autofill:hover,
+.field-control:-webkit-autofill:focus,
+.header-input:-webkit-autofill,
+.header-input:-webkit-autofill:hover,
+.header-input:-webkit-autofill:focus {
+    -webkit-text-fill-color: var(--text);
+    -webkit-box-shadow: 0 0 0px 1000px #faf7ff inset;
+    box-shadow: 0 0 0px 1000px #faf7ff inset;
+    caret-color: var(--text);
+    transition: background-color 5000s ease-in-out 0s;
 }
 
 textarea.field-control { 
@@ -772,12 +787,7 @@ textarea.field-control {
 
 /* Status Colors for Input */
 .header-input.status-submitted { background: #f0fdf4; color: var(--green); border-color: var(--green); }
-.header-input.status-checking { background: #fff7ed; color: var(--orange); border-color: var(--orange); }
-.header-input.status-unpaid { background: #fefce8; color: var(--yellow); border-color: var(--yellow); }
-.header-input.status-paid { background: #f0fdf4; color: var(--green); border-color: var(--green); }
-.header-input.status-printing { background: #f0f9ff; color: var(--blue); border-color: var(--blue); }
-.header-input.status-delivered { background: #faf5ff; color: var(--primary); border-color: var(--primary); }
-.header-input.status-cancelled { background: #fef2f2; color: var(--red); border-color: var(--red); }
+/* Status input color overrides removed — soft pastel styles defined in admin-components.css */
 
 /* File Upload Components */
 .file-details {

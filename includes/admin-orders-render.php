@@ -1419,7 +1419,7 @@ window.orderDueDate = '<?= htmlspecialchars($order['selectedDate']) ?>'; // Lega
 
     <!-- Page Header - Purple for View, Grey for Edit -->
     <?php if ($isEditMode): ?>
-    <div class="page-header" style="margin: 0; background: linear-gradient(90deg, rgba(95, 95, 95, 1) 0%, rgba(170, 170, 170, 1) 100%); box-shadow: var(--shadow-md);  outline: 2px dashed rgba(191, 191, 191, 0.7);   outline-offset: -5px;">
+    <div class="page-header" style="margin: 0;">
       <div class="page-header-left">
         <h1 class="page-title">
           <a href="admin-orders.php" class="page-title-back" title="Back to Orders"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6-6 6 6 6"/><path d="M3 12h14"/><path d="M21 19V5"/></svg></a>
@@ -1505,7 +1505,7 @@ window.orderDueDate = '<?= htmlspecialchars($order['selectedDate']) ?>'; // Lega
         ];
         ?>
         <?php if ($isEditMode): ?>
-        <select name="status" class="header-input btn-medium" required>
+        <select name="status" class="header-input btn-medium status-<?= $currentStatus ?>" required>
           <?php
           $statusOptionsWithIcons = [
             'unpaid' => ICON_HOURGLASS . ' Unpaid',
