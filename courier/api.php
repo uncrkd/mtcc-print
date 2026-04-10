@@ -85,6 +85,7 @@ switch ($action) {
     case 'get_tracking':       handleGetTracking(); break; // public — no auth needed
     // Weather
     case 'get_home_data':      requireAuth(); handleGetHomeData(); break;
+    case 'search_orders':      requireAuth(); handleSearchOrders(); break;
     case 'get_weather':        requireAuth(); handleGetWeather(); break;
     case 'get_notifications':  requireAuth(); handleGetNotifications(); break;
     // Batch Orders
@@ -657,6 +658,55 @@ function handleGetActivity() {
 // MTCC Staff Dashboard
 // ============================================
 
+function handleSearchOrders() {
+    $query = strtolower(trim($_POST['query'] ?? ''));
+    if (strlen($query) < 2) {
+        echo json_encode(['success' => true, 'results' => []]);
+        return;
+    }
+
+    $statuses = courier_loadStatuses();
+    $results = [];
+
+    foreach ($statuses as $ref => $status) {
+        if (empty($ref)) continue;
+        // Skip cancelled/refunded
+        if (in_array($status, ['cancelled', 'refunded'])) continue;
+
+        $order = courier_loadOrder($ref);
+        if (!$order) continue;
+
+        $customerName = strtolower($order['customerInfo']['name'] ?? $order['name'] ?? '');
+        $customerEmail = strtolower($order['customerInfo']['email'] ?? $order['email'] ?? '');
+        $tracking = strtolower($order['dispatch']['tracking'] ?? '');
+        $refLower = strtolower($ref);
+
+        // Match against ref, customer name, email, tracking
+        if (strpos($refLower, $query) !== false ||
+            strpos($customerName, $query) !== false ||
+            strpos($customerEmail, $query) !== false ||
+            strpos($tracking, $query) !== false) {
+
+            $formatted = formatOrderForApp($order, $ref, $status);
+            $results[] = [
+                'ref' => $ref,
+                'status' => $status,
+                'customer_name' => $order['customerInfo']['name'] ?? $order['name'] ?? '',
+                'event' => $order['event']['acronym'] ?? $order['event_select']['acronym'] ?? '',
+                'event_name' => $order['event']['name'] ?? $order['event_select']['name'] ?? '',
+                'building' => $formatted['building'] ?? '',
+                'due_date_formatted' => $formatted['due_date_formatted'] ?? '',
+                'due_time_formatted' => $formatted['due_time_formatted'] ?? '',
+            ];
+
+            // Cap at 20 results
+            if (count($results) >= 20) break;
+        }
+    }
+
+    echo json_encode(['success' => true, 'results' => $results, 'query' => $query]);
+}
+
 function handleGetMTCCDashboard() {
     $statuses = courier_loadStatuses();
     $today = date('Y-m-d');
@@ -673,52 +723,55 @@ function handleGetMTCCDashboard() {
     $inProduction = 0;
     $inTransit = 0;
     $upcomingDeliveries = [];
+    // Per-event totals: track total orders, waiting, picked up
+    $eventTotals = [];
 
     foreach ($statuses as $ref => $status) {
         if (empty($ref)) continue;
+        // Skip cancelled/refunded
+        if (in_array($status, ['cancelled', 'refunded'])) continue;
 
-        // Check if order belongs to an active event
         $eventPrefix = explode('-', $ref)[0] ?? '';
-        // Event filtering handled client-side via filter pills
+        // Initialize event bucket
+        if ($eventPrefix && !isset($eventTotals[$eventPrefix])) {
+            $eventTotals[$eventPrefix] = ['acronym' => $eventPrefix, 'total' => 0, 'waiting' => 0, 'picked_up' => 0];
+        }
+        if ($eventPrefix) {
+            $eventTotals[$eventPrefix]['total']++;
+        }
+
+        $order = courier_loadOrder($ref);
+        if (!$order) continue;
 
         if ($status === 'delivered') {
             $waitingForPickup++;
+            if ($eventPrefix) $eventTotals[$eventPrefix]['waiting']++;
         } elseif ($status === 'pickedup') {
-            // Check if picked up today
-            $order = courier_loadOrder($ref);
-            if ($order) {
-                $pickupTime = $order['dispatch']['picked_up_at'] ?? '';
-                if ($pickupTime && substr($pickupTime, 0, 10) === $today) {
-                    $pickedUpToday++;
-                }
+            $pickupTime = $order['dispatch']['picked_up_at'] ?? '';
+            if ($pickupTime && substr($pickupTime, 0, 10) === $today) {
+                $pickedUpToday++;
             }
+            if ($eventPrefix) $eventTotals[$eventPrefix]['picked_up']++;
         } elseif (in_array($status, ['dispatched', 'shipped'])) {
             $inTransit++;
-            // Check if due today
-            $order = courier_loadOrder($ref);
-            if ($order) {
-                $dueDate = $order['selectedDate'] ?? '';
-                if ($dueDate === $today) $expectedToday++;
-                $formatted = formatOrderForApp($order, $ref, $status);
-                $upcomingDeliveries[] = $formatted;
-            }
-        } elseif (in_array($status, ['ready'])) {
-            $order = courier_loadOrder($ref);
-            if ($order) {
-                $dueDate = $order['selectedDate'] ?? '';
-                if ($dueDate === $today) $expectedToday++;
-                $formatted = formatOrderForApp($order, $ref, $status);
-                $upcomingDeliveries[] = $formatted;
-            }
+            $dueDate = $order['selectedDate'] ?? '';
+            if ($dueDate === $today) $expectedToday++;
+            $formatted = formatOrderForApp($order, $ref, $status);
+            $upcomingDeliveries[] = $formatted;
+        } elseif ($status === 'ready') {
+            $dueDate = $order['selectedDate'] ?? '';
+            if ($dueDate === $today) $expectedToday++;
+            $formatted = formatOrderForApp($order, $ref, $status);
+            $upcomingDeliveries[] = $formatted;
         } elseif (in_array($status, ['preflight', 'printing'])) {
             $inProduction++;
-        } elseif (in_array($status, ['missing', 'file_issue'])) {
+        } elseif (in_array($status, ['missing', 'file_issue', 'unclaimed'])) {
             $openIssues++;
             $issueOrdersList[] = [
                 'ref' => $ref,
                 'status' => $status,
                 'customer_name' => $order['customerInfo']['name'] ?? $order['name'] ?? '',
-                'event' => $order['event']['acronym'] ?? $order['event_select']['acronym'] ?? '',
+                'event' => $eventPrefix,
             ];
         }
     }
@@ -730,12 +783,10 @@ function handleGetMTCCDashboard() {
         return $aH <=> $bH;
     });
 
-    // Recent pickups (last 10 today)
+    // Recent pickups (last 10 today) — now with pickedup_by
     $recentPickups = [];
     foreach ($statuses as $ref => $status) {
         if ($status !== 'pickedup') continue;
-        $eventPrefix = explode('-', $ref)[0] ?? '';
-        // Event filtering handled client-side via filter pills
         $order = courier_loadOrder($ref);
         if (!$order) continue;
         $pickupTime = $order['dispatch']['picked_up_at'] ?? '';
@@ -746,6 +797,7 @@ function handleGetMTCCDashboard() {
                 'event' => $order['event']['name'] ?? $order['event_select']['name'] ?? '',
                 'event_acronym' => $order['event']['acronym'] ?? $order['event_select']['acronym'] ?? '',
                 'picked_up_at' => $pickupTime,
+                'pickedup_by' => $order['dispatch']['pickedup_by'] ?? '',
             ];
         }
     }
@@ -753,13 +805,31 @@ function handleGetMTCCDashboard() {
         return strcmp($b['picked_up_at'], $a['picked_up_at']);
     });
 
-    // Event breakdown
-    $eventCounts = [];
-    foreach ($statuses as $ref => $status) {
-        if ($status !== 'delivered') continue;
-        $eventPrefix = explode('-', $ref)[0] ?? '';
-        // Event filtering handled client-side via filter pills
-        $eventCounts[$eventPrefix] = ($eventCounts[$eventPrefix] ?? 0) + 1;
+    // Determine current active event (event with most activity today/most recent)
+    // Use the active events list as the source of truth — show first one
+    $currentEvent = null;
+    if (!empty($activeEvents)) {
+        $currentEvent = is_array($activeEvents[0])
+            ? ['acronym' => $activeEvents[0]['acronym'] ?? '', 'name' => $activeEvents[0]['name'] ?? '']
+            : ['acronym' => $activeEvents[0], 'name' => $activeEvents[0]];
+    }
+
+    // Build per-event progress data (only for active events)
+    $eventProgress = [];
+    if (!empty($activeEvents)) {
+        foreach ($activeEvents as $ev) {
+            $acr = is_array($ev) ? ($ev['acronym'] ?? '') : $ev;
+            $name = is_array($ev) ? ($ev['name'] ?? $acr) : $ev;
+            if (!$acr) continue;
+            $totals = $eventTotals[$acr] ?? ['total' => 0, 'waiting' => 0, 'picked_up' => 0];
+            $eventProgress[] = [
+                'acronym' => $acr,
+                'name' => $name,
+                'total' => $totals['total'],
+                'waiting' => $totals['waiting'],
+                'picked_up' => $totals['picked_up'],
+            ];
+        }
     }
 
     echo json_encode([
@@ -774,7 +844,8 @@ function handleGetMTCCDashboard() {
         ],
         'upcoming_deliveries' => array_slice($upcomingDeliveries, 0, 8),
         'recent_pickups' => array_slice($recentPickups, 0, 10),
-        'event_breakdown' => $eventCounts,
+        'event_progress' => $eventProgress,
+        'current_event' => $currentEvent,
         'active_events' => $activeEvents,
         'issue_orders' => $issueOrdersList,
     ]);

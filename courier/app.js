@@ -1319,33 +1319,62 @@ function loadMTCCDashboard() {
         cachedActiveEvents = result.active_events || [];
 
         var s = result.stats;
-        var html = '';
+        var name = currentUser ? (currentUser.name || '').split(' ')[0] : '';
+        var hour = new Date().getHours();
+        var greeting = hour < 12 ? 'Good morning' : (hour < 17 ? 'Good afternoon' : 'Good evening');
+        var currentEvent = result.current_event;
 
-        // Stats cards — 3 cards (Open Issues becomes its own section below)
-        html += '<div class="mtcc-stats-grid mtcc-stats-grid-3">';
-        html += '<div class="mtcc-stat-card stat-purple" onclick="switchTab(\'pickup\')"><div class="mtcc-stat-number">' + s.waiting_for_pickup + '</div><div class="mtcc-stat-label">Waiting for Pickup</div></div>';
-        html += '<div class="mtcc-stat-card stat-blue" onclick="switchTab(\'upcoming_mtcc\')"><div class="mtcc-stat-number">' + s.expected_today + '</div><div class="mtcc-stat-label">Expected Today</div></div>';
-        html += '<div class="mtcc-stat-card stat-green" onclick="switchTab(\'complete\')"><div class="mtcc-stat-number">' + s.picked_up_today + '</div><div class="mtcc-stat-label">Picked Up Today</div></div>';
-        html += '</div>';
-
-        // Cache upcoming + issue orders for click handlers (need full order data for detail panel)
+        // Cache upcoming + issue orders so detail panel can open
         var upcoming = result.upcoming_deliveries || [];
         upcoming.forEach(function(o) { orderCache[o.ref] = o; });
 
-        // Open issues list — always visible, individual cards (no background container)
+        var html = '';
+
+        // Greeting hero — current event context shown subtly
+        html += '<div class="mtcc-hero">';
+        html += '<div class="mtcc-hero-greeting">' + escapeHtml(greeting) + ', ' + escapeHtml(name) + '</div>';
+        if (currentEvent && currentEvent.acronym) {
+            html += '<div class="mtcc-hero-context">' + escapeHtml(currentEvent.name || currentEvent.acronym) + '</div>';
+        }
+        html += '</div>';
+
+        // BIG global search bar — the centerpiece
+        html += '<div class="mtcc-search-section">';
+        html += '<div class="mtcc-search-wrap">';
+        html += '<svg class="mtcc-search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
+        html += '<input type="text" id="mtccGlobalSearch" class="mtcc-search-input" placeholder="Search order ID, customer name, email..." autocomplete="off" oninput="onMtccGlobalSearch(this.value)">';
+        html += '<button class="mtcc-search-clear" id="mtccSearchClear" onclick="clearMtccGlobalSearch()" style="display:none;">';
+        html += '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+        html += '</button>';
+        html += '</div>';
+        html += '<div class="mtcc-search-results" id="mtccSearchResults"></div>';
+        html += '</div>';
+
+        // Hero stats — 2 BIG numbers, no clutter
+        html += '<div class="mtcc-hero-stats">';
+        html += '<button class="mtcc-hero-stat" onclick="switchTab(\'pickup\')">';
+        html += '<div class="mtcc-hero-num">' + s.waiting_for_pickup + '</div>';
+        html += '<div class="mtcc-hero-label">Waiting for Pickup</div>';
+        html += '</button>';
+        html += '<button class="mtcc-hero-stat" onclick="switchTab(\'complete\')">';
+        html += '<div class="mtcc-hero-num">' + s.picked_up_today + '</div>';
+        html += '<div class="mtcc-hero-label">Picked Up Today</div>';
+        html += '</button>';
+        html += '</div>';
+
+        // Need Attention — only shows if there are issues
         var issueOrders = result.issue_orders || [];
         if (issueOrders.length > 0) {
-            html += '<div class="mtcc-dash-issues">';
-            html += '<div class="mtcc-section-header"><span><span class="dot-issue-inline"></span>Open Issues</span><span class="mtcc-section-count">' + issueOrders.length + '</span></div>';
+            html += '<div class="mtcc-attention">';
+            html += '<div class="mtcc-attention-header"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> ' + issueOrders.length + ' Need' + (issueOrders.length === 1 ? 's' : '') + ' Attention</div>';
             issueOrders.forEach(function(iss) {
                 var statusLabel = iss.status === 'missing' ? 'Missing' : (iss.status === 'unclaimed' ? 'Unclaimed' : 'File Issue');
                 var statusCls = iss.status === 'missing' ? 'badge-missing' : (iss.status === 'unclaimed' ? 'badge-unclaimed' : 'badge-issue');
-                // Cache minimal order data so detail panel can open even without full fetch
                 if (!orderCache[iss.ref]) orderCache[iss.ref] = { ref: iss.ref, status: iss.status, customer_name: iss.customer_name, event_acronym: iss.event };
-                html += '<button class="mtcc-issue-card" onclick="showOrderDetail(\'' + escapeAttr(iss.ref) + '\', \'pickup\')">';
-                html += '<div class="mtcc-issue-left">';
-                html += '<span class="mtcc-issue-ref ref-status-' + escapeAttr(iss.status) + '">' + escapeHtml(iss.ref) + '</span>';
-                html += '<span class="mtcc-issue-name">' + escapeHtml(iss.customer_name) + '</span>';
+                html += '<button class="mtcc-attention-card" onclick="showOrderDetail(\'' + escapeAttr(iss.ref) + '\', \'pickup\')">';
+                html += '<div class="mtcc-attention-left">';
+                html += '<span class="mtcc-attention-ref ref-status-' + escapeAttr(iss.status) + '">' + escapeHtml(iss.ref) + '</span>';
+                html += '<span class="mtcc-attention-name">' + escapeHtml(iss.customer_name) + '</span>';
                 html += '</div>';
                 html += '<span class="order-status-badge ' + statusCls + ' badge-sm">' + statusLabel + '</span>';
                 html += '</button>';
@@ -1353,47 +1382,69 @@ function loadMTCCDashboard() {
             html += '</div>';
         }
 
-        // Pipeline visual — segmented bar showing production vs transit proportions
-        if (s.in_production > 0 || s.in_transit > 0) {
-            var totalPipeline = s.in_production + s.in_transit;
-            var prodPct = totalPipeline > 0 ? (s.in_production / totalPipeline) * 100 : 0;
-            var transitPct = totalPipeline > 0 ? (s.in_transit / totalPipeline) * 100 : 0;
-            html += '<div class="pipeline-section" onclick="switchTab(\'upcoming_mtcc\')">';
-            html += '<div class="pipeline-header"><span>Pipeline</span><span class="pipeline-total">' + totalPipeline + '</span></div>';
-            html += '<div class="pipeline-bar">';
-            if (prodPct > 0) html += '<div class="pipeline-segment seg-production" style="width:' + prodPct + '%;"></div>';
-            if (transitPct > 0) html += '<div class="pipeline-segment seg-transit" style="width:' + transitPct + '%;"></div>';
-            html += '</div>';
-            html += '<div class="pipeline-legend">';
-            if (s.in_production > 0) html += '<div class="pipeline-leg"><span class="leg-dot dot-prod"></span><span><strong>' + s.in_production + '</strong> in production</span></div>';
-            if (s.in_transit > 0) html += '<div class="pipeline-leg"><span class="leg-dot dot-trans"></span><span><strong>' + s.in_transit + '</strong> in transit</span></div>';
-            html += '</div>';
+        // Active Events — total posters per event with progress bar
+        var eventProgress = result.event_progress || [];
+        if (eventProgress.length > 0) {
+            html += '<div class="mtcc-section">';
+            html += '<div class="mtcc-section-title">Active Events</div>';
+            eventProgress.forEach(function(ev) {
+                var pickedPct = ev.total > 0 ? (ev.picked_up / ev.total) * 100 : 0;
+                html += '<button class="mtcc-event-card" onclick="mtccEventFilters=[\'' + escapeAttr(ev.acronym) + '\']; switchTab(\'pickup\')">';
+                html += '<div class="mtcc-event-top">';
+                html += '<span class="mtcc-event-name">' + escapeHtml(ev.name) + '</span>';
+                html += '<span class="mtcc-event-total">' + ev.total + ' total</span>';
+                html += '</div>';
+                html += '<div class="mtcc-event-bar"><div class="mtcc-event-bar-fill" style="width:' + pickedPct + '%;"></div></div>';
+                html += '<div class="mtcc-event-stats">';
+                html += '<span><strong>' + ev.picked_up + '</strong> picked up</span>';
+                html += '<span><strong>' + ev.waiting + '</strong> waiting</span>';
+                html += '</div>';
+                html += '</button>';
+            });
             html += '</div>';
         }
 
-        // Recent pickups — clickable rows open detail panel
+        // Pipeline — compact summary
+        if (s.in_production > 0 || s.in_transit > 0) {
+            html += '<div class="mtcc-section">';
+            html += '<div class="mtcc-section-title">Pipeline</div>';
+            html += '<button class="mtcc-pipeline-card" onclick="switchTab(\'upcoming_mtcc\')">';
+            if (s.in_production > 0) {
+                html += '<div class="mtcc-pipeline-row"><span class="mtcc-pipeline-icon dot-prod-bg"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></span><span><strong>' + s.in_production + '</strong> in production</span></div>';
+            }
+            if (s.in_transit > 0) {
+                html += '<div class="mtcc-pipeline-row"><span class="mtcc-pipeline-icon dot-trans-bg"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5a2 2 0 0 1-2 2"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></span><span><strong>' + s.in_transit + '</strong> on the way</span></div>';
+            }
+            html += '<div class="mtcc-pipeline-arrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>';
+            html += '</button>';
+            html += '</div>';
+        }
+
+        // Recent Activity — pickups with timestamp + user
         var recent = result.recent_pickups || [];
         if (recent.length > 0) {
-            html += '<div class="mtcc-dash-section">';
-            html += '<div class="mtcc-section-header"><span>Recent Pickups Today</span><span class="mtcc-section-count">' + s.picked_up_today + ' total</span></div>';
-            html += '<div class="mtcc-dash-list">';
-            recent.forEach(function(r) {
+            html += '<div class="mtcc-section">';
+            html += '<div class="mtcc-section-title">Recent Activity</div>';
+            html += '<div class="mtcc-activity-feed">';
+            recent.slice(0, 5).forEach(function(r) {
                 var pTime = r.picked_up_at ? new Date(r.picked_up_at) : null;
                 var timeStr = pTime ? pTime.toLocaleTimeString('en-US', {hour: 'numeric', minute: '2-digit'}) : '';
-                html += '<div class="mtcc-recent-item" onclick="if(orderCache[\'' + escapeAttr(r.ref) + '\']) showOrderDetail(\'' + escapeAttr(r.ref) + '\', \'complete\')">';
-                html += '<span class="mtcc-recent-ref">' + escapeHtml(r.ref) + '</span>';
-                html += '<span class="mtcc-recent-name">' + escapeHtml(r.customer_name) + '</span>';
-                html += '<span class="mtcc-recent-time">' + timeStr + '</span>';
+                html += '<div class="mtcc-activity-row" onclick="if(orderCache[\'' + escapeAttr(r.ref) + '\']) showOrderDetail(\'' + escapeAttr(r.ref) + '\', \'complete\')">';
+                html += '<div class="mtcc-activity-time">' + timeStr + '</div>';
+                html += '<div class="mtcc-activity-body">';
+                html += '<div class="mtcc-activity-line"><span class="mtcc-activity-ref ref-status-pickedup">' + escapeHtml(r.ref) + '</span> <span class="mtcc-activity-customer">' + escapeHtml(r.customer_name) + '</span></div>';
+                if (r.pickedup_by) html += '<div class="mtcc-activity-user">picked up by ' + escapeHtml(r.pickedup_by) + '</div>';
+                html += '</div>';
                 html += '</div>';
             });
             html += '</div>';
-            if (s.picked_up_today > recent.length) {
+            if (s.picked_up_today > 5) {
                 html += '<button class="mtcc-view-all-link" onclick="switchTab(\'complete\')">View all activity <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></button>';
             }
             html += '</div>';
         }
 
-        // Support — 3 icon buttons side-by-side (clean, simple)
+        // Support — 3 icon buttons side-by-side
         html += '<div class="dash-support-row">';
         html += '<a class="support-icon-btn" href="tel:' + SUPPORT_PHONES.admin.number.replace(/[^0-9+]/g, '') + '" title="Call Print Stuff">';
         html += '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72"/></svg>';
@@ -1417,6 +1468,84 @@ function loadMTCCDashboard() {
 
         el.innerHTML = html;
     });
+}
+
+// ============================================
+// MTCC Dashboard Global Search (Option A — live results)
+// ============================================
+var mtccGlobalSearchTimer = null;
+
+function onMtccGlobalSearch(query) {
+    var clearBtn = document.getElementById('mtccSearchClear');
+    var resultsEl = document.getElementById('mtccSearchResults');
+    if (clearBtn) clearBtn.style.display = query ? 'flex' : 'none';
+    if (!resultsEl) return;
+
+    if (!query || query.length < 2) {
+        resultsEl.innerHTML = '';
+        resultsEl.classList.remove('active');
+        return;
+    }
+
+    // Debounce
+    if (mtccGlobalSearchTimer) clearTimeout(mtccGlobalSearchTimer);
+    mtccGlobalSearchTimer = setTimeout(function() {
+        apiCall('search_orders', { query: query }, function(result) {
+            if (!result.success) return;
+            renderMtccSearchResults(result.results || []);
+        });
+    }, 200);
+}
+
+function renderMtccSearchResults(results) {
+    var resultsEl = document.getElementById('mtccSearchResults');
+    if (!resultsEl) return;
+
+    if (results.length === 0) {
+        resultsEl.innerHTML = '<div class="mtcc-search-empty">No orders found</div>';
+        resultsEl.classList.add('active');
+        return;
+    }
+
+    var html = '';
+    results.forEach(function(r) {
+        // Cache so detail panel can open
+        if (!orderCache[r.ref]) {
+            orderCache[r.ref] = {
+                ref: r.ref, status: r.status,
+                customer_name: r.customer_name,
+                event_acronym: r.event,
+                event: r.event_name,
+                building: r.building,
+                due_date_formatted: r.due_date_formatted,
+                due_time_formatted: r.due_time_formatted
+            };
+        }
+        var statusLabel = (statusLabels && statusLabels[r.status]) || r.status;
+        html += '<button class="mtcc-search-result" onclick="showOrderDetail(\'' + escapeAttr(r.ref) + '\', \'pickup\'); clearMtccGlobalSearch();">';
+        html += '<div class="mtcc-search-left">';
+        html += '<div class="mtcc-search-row1"><span class="mtcc-search-ref ref-status-' + escapeAttr(r.status) + '">' + escapeHtml(r.ref) + '</span><span class="order-status-badge badge-' + escapeAttr(r.status) + ' badge-sm">' + escapeHtml(statusLabel) + '</span></div>';
+        html += '<div class="mtcc-search-row2">' + escapeHtml(r.customer_name);
+        if (r.event) html += ' \u00b7 ' + escapeHtml(r.event);
+        html += '</div>';
+        html += '</div>';
+        html += '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>';
+        html += '</button>';
+    });
+    resultsEl.innerHTML = html;
+    resultsEl.classList.add('active');
+}
+
+function clearMtccGlobalSearch() {
+    var input = document.getElementById('mtccGlobalSearch');
+    var clearBtn = document.getElementById('mtccSearchClear');
+    var resultsEl = document.getElementById('mtccSearchResults');
+    if (input) input.value = '';
+    if (clearBtn) clearBtn.style.display = 'none';
+    if (resultsEl) {
+        resultsEl.innerHTML = '';
+        resultsEl.classList.remove('active');
+    }
 }
 
 function loadUpcomingMTCC() {

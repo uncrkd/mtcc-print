@@ -5419,6 +5419,415 @@ input {
 .ref-status-cancelled .ref-label,
 .ref-status-refunded .ref-label { color: var(--gray-400) !important; }
 
+/* ============================================
+   MTCC DASHBOARD — REIMAGINED
+   ============================================ */
+#tab-mtcc_dashboard .tab-body {
+    padding: 0 0 calc(var(--nav-height) + 20px);
+    background: var(--bg);
+}
+
+/* Hero greeting */
+.mtcc-hero {
+    padding: 24px 20px 16px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-deeper));
+    color: white;
+}
+
+.mtcc-hero-greeting {
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.mtcc-hero-context {
+    font-size: 0.78rem;
+    opacity: 0.85;
+    margin-top: 4px;
+    font-weight: 500;
+}
+
+/* Search section — the centerpiece */
+.mtcc-search-section {
+    padding: 0 14px;
+    margin-top: -12px;
+    position: relative;
+    z-index: 10;
+}
+
+.mtcc-search-wrap {
+    display: flex;
+    align-items: center;
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    padding: 0 14px;
+    height: 52px;
+}
+
+.mtcc-search-icon {
+    color: var(--gray-400);
+    flex-shrink: 0;
+    margin-right: 10px;
+}
+
+.mtcc-search-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 0.92rem;
+    font-weight: 500;
+    color: var(--text);
+    height: 52px;
+    font-family: inherit;
+}
+
+.mtcc-search-input::placeholder {
+    color: var(--gray-400);
+    font-weight: 400;
+}
+
+.mtcc-search-clear {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--gray-100);
+    color: var(--gray-500);
+    flex-shrink: 0;
+}
+
+.mtcc-search-results {
+    margin-top: 6px;
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.2s ease;
+}
+
+.mtcc-search-results.active {
+    max-height: 480px;
+    overflow-y: auto;
+}
+
+.mtcc-search-result {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    text-align: left;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-light);
+    background: none;
+    color: var(--text);
+}
+
+.mtcc-search-result:last-child { border-bottom: none; }
+.mtcc-search-result:active { background: var(--gray-50); }
+
+.mtcc-search-left {
+    flex: 1;
+    min-width: 0;
+}
+
+.mtcc-search-row1 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.mtcc-search-ref {
+    font-weight: 700;
+    font-size: 0.85rem;
+}
+
+.mtcc-search-row2 {
+    font-size: 0.75rem;
+    color: var(--gray-500);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mtcc-search-empty {
+    padding: 20px;
+    text-align: center;
+    color: var(--gray-400);
+    font-size: 0.85rem;
+}
+
+/* Hero stats — 2 BIG numbers */
+.mtcc-hero-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding: 16px 14px 0;
+}
+
+.mtcc-hero-stat {
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    padding: 20px 16px;
+    text-align: center;
+    transition: transform 0.15s;
+    border: none;
+}
+
+.mtcc-hero-stat:active { transform: scale(0.98); }
+
+.mtcc-hero-num {
+    font-size: 2.4rem;
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1;
+}
+
+.mtcc-hero-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--gray-400);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-top: 6px;
+}
+
+/* Need Attention section */
+.mtcc-attention {
+    margin: 16px 14px 0;
+    padding: 14px;
+    background: var(--danger-bg);
+    border-radius: var(--radius);
+    border-left: 3px solid var(--danger);
+}
+
+.mtcc-attention-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--danger);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.mtcc-attention-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    text-align: left;
+    padding: 10px 12px;
+    background: var(--card);
+    border-radius: var(--radius-sm);
+    margin-bottom: 6px;
+    box-shadow: var(--shadow-sm);
+}
+
+.mtcc-attention-card:last-child { margin-bottom: 0; }
+.mtcc-attention-card:active { transform: scale(0.98); }
+
+.mtcc-attention-left {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.mtcc-attention-ref {
+    font-weight: 700;
+    font-size: 0.82rem;
+}
+
+.mtcc-attention-name {
+    font-size: 0.72rem;
+    color: var(--gray-400);
+}
+
+/* Section wrapper */
+.mtcc-section {
+    margin: 20px 14px 0;
+}
+
+.mtcc-section-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--gray-400);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 0 4px 8px;
+}
+
+/* Active Events — progress bars per event */
+.mtcc-event-card {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 14px 16px;
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 8px;
+    transition: transform 0.15s;
+}
+
+.mtcc-event-card:active { transform: scale(0.99); }
+
+.mtcc-event-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.mtcc-event-name {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.mtcc-event-total {
+    font-size: 0.72rem;
+    color: var(--gray-400);
+    font-weight: 600;
+}
+
+.mtcc-event-bar {
+    width: 100%;
+    height: 8px;
+    background: var(--gray-100);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.mtcc-event-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #22c55e, #059669);
+    transition: width 0.4s ease;
+    border-radius: 4px;
+}
+
+.mtcc-event-stats {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.72rem;
+    color: var(--gray-500);
+}
+
+.mtcc-event-stats strong {
+    color: var(--text);
+}
+
+/* Pipeline card — compact summary */
+.mtcc-pipeline-card {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    text-align: left;
+    padding: 14px 16px;
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    gap: 14px;
+    transition: transform 0.15s;
+}
+
+.mtcc-pipeline-card:active { transform: scale(0.99); }
+
+.mtcc-pipeline-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.82rem;
+    color: var(--gray-500);
+    flex: 1;
+}
+
+.mtcc-pipeline-row strong { color: var(--text); }
+
+.mtcc-pipeline-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    flex-shrink: 0;
+}
+
+.dot-prod-bg { background: #6366f1; }
+.dot-trans-bg { background: #14b8a6; }
+
+.mtcc-pipeline-arrow {
+    color: var(--gray-300);
+    flex-shrink: 0;
+}
+
+/* Activity feed */
+.mtcc-activity-feed {
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+}
+
+.mtcc-activity-row {
+    display: flex;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-light);
+    cursor: pointer;
+}
+
+.mtcc-activity-row:last-child { border-bottom: none; }
+.mtcc-activity-row:active { background: var(--gray-50); }
+
+.mtcc-activity-time {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--gray-400);
+    flex-shrink: 0;
+    width: 50px;
+    padding-top: 2px;
+}
+
+.mtcc-activity-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.mtcc-activity-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.mtcc-activity-ref {
+    font-weight: 700;
+    font-size: 0.8rem;
+}
+
+.mtcc-activity-customer {
+    font-size: 0.78rem;
+    color: var(--gray-500);
+}
+
+.mtcc-activity-user {
+    font-size: 0.7rem;
+    color: var(--gray-400);
+    margin-top: 2px;
+}
+
 /* Dashboard issues — clean cards, no background container */
 .mtcc-dash-issues {
     padding: 0 14px;
