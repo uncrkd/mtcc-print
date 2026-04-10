@@ -706,15 +706,22 @@
     text-decoration: none;
     transition: background 0.15s ease, color 0.15s ease;
     flex-shrink: 0;
+    margin-left: -10px;
 }
 
 .page-title-back:hover {
-    background: rgba(255, 255, 255, 0.6);
+    background: rgba(124, 58, 237, 0.08);
     color: var(--primary);
 }
 
 .page-title-back svg {
     display: block;
+}
+
+/* Order details page header: flush left with cards */
+.page-header:has(.page-title-back) {
+    padding-left: 0;
+    padding-right: 0;
 }
 
 .page-subtitle {
@@ -745,6 +752,28 @@
     display: flex;
     align-items: center;
     gap: 8px;
+}
+
+/* Vertical dividers between buttons on order details page header */
+.page-header:has(.page-title-back) .page-header-right {
+    gap: 0;
+}
+
+.page-header:has(.page-title-back) .page-header-right > .top-nav-btn + .top-nav-btn {
+    position: relative;
+    margin-left: 4px;
+    padding-left: 20px;
+}
+
+.page-header:has(.page-title-back) .page-header-right > .top-nav-btn + .top-nav-btn::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1px;
+    height: 20px;
+    background: #cbd5e1;
 }
 
 /* Events Toggle in Page Header */

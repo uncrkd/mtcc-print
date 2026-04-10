@@ -33,19 +33,22 @@
         display: none !important;
     }
     
-    /* Keep logo bar visible but compact */
+    /* Keep top-logo-bar hidden on print (we use print-only-header instead) */
     .top-logo-bar {
-        display: block !important;
-        padding: 8px 0 !important;
+        display: none !important;
+    }
+
+    /* Print-only header with logo */
+    .print-only-header {
+        display: flex !important;
+        align-items: center;
+        padding: 0 0 10px 0 !important;
         margin-bottom: 10px !important;
     }
-    
-    .logo-left {
-        display: block !important;
-    }
-    
-    .top-logo {
-        max-height: 40px !important;
+
+    .print-logo {
+        max-height: 48px !important;
+        width: auto !important;
     }
     
     /* 2. Hide "Order Details" title bar */
@@ -134,7 +137,7 @@
 
     .header-main-row {
         display: grid !important;
-        grid-template-columns: auto auto auto 1fr !important;
+        grid-template-columns: auto auto minmax(0, 1fr) auto !important;
         gap: 14px !important;
         align-items: center !important;
     }
@@ -215,24 +218,23 @@
     
     .order-number,
     .order-number-section .order-number {
-        font-size: 1.1rem !important;
+        font-size: 1rem !important;
         font-weight: 700 !important;
         color: var(--primary) !important;
-        letter-spacing: -0.5px !important;
+        letter-spacing: -0.3px !important;
         line-height: 1 !important;
         margin: 0 !important;
         display: block !important;
+        white-space: nowrap !important;
     }
-    
+
+    /* Remove the # prefix from order number on print */
     .order-number::before {
-        content: '#' !important;
-        color: var(--subtext) !important;
-        font-size: 0.95rem !important;
-        margin-right: 0.15rem !important;
+        content: none !important;
     }
-    
+
     .order-section-header {
-        font-size: 0.6rem !important;
+        font-size: 0.55rem !important;
         font-weight: 600 !important;
         color: var(--subtext) !important;
         text-transform: uppercase !important;
@@ -240,19 +242,29 @@
         margin-bottom: 2px !important;
         height: auto !important;
         display: block !important;
+        white-space: nowrap !important;
     }
-    
+
+    /* Due date: responsive font-size via CSS clamp so it never wraps */
     .due-date-main {
-        font-size: 0.8rem !important;
+        font-size: clamp(0.55rem, 1.4vw, 0.78rem) !important;
         font-weight: 600 !important;
         color: var(--text) !important;
         white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
     }
-    
+
     .due-date-section,
     .due-date-info {
         text-align: left !important;
         display: block !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+    }
+
+    .order-number-section {
+        min-width: 0 !important;
     }
     
     .status-badge-large {

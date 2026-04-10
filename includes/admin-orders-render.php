@@ -1400,6 +1400,11 @@ window.orderReferenceCode = '<?= htmlspecialchars($order['referenceCode']) ?>'; 
 window.orderDueDate = '<?= htmlspecialchars($order['selectedDate']) ?>'; // Legacy support
 </script>
 <div class="container">
+    <!-- Print-only header with logo (visible only when printing) -->
+    <div class="print-only-header">
+      <img src="/mtcc-ps-logo.png" alt="MTCC Print Services" class="print-logo" onerror="this.style.display='none'">
+    </div>
+
     <!-- Top Logo Bar -->
     <div class="top-logo-bar" style="padding: 12px 0; margin: 0;">
       <div class="logo-left">
@@ -1417,7 +1422,7 @@ window.orderDueDate = '<?= htmlspecialchars($order['selectedDate']) ?>'; // Lega
     <div class="page-header" style="margin: 0; background: linear-gradient(90deg, rgba(95, 95, 95, 1) 0%, rgba(170, 170, 170, 1) 100%); box-shadow: var(--shadow-md);  outline: 2px dashed rgba(191, 191, 191, 0.7);   outline-offset: -5px;">
       <div class="page-header-left">
         <h1 class="page-title">
-          <a href="admin-orders.php" class="page-title-back" title="Back to Orders"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 9a1 1 0 0 1-1-1V4.707a.707.707 0 0 0-1.207-.5l-6.94 6.94a1.207 1.207 0 0 0 0 1.707l6.94 6.94a.707.707 0 0 0 1.207-.5V16a1 1 0 0 1 1-1h2a1 1 0 0 0 1-1v-4a1 1 0 0 0-1-1z"/><path d="M20 9v6"/></svg></a>
+          <a href="admin-orders.php" class="page-title-back" title="Back to Orders"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6-6 6 6 6"/><path d="M3 12h14"/><path d="M21 19V5"/></svg></a>
           Order Details: Edit Mode
         </h1>
         <div class="page-welcome">
@@ -1432,7 +1437,7 @@ window.orderDueDate = '<?= htmlspecialchars($order['selectedDate']) ?>'; // Lega
     <div class="page-header" style="margin: 0;">
       <div class="page-header-left">
         <h1 class="page-title">
-          <a href="admin-orders.php" class="page-title-back" title="Back to Orders"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 9a1 1 0 0 1-1-1V4.707a.707.707 0 0 0-1.207-.5l-6.94 6.94a1.207 1.207 0 0 0 0 1.707l6.94 6.94a.707.707 0 0 0 1.207-.5V16a1 1 0 0 1 1-1h2a1 1 0 0 0 1-1v-4a1 1 0 0 0-1-1z"/><path d="M20 9v6"/></svg></a>
+          <a href="admin-orders.php" class="page-title-back" title="Back to Orders"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6-6 6 6 6"/><path d="M3 12h14"/><path d="M21 19V5"/></svg></a>
           Order Details
         </h1>
         <div class="page-welcome">

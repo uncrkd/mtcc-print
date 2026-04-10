@@ -377,7 +377,7 @@ body.edit-mode {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 4px 6px;
+    padding: 0 8px;
     background: white;
     border: 1px solid #e5e7eb;
     border-radius: 3px;
@@ -385,15 +385,15 @@ body.edit-mode {
 }
 
 .header-barcode-display #orderBarcode svg {
-    height: 56px;
+    height: 72px;
     width: auto;
-    max-width: 180px;
+    max-width: 240px;
     display: block;
 }
 
 .header-barcode-display .barcode-number {
     font-family: 'Monaco', 'Consolas', monospace;
-    font-size: 0.78rem;
+    font-size: 0.88rem;
     font-weight: 700;
     color: var(--text);
     letter-spacing: 0.5px;
@@ -402,6 +402,11 @@ body.edit-mode {
     background: none;
     border: none;
     white-space: nowrap;
+}
+
+/* Print-only header (hidden on screen, visible in print) */
+.print-only-header {
+    display: none;
 }
 
 .header-actions {
