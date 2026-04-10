@@ -5337,6 +5337,21 @@ input {
    MTCC Staff Dashboard Styles
    ============================================ */
 
+.mtcc-stats-grid-3 {
+    grid-template-columns: 1fr 1fr 1fr !important;
+}
+
+.dot-issue-inline {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--danger);
+    margin-right: 6px;
+    vertical-align: middle;
+    animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
 .mtcc-stats-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -5365,6 +5380,86 @@ input {
 .mtcc-stat-card.stat-red { border-left: 4px solid #dc2626; background: #fef2f2; box-shadow: 0 2px 8px rgba(220,38,38,0.08); }
 .mtcc-stat-card.stat-grey { border-left: 4px solid #9ca3af; }
 .mtcc-stat-card.stat-red { cursor: pointer; }
+
+/* Status-colored order IDs (applied across all tabs and detail panels) */
+.ref-status-preflight,
+.ref-status-file_issue,
+.ref-status-printing { color: #6366f1 !important; }
+.ref-status-ready { color: #d97706 !important; }
+.ref-status-dispatched,
+.ref-status-shipped { color: #14b8a6 !important; }
+.ref-status-delivered { color: #059669 !important; }
+.ref-status-pickedup { color: #22c55e !important; }
+.ref-status-missing,
+.ref-status-unclaimed { color: #dc2626 !important; }
+.ref-status-cancelled,
+.ref-status-refunded { color: #6b7280 !important; }
+
+/* Make sure the "ID:" label stays gray */
+.ref-status-preflight .ref-label,
+.ref-status-file_issue .ref-label,
+.ref-status-printing .ref-label,
+.ref-status-ready .ref-label,
+.ref-status-dispatched .ref-label,
+.ref-status-shipped .ref-label,
+.ref-status-delivered .ref-label,
+.ref-status-pickedup .ref-label,
+.ref-status-missing .ref-label,
+.ref-status-unclaimed .ref-label,
+.ref-status-cancelled .ref-label,
+.ref-status-refunded .ref-label { color: var(--gray-400) !important; }
+
+/* Upcoming status filter pills */
+.upcoming-status-filter {
+    display: flex;
+    gap: 6px;
+    padding: 0 14px 8px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+
+.upcoming-status-filter::-webkit-scrollbar { display: none; }
+
+.status-filter-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 20px;
+    background: var(--gray-100);
+    color: var(--gray-500);
+    font-size: 0.78rem;
+    font-weight: 600;
+    white-space: nowrap;
+    border: 1.5px solid transparent;
+    transition: all 0.15s;
+    flex-shrink: 0;
+}
+
+.status-filter-pill:active { transform: scale(0.96); }
+
+.status-filter-pill.active {
+    background: var(--card);
+    color: var(--text);
+    border-color: var(--text);
+}
+
+.status-filter-pill.pill-transit.active { color: #14b8a6; border-color: #14b8a6; }
+.status-filter-pill.pill-ready.active { color: #d97706; border-color: #d97706; }
+.status-filter-pill.pill-production.active { color: #6366f1; border-color: #6366f1; }
+
+.pill-count {
+    font-size: 0.7rem;
+    padding: 1px 7px;
+    border-radius: 10px;
+    background: rgba(0,0,0,0.06);
+    font-weight: 700;
+}
+
+.status-filter-pill.active .pill-count {
+    background: rgba(0,0,0,0.1);
+}
 
 /* Issue rows in dashboard */
 .mtcc-issue-row {

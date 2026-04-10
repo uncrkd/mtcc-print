@@ -1632,6 +1632,9 @@ function formatOrderForApp($order, $ref = null, $statusOverride = null) {
         'shipped_at' => $dispatch['shipped_at'] ?? '',
         'delivered_at' => $dispatch['delivered_at'] ?? '',
         'picked_up_at' => $dispatch['picked_up_at'] ?? '',
+        'pickedup_by' => $dispatch['pickedup_by'] ?? '',
+        'delivered_by' => $dispatch['delivered_by'] ?? '',
+        'shipped_by' => $dispatch['shipped_by'] ?? '',
         'delivery_photo' => $dispatch['delivery_photo'] ?? '',
         'notes' => $order['specialInstructions'] ?? '',
         // Issue tracking

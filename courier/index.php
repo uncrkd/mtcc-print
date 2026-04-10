@@ -313,5 +313,23 @@ $cacheBust = time();
 
 <script src="app.js?v=<?= $cacheBust ?>"></script>
 <script src="courier-issues.js?v=<?= $cacheBust ?>"></script>
+
+<!--Start of Tawk.to Script (embedded chat widget)-->
+<script type="text/javascript">
+var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+Tawk_API.onLoad = function() {
+    // Hide the floating bubble — we trigger via our own buttons
+    if (Tawk_API.hideWidget) Tawk_API.hideWidget();
+};
+(function(){
+var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+s1.async=true;
+s1.src='https://embed.tawk.to/69bcadcf600a121c36fa7a4b/1jk4gdsmg';
+s1.charset='UTF-8';
+s1.setAttribute('crossorigin','*');
+s0.parentNode.insertBefore(s1,s0);
+})();
+</script>
+<!--End of Tawk.to Script-->
 </body>
 </html>

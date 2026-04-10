@@ -721,7 +721,7 @@ function loadHome() {
             inTransit.forEach(function(o) {
                 orderCache[o.ref] = o;
                 html += '<button class="home-active-card home-transit-card" onclick="switchTab(\'deliveries\')">';
-                html += '<div class="home-active-top"><span class="home-active-ref">' + escapeHtml(o.ref) + '</span><span class="order-status-badge badge-shipped badge-sm">In Transit</span></div>';
+                html += '<div class="home-active-top"><span class="home-active-ref ref-status-shipped">' + escapeHtml(o.ref) + '</span><span class="order-status-badge badge-shipped badge-sm">In Transit</span></div>';
                 html += '<div class="home-active-dest">';
                 html += '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> ';
                 html += escapeHtml(o.destination || 'MTCC');
@@ -738,7 +738,7 @@ function loadHome() {
             pickupPending.forEach(function(o) {
                 orderCache[o.ref] = o;
                 html += '<button class="home-active-card home-pickup-card" onclick="switchTab(\'deliveries\')">';
-                html += '<div class="home-active-top"><span class="home-active-ref">' + escapeHtml(o.ref) + '</span><span class="order-status-badge badge-dispatched badge-sm">Pickup Pending</span></div>';
+                html += '<div class="home-active-top"><span class="home-active-ref ref-status-dispatched">' + escapeHtml(o.ref) + '</span><span class="order-status-badge badge-dispatched badge-sm">Pickup Pending</span></div>';
                 html += '<div class="home-active-dest">';
                 html += '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M16.5 9.4l-9-5.19M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg> ';
                 html += escapeHtml(o.vendor_name || 'Vendor');
@@ -1229,6 +1229,14 @@ function renderPickupFromCache() {
     el.innerHTML = html;
 }
 
+var upcomingStatusFilter = 'all'; // 'all', 'transit', 'ready', 'production'
+
+function setUpcomingStatusFilter(filter) {
+    upcomingStatusFilter = filter;
+    haptic.tap();
+    renderUpcomingMTCCFromCache();
+}
+
 function renderUpcomingMTCCFromCache() {
     var el = document.getElementById('upcomingMtccContent');
     if (!el) return;
@@ -1241,23 +1249,38 @@ function renderUpcomingMTCCFromCache() {
     });
 
     var html = buildSearchFilterBar('upcoming_mtcc');
-    html += '<div class="section-label">' + filtered.length + ' order' + (filtered.length !== 1 ? 's' : '') + ' in the pipeline' + (mtccSearchQuery || mtccEventFilters.length ? ' (filtered)' : '') + '</div>';
 
-    if (filtered.length === 0 && (mtccSearchQuery || mtccEventFilters.length)) {
+    // Status filter pills
+    html += '<div class="upcoming-status-filter">';
+    html += '<button class="status-filter-pill' + (upcomingStatusFilter === 'all' ? ' active' : '') + '" onclick="setUpcomingStatusFilter(\'all\')">All <span class="pill-count">' + filtered.length + '</span></button>';
+    html += '<button class="status-filter-pill pill-transit' + (upcomingStatusFilter === 'transit' ? ' active' : '') + '" onclick="setUpcomingStatusFilter(\'transit\')">On the Way <span class="pill-count">' + groups.transit.length + '</span></button>';
+    html += '<button class="status-filter-pill pill-ready' + (upcomingStatusFilter === 'ready' ? ' active' : '') + '" onclick="setUpcomingStatusFilter(\'ready\')">Preparing <span class="pill-count">' + groups.ready.length + '</span></button>';
+    html += '<button class="status-filter-pill pill-production' + (upcomingStatusFilter === 'production' ? ' active' : '') + '" onclick="setUpcomingStatusFilter(\'production\')">Production <span class="pill-count">' + groups.production.length + '</span></button>';
+    html += '</div>';
+
+    // Determine display set based on status filter
+    var displayCount = filtered.length;
+    if (upcomingStatusFilter === 'transit') displayCount = groups.transit.length;
+    else if (upcomingStatusFilter === 'ready') displayCount = groups.ready.length;
+    else if (upcomingStatusFilter === 'production') displayCount = groups.production.length;
+
+    html += '<div class="section-label">' + displayCount + ' order' + (displayCount !== 1 ? 's' : '') + (mtccSearchQuery || mtccEventFilters.length ? ' (filtered)' : '') + '</div>';
+
+    if (displayCount === 0 && (mtccSearchQuery || mtccEventFilters.length)) {
         html += '<div class="empty-state"><p>No orders match your search.</p></div>';
-    } else if (filtered.length === 0) {
-        html += '<div class="empty-state"><div class="empty-state-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div><h3>All Caught Up</h3><p>No orders in the pipeline right now.</p></div>';
+    } else if (displayCount === 0) {
+        html += '<div class="empty-state"><div class="empty-state-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div><h3>All Caught Up</h3><p>No orders in this category right now.</p></div>';
     } else {
-        if (groups.transit.length > 0) {
-            html += '<div class="mtcc-group-header">On the Way (' + groups.transit.length + ')</div>';
+        if ((upcomingStatusFilter === 'all' || upcomingStatusFilter === 'transit') && groups.transit.length > 0) {
+            if (upcomingStatusFilter === 'all') html += '<div class="mtcc-group-header">On the Way (' + groups.transit.length + ')</div>';
             groups.transit.forEach(function(o) { html += renderOrderCard(o, 'upcoming_mtcc'); });
         }
-        if (groups.ready.length > 0) {
-            html += '<div class="mtcc-group-header">Preparing to Ship (' + groups.ready.length + ')</div>';
+        if ((upcomingStatusFilter === 'all' || upcomingStatusFilter === 'ready') && groups.ready.length > 0) {
+            if (upcomingStatusFilter === 'all') html += '<div class="mtcc-group-header">Preparing to Ship (' + groups.ready.length + ')</div>';
             groups.ready.forEach(function(o) { html += renderOrderCard(o, 'upcoming_mtcc'); });
         }
-        if (groups.production.length > 0) {
-            html += '<div class="mtcc-group-header">In Production (' + groups.production.length + ')</div>';
+        if ((upcomingStatusFilter === 'all' || upcomingStatusFilter === 'production') && groups.production.length > 0) {
+            if (upcomingStatusFilter === 'all') html += '<div class="mtcc-group-header">In Production (' + groups.production.length + ')</div>';
             groups.production.forEach(function(o) { html += renderOrderCard(o, 'upcoming_mtcc'); });
         }
     }
@@ -1298,25 +1321,24 @@ function loadMTCCDashboard() {
         var s = result.stats;
         var html = '';
 
-        // Stats cards — clickable, navigate to relevant tab
-        html += '<div class="mtcc-stats-grid">';
+        // Stats cards — 3 cards (Open Issues becomes its own section below)
+        html += '<div class="mtcc-stats-grid mtcc-stats-grid-3">';
         html += '<div class="mtcc-stat-card stat-purple" onclick="switchTab(\'pickup\')"><div class="mtcc-stat-number">' + s.waiting_for_pickup + '</div><div class="mtcc-stat-label">Waiting for Pickup</div></div>';
         html += '<div class="mtcc-stat-card stat-blue" onclick="switchTab(\'upcoming_mtcc\')"><div class="mtcc-stat-number">' + s.expected_today + '</div><div class="mtcc-stat-label">Expected Today</div></div>';
         html += '<div class="mtcc-stat-card stat-green" onclick="switchTab(\'complete\')"><div class="mtcc-stat-number">' + s.picked_up_today + '</div><div class="mtcc-stat-label">Picked Up Today</div></div>';
-        html += '<div class="mtcc-stat-card' + (s.open_issues > 0 ? ' stat-red' : ' stat-grey') + '"' + (s.open_issues > 0 ? ' onclick="toggleDashboardIssues()"' : '') + '><div class="mtcc-stat-number">' + s.open_issues + '</div><div class="mtcc-stat-label">Open Issues</div></div>';
         html += '</div>';
 
-        // Open issues list (hidden by default, toggled by tapping stat card)
+        // Open issues list — always visible (only place issues are surfaced)
         var issueOrders = result.issue_orders || [];
         if (issueOrders.length > 0) {
-            html += '<div class="mtcc-dash-section mtcc-issues-section" id="dashboardIssues" style="display:none;">';
-            html += '<div class="mtcc-section-header">Open Issues</div>';
+            html += '<div class="mtcc-dash-section mtcc-issues-section">';
+            html += '<div class="mtcc-section-header"><span><span class="dot-issue-inline"></span>Open Issues</span><span class="mtcc-section-count">' + issueOrders.length + '</span></div>';
             html += '<div class="mtcc-dash-list">';
             issueOrders.forEach(function(iss) {
                 var statusLabel = iss.status === 'missing' ? 'Missing' : 'File Issue';
                 var statusCls = iss.status === 'missing' ? 'badge-missing' : 'badge-issue';
                 html += '<div class="mtcc-issue-row" onclick="if(orderCache[\'' + escapeAttr(iss.ref) + '\']) showOrderDetail(\'' + escapeAttr(iss.ref) + '\', \'pickup\')">';
-                html += '<div class="mtcc-issue-left"><span class="mtcc-issue-ref">' + escapeHtml(iss.ref) + '</span><span class="mtcc-issue-name">' + escapeHtml(iss.customer_name) + '</span></div>';
+                html += '<div class="mtcc-issue-left"><span class="mtcc-issue-ref ref-status-' + escapeAttr(iss.status) + '">' + escapeHtml(iss.ref) + '</span><span class="mtcc-issue-name">' + escapeHtml(iss.customer_name) + '</span></div>';
                 html += '<span class="order-status-badge ' + statusCls + ' badge-sm">' + statusLabel + '</span>';
                 html += '</div>';
             });
@@ -1351,17 +1373,9 @@ function loadMTCCDashboard() {
             html += '</div></div>';
         }
 
-        // Upcoming deliveries — clickable rows open detail panel
+        // Cache upcoming for click handlers (no longer rendered as full cards)
         var upcoming = result.upcoming_deliveries || [];
-        if (upcoming.length > 0) {
-            html += '<div class="mtcc-dash-section"><div class="mtcc-section-header">Next Expected Deliveries</div>';
-            html += '<div class="mtcc-dash-list">';
-            upcoming.forEach(function(o) {
-                orderCache[o.ref] = o;
-                html += renderOrderCard(o, 'upcoming_mtcc');
-            });
-            html += '</div></div>';
-        }
+        upcoming.forEach(function(o) { orderCache[o.ref] = o; });
 
         // Recent pickups — clickable rows open detail panel
         var recent = result.recent_pickups || [];
@@ -1385,24 +1399,31 @@ function loadMTCCDashboard() {
             html += '</div>';
         }
 
-        // Support + Sign out (replaces drawer for MTCC)
-        html += '<div class="mtcc-dash-section"><div class="mtcc-section-header">Support</div>';
-        html += '<div class="acct-link-group">';
-        html += '<a class="acct-link" href="tel:' + SUPPORT_PHONES.admin.number.replace(/[^0-9+]/g, '') + '"><div class="acct-link-left"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72"/></svg><span>Call Print Stuff</span></div><span class="acct-link-meta">' + SUPPORT_PHONES.admin.number + '</span></a>';
-        html += '<a class="acct-link" href="mailto:orders@printstuff.ca"><div class="acct-link-left"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><span>Email Support</span></div><span class="acct-link-meta">orders@printstuff.ca</span></a>';
-        html += '</div></div>';
-        html += '<div style="text-align:center;padding:16px 0;"><button class="acct-signout" onclick="doLogout()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Sign Out</button></div>';
+        // Support section — matches courier Account style
+        html += '<div class="acct-section">';
+        html += '<div class="acct-section-label">Support</div>';
+        html += '<a class="acct-link" href="tel:' + SUPPORT_PHONES.admin.number.replace(/[^0-9+]/g, '') + '">';
+        html += '<div class="acct-link-left"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72"/></svg><span>Call Print Stuff</span></div>';
+        html += '<span class="acct-link-meta">' + SUPPORT_PHONES.admin.number + '</span>';
+        html += '</a>';
+        html += '<a class="acct-link" href="mailto:orders@printstuff.ca">';
+        html += '<div class="acct-link-left"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><span>Email Support</span></div>';
+        html += '<span class="acct-link-meta">orders@printstuff.ca</span>';
+        html += '</a>';
+        html += '<button class="acct-link" onclick="openLiveChat()">';
+        html += '<div class="acct-link-left"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Live Chat</span></div>';
+        html += '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>';
+        html += '</button>';
+        html += '</div>';
+
+        // Footer: app version + sign out
+        html += '<div class="acct-section acct-footer-section">';
+        html += '<div class="acct-app-version">MTCC Staff v2.1</div>';
+        html += '<button class="acct-signout" onclick="doLogout()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Sign Out</button>';
+        html += '</div>';
 
         el.innerHTML = html;
     });
-}
-
-function toggleDashboardIssues() {
-    var el = document.getElementById('dashboardIssues');
-    if (el) {
-        el.style.display = el.style.display === 'none' ? '' : 'none';
-        if (el.style.display !== 'none') el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
 }
 
 function loadUpcomingMTCC() {
@@ -1497,10 +1518,10 @@ function loadAccount() {
         html += '<div class="acct-link-left"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Call MTCC</span></div>';
         html += '<span class="acct-link-meta">' + SUPPORT_PHONES.mtcc.number + '</span>';
         html += '</a>';
-        html += '<a class="acct-link" href="https://tawk.to/chat/69bcadcf600a121c36fa7a4b/1jk4gdsmg" target="_blank" rel="noopener">';
+        html += '<button class="acct-link" onclick="openLiveChat()">';
         html += '<div class="acct-link-left"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Live Chat</span></div>';
         html += '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>';
-        html += '</a>';
+        html += '</button>';
         html += '</div>';
 
         // App info + sign out
@@ -2080,7 +2101,7 @@ function renderNearbyOrders(orders, courierLoc) {
         // Top row — ID + payout
         html += '<div class="nearby-card-top">';
         html += '<div class="nearby-card-info">';
-        html += '<div class="order-ref"><span class="ref-label">ID:</span> ' + escapeHtml(order.ref) + '</div>';
+        html += '<div class="order-ref ref-status-' + escapeAttr(order.status || 'ready') + '"><span class="ref-label">ID:</span> ' + escapeHtml(order.ref) + '</div>';
         html += '</div>';
         if (order.est_payout) {
             html += '<div class="nearby-card-payout">$' + parseFloat(order.est_payout).toFixed(2) + '</div>';
@@ -2343,7 +2364,7 @@ function renderOrderCard(order, mode) {
     // Top row: ID ref (left) + payout (right, courier only)
     html += '<div class="order-card-top">';
     html += '<div class="order-card-top-left">';
-    html += '<div class="order-ref"><span class="ref-label">ID:</span> ' + escapeHtml(order.ref) + '</div>';
+    html += '<div class="order-ref ref-status-' + escapeAttr(order.status || 'ready') + '"><span class="ref-label">ID:</span> ' + escapeHtml(order.ref) + '</div>';
     html += '</div>';
     // Base pay + bonus (hide for MTCC card modes)
     if (order.est_payout && !isMTCCCard) {
@@ -2365,10 +2386,16 @@ function renderOrderCard(order, mode) {
         html += '<div class="order-card-body">';
         html += '<div class="order-detail"><span class="order-detail-label">Customer</span><span class="order-detail-value">' + escapeHtml(order.customer_name) + '</span></div>';
         html += '<div class="order-detail"><span class="order-detail-label">Event</span><span class="order-detail-value">' + escapeHtml(isMTCCCard ? (order.event || order.event_acronym) : (order.event_acronym || order.event)) + (order.building ? ' \u2014 ' + escapeHtml(order.building) : '') + '</span></div>';
-        if (mode === 'complete' && order.delivered_at) {
-            var pDate = new Date(order.delivered_at);
-            var pStr = isNaN(pDate) ? '' : pDate.toLocaleDateString('en-US', {month: 'short', day: 'numeric'}) + ', ' + pDate.toLocaleTimeString('en-US', {hour: 'numeric', minute: '2-digit'});
-            if (pStr) html += '<div class="order-detail"><span class="order-detail-label">Picked Up</span><span class="order-detail-value">' + pStr + '</span></div>';
+        if (mode === 'complete') {
+            var pickupTs = order.picked_up_at || order.delivered_at;
+            if (pickupTs) {
+                var pDate = new Date(pickupTs);
+                var pStr = isNaN(pDate) ? '' : pDate.toLocaleDateString('en-US', {month: 'short', day: 'numeric'}) + ', ' + pDate.toLocaleTimeString('en-US', {hour: 'numeric', minute: '2-digit'});
+                if (pStr) html += '<div class="order-detail"><span class="order-detail-label">Picked Up</span><span class="order-detail-value">' + pStr + '</span></div>';
+            }
+            if (order.pickedup_by) {
+                html += '<div class="order-detail"><span class="order-detail-label">By</span><span class="order-detail-value">' + escapeHtml(order.pickedup_by) + '</span></div>';
+            }
         }
         html += '</div>';
     } else {
@@ -2602,7 +2629,7 @@ function showActiveRouteDetail() {
     html += '<div class="bv7-quick-connect">';
     html += '<div class="bv7-qc-label"><span class="bv7-qc-name bv7-qc-name-lg">Print Stuff Support</span></div>';
     html += '<div class="bv7-qc-buttons">';
-    html += '<a class="bv7-qc-btn" href="https://tawk.to/chat/69bcadcf600a121c36fa7a4b/1jk4gdsmg" target="_blank" rel="noopener" title="Live Chat"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></a>';
+    html += '<button class="bv7-qc-btn" onclick="openLiveChat()" title="Live Chat"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>';
     html += '<a class="bv7-qc-btn" href="tel:' + SUPPORT_PHONES.admin.number.replace(/[^0-9+]/g, '') + '" title="Call"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"/></svg></a>';
     html += '</div>';
     html += '</div>';
@@ -2894,7 +2921,7 @@ function renderMTCCDetailPanel(order, mode) {
     html += '<div class="mtcc-detail-id-section">';
     html += '<div class="mtcc-detail-id-left">';
     html += '<div class="mtcc-detail-id-label">ORDER</div>';
-    html += '<div class="mtcc-detail-id-value">' + escapeHtml(order.ref) + '</div>';
+    html += '<div class="mtcc-detail-id-value ref-status-' + escapeAttr(order.status || 'ready') + '">' + escapeHtml(order.ref) + '</div>';
     html += '</div>';
     if (order.tracking) {
         html += '<div class="mtcc-detail-id-right">';
@@ -2917,6 +2944,18 @@ function renderMTCCDetailPanel(order, mode) {
     if (order.notes) {
         html += '<div class="mtcc-detail-divider"></div>';
         html += '<div class="mtcc-detail-row mtcc-detail-notes"><span class="mtcc-detail-label">Notes</span><span class="mtcc-detail-value">' + escapeHtml(order.notes) + '</span></div>';
+    }
+    // Pickup audit info for picked-up orders
+    if (order.status === 'pickedup' && (order.picked_up_at || order.pickedup_by)) {
+        html += '<div class="mtcc-detail-divider"></div>';
+        if (order.picked_up_at) {
+            var pdate = new Date(order.picked_up_at);
+            var pstr = isNaN(pdate) ? '' : pdate.toLocaleDateString('en-US', {month: 'short', day: 'numeric'}) + ' at ' + pdate.toLocaleTimeString('en-US', {hour: 'numeric', minute: '2-digit'});
+            if (pstr) html += '<div class="mtcc-detail-row"><span class="mtcc-detail-label">Picked Up</span><span class="mtcc-detail-value">' + escapeHtml(pstr) + '</span></div>';
+        }
+        if (order.pickedup_by) {
+            html += '<div class="mtcc-detail-row"><span class="mtcc-detail-label">Confirmed By</span><span class="mtcc-detail-value">' + escapeHtml(order.pickedup_by) + '</span></div>';
+        }
     }
     html += '</div>';
 
@@ -2954,7 +2993,7 @@ function renderMTCCDetailPanel(order, mode) {
     html += '<div class="bv7-quick-connect">';
     html += '<div class="bv7-qc-label"><span class="bv7-qc-name bv7-qc-name-lg">Print Stuff Support</span></div>';
     html += '<div class="bv7-qc-buttons">';
-    html += '<a class="bv7-qc-btn" href="https://tawk.to/chat/69bcadcf600a121c36fa7a4b/1jk4gdsmg" target="_blank" rel="noopener" title="Live Chat"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></a>';
+    html += '<button class="bv7-qc-btn" onclick="openLiveChat()" title="Live Chat"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>';
     html += '<a class="bv7-qc-btn" href="tel:+14378828822" title="Call"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"/></svg></a>';
     html += '</div>';
     html += '</div>';
@@ -3106,7 +3145,7 @@ function showOrderDetail(ref, mode) {
     html += '<div class="detail-order-header">';
     html += '<div>';
     html += '<div class="batch-id-label">ORDER</div>';
-    html += '<div class="detail-order-ref">' + escapeHtml(order.ref) + '</div>';
+    html += '<div class="detail-order-ref ref-status-' + escapeAttr(order.status || 'ready') + '">' + escapeHtml(order.ref) + '</div>';
     html += '</div>';
     if (order.est_payout) {
         html += '<div class="batch-payout-top"><div class="batch-payout-top-label">Est. Payout</div><div class="batch-payout-top-amount">$' + parseFloat(order.est_payout).toFixed(2) + '</div></div>';
@@ -3216,7 +3255,7 @@ function showOrderDetail(ref, mode) {
     html += '<div class="bv7-quick-connect">';
     html += '<div class="bv7-qc-label"><span class="bv7-qc-name bv7-qc-name-lg">Print Stuff Support</span></div>';
     html += '<div class="bv7-qc-buttons">';
-    html += '<a class="bv7-qc-btn" href="https://tawk.to/chat/69bcadcf600a121c36fa7a4b/1jk4gdsmg" target="_blank" rel="noopener" title="Live Chat"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></a>';
+    html += '<button class="bv7-qc-btn" onclick="openLiveChat()" title="Live Chat"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>';
     html += '<a class="bv7-qc-btn" href="tel:' + SUPPORT_PHONES.admin.number.replace(/[^0-9+]/g, '') + '" title="Call"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"/></svg></a>';
     html += '</div>';
     html += '</div>';
@@ -4228,6 +4267,18 @@ function initSwipeConfirm(id, onConfirm) {
     document.addEventListener('touchcancel', onEnd);
 }
 
+// Open Tawk.to live chat (embedded widget, not new browser tab)
+function openLiveChat() {
+    haptic.tap();
+    if (typeof Tawk_API !== 'undefined' && Tawk_API.maximize) {
+        Tawk_API.showWidget && Tawk_API.showWidget();
+        Tawk_API.maximize();
+    } else {
+        // Fallback if widget hasn't loaded yet
+        showToast('Live chat is loading...', 'info');
+    }
+}
+
 function showToast(message, type) {
     var container = document.getElementById('toastContainer');
     var toast = document.createElement('div');
@@ -4805,7 +4856,7 @@ function showBatchDetail(batchId, mode) {
     html += '<div class="bv7-quick-connect">';
     html += '<div class="bv7-qc-label"><span class="bv7-qc-name bv7-qc-name-lg">Print Stuff Support</span></div>';
     html += '<div class="bv7-qc-buttons">';
-    html += '<a class="bv7-qc-btn" href="https://tawk.to/chat/69bcadcf600a121c36fa7a4b/1jk4gdsmg" target="_blank" rel="noopener" title="Live Chat"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></a>';
+    html += '<button class="bv7-qc-btn" onclick="openLiveChat()" title="Live Chat"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>';
     html += '<a class="bv7-qc-btn" href="tel:' + SUPPORT_PHONES.admin.number.replace(/[^0-9+]/g, '') + '" title="Call"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"/></svg></a>';
     html += '</div>';
     html += '</div>';
