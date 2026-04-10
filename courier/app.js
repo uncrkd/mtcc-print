@@ -2379,17 +2379,6 @@ function renderOrderCard(order, mode) {
         html += '<div class="order-card-body">';
         html += '<div class="order-detail"><span class="order-detail-label">Customer</span><span class="order-detail-value">' + escapeHtml(order.customer_name) + '</span></div>';
         html += '<div class="order-detail"><span class="order-detail-label">Event</span><span class="order-detail-value">' + escapeHtml(isMTCCCard ? (order.event || order.event_acronym) : (order.event_acronym || order.event)) + (order.building ? ' \u2014 ' + escapeHtml(order.building) : '') + '</span></div>';
-        if (mode === 'complete') {
-            var pickupTs = order.picked_up_at || order.delivered_at;
-            if (pickupTs) {
-                var pDate = new Date(pickupTs);
-                var pStr = isNaN(pDate) ? '' : pDate.toLocaleDateString('en-US', {month: 'short', day: 'numeric'}) + ', ' + pDate.toLocaleTimeString('en-US', {hour: 'numeric', minute: '2-digit'});
-                if (pStr) html += '<div class="order-detail"><span class="order-detail-label">Picked Up</span><span class="order-detail-value">' + pStr + '</span></div>';
-            }
-            if (order.pickedup_by) {
-                html += '<div class="order-detail"><span class="order-detail-label">By</span><span class="order-detail-value">' + escapeHtml(order.pickedup_by) + '</span></div>';
-            }
-        }
         html += '</div>';
     } else {
         var pickup = order.vendor_name || 'Vendor';

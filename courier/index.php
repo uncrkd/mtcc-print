@@ -318,7 +318,14 @@ $cacheBust = time();
 <script type="text/javascript">
 var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
 Tawk_API.onLoad = function() {
-    // Hide the floating bubble — we trigger via our own buttons
+    // Hide the floating bubble on load — we trigger via our own buttons
+    if (Tawk_API.hideWidget) Tawk_API.hideWidget();
+};
+Tawk_API.onChatMinimized = function() {
+    // Re-hide the floating bubble after user minimizes the chat
+    if (Tawk_API.hideWidget) Tawk_API.hideWidget();
+};
+Tawk_API.onChatEnded = function() {
     if (Tawk_API.hideWidget) Tawk_API.hideWidget();
 };
 (function(){
