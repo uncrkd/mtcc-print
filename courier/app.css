@@ -5461,26 +5461,28 @@ input {
     background: var(--card);
     border-radius: var(--radius);
     box-shadow: var(--shadow-md);
-    padding: 0 14px;
-    height: 52px;
+    padding: 0 18px;
+    height: 56px;
+    gap: 14px;
 }
 
 .mtcc-search-icon {
     color: var(--gray-400);
     flex-shrink: 0;
-    margin-right: 10px;
 }
 
 .mtcc-search-input {
     flex: 1;
+    min-width: 0;
     border: none;
     outline: none;
     background: transparent;
     font-size: 0.92rem;
     font-weight: 500;
     color: var(--text);
-    height: 52px;
+    height: 56px;
     font-family: inherit;
+    padding: 0;
 }
 
 .mtcc-search-input::placeholder {
@@ -5489,8 +5491,8 @@ input {
 }
 
 .mtcc-search-clear {
-    width: 28px;
-    height: 28px;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -5791,18 +5793,22 @@ input {
 .mtcc-pipeline-row strong { color: var(--text); }
 
 .mtcc-pipeline-icon {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
+    width: 24px;
+    height: 24px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
     flex-shrink: 0;
+    background: none;
 }
 
-.dot-prod-bg { background: #6366f1; }
-.dot-trans-bg { background: #14b8a6; }
+.mtcc-pipeline-icon svg {
+    width: 22px;
+    height: 22px;
+}
+
+.dot-prod-bg { color: #6366f1; }
+.dot-trans-bg { color: #14b8a6; }
 
 .mtcc-pipeline-arrow {
     color: var(--gray-300);
@@ -5865,69 +5871,19 @@ input {
     margin-top: 2px;
 }
 
-/* Past events archive (Complete tab footer) */
+/* Past events archive (Complete tab footer) — matches dashboard event card style */
 .past-events-section {
-    margin: 24px 14px 0;
+    margin-top: 24px;
     padding-top: 20px;
     border-top: 1px solid var(--border);
 }
 
-.past-events-header {
-    font-size: 0.7rem;
-    font-weight: 700;
-    color: var(--gray-400);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    padding: 0 4px 10px;
-}
-
-.past-event-card {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    text-align: left;
-    padding: 12px 14px;
-    background: var(--card);
-    border-radius: var(--radius-sm);
-    box-shadow: var(--shadow-sm);
-    margin-bottom: 6px;
+.mtcc-event-past {
     opacity: 0.85;
-    transition: opacity 0.15s, transform 0.15s;
+    border-left: 3px solid var(--gray-300);
 }
 
-.past-event-card:active {
-    opacity: 1;
-    transform: scale(0.98);
-}
-
-.past-event-info {
-    flex: 1;
-    min-width: 0;
-}
-
-.past-event-name {
-    font-weight: 600;
-    font-size: 0.82rem;
-    color: var(--text);
-}
-
-.past-event-dates {
-    font-size: 0.7rem;
-    color: var(--gray-400);
-    margin-top: 2px;
-}
-
-.past-event-count {
-    font-size: 0.78rem;
-    color: var(--gray-500);
-    flex-shrink: 0;
-    padding-left: 12px;
-}
-
-.past-event-count strong {
-    color: var(--success);
-}
+.mtcc-event-past:active { opacity: 1; }
 
 /* Dashboard issues — clean cards, no background container */
 .mtcc-dash-issues {
