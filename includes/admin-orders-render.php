@@ -1505,7 +1505,7 @@ window.orderDueDate = '<?= htmlspecialchars($order['selectedDate']) ?>'; // Lega
         ];
         ?>
         <?php if ($isEditMode): ?>
-        <select name="status" class="header-input btn-medium status-<?= $currentStatus ?>" required>
+        <select name="status" class="header-input status-<?= $currentStatus ?>" required>
           <?php
           $statusOptionsWithIcons = [
             'unpaid' => ICON_HOURGLASS . ' Unpaid',

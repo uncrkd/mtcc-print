@@ -89,12 +89,12 @@ foreach ($statusLabelsMap as $code => $label) {
     <!-- CONTAINER WRAPPER -->
     <div class="container" style="max-width: 1400px;">
         <!-- Page Header - Green for Create -->
-        <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin: 0; background: linear-gradient(90deg, #059669 0%, #10b981 100%); box-shadow:var(--shadow-md); outline: 2px dashed rgba(176, 223, 180, 0.7); outline-offset: -5px; border-radius: 10px;">
+        <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin: 0; background: linear-gradient(90deg, #059669 0%, #10b981 100%); box-shadow:var(--shadow-md); outline: 2px dashed rgba(176, 223, 180, 0.7); outline-offset: -5px; border-radius: 10px; color: white;">
           <div class="page-header-left">
-            <h1 class="page-title">Create New Order</h1>
+            <h1 class="page-title" style="color: white;">Create New Order</h1>
             <div class="page-welcome">
-              <span class="welcome-text">New order form <?= ICON_CLIPBOARD ?></span>
-              <span class="welcome-date">Today is <?= date('l, F j,  Y') ?></span>
+              <span class="welcome-text" style="color: white;">New order form <?= ICON_CLIPBOARD ?></span>
+              <span class="welcome-date" style="color: rgba(255,255,255,0.85);">Today is <?= date('l, F j,  Y') ?></span>
             </div>
           </div>
           <div class="page-header-right">

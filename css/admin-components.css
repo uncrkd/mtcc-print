@@ -86,6 +86,10 @@
     box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.12);
 }
 
+.header-input:hover:not(:focus) {
+    border-color: #c4b5fd;
+}
+
 .btn-medium:hover,
 .filter-btn.active:hover {
     background: #6d28d9;
