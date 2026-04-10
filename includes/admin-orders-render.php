@@ -478,7 +478,7 @@ body {
 <body>
 <div class="label-container"> 
   <!-- Header with logo -->
-  <div class="header"> <img src="logo.png" alt="PrintStuff.ca" class="logo" onerror="this.style.display='none'"> </div>
+  <div class="header"> <img src="mtcc-ps-logo.png" alt="PrintStuff.ca" class="logo" onerror="this.style.display='none'"> </div>
   
   <!-- Ship From -->
   <div class="ship-from"> <span class="ship-from-label">Ship From:</span>100 King St. W, Suite 5700, Toronto, ON M5X 1C9 </div>
@@ -807,14 +807,14 @@ function generateBulkOrderPrint( $orders, $statuses ) {
     }
     
     $statusIcons = [
-        'unpaid' => '<?= ICON_HOURGLASS ?>', 'paid' => '<?= ICON_MONEY_BAG ?>', 'file_issue' => '<?= ICON_EYE ?>',
-        'printing' => '<?= ICON_PRINTER ?>',
-        'preflight' => '<?= ICON_EYE ?>',
-        'ready' => '<?= ICON_PACKAGE ?>',
-        'dispatched' => '<?= ICON_TRUCK ?>',
-        'shipped' => '<?= ICON_TRUCK ?>', 'delivered' => '<?= ICON_PACKAGE ?>',
-        'pickedup' => '<?= ICON_CHECK_GREEN ?>', 'unclaimed' => '<?= ICON_MAILBOX ?>', 'missing' => '<?= ICON_WARNING ?>',
-        'cancelled' => '<?= ICON_CROSS ?>', 'refunded' => '<?= ICON_SIREN ?>'
+        'unpaid' => ICON_HOURGLASS, 'paid' => ICON_MONEY_BAG, 'file_issue' => ICON_EYE,
+        'printing' => ICON_PRINTER,
+        'preflight' => ICON_EYE,
+        'ready' => ICON_PACKAGE,
+        'dispatched' => ICON_TRUCK,
+        'shipped' => ICON_TRUCK, 'delivered' => ICON_PACKAGE,
+        'pickedup' => ICON_CHECK_GREEN, 'unclaimed' => ICON_MAILBOX, 'missing' => ICON_WARNING,
+        'cancelled' => ICON_CROSS, 'refunded' => ICON_SIREN
     ];
     ?>
 <!DOCTYPE html>
@@ -1005,7 +1005,7 @@ function generateBulkOrderPrint( $orders, $statuses ) {
     <div class="status-section">
       <div class="order-section-header">Current Status</div>
       <span class="status-badge-large status-<?= $currentStatus ?>">
-        <?= $statusIcons[$currentStatus] ?? '<?= ICON_MEMO ?>' ?>
+        <?= $statusIcons[$currentStatus] ?? ICON_MEMO ?>
         <?= $statusInfo['label'] ?>
       </span>
     </div>
@@ -1404,7 +1404,7 @@ window.orderDueDate = '<?= htmlspecialchars($order['selectedDate']) ?>'; // Lega
     <div class="top-logo-bar" style="padding: 12px 0; margin: 0;">
       <div class="logo-left">
         <a href="admin-orders.php">
-          <img src="mtcc-ps-logo.png" alt="Logo" class="top-logo" onerror="this.style.display='none'">
+          <img src="/mtcc-ps-logo.png" alt="MTCC Print Services" class="top-logo" onerror="this.style.display='none'">
         </a>
       </div>
       <div class="logo-right">
@@ -1534,39 +1534,39 @@ window.orderDueDate = '<?= htmlspecialchars($order['selectedDate']) ?>'; // Lega
         <div class="order-section-header">Current Status</div>
         <?php
         $statusIcons = [
-          'unpaid' => '<?= ICON_HOURGLASS ?>',
-          'paid' => '<?= ICON_MONEY_BAG ?>',
-          'file_issue' => '<?= ICON_EYE ?>',
-          'printing' => '<?= ICON_PRINTER ?>',
-          'preflight' => '<?= ICON_EYE ?>',
-          'ready' => '<?= ICON_PACKAGE ?>',
-          'dispatched' => '<?= ICON_TRUCK ?>',
-          'shipped' => '<?= ICON_TRUCK ?>',
-          'delivered' => '<?= ICON_PACKAGE ?>',
-          'pickedup' => '<?= ICON_CHECK_GREEN ?>',
-          'unclaimed' => '<?= ICON_MAILBOX ?>',
-          'missing' => '<?= ICON_WARNING ?>',
-          'cancelled' => '<?= ICON_CROSS ?>',
-          'refunded' => '<?= ICON_SIREN ?>'
+          'unpaid' => ICON_HOURGLASS,
+          'paid' => ICON_MONEY_BAG,
+          'file_issue' => ICON_EYE,
+          'printing' => ICON_PRINTER,
+          'preflight' => ICON_EYE,
+          'ready' => ICON_PACKAGE,
+          'dispatched' => ICON_TRUCK,
+          'shipped' => ICON_TRUCK,
+          'delivered' => ICON_PACKAGE,
+          'pickedup' => ICON_CHECK_GREEN,
+          'unclaimed' => ICON_MAILBOX,
+          'missing' => ICON_WARNING,
+          'cancelled' => ICON_CROSS,
+          'refunded' => ICON_SIREN
         ];
         ?>
         <?php if ($isEditMode): ?>
         <select name="status" class="header-input btn-medium" required>
           <?php
           $statusOptionsWithIcons = [
-            'unpaid' => '<?= ICON_HOURGLASS ?> Unpaid',
-            'paid' => '<?= ICON_MONEY_BAG ?> Paid',
-            'file_issue' => '<?= ICON_EYE ?> File Issue',
-            'printing' => '<?= ICON_PRINTER ?> Printing',
-            'preflight' => '<?= ICON_EYE ?> Sent to Vendor',
-            'ready' => '<?= ICON_PACKAGE ?> Ready to Ship',
-            'dispatched' => '<?= ICON_TRUCK ?> Courier Assigned',
-            'shipped' => '<?= ICON_TRUCK ?> Shipped',
-            'delivered' => '<?= ICON_PACKAGE ?> Delivered',
-            'pickedup' => '<?= ICON_CHECK_GREEN ?> Picked Up',
-            'unclaimed' => '<?= ICON_MAILBOX ?> Unclaimed',
-            'missing' => '<?= ICON_WARNING ?> Missing',
-            'cancelled' => '<?= ICON_CROSS ?> Cancelled'
+            'unpaid' => ICON_HOURGLASS . ' Unpaid',
+            'paid' => ICON_MONEY_BAG . ' Paid',
+            'file_issue' => ICON_EYE . ' File Issue',
+            'printing' => ICON_PRINTER . ' Printing',
+            'preflight' => ICON_EYE . ' Sent to Vendor',
+            'ready' => ICON_PACKAGE . ' Ready to Ship',
+            'dispatched' => ICON_TRUCK . ' Courier Assigned',
+            'shipped' => ICON_TRUCK . ' Shipped',
+            'delivered' => ICON_PACKAGE . ' Delivered',
+            'pickedup' => ICON_CHECK_GREEN . ' Picked Up',
+            'unclaimed' => ICON_MAILBOX . ' Unclaimed',
+            'missing' => ICON_WARNING . ' Missing',
+            'cancelled' => ICON_CROSS . ' Cancelled'
           ];
           foreach ( $statusOptionsWithIcons as $key => $label ): ?>
           <option value="<?= $key ?>" <?= $currentStatus === $key ? 'selected' : '' ?>>
@@ -1576,7 +1576,7 @@ window.orderDueDate = '<?= htmlspecialchars($order['selectedDate']) ?>'; // Lega
         </select>
         <?php else: ?>
         <span class="status-badge-large status-<?= $currentStatus ?>">
-        <?= $statusIcons[$currentStatus] ?? '<?= ICON_MEMO ?>' ?>
+        <?= $statusIcons[$currentStatus] ?? ICON_MEMO ?>
         <?= $statusConfig[$currentStatus]['label'] ?>
         </span>
         <?php endif; ?>
@@ -2236,7 +2236,7 @@ window.orderDueDate = '<?= htmlspecialchars($order['selectedDate']) ?>'; // Lega
   <!-- Order History Timeline Card -->
   <div class="card card-compact order-history-card">
     <div class="section-header">
-      <div class="header-left"> <span class="card-icon"><?= ICON_DOCUMENT ?></span> Order History </div>
+      <div class="header-left"> <span class="card-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"/><path d="M14 2v5a1 1 0 0 0 1 1h5"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg></span> Order History </div>
     </div>
     <div class="order-history-timeline" id="orderHistoryTimeline">
       <?php
@@ -2269,21 +2269,29 @@ window.orderDueDate = '<?= htmlspecialchars($order['selectedDate']) ?>'; // Lega
           return strtotime($b['timestamp']) - strtotime($a['timestamp']);
       });
       
-      // Action icons and labels
+      // Action icons — Lucide SVGs inlined for consistency
+      $lucidePackage = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"/><path d="M12 22V12"/><polyline points="3.29 7 12 12 20.71 7"/><path d="m7.5 4.27 9 5.15"/></svg>';
+      $lucideStatus = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/></svg>';
+      $lucidePencil = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg>';
+      $lucideNote = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 9a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 15 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2z"/><path d="M15 3v5a1 1 0 0 0 1 1h5"/></svg>';
+      $lucideMail = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7"/><rect x="2" y="4" width="20" height="16" rx="2"/></svg>';
+      $lucideFolder = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"/></svg>';
+      $lucideFile = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"/><path d="M14 2v5a1 1 0 0 0 1 1h5"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>';
+
       $actionConfig = [
-          'order_created' => ['icon' => '<?= ICON_PACKAGE ?>', 'label' => 'Order Created', 'color' => '#10b981'],
-          'status_change' => ['icon' => '<?= ICON_UPLOAD ?>', 'label' => 'Status Changed', 'color' => '#6366f1'],
-          'edit' => ['icon' => '<?= ICON_PENCIL ?>', 'label' => 'Order Edited', 'color' => '#f59e0b'],
-          'note_added' => ['icon' => '<?= ICON_MEMO ?>', 'label' => 'Note Added', 'color' => '#3b82f6'],
-          'note_edited' => ['icon' => '<?= ICON_PENCIL ?>', 'label' => 'Note Edited', 'color' => '#8b5cf6'],
-          'note_removed' => ['icon' => '<?= ICON_PENCIL ?>', 'label' => 'Note Removed', 'color' => '#ef4444'],
-          'email_sent' => ['icon' => '<?= ICON_ENVELOPE ?>', 'label' => 'Email Sent', 'color' => '#06b6d4'],
-          'file_uploaded' => ['icon' => '<?= ICON_FOLDER ?>', 'label' => 'File Uploaded', 'color' => '#84cc16']
+          'order_created' => ['icon' => $lucidePackage, 'label' => 'Order Created', 'color' => '#10b981'],
+          'status_change' => ['icon' => $lucideStatus, 'label' => 'Status Changed', 'color' => '#6366f1'],
+          'edit' => ['icon' => $lucidePencil, 'label' => 'Order Edited', 'color' => '#f59e0b'],
+          'note_added' => ['icon' => $lucideNote, 'label' => 'Note Added', 'color' => '#3b82f6'],
+          'note_edited' => ['icon' => $lucidePencil, 'label' => 'Note Edited', 'color' => '#8b5cf6'],
+          'note_removed' => ['icon' => $lucidePencil, 'label' => 'Note Removed', 'color' => '#ef4444'],
+          'email_sent' => ['icon' => $lucideMail, 'label' => 'Email Sent', 'color' => '#06b6d4'],
+          'file_uploaded' => ['icon' => $lucideFolder, 'label' => 'File Uploaded', 'color' => '#84cc16']
       ];
-      
+
       if (!empty($orderHistory)):
       foreach ($orderHistory as $entry):
-          $config = $actionConfig[$entry['action']] ?? ['icon' => '<?= ICON_MEMO ?>', 'label' => ucfirst(str_replace('_', ' ', $entry['action'])), 'color' => '#6b7280'];
+          $config = $actionConfig[$entry['action']] ?? ['icon' => $lucideNote, 'label' => ucfirst(str_replace('_', ' ', $entry['action'])), 'color' => '#6b7280'];
       ?>
       <div class="history-item">
         <div class="history-icon" style="background-color: <?= $config['color'] ?>20; color: <?= $config['color'] ?>;">
@@ -2302,7 +2310,7 @@ window.orderDueDate = '<?= htmlspecialchars($order['selectedDate']) ?>'; // Lega
       endforeach;
       else:
       ?>
-      <div class="no-history"><?= ICON_DOCUMENT ?> No history recorded yet.</div>
+      <div class="no-history"><?= $lucideFile ?> No history recorded yet.</div>
       <?php endif; ?>
     </div>
   </div>

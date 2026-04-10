@@ -863,12 +863,29 @@ function showLoginForm($error = '') {
             height: auto;
         }
         .login-title {
-            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
             font-size: 1.5rem;
             font-weight: 700;
             color: #1f2937;
             margin-bottom: 8px;
         }
+        .login-title svg { color: #7c3aed; flex-shrink: 0; }
+        .login-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .login-btn svg { flex-shrink: 0; }
+        .login-footer a {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .login-footer a svg { flex-shrink: 0; }
         .login-subtitle {
             text-align: center;
             color: #6b7280;
@@ -961,10 +978,10 @@ function showLoginForm($error = '') {
 <body>
     <div class="login-container">
         <div class="login-logo">
-            <img src="logo.png" alt="MTCC Print Services" onerror="this.style.display=\'none\'">
+            <img src="mtcc-ps-logo.png" alt="MTCC Print Services" onerror="this.style.display=\'none\'">
         </div>
         
-        <h1 class="login-title">ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬â„¢ Admin Login</h1>
+        <h1 class="login-title"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="16" r="1"/><rect x="3" y="10" width="18" height="12" rx="2"/><path d="M7 10V7a5 5 0 0 1 10 0v3"/></svg> Admin Login</h1>
         <p class="login-subtitle">Enter your credentials to access the admin area</p>
         
         ' . $error_html . '
@@ -985,11 +1002,11 @@ function showLoginForm($error = '') {
                 <label for="remember_me">Remember me for ' . REMEMBER_ME_DAYS . ' days</label>
             </div>
             
-            <button type="submit" class="login-btn">Login ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢</button>
+            <button type="submit" class="login-btn">Login <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
         </form>
         
         <div class="login-footer">
-            <a href="/">ÃƒÂ¢Ã¢â‚¬Â Ã‚Â Back to Order Form</a>
+            <a href="/"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg> Back to Order Form</a>
         </div>
     </div>
 </body>
@@ -1110,7 +1127,7 @@ function showPasswordChangeForm($error = '') {
 </head>
 <body>
     <div class="login-container">
-        <h1 class="login-title">ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬Ëœ Change Password</h1>
+        <h1 class="login-title"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"/><circle cx="16.5" cy="7.5" r=".5" fill="currentColor"/></svg> Change Password</h1>
         <p class="login-subtitle">You must change your password before continuing</p>
         
         ' . $error_html . '
@@ -1138,7 +1155,7 @@ function showPasswordChangeForm($error = '') {
                 <input type="password" name="confirm_password" class="form-input" placeholder="Confirm new password" required>
             </div>
             
-            <button type="submit" class="login-btn">Change Password ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢</button>
+            <button type="submit" class="login-btn">Change Password <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
         </form>
     </div>
 </body>
@@ -1254,10 +1271,10 @@ function showAccessDenied($requiredPermission = '') {
 </head>
 <body>
     <div class="container">
-        <div class="icon">ÃƒÂ°Ã…Â¸Ã…Â¡Ã‚Â«</div>
+        <div class="icon"><svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m14.5 9.5-5 5"/><path d="m9.5 9.5 5 5"/></svg></div>
         <h1 class="title">Access Denied</h1>
         <p class="message">You don\'t have permission to access this page.<br>Contact your administrator if you believe this is an error.</p>
-        <a href="admin-orders.php" class="back-btn">ÃƒÂ¢Ã¢â‚¬Â Ã‚Â Go to Dashboard</a>
+        <a href="admin-orders.php" class="back-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.2em;"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg> Go to Dashboard</a>
         <div class="user-info">
             Logged in as: ' . htmlspecialchars(getCurrentAdminName()) . ' (' . htmlspecialchars(getCurrentAdminRoleLabel()) . ')
         </div>
