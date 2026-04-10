@@ -149,34 +149,48 @@
 
     .header-barcode-display {
         display: flex !important;
-        flex-direction: row-reverse !important;
-        align-items: center !important;
-        gap: 8px !important;
+        align-items: stretch !important;
+        gap: 10px !important;
         background: none !important;
         border: none !important;
         padding: 0 !important;
+    }
+
+    .header-barcode-info {
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        align-items: flex-end !important;
+        gap: 3px !important;
+    }
+
+    .header-barcode-info .order-section-header {
+        margin: 0 !important;
+        text-align: right !important;
     }
 
     .header-barcode-display #orderBarcode {
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
-        padding: 2px 3px !important;
+        padding: 3px 5px !important;
         background: white !important;
         border: 1px solid #e5e7eb !important;
         border-radius: 2px !important;
-        min-height: 28px !important;
+        flex-shrink: 0 !important;
     }
 
     .header-barcode-display #orderBarcode svg {
-        max-height: 26px !important;
+        height: 44px !important;
+        width: auto !important;
+        max-width: 160px !important;
         display: block !important;
     }
 
     .header-barcode-display .barcode-number {
         font-family: 'Monaco', 'Consolas', monospace !important;
-        font-size: 0.62rem !important;
-        font-weight: 600 !important;
+        font-size: 0.68rem !important;
+        font-weight: 700 !important;
         color: var(--text) !important;
         letter-spacing: 0.4px !important;
         text-align: right !important;

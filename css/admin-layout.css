@@ -686,10 +686,35 @@
 }
 
 .page-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
     font-size: 1.5rem;
     font-weight: 700;
     margin: 0;
     color: var(--text);
+}
+
+.page-title-back {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    color: var(--text);
+    text-decoration: none;
+    transition: background 0.15s ease, color 0.15s ease;
+    flex-shrink: 0;
+}
+
+.page-title-back:hover {
+    background: rgba(255, 255, 255, 0.6);
+    color: var(--primary);
+}
+
+.page-title-back svg {
+    display: block;
 }
 
 .page-subtitle {

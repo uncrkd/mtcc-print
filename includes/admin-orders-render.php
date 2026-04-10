@@ -1416,32 +1416,35 @@ window.orderDueDate = '<?= htmlspecialchars($order['selectedDate']) ?>'; // Lega
     <?php if ($isEditMode): ?>
     <div class="page-header" style="margin: 0; background: linear-gradient(90deg, rgba(95, 95, 95, 1) 0%, rgba(170, 170, 170, 1) 100%); box-shadow: var(--shadow-md);  outline: 2px dashed rgba(191, 191, 191, 0.7);   outline-offset: -5px;">
       <div class="page-header-left">
-        <h1 class="page-title">Order Details: Edit Mode</h1>
+        <h1 class="page-title">
+          <a href="admin-orders.php" class="page-title-back" title="Back to Orders"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 9a1 1 0 0 1-1-1V4.707a.707.707 0 0 0-1.207-.5l-6.94 6.94a1.207 1.207 0 0 0 0 1.707l6.94 6.94a.707.707 0 0 0 1.207-.5V16a1 1 0 0 1 1-1h2a1 1 0 0 0 1-1v-4a1 1 0 0 0-1-1z"/><path d="M20 9v6"/></svg></a>
+          Order Details: Edit Mode
+        </h1>
         <div class="page-welcome">
           <span class="welcome-text">Editing order <?= htmlspecialchars($order['referenceCode']) ?> <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.15em;"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg></span>
           <span class="welcome-date">Today is <?= date('l, F j, Y') ?></span>
         </div>
       </div>
       <div class="page-header-right">
-        <a href="admin-orders.php" class="top-nav-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg> Back to Orders</a>
       </div>
     </div>
     <?php else: ?>
     <div class="page-header" style="margin: 0;">
       <div class="page-header-left">
-        <h1 class="page-title">Order Details</h1>
+        <h1 class="page-title">
+          <a href="admin-orders.php" class="page-title-back" title="Back to Orders"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 9a1 1 0 0 1-1-1V4.707a.707.707 0 0 0-1.207-.5l-6.94 6.94a1.207 1.207 0 0 0 0 1.707l6.94 6.94a.707.707 0 0 0 1.207-.5V16a1 1 0 0 1 1-1h2a1 1 0 0 0 1-1v-4a1 1 0 0 0-1-1z"/><path d="M20 9v6"/></svg></a>
+          Order Details
+        </h1>
         <div class="page-welcome">
           <span class="welcome-text">Order <?= htmlspecialchars($order['referenceCode']) ?></span>
           <span class="welcome-date">Today is <?= date('l, F j, Y') ?></span>
         </div>
       </div>
       <div class="page-header-right">
-        <a href="admin-orders.php" class="top-nav-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg> Back to Orders</a>
         <button onclick="printOrderDetails()" class="top-nav-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg> Print</button>
         <button onclick="printShippingLabel()" class="top-nav-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/></svg> Print Label</button>
         <button onclick="resendConfirmationEmail('<?= htmlspecialchars($order['referenceCode']) ?>')"
               class="top-nav-btn"
-              style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 6px;"
               title="Send to: <?= htmlspecialchars($order['customerInfo']['email']) ?>"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7"/><rect x="2" y="4" width="20" height="16" rx="2"/></svg> Send Details</button>
         <?php if ($canEditOrders): ?><a href="?view=<?= urlencode($order['referenceCode']) ?>&edit=1" class="top-nav-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg> Edit</a><?php endif; ?>
       </div>
@@ -1582,10 +1585,12 @@ window.orderDueDate = '<?= htmlspecialchars($order['selectedDate']) ?>'; // Lega
         <?php endif; ?>
       </div>
       <div class="header-tracking-section">
-        <div class="order-section-header">Tracking Code</div>
         <div class="header-barcode-display">
+          <div class="header-barcode-info">
+            <div class="order-section-header">Tracking Code</div>
+            <div class="barcode-number" id="orderBarcodeText"><?= $trackingNumber ?></div>
+          </div>
           <div id="orderBarcode">Generating barcode...</div>
-          <div class="barcode-number" id="orderBarcodeText"><?= $trackingNumber ?></div>
         </div>
       </div>
     </div>

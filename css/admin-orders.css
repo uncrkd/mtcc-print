@@ -346,46 +346,55 @@ body.edit-mode {
 /* Tracking section in header */
 .header-tracking-section {
     display: flex;
-    flex-direction: column;
-    align-items: flex-end;
     justify-self: end;
-}
-
-.header-tracking-section .order-section-header {
-    align-self: flex-end;
-    margin-bottom: 0.4rem;
+    align-items: stretch;
 }
 
 .header-barcode-display {
     display: flex;
-    flex-direction: row-reverse;
-    align-items: center;
-    gap: 10px;
+    align-items: stretch;
+    gap: 12px;
     background: none;
     border: none;
     padding: 0;
+}
+
+.header-barcode-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 4px;
+}
+
+.header-barcode-info .order-section-header {
+    margin: 0;
+    height: auto;
+    text-align: right;
 }
 
 .header-barcode-display #orderBarcode {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 2px 4px;
+    padding: 4px 6px;
     background: white;
     border: 1px solid #e5e7eb;
     border-radius: 3px;
-    min-height: 32px;
+    flex-shrink: 0;
 }
 
 .header-barcode-display #orderBarcode svg {
-    max-height: 30px;
+    height: 56px;
+    width: auto;
+    max-width: 180px;
     display: block;
 }
 
 .header-barcode-display .barcode-number {
     font-family: 'Monaco', 'Consolas', monospace;
-    font-size: 0.72rem;
-    font-weight: 600;
+    font-size: 0.78rem;
+    font-weight: 700;
     color: var(--text);
     letter-spacing: 0.5px;
     text-align: right;
@@ -559,6 +568,36 @@ body.edit-mode {
 .header.border-status-delivered { border-left-color: var(--primary) !important; }
 .header.status-cancelled,
 .header.border-status-cancelled { border-left-color: var(--red) !important; }
+
+/* Order Number text color matches the status */
+.header.status-unpaid .order-number,
+.header.status-unpaid .order-number::before { color: #a16207 !important; }
+.header.status-paid .order-number,
+.header.status-paid .order-number::before { color: #a16207 !important; }
+.header.status-file_issue .order-number,
+.header.status-file_issue .order-number::before { color: #dc2626 !important; }
+.header.status-preflight .order-number,
+.header.status-preflight .order-number::before { color: #4338ca !important; }
+.header.status-printing .order-number,
+.header.status-printing .order-number::before { color: #4338ca !important; }
+.header.status-ready .order-number,
+.header.status-ready .order-number::before { color: #d97706 !important; }
+.header.status-dispatched .order-number,
+.header.status-dispatched .order-number::before { color: #0d9488 !important; }
+.header.status-shipped .order-number,
+.header.status-shipped .order-number::before { color: #0d9488 !important; }
+.header.status-delivered .order-number,
+.header.status-delivered .order-number::before { color: #047857 !important; }
+.header.status-pickedup .order-number,
+.header.status-pickedup .order-number::before { color: #059669 !important; }
+.header.status-unclaimed .order-number,
+.header.status-unclaimed .order-number::before { color: #dc2626 !important; }
+.header.status-missing .order-number,
+.header.status-missing .order-number::before { color: #dc2626 !important; }
+.header.status-cancelled .order-number,
+.header.status-cancelled .order-number::before { color: #64748b !important; }
+.header.status-refunded .order-number,
+.header.status-refunded .order-number::before { color: #dc2626 !important; }
 
 
 /* Section Headers */
