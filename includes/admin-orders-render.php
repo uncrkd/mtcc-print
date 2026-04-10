@@ -1418,12 +1418,12 @@ window.orderDueDate = '<?= htmlspecialchars($order['selectedDate']) ?>'; // Lega
       <div class="page-header-left">
         <h1 class="page-title">Order Details: Edit Mode</h1>
         <div class="page-welcome">
-          <span class="welcome-text">Editing order <?= htmlspecialchars($order['referenceCode']) ?> <?= ICON_PENCIL ?></span>
+          <span class="welcome-text">Editing order <?= htmlspecialchars($order['referenceCode']) ?> <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.15em;"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg></span>
           <span class="welcome-date">Today is <?= date('l, F j, Y') ?></span>
         </div>
       </div>
-        <div class="page-header-right">
-        <a href="admin-orders.php" class="top-nav-btn"><?= SYMBOL_ARROW_LEFT ?> Back to Orders</a>
+      <div class="page-header-right">
+        <a href="admin-orders.php" class="top-nav-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg> Back to Orders</a>
       </div>
     </div>
     <?php else: ?>
@@ -1436,14 +1436,14 @@ window.orderDueDate = '<?= htmlspecialchars($order['selectedDate']) ?>'; // Lega
         </div>
       </div>
       <div class="page-header-right">
-        <a href="admin-orders.php" class="top-nav-btn"><?= SYMBOL_ARROW_LEFT ?> Back to Orders</a>
-          <button onclick="printOrderDetails()" class="top-nav-btn"><?= ICON_PRINTER ?> Print</button>
-        <button onclick="printShippingLabel()" class="top-nav-btn"><?= ICON_PACKAGE ?> Print Label</button>
-        <button onclick="resendConfirmationEmail('<?= htmlspecialchars($order['referenceCode']) ?>')" 
-              class="top-nav-btn" 
+        <a href="admin-orders.php" class="top-nav-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg> Back to Orders</a>
+        <button onclick="printOrderDetails()" class="top-nav-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg> Print</button>
+        <button onclick="printShippingLabel()" class="top-nav-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/></svg> Print Label</button>
+        <button onclick="resendConfirmationEmail('<?= htmlspecialchars($order['referenceCode']) ?>')"
+              class="top-nav-btn"
               style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 6px;"
-              title="Send to: <?= htmlspecialchars($order['customerInfo']['email']) ?>"><?= ICON_ENVELOPE ?> Send Details</button>
-        <?php if ($canEditOrders): ?><a href="?view=<?= urlencode($order['referenceCode']) ?>&edit=1" class="top-nav-btn"><?= ICON_PENCIL ?> Edit</a><?php endif; ?>
+              title="Send to: <?= htmlspecialchars($order['customerInfo']['email']) ?>"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7"/><rect x="2" y="4" width="20" height="16" rx="2"/></svg> Send Details</button>
+        <?php if ($canEditOrders): ?><a href="?view=<?= urlencode($order['referenceCode']) ?>&edit=1" class="top-nav-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg> Edit</a><?php endif; ?>
       </div>
     </div>
     <?php endif; ?>
@@ -1451,11 +1451,11 @@ window.orderDueDate = '<?= htmlspecialchars($order['selectedDate']) ?>'; // Lega
   <!-- Order Status Card -->
   <div class="header status-<?= $currentStatus ?>">
     <div class="header-top-row">
-      <div style="display: flex; align-items: center; gap: var(--space-lg);">
+      <div class="header-top-left">
         <div class="submitted-info"><?= ICON_CALENDAR ?>  Submitted: <strong><?= date('l, F j, Y \a\t g:i A', strtotime($order['submittedAt'])) ?></strong></div>
-        <div style="width: 1px; height: 20px; background: #e5e7eb;"></div>
-        <div style="display: flex; align-items: center; gap: var(--space-sm);">
-          <span style="font-size: 0.8rem; color: var(--subtext); font-weight: 500;">Priority Tier:</span>
+        <div class="header-top-divider"></div>
+        <div class="priority-tier-row">
+          <span class="priority-tier-label">Priority Tier:</span>
           <?php
           // Determine priority class based on tier
           $priorityClass = 'priority-tier-standard';
@@ -1475,12 +1475,63 @@ window.orderDueDate = '<?= htmlspecialchars($order['selectedDate']) ?>'; // Lega
           <span class="priority-tier-badge <?= $priorityClass ?>" id="priority_tier_badge"><?= htmlspecialchars($order['pricing']['tier']) ?></span>
         </div>
       </div>
+      <div class="header-top-right">
+        <span class="current-status-label">Current Status:</span>
+        <?php
+        $statusIcons = [
+          'unpaid' => ICON_HOURGLASS,
+          'paid' => ICON_MONEY_BAG,
+          'file_issue' => ICON_EYE,
+          'printing' => ICON_PRINTER,
+          'preflight' => ICON_EYE,
+          'ready' => ICON_PACKAGE,
+          'dispatched' => ICON_TRUCK,
+          'shipped' => ICON_TRUCK,
+          'delivered' => ICON_PACKAGE,
+          'pickedup' => ICON_CHECK_GREEN,
+          'unclaimed' => ICON_MAILBOX,
+          'missing' => ICON_WARNING,
+          'cancelled' => ICON_CROSS,
+          'refunded' => ICON_SIREN
+        ];
+        ?>
+        <?php if ($isEditMode): ?>
+        <select name="status" class="header-input btn-medium" required>
+          <?php
+          $statusOptionsWithIcons = [
+            'unpaid' => ICON_HOURGLASS . ' Unpaid',
+            'paid' => ICON_MONEY_BAG . ' Paid',
+            'file_issue' => ICON_EYE . ' File Issue',
+            'printing' => ICON_PRINTER . ' Printing',
+            'preflight' => ICON_EYE . ' Sent to Vendor',
+            'ready' => ICON_PACKAGE . ' Ready to Ship',
+            'dispatched' => ICON_TRUCK . ' Courier Assigned',
+            'shipped' => ICON_TRUCK . ' Shipped',
+            'delivered' => ICON_PACKAGE . ' Delivered',
+            'pickedup' => ICON_CHECK_GREEN . ' Picked Up',
+            'unclaimed' => ICON_MAILBOX . ' Unclaimed',
+            'missing' => ICON_WARNING . ' Missing',
+            'cancelled' => ICON_CROSS . ' Cancelled'
+          ];
+          foreach ( $statusOptionsWithIcons as $key => $label ): ?>
+          <option value="<?= $key ?>" <?= $currentStatus === $key ? 'selected' : '' ?>>
+          <?= $label ?>
+          </option>
+          <?php endforeach; ?>
+        </select>
+        <?php else: ?>
+        <span class="status-badge-large status-<?= $currentStatus ?>">
+        <?= $statusIcons[$currentStatus] ?? ICON_MEMO ?>
+        <?= $statusConfig[$currentStatus]['label'] ?>
+        </span>
+        <?php endif; ?>
+      </div>
     </div>
     <div class="header-main-row">
       <div class="order-number-section">
         <div class="order-section-header">Order Number</div>
         <?php if ($isEditMode): ?>
-        <input type="text" name="new_reference_code" value="<?= htmlspecialchars($order['referenceCode']) ?>" 
+        <input type="text" name="new_reference_code" value="<?= htmlspecialchars($order['referenceCode']) ?>"
                                    class="header-input" required>
         <?php else: ?>
         <div class="order-number">
@@ -1530,56 +1581,12 @@ window.orderDueDate = '<?= htmlspecialchars($order['selectedDate']) ?>'; // Lega
         </div>
         <?php endif; ?>
       </div>
-      <div class="status-section">
-        <div class="order-section-header">Current Status</div>
-        <?php
-        $statusIcons = [
-          'unpaid' => ICON_HOURGLASS,
-          'paid' => ICON_MONEY_BAG,
-          'file_issue' => ICON_EYE,
-          'printing' => ICON_PRINTER,
-          'preflight' => ICON_EYE,
-          'ready' => ICON_PACKAGE,
-          'dispatched' => ICON_TRUCK,
-          'shipped' => ICON_TRUCK,
-          'delivered' => ICON_PACKAGE,
-          'pickedup' => ICON_CHECK_GREEN,
-          'unclaimed' => ICON_MAILBOX,
-          'missing' => ICON_WARNING,
-          'cancelled' => ICON_CROSS,
-          'refunded' => ICON_SIREN
-        ];
-        ?>
-        <?php if ($isEditMode): ?>
-        <select name="status" class="header-input btn-medium" required>
-          <?php
-          $statusOptionsWithIcons = [
-            'unpaid' => ICON_HOURGLASS . ' Unpaid',
-            'paid' => ICON_MONEY_BAG . ' Paid',
-            'file_issue' => ICON_EYE . ' File Issue',
-            'printing' => ICON_PRINTER . ' Printing',
-            'preflight' => ICON_EYE . ' Sent to Vendor',
-            'ready' => ICON_PACKAGE . ' Ready to Ship',
-            'dispatched' => ICON_TRUCK . ' Courier Assigned',
-            'shipped' => ICON_TRUCK . ' Shipped',
-            'delivered' => ICON_PACKAGE . ' Delivered',
-            'pickedup' => ICON_CHECK_GREEN . ' Picked Up',
-            'unclaimed' => ICON_MAILBOX . ' Unclaimed',
-            'missing' => ICON_WARNING . ' Missing',
-            'cancelled' => ICON_CROSS . ' Cancelled'
-          ];
-          foreach ( $statusOptionsWithIcons as $key => $label ): ?>
-          <option value="<?= $key ?>" <?= $currentStatus === $key ? 'selected' : '' ?>>
-          <?= $label ?>
-          </option>
-          <?php endforeach; ?>
-        </select>
-        <?php else: ?>
-        <span class="status-badge-large status-<?= $currentStatus ?>">
-        <?= $statusIcons[$currentStatus] ?? ICON_MEMO ?>
-        <?= $statusConfig[$currentStatus]['label'] ?>
-        </span>
-        <?php endif; ?>
+      <div class="header-tracking-section">
+        <div class="order-section-header">Tracking Code</div>
+        <div class="header-barcode-display">
+          <div id="orderBarcode">Generating barcode...</div>
+          <div class="barcode-number" id="orderBarcodeText"><?= $trackingNumber ?></div>
+        </div>
       </div>
     </div>
     
@@ -2119,27 +2126,9 @@ window.orderDueDate = '<?= htmlspecialchars($order['selectedDate']) ?>'; // Lega
   </div>
   <?php endif; ?>
   
-  <!-- BARCODE CARD -->
-  <div class="barcode-card">
-    <div class="section-header"> <span class="card-icon"><?= ICON_PACKAGE ?></span> Tracking Information </div>
-    <div class="barcode-visual-section">
-      <div class="barcode-header">Tracking Code</div>
-      <div class="barcode-display">
-        <div id="orderBarcode">Generating barcode...</div>
-        <div class="barcode-number" id="orderBarcodeText">
-          <?= $trackingNumber ?>
-        </div>
-      </div>
-    </div>
-    <?php if (!$isEditMode): ?>
-    <div class="barcode-actions">
-      <button class="btn btn-light" onclick="downloadBarcodeImage()"><?= ICON_DOWNLOAD ?> Download</button>
-      <button class="btn btn-light" onclick="printBarcodeOnly()"><?= ICON_PRINTER ?> Print</button>
-      <button class="btn btn-light" onclick="copyTrackingNumber()"><?= ICON_MEMO ?> Copy</button>
-    </div>
-    <?php endif; ?>
-  </div>
-  
+  <!-- BARCODE CARD removed — barcode now lives in header card -->
+
+
   <!-- Enhanced Internal Notes Card with Collaborative System -->
   <div class="card card-compact" id="internalNotesCard">
     <div class="section-header section-header-with-button">

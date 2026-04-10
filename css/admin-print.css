@@ -82,40 +82,108 @@
         border-radius: 6px !important;
         text-align: left !important;
     }
-    
+
     .header-top-row {
         display: flex !important;
-        justify-content: flex-start !important;
+        justify-content: space-between !important;
         align-items: center !important;
         margin-bottom: 8px !important;
         padding-bottom: 8px !important;
         border-bottom: 1px solid #e5e7eb !important;
-        text-align: left !important;
+        gap: 10px !important;
     }
-    
-    .header-top-row > div,
-    .header-top-row > div > div,
-    .header-top-row * {
-        justify-content: flex-start !important;
-        text-align: left !important;
+
+    .header-top-left {
+        display: flex !important;
+        align-items: center !important;
+        gap: 12px !important;
+        flex: 1 !important;
+        min-width: 0 !important;
     }
-    
-    .header-top-row > div:first-child {
-        width: auto !important;
-        flex: 0 0 auto !important;
-        margin-right: auto !important;
+
+    .header-top-right {
+        display: flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        flex-shrink: 0 !important;
     }
-    
+
+    .current-status-label,
+    .priority-tier-label {
+        font-size: 0.7rem !important;
+        color: var(--subtext) !important;
+        font-weight: 500 !important;
+    }
+
+    .header-top-divider {
+        width: 1px !important;
+        height: 18px !important;
+        background: #e5e7eb !important;
+    }
+
+    .priority-tier-row {
+        display: flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+    }
+
     .submitted-info {
         text-align: left !important;
+        font-size: 0.7rem !important;
     }
-    
+
     .header-main-row {
         display: grid !important;
-        grid-template-columns: auto auto 1fr auto !important;
-        gap: 16px !important;
-        align-items: flex-start !important;
+        grid-template-columns: auto auto auto 1fr !important;
+        gap: 14px !important;
+        align-items: center !important;
     }
+
+    /* Header tracking barcode (replaces standalone barcode card) */
+    .header-tracking-section {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: flex-end !important;
+        justify-self: end !important;
+    }
+
+    .header-barcode-display {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        background: white !important;
+        border: 2px solid var(--primary) !important;
+        border-radius: 4px !important;
+        padding: 4px 8px !important;
+        gap: 2px !important;
+    }
+
+    .header-barcode-display #orderBarcode {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        min-height: 32px !important;
+    }
+
+    .header-barcode-display #orderBarcode svg {
+        max-height: 32px !important;
+    }
+
+    .header-barcode-display .barcode-number {
+        font-family: 'Monaco', 'Consolas', monospace !important;
+        font-size: 0.6rem !important;
+        font-weight: 600 !important;
+        color: var(--text) !important;
+        letter-spacing: 0.5px !important;
+        text-align: center !important;
+        padding: 1px 4px !important;
+        background: #f8fafc !important;
+        border: 1px solid #e5e7eb !important;
+        border-radius: 2px !important;
+    }
+
+    /* Hide old standalone barcode card on print (no longer rendered but safety) */
+    .barcode-card { display: none !important; }
     
     .header-divider {
         display: block !important;

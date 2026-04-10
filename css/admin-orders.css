@@ -290,16 +290,105 @@ body.edit-mode {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: var(--space-md);
     margin-bottom: var(--space-md);
     padding-bottom: var(--space-md);
     border-bottom: 1px solid #e5e7eb;
 }
 
+.header-top-left {
+    display: flex;
+    align-items: center;
+    gap: var(--space-lg);
+    flex: 1;
+    min-width: 0;
+}
+
+.header-top-right {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    flex-shrink: 0;
+}
+
+.current-status-label {
+    font-size: 0.8rem;
+    color: var(--subtext);
+    font-weight: 500;
+}
+
+.header-top-divider {
+    width: 1px;
+    height: 20px;
+    background: #e5e7eb;
+    flex-shrink: 0;
+}
+
+.priority-tier-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.priority-tier-label {
+    font-size: 0.8rem;
+    color: var(--subtext);
+    font-weight: 500;
+}
+
 .header-main-row {
     display: grid;
-    grid-template-columns: auto auto 1fr auto;
+    grid-template-columns: auto auto auto 1fr;
     gap: var(--space-lg);
-    align-items: flex-start;
+    align-items: center;
+}
+
+/* Tracking section in header */
+.header-tracking-section {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-self: end;
+}
+
+.header-tracking-section .order-section-header {
+    align-self: flex-end;
+    margin-bottom: 0.4rem;
+}
+
+.header-barcode-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: white;
+    border: 2px solid var(--primary);
+    border-radius: var(--radius-sm);
+    padding: 6px 10px;
+    gap: 4px;
+}
+
+.header-barcode-display #orderBarcode {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 36px;
+}
+
+.header-barcode-display #orderBarcode svg {
+    max-height: 36px;
+}
+
+.header-barcode-display .barcode-number {
+    font-family: 'Monaco', 'Consolas', monospace;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: 0.5px;
+    text-align: center;
+    padding: 2px 6px;
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+    border-radius: 3px;
 }
 
 .header-actions {
