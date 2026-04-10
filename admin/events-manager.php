@@ -4,6 +4,7 @@
  * Manages events for poster printing operations
  */
 require_once '../admin-auth.php';
+require_once __DIR__ . '/../includes/icons.php';
 
 // Require at least view permission for events
 requireAnyPermission(['events_edit', 'events_view']);
