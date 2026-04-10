@@ -859,7 +859,8 @@ function showLoginForm($error = '') {
             margin-bottom: 30px;
         }
         .login-logo img {
-            max-width: 200px;
+            max-width: 320px;
+            width: 100%;
             height: auto;
         }
         .login-title {
@@ -870,7 +871,7 @@ function showLoginForm($error = '') {
             font-size: 1.5rem;
             font-weight: 700;
             color: #1f2937;
-            margin-bottom: 8px;
+            margin-bottom: 28px;
         }
         .login-title svg { color: #7c3aed; flex-shrink: 0; }
         .login-btn {
@@ -982,7 +983,6 @@ function showLoginForm($error = '') {
         </div>
         
         <h1 class="login-title"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="16" r="1"/><rect x="3" y="10" width="18" height="12" rx="2"/><path d="M7 10V7a5 5 0 0 1 10 0v3"/></svg> Admin Login</h1>
-        <p class="login-subtitle">Enter your credentials to access the admin area</p>
         
         ' . $error_html . '
         
