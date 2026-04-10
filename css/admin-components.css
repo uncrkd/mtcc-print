@@ -1696,9 +1696,7 @@ textarea.field-control {
 .header.status-ready { background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border-color: #d97706; }
 .header.status-dispatched { background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%); border-color: #7c3aed; }
 
-.header-input.status-shipped { background: #f0fdfa; color: #14b8a6; border-color: #14b8a6; }
-.header-input.status-unclaimed { background: #fff1f2; color: #e11d48; border-color: #e11d48; }
-.header-input.status-missing { background: #fef2f2; color: #dc2626; border-color: #dc2626; }
+/* Duplicate .header-input.status-X rules removed — consolidated above with soft pastel borders */
 
 /* ===== PREFLIGHT STATUS (Purple) ===== */
 .status-badge-large.status-preflight,
@@ -1706,15 +1704,13 @@ textarea.field-control {
 
 .header.status-preflight { background: linear-gradient(135deg, #f5f3ff 0%, var(--primary-light) 100%); border-color: #8b5cf6; }
 
-.header-input.status-preflight { background: #f5f3ff; color: #8b5cf6; border-color: #8b5cf6; }
-
 /* ===== READY TO SHIP STATUS (Cyan) ===== */
 .status-badge-large.status-ready_to_ship,
 .status-badge.status-ready_to_ship { background: #ecfeff; color: #0891b2; border-color: #06b6d4; }
 
 .header.status-ready_to_ship { background: linear-gradient(135deg, #ecfeff 0%, #cffafe 100%); border-color: #06b6d4; }
 
-.header-input.status-ready_to_ship { background: #ecfeff; color: #06b6d4; border-color: #06b6d4; }
+.header-input.status-ready_to_ship { background: #ecfeff; color: #0891b2; border-color: #a5f3fc; }
 
 /* ===== PREFLIGHT FILTER PILL (Status Filters bar) ===== */
 .filter-btn.status-preflight {

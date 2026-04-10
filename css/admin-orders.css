@@ -116,12 +116,12 @@ body.edit-mode {
 }
 
 .btn-medium,
-.filter-btn.active,
-.header-input:focus {
-    background: var(--primary) !important;
-    color: white !important;
-    border-color: var(--primary) !important;
+.filter-btn.active {
+    color: var(--primary);
+    border-color: var(--primary);
 }
+
+/* .header-input:focus handled in admin-components.css with soft purple */
 
 .btn-medium:hover,
 .filter-btn.active:hover {
@@ -779,15 +779,13 @@ textarea.field-control {
     letter-spacing: 0.5px;
     min-width: 200px;
     width: 100%;
-    max-width: 280px;
+    max-width: 320px;
     height: 32px;
     box-sizing: border-box;
     font-family: 'Montserrat', sans-serif;
 }
 
-/* Status Colors for Input */
-.header-input.status-submitted { background: #f0fdf4; color: var(--green); border-color: var(--green); }
-/* Status input color overrides removed — soft pastel styles defined in admin-components.css */
+/* Status Colors for Input — soft pastel versions are in admin-components.css */
 
 /* File Upload Components */
 .file-details {
@@ -2509,12 +2507,7 @@ body.login-page {
 .header.status-pickedup,
 .header.border-status-pickedup { border-left-color: #22c55e !important; }
 
-/* --- Header Input Status Colors --- */
-.header-input.status-preflight { background: #f5f3ff; color: #8b5cf6; border-color: #8b5cf6; }
-.header-input.status-ready { background: #fffbeb; color: #d97706; border-color: #d97706; }
-.header-input.status-dispatched { background: #f5f3ff; color: #7c3aed; border-color: #7c3aed; }
-.header-input.status-shipped { background: #f0fdfa; color: #14b8a6; border-color: #14b8a6; }
-.header-input.status-pickedup { background: #f0fdf4; color: #22c55e; border-color: #22c55e; }
+/* Header Input Status Colors — soft pastel versions are in admin-components.css */
 
 /* --- Status Dots --- */
 .status-dot.status-preflight { background: #8b5cf6; }
