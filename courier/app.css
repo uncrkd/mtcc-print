@@ -1516,6 +1516,8 @@ input {
 }
 
 .dot-active { background: var(--primary); }
+.dot-transit { background: var(--success); animation: pulse-dot 1.5s ease-in-out infinite; }
+.dot-pickup { background: #3b82f6; }
 .dot-urgent { background: var(--danger); animation: pulse-dot 1.5s ease-in-out infinite; }
 .dot-issue { background: var(--warning); }
 
@@ -1539,6 +1541,8 @@ input {
 }
 
 .home-active-card:active { transform: scale(0.98); }
+.home-transit-card { border-left-color: var(--success); }
+.home-pickup-card { border-left-color: #3b82f6; }
 
 .home-active-top {
     display: flex;

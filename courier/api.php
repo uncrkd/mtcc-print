@@ -257,9 +257,9 @@ function getTabsForRole($role) {
         case 'courier':
             return [
                 ['id' => 'home', 'label' => 'Home', 'icon' => 'home'],
-                ['id' => 'available', 'label' => 'Available', 'icon' => 'available'],
-                ['id' => 'scan', 'label' => 'Scan', 'icon' => 'scan'],
                 ['id' => 'deliveries', 'label' => 'Deliveries', 'icon' => 'deliveries'],
+                ['id' => 'scan', 'label' => 'Scan', 'icon' => 'scan'],
+                ['id' => 'available', 'label' => 'Available', 'icon' => 'available'],
                 ['id' => 'account', 'label' => 'Account', 'icon' => 'account'],
             ];
         case 'mtcc_staff':

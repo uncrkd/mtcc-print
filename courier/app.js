@@ -705,31 +705,42 @@ function loadHome() {
         html += '<div class="home-stat"><div class="home-stat-value ' + rateClass + '">' + (s.on_time_rate || 0) + '%</div><div class="home-stat-label">On Time</div></div>';
         html += '</div>';
 
-        // Active delivery card (if carrying orders)
+        // Split active orders into In Transit vs Pickup Pending
         var activeOrders = result.active_orders || [];
-        var activeCount = result.active_count || 0;
-        if (activeCount > 0) {
+        var inTransit = activeOrders.filter(function(o) { return o.status === 'shipped'; });
+        var pickupPending = activeOrders.filter(function(o) { return o.status !== 'shipped'; });
+
+        // In Transit section (always shown first and separately)
+        if (inTransit.length > 0) {
             html += '<div class="home-section">';
-            html += '<div class="home-section-header"><span class="home-section-dot dot-active"></span>Active Deliver' + (activeCount !== 1 ? 'ies' : 'y') + ' (' + activeCount + ')</div>';
-            activeOrders.forEach(function(o) {
+            html += '<div class="home-section-header"><span class="home-section-dot dot-transit"></span>In Transit (' + inTransit.length + ')</div>';
+            inTransit.forEach(function(o) {
                 orderCache[o.ref] = o;
-                var statusLabel = o.status === 'shipped' ? 'In Transit' : 'Pickup Pending';
-                var statusCls = o.status === 'shipped' ? 'badge-shipped' : 'badge-dispatched';
-                html += '<button class="home-active-card" onclick="switchTab(\'deliveries\')">';
-                html += '<div class="home-active-top"><span class="home-active-ref">' + escapeHtml(o.ref) + '</span><span class="order-status-badge ' + statusCls + ' badge-sm">' + statusLabel + '</span></div>';
+                html += '<button class="home-active-card home-transit-card" onclick="switchTab(\'deliveries\')">';
+                html += '<div class="home-active-top"><span class="home-active-ref">' + escapeHtml(o.ref) + '</span><span class="order-status-badge badge-shipped badge-sm">In Transit</span></div>';
                 html += '<div class="home-active-dest">';
-                if (o.status === 'shipped') {
-                    html += '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> ';
-                } else {
-                    html += '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M16.5 9.4l-9-5.19M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg> ';
-                }
-                html += escapeHtml(o.status === 'shipped' ? (o.destination || 'MTCC') : (o.vendor_name || 'Vendor'));
+                html += '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> ';
+                html += escapeHtml(o.destination || 'MTCC');
                 html += '</div>';
                 html += '</button>';
             });
-            if (activeCount > 3) {
-                html += '<button class="home-view-all" onclick="switchTab(\'deliveries\')">View all ' + activeCount + ' deliveries <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></button>';
-            }
+            html += '</div>';
+        }
+
+        // Pickup Pending section
+        if (pickupPending.length > 0) {
+            html += '<div class="home-section">';
+            html += '<div class="home-section-header"><span class="home-section-dot dot-pickup"></span>Pickup Pending (' + pickupPending.length + ')</div>';
+            pickupPending.forEach(function(o) {
+                orderCache[o.ref] = o;
+                html += '<button class="home-active-card home-pickup-card" onclick="switchTab(\'deliveries\')">';
+                html += '<div class="home-active-top"><span class="home-active-ref">' + escapeHtml(o.ref) + '</span><span class="order-status-badge badge-dispatched badge-sm">Pickup Pending</span></div>';
+                html += '<div class="home-active-dest">';
+                html += '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M16.5 9.4l-9-5.19M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg> ';
+                html += escapeHtml(o.vendor_name || 'Vendor');
+                html += '</div>';
+                html += '</button>';
+            });
             html += '</div>';
         }
 
