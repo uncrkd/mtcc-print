@@ -365,23 +365,30 @@ body.edit-mode {
 /* Tracking section in header */
 .header-tracking-section {
     display: flex;
-    flex-direction: column;
-    align-items: flex-end;
     justify-self: end;
     min-width: 0;
 }
 
-.header-tracking-section .order-section-header {
-    justify-content: flex-end;
-}
-
 .header-barcode-display {
     display: flex;
-    align-items: center;
+    align-items: stretch;
     gap: 12px;
     background: none;
     border: none;
     padding: 0;
+}
+
+.header-barcode-label-stack {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 2px 0;
+}
+
+.header-barcode-label-stack .order-section-header {
+    justify-content: flex-end;
+    text-align: right;
 }
 
 .header-barcode-display #orderBarcode {
@@ -2181,181 +2188,8 @@ body.login-page {
 /* NOTE: Animations (pulse, spin, slideDown, fadeOut, slideIn) are defined in css/admin-base.css */
 
 /* Print Styles */
-@media print {
-    * {
-        -webkit-print-color-adjust: exact !important;
-        color-adjust: exact !important;
-        print-color-adjust: exact !important;
-    }
-    
-    @page {
-        size: 8.5in 11in;
-        margin: 0.25in;
-    }
-    
-    body {
-        background: white !important;
-        padding: 20px !important; /* Keep original padding */
-        font-size: inherit !important; /* Don't shrink fonts */
-        line-height: inherit !important;
-    }
-    
-    .container {
-        width: 95% !important; /* Keep original width */
-        max-width: 1200px !important; /* Keep original max-width */
-        margin: 1rem auto !important; /* Keep original margins */
-    }
+/* Legacy @media print block removed — admin-print.css is the authoritative print stylesheet */
 
-    /* PRESERVE TOP CARD LAYOUT EXACTLY */
-    .header {
-        margin-bottom: var(--space-lg) !important; /* Keep original spacing */
-        padding: var(--space-lg) !important; /* Keep original padding */
-        border-radius: var(--radius) !important; /* Keep original styling */
-    }
-    
-    .header-top-row {
-        display: flex !important; /* Keep original layout */
-        justify-content: space-between !important;
-        align-items: center !important;
-        margin-bottom: var(--space-md) !important;
-        padding-bottom: var(--space-md) !important;
-        border-bottom: 1px solid #e5e7eb !important;
-    }
-    
-    .header-main-row {
-        display: grid !important; /* Keep original grid */
-        grid-template-columns: auto auto 1fr auto !important; /* Keep original columns */
-        gap: var(--space-lg) !important;
-        align-items: flex-start !important;
-    }
-    
-    .header-divider {
-        width: 1px !important; /* Keep dividers */
-        height: 40px !important;
-        background: linear-gradient(to bottom, transparent, #e5e7eb 20%, #e5e7eb 80%, transparent) !important;
-        align-self: center !important;
-    }
-
-    /* PRESERVE 2-COLUMN LAYOUT EXACTLY */
-    .info-grid {
-        display: grid !important; /* Force grid layout */
-        grid-template-columns: 1fr 1fr !important; /* Force 50-50 split */
-        gap: var(--space-xl) !important; /* Keep original gap */
-    }
-    
-    .card {
-        background: var(--card) !important; /* Keep original styling */
-        border-radius: var(--radius) !important;
-        padding: var(--space-lg) !important; /* Keep original padding */
-        border: 1px solid #f3f4f6 !important;
-        box-shadow: var(--shadow-md) !important;
-        margin-bottom: var(--space-lg) !important;
-        page-break-inside: avoid !important;
-    }
-    
-    .card-compact {
-        padding: var(--space-md) !important; /* Keep compact padding */
-    }
-
-    /* PRESERVE ALL SECTION LAYOUTS */
-    .section-header {
-        display: flex !important;
-        align-items: center !important;
-        gap: var(--space-sm) !important;
-        margin-bottom: var(--space-md) !important;
-        font-weight: 600 !important;
-        font-size: 0.9rem !important; /* Keep original size */
-        color: var(--primary) !important;
-        border-bottom: 1px solid var(--primary-light) !important;
-        padding-bottom: var(--space-sm) !important;
-    }
-    
-    .grid-2 {
-        display: grid !important;
-        grid-template-columns: 1fr 1fr !important;
-        gap: var(--space-lg) !important;
-    }
-    
-    .grid-3 {
-        display: grid !important;
-        grid-template-columns: 1fr 1fr 1fr !important;
-        gap: var(--space-lg) !important;
-    }
-
-    /* PRESERVE BARCODE LAYOUT */
-    .barcode-card {
-        background: var(--card) !important;
-        border-radius: var(--radius) !important;
-        padding: var(--space-lg) !important;
-        border: 1px solid #f3f4f6 !important;
-        box-shadow: var(--shadow-md) !important;
-        margin-bottom: var(--space-lg) !important;
-        page-break-inside: avoid !important;
-    }
-    
-    .barcode-content-wrapper {
-        display: flex !important;
-        align-items: center !important;
-        gap: var(--space-xl) !important;
-    }
-	
-    /* HIDE ONLY INTERACTIVE ELEMENTS */
-    .header-actions,
-    .action-buttons-container,
-    .btn, button,
-    input[type="submit"],
-    input[type="button"],
-    .action-btn-table,
-    .action-btn-large,
-    .btn-small,
-    .note-action-btn,
-    .barcode-actions,
-    .add-note-btn,
-    .note-actions,
-    .edit-note-form,
-    .add-note-form
-	{
-        display: none !important;
-    }
-
-    /* HIDE NOTES CARD COMPLETELY */
-    .card:has(.section-header:contains("Internal")),
-    .card:has([class*="notes"]),
-    .notes-timeline,
-    .note-item,
-    .no-notes {
-        display: none !important;
-    }
-
-    /* Fallback: hide the last card if notes detection fails */
-    .container > .info-grid ~ .card:last-of-type {
-        display: none !important;
-    }
-	
-	/* HIDE ONLY INTERACTIVE ELEMENTS */
-.header-actions,
-.action-buttons-container,
-.btn, button,
-input[type="submit"],
-input[type="button"],
-.action-btn-table,
-.action-btn-large,
-.btn-small,
-.note-action-btn,
-.barcode-actions,
-.add-note-btn,
-.note-actions,
-.edit-note-form,
-.add-note-form
-	{
-    display: none !important;
-}
-
-    .file-details {
-        margin-left: 0 !important;
-    }
-	
-}
 /* Responsive Design */
 @media (max-width: 1024px) {
     .analytics-grid {

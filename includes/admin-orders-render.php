@@ -1593,9 +1593,11 @@ window.orderDueDate = '<?= htmlspecialchars($order['selectedDate']) ?>'; // Lega
         <?php endif; ?>
       </div>
       <div class="header-tracking-section">
-        <div class="order-section-header">Tracking Code</div>
         <div class="header-barcode-display">
-          <div class="barcode-number" id="orderBarcodeText"><?= $trackingNumber ?></div>
+          <div class="header-barcode-label-stack">
+            <div class="order-section-header">Tracking Code</div>
+            <div class="barcode-number" id="orderBarcodeText"><?= $trackingNumber ?></div>
+          </div>
           <div id="orderBarcode">Generating barcode...</div>
         </div>
       </div>

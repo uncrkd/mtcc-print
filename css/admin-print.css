@@ -183,9 +183,8 @@
     /* Header tracking barcode (replaces standalone barcode card) */
     .header-tracking-section {
         display: flex !important;
-        flex-direction: column !important;
-        align-items: flex-end !important;
         justify-self: end !important;
+        min-width: 0 !important;
     }
 
     .header-barcode-display {
@@ -197,17 +196,18 @@
         padding: 0 !important;
     }
 
-    .header-barcode-info {
+    .header-barcode-label-stack {
         display: flex !important;
         flex-direction: column !important;
-        justify-content: center !important;
+        justify-content: space-between !important;
         align-items: flex-end !important;
-        gap: 3px !important;
+        padding: 2px 0 !important;
     }
 
-    .header-barcode-info .order-section-header {
-        margin: 0 !important;
+    .header-barcode-label-stack .order-section-header {
+        justify-content: flex-end !important;
         text-align: right !important;
+        margin: 0 !important;
     }
 
     .header-barcode-display #orderBarcode {
