@@ -534,7 +534,6 @@ textarea.field-control {
     border-radius: 4px;
     padding: 8px;
     background: white;
-    min-height: 60px;
     display: flex;
     align-items: center;
     justify-content: center;

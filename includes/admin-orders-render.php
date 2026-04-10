@@ -1460,7 +1460,10 @@ window.orderDueDate = '<?= htmlspecialchars($order['selectedDate']) ?>'; // Lega
   <div class="header status-<?= $currentStatus ?>">
     <div class="header-top-row">
       <div class="header-top-left">
-        <div class="submitted-info"><?= ICON_CALENDAR ?>  Submitted: <strong><?= date('l, F j, Y \a\t g:i A', strtotime($order['submittedAt'])) ?></strong></div>
+        <div class="submitted-row">
+          <span class="submitted-label">Submitted:</span>
+          <strong class="submitted-date"><?= date('l, F j, Y \a\t g:i A', strtotime($order['submittedAt'])) ?></strong>
+        </div>
         <div class="header-top-divider"></div>
         <div class="priority-tier-row">
           <span class="priority-tier-label">Priority Tier:</span>
@@ -1484,7 +1487,7 @@ window.orderDueDate = '<?= htmlspecialchars($order['selectedDate']) ?>'; // Lega
         </div>
       </div>
       <div class="header-top-right">
-        <span class="current-status-label">Current Status:</span>
+        <span class="current-status-label">Status:</span>
         <?php
         $statusIcons = [
           'unpaid' => ICON_HOURGLASS,
@@ -1590,11 +1593,9 @@ window.orderDueDate = '<?= htmlspecialchars($order['selectedDate']) ?>'; // Lega
         <?php endif; ?>
       </div>
       <div class="header-tracking-section">
+        <div class="order-section-header">Tracking Code</div>
         <div class="header-barcode-display">
-          <div class="header-barcode-info">
-            <div class="order-section-header">Tracking Code</div>
-            <div class="barcode-number" id="orderBarcodeText"><?= $trackingNumber ?></div>
-          </div>
+          <div class="barcode-number" id="orderBarcodeText"><?= $trackingNumber ?></div>
           <div id="orderBarcode">Generating barcode...</div>
         </div>
       </div>

@@ -138,17 +138,31 @@
         white-space: nowrap !important;
     }
 
-    .submitted-info {
-        text-align: left !important;
-        font-size: 0.58rem !important;
+    .submitted-row {
+        display: flex !important;
+        align-items: center !important;
+        flex-wrap: nowrap !important;
+        gap: 4px !important;
         white-space: nowrap !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
         min-width: 0 !important;
     }
 
-    .submitted-info strong {
-        font-weight: 700 !important;
+    .submitted-label {
+        font-size: 0.55rem !important;
+        color: var(--subtext) !important;
+        font-weight: 500 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.4px !important;
+        white-space: nowrap !important;
+    }
+
+    .submitted-date {
+        font-size: 0.58rem !important;
+        color: var(--text) !important;
+        font-weight: 600 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
     }
 
     /* Tighten status/priority badges on print */
@@ -302,12 +316,6 @@
         text-transform: uppercase !important;
         letter-spacing: 0.3px !important;
         border: 1px solid !important;
-    }
-    
-    .submitted-info {
-        font-size: 0.7rem !important;
-        color: var(--subtext) !important;
-        font-weight: 500 !important;
     }
     
     .priority-tier-badge {
@@ -619,7 +627,6 @@
         border-radius: 3px !important;
         padding: 4px !important;
         background: white !important;
-        min-height: 40px !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;

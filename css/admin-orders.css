@@ -336,6 +336,25 @@ body.edit-mode {
     font-weight: 500;
 }
 
+.submitted-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.submitted-label {
+    font-size: 0.8rem;
+    color: var(--subtext);
+    font-weight: 500;
+}
+
+.submitted-date {
+    font-size: 0.8rem;
+    color: var(--text);
+    font-weight: 700;
+    white-space: nowrap;
+}
+
 .header-main-row {
     display: grid;
     grid-template-columns: auto auto auto 1fr;
@@ -346,31 +365,23 @@ body.edit-mode {
 /* Tracking section in header */
 .header-tracking-section {
     display: flex;
+    flex-direction: column;
+    align-items: flex-end;
     justify-self: end;
-    align-items: stretch;
+    min-width: 0;
+}
+
+.header-tracking-section .order-section-header {
+    justify-content: flex-end;
 }
 
 .header-barcode-display {
     display: flex;
-    align-items: stretch;
+    align-items: center;
     gap: 12px;
     background: none;
     border: none;
     padding: 0;
-}
-
-.header-barcode-info {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: flex-end;
-    gap: 4px;
-}
-
-.header-barcode-info .order-section-header {
-    margin: 0;
-    height: auto;
-    text-align: right;
 }
 
 .header-barcode-display #orderBarcode {
@@ -383,6 +394,7 @@ body.edit-mode {
     border-radius: 3px;
     flex-shrink: 0;
     line-height: 0;
+    min-height: 0;
 }
 
 .header-barcode-display #orderBarcode svg {
@@ -450,7 +462,7 @@ body.edit-mode {
     color: var(--subtext);
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    margin-bottom: 0.3rem;
+    margin-bottom: 0;
     height: 1rem;
     display: flex;
     align-items: center;
@@ -1288,7 +1300,6 @@ textarea.field-control {
     border-radius: 4px;
     padding: 8px;
     background: white;
-    min-height: 60px;
     display: flex;
     align-items: center;
     justify-content: center;
