@@ -669,6 +669,7 @@ function handleGetMTCCDashboard() {
     $pickedUpToday = 0;
     $expectedToday = 0;
     $openIssues = 0;
+    $issueOrdersList = [];
     $inProduction = 0;
     $inTransit = 0;
     $upcomingDeliveries = [];
@@ -713,6 +714,12 @@ function handleGetMTCCDashboard() {
             $inProduction++;
         } elseif (in_array($status, ['missing', 'file_issue'])) {
             $openIssues++;
+            $issueOrdersList[] = [
+                'ref' => $ref,
+                'status' => $status,
+                'customer_name' => $order['customerInfo']['name'] ?? $order['name'] ?? '',
+                'event' => $order['event']['acronym'] ?? $order['event_select']['acronym'] ?? '',
+            ];
         }
     }
 
@@ -769,6 +776,7 @@ function handleGetMTCCDashboard() {
         'recent_pickups' => array_slice($recentPickups, 0, 10),
         'event_breakdown' => $eventCounts,
         'active_events' => $activeEvents,
+        'issue_orders' => $issueOrdersList,
     ]);
 }
 

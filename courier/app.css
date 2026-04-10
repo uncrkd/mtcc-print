@@ -562,6 +562,13 @@ input {
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
+
+.header-user-name {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-right: 4px;
+}
 .role-pill.role-courier { background: #dbeafe; color: #1e40af; }
 .role-pill.role-mtcc_staff { background: #fef3c7; color: #92400e; }
 .role-pill.role-admin { background: var(--primary-light); color: var(--primary); }
@@ -5357,6 +5364,39 @@ input {
 .mtcc-stat-card.stat-green { border-left: 4px solid #059669; box-shadow: 0 2px 8px rgba(5,150,105,0.08); }
 .mtcc-stat-card.stat-red { border-left: 4px solid #dc2626; background: #fef2f2; box-shadow: 0 2px 8px rgba(220,38,38,0.08); }
 .mtcc-stat-card.stat-grey { border-left: 4px solid #9ca3af; }
+.mtcc-stat-card.stat-red { cursor: pointer; }
+
+/* Issue rows in dashboard */
+.mtcc-issue-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    background: var(--card);
+    border-radius: var(--radius-sm);
+    margin-bottom: 6px;
+    border-left: 3px solid var(--danger);
+    cursor: pointer;
+}
+
+.mtcc-issue-row:active { background: var(--gray-50); }
+
+.mtcc-issue-left {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.mtcc-issue-ref {
+    font-weight: 700;
+    font-size: 0.82rem;
+    color: var(--text);
+}
+
+.mtcc-issue-name {
+    font-size: 0.72rem;
+    color: var(--gray-400);
+}
 
 .mtcc-stat-number {
     font-size: 2rem;
@@ -5391,6 +5431,31 @@ input {
     padding: 0 0 8px;
     border-bottom: 1px solid #f3f4f6;
     margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.mtcc-section-count {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--gray-400);
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.mtcc-view-all-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    width: 100%;
+    padding: 10px;
+    margin-top: 8px;
+    color: var(--primary);
+    font-weight: 600;
+    font-size: 0.78rem;
+    background: none;
 }
 
 .mtcc-event-pills {
@@ -6076,6 +6141,28 @@ input {
     background: white;
     color: #7c3aed;
     border: 2px solid #7c3aed !important;
+}
+
+.mtcc-btn-unclaimed {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    margin-top: 8px;
+    padding: 10px;
+    background: none;
+    color: var(--gray-400);
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius-sm);
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.mtcc-btn-unclaimed:active {
+    background: var(--danger-bg);
+    color: var(--danger);
+    border-color: var(--danger) !important;
 }
 
 .mtcc-btn-issue {

@@ -476,6 +476,10 @@ function showApp() {
         roleEl.textContent = currentUser.role_label;
         roleEl.className = 'role-pill role-' + currentUser.role;
     }
+    var nameEl = document.getElementById('headerUserName');
+    if (nameEl) {
+        nameEl.textContent = (currentUser.name || '').split(' ')[0];
+    }
 
     // Set role-specific status labels for badge rendering
     if (currentUser.role === 'mtcc_staff') {
@@ -1299,8 +1303,25 @@ function loadMTCCDashboard() {
         html += '<div class="mtcc-stat-card stat-purple" onclick="switchTab(\'pickup\')"><div class="mtcc-stat-number">' + s.waiting_for_pickup + '</div><div class="mtcc-stat-label">Waiting for Pickup</div></div>';
         html += '<div class="mtcc-stat-card stat-blue" onclick="switchTab(\'upcoming_mtcc\')"><div class="mtcc-stat-number">' + s.expected_today + '</div><div class="mtcc-stat-label">Expected Today</div></div>';
         html += '<div class="mtcc-stat-card stat-green" onclick="switchTab(\'complete\')"><div class="mtcc-stat-number">' + s.picked_up_today + '</div><div class="mtcc-stat-label">Picked Up Today</div></div>';
-        html += '<div class="mtcc-stat-card' + (s.open_issues > 0 ? ' stat-red' : ' stat-grey') + '"><div class="mtcc-stat-number">' + s.open_issues + '</div><div class="mtcc-stat-label">Open Issues</div></div>';
+        html += '<div class="mtcc-stat-card' + (s.open_issues > 0 ? ' stat-red' : ' stat-grey') + '"' + (s.open_issues > 0 ? ' onclick="toggleDashboardIssues()"' : '') + '><div class="mtcc-stat-number">' + s.open_issues + '</div><div class="mtcc-stat-label">Open Issues</div></div>';
         html += '</div>';
+
+        // Open issues list (hidden by default, toggled by tapping stat card)
+        var issueOrders = result.issue_orders || [];
+        if (issueOrders.length > 0) {
+            html += '<div class="mtcc-dash-section mtcc-issues-section" id="dashboardIssues" style="display:none;">';
+            html += '<div class="mtcc-section-header">Open Issues</div>';
+            html += '<div class="mtcc-dash-list">';
+            issueOrders.forEach(function(iss) {
+                var statusLabel = iss.status === 'missing' ? 'Missing' : 'File Issue';
+                var statusCls = iss.status === 'missing' ? 'badge-missing' : 'badge-issue';
+                html += '<div class="mtcc-issue-row" onclick="if(orderCache[\'' + escapeAttr(iss.ref) + '\']) showOrderDetail(\'' + escapeAttr(iss.ref) + '\', \'pickup\')">';
+                html += '<div class="mtcc-issue-left"><span class="mtcc-issue-ref">' + escapeHtml(iss.ref) + '</span><span class="mtcc-issue-name">' + escapeHtml(iss.customer_name) + '</span></div>';
+                html += '<span class="order-status-badge ' + statusCls + ' badge-sm">' + statusLabel + '</span>';
+                html += '</div>';
+            });
+            html += '</div></div>';
+        }
 
         // Event breakdown — clickable, sets event filter and navigates to pickup
         // Build acronym → full name lookup from active events
@@ -1345,7 +1366,8 @@ function loadMTCCDashboard() {
         // Recent pickups — clickable rows open detail panel
         var recent = result.recent_pickups || [];
         if (recent.length > 0) {
-            html += '<div class="mtcc-dash-section"><div class="mtcc-section-header">Recent Pickups Today</div>';
+            html += '<div class="mtcc-dash-section">';
+            html += '<div class="mtcc-section-header"><span>Recent Pickups Today</span><span class="mtcc-section-count">' + s.picked_up_today + ' total</span></div>';
             html += '<div class="mtcc-dash-list">';
             recent.forEach(function(r) {
                 var pTime = r.picked_up_at ? new Date(r.picked_up_at) : null;
@@ -1356,7 +1378,11 @@ function loadMTCCDashboard() {
                 html += '<span class="mtcc-recent-time">' + timeStr + '</span>';
                 html += '</div>';
             });
-            html += '</div></div>';
+            html += '</div>';
+            if (s.picked_up_today > recent.length) {
+                html += '<button class="mtcc-view-all-link" onclick="switchTab(\'complete\')">View all activity <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></button>';
+            }
+            html += '</div>';
         }
 
         // Support + Sign out (replaces drawer for MTCC)
@@ -1369,6 +1395,14 @@ function loadMTCCDashboard() {
 
         el.innerHTML = html;
     });
+}
+
+function toggleDashboardIssues() {
+    var el = document.getElementById('dashboardIssues');
+    if (el) {
+        el.style.display = el.style.display === 'none' ? '' : 'none';
+        if (el.style.display !== 'none') el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
 }
 
 function loadUpcomingMTCC() {
@@ -2902,6 +2936,9 @@ function renderMTCCDetailPanel(order, mode) {
         html += '<button class="mtcc-action-btn mtcc-btn-scan" onclick="scanExpectedRef=\'' + escapeAttr(order.ref) + '\'; closeDetailPanel(); switchTab(\'scan\')">';
         html += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M8 7v10"/><path d="M12 7v10"/><path d="M17 7v10"/></svg> Scan to Verify</button>';
         html += '</div>';
+        // Mark Unclaimed — secondary action for delivered orders
+        html += '<button class="mtcc-action-btn mtcc-btn-unclaimed" onclick="if(confirm(\'Mark this order as unclaimed? This means the customer did not pick it up.\')) updateOrderStatus(\'' + escapeAttr(order.ref) + '\', \'unclaimed\')">';
+        html += '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> Mark Unclaimed</button>';
     }
     // Report Issue — ALWAYS visible for paid+ orders (Fix 1)
     if (typeof CourierIssues !== 'undefined') {
@@ -5469,7 +5506,7 @@ var seenNotifIds = {};
 
 function startNotificationPolling() {
     if (notifPollInterval) return;
-    if (!currentUser || currentUser.role === 'mtcc_staff') return;
+    if (!currentUser) return;
     // Initial timestamp = now (don't show old notifications)
     lastNotifTimestamp = new Date().toISOString();
     // Poll every 30 seconds

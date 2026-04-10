@@ -83,6 +83,7 @@ $cacheBust = time();
             <img src="../logo.png" alt="MTCC" class="header-logo-img" onerror="this.style.display='none'">
         </div>
         <div class="app-header-right">
+            <span class="header-user-name" id="headerUserName"></span>
             <span class="role-pill" id="headerRole"></span>
         </div>
     </header>
