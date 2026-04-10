@@ -288,7 +288,8 @@ body.edit-mode {
 /* Order Header Components */
 .header-top-row {
     display: flex;
-    justify-content: space-between;
+    flex-direction: row;
+    flex-wrap: nowrap;
     align-items: center;
     gap: var(--space-md);
     margin-bottom: var(--space-md);
@@ -296,19 +297,13 @@ body.edit-mode {
     border-bottom: 1px solid #e5e7eb;
 }
 
-.header-top-left {
-    display: flex;
-    align-items: center;
-    gap: var(--space-lg);
-    flex: 1;
-    min-width: 0;
-}
-
 .header-top-right {
     display: flex;
     align-items: center;
     gap: var(--space-sm);
     flex-shrink: 0;
+    margin-left: auto;
+    white-space: nowrap;
 }
 
 .current-status-label {
@@ -357,61 +352,27 @@ body.edit-mode {
 
 .header-main-row {
     display: grid;
-    grid-template-columns: auto auto auto 1fr;
+    grid-template-columns: auto auto minmax(0, 1fr) auto auto;
     gap: var(--space-lg);
     align-items: center;
 }
 
-/* Tracking section in header */
+/* Tracking section — same structure as order-number-section & due-date-section */
 .header-tracking-section {
     display: flex;
+    flex-direction: column;
+    align-items: flex-end;
     justify-self: end;
     min-width: 0;
 }
 
-.header-barcode-display {
-    display: flex;
-    align-items: stretch;
-    gap: 12px;
-    background: none;
-    border: none;
-    padding: 0;
-}
-
-.header-barcode-label-stack {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    align-items: flex-end;
-    padding: 2px 0;
-}
-
-.header-barcode-label-stack .order-section-header {
+.header-tracking-section .order-section-header {
     justify-content: flex-end;
     text-align: right;
 }
 
-.header-barcode-display #orderBarcode {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0 6px;
-    background: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 3px;
-    flex-shrink: 0;
-    line-height: 0;
-    min-height: 0;
-}
-
-.header-barcode-display #orderBarcode svg {
-    height: 50px;
-    width: auto;
-    max-width: 220px;
-    display: block;
-}
-
-.header-barcode-display .barcode-number {
+/* Tracking number — styled like the .order-number and .due-date-main values */
+.header-tracking-section .barcode-number {
     font-family: 'Monaco', 'Consolas', monospace;
     font-size: 0.88rem;
     font-weight: 700;
@@ -422,6 +383,29 @@ body.edit-mode {
     background: none;
     border: none;
     white-space: nowrap;
+}
+
+/* Barcode SVG as a separate grid cell beside the tracking text */
+.header-barcode-svg {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 6px;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 3px;
+    flex-shrink: 0;
+    line-height: 0;
+    min-height: 0;
+    justify-self: end;
+    align-self: center;
+}
+
+.header-barcode-svg svg {
+    height: 50px;
+    width: auto;
+    max-width: 220px;
+    display: block;
 }
 
 /* Print-only header (hidden on screen, visible in print) */
@@ -1302,15 +1286,7 @@ textarea.field-control {
     gap: var(--space-sm);
 }
 
-#orderBarcode {
-    border: 1px solid #e5e7eb;
-    border-radius: 4px;
-    padding: 8px;
-    background: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
+/* Legacy #orderBarcode rules removed — barcode is now inside the header card with .header-barcode-svg class */
 
 .barcode-number {
     font-family: 'Monaco', 'Consolas', monospace;

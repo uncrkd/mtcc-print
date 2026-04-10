@@ -88,22 +88,13 @@
 
     .header-top-row {
         display: flex !important;
-        justify-content: space-between !important;
-        align-items: center !important;
+        flex-direction: row !important;
         flex-wrap: nowrap !important;
+        align-items: center !important;
         margin-bottom: 8px !important;
         padding-bottom: 6px !important;
         border-bottom: 1px solid #e5e7eb !important;
         gap: 8px !important;
-    }
-
-    .header-top-left {
-        display: flex !important;
-        align-items: center !important;
-        flex-wrap: nowrap !important;
-        gap: 8px !important;
-        flex: 1 1 auto !important;
-        min-width: 0 !important;
     }
 
     .header-top-right {
@@ -112,6 +103,7 @@
         flex-wrap: nowrap !important;
         gap: 4px !important;
         flex-shrink: 0 !important;
+        margin-left: auto !important;
         white-space: nowrap !important;
     }
 
@@ -175,60 +167,27 @@
 
     .header-main-row {
         display: grid !important;
-        grid-template-columns: auto auto minmax(0, 1fr) auto !important;
+        grid-template-columns: auto auto minmax(0, 1fr) auto auto !important;
         gap: 14px !important;
         align-items: center !important;
     }
 
-    /* Header tracking barcode (replaces standalone barcode card) */
+    /* Tracking section — matches order-number-section & due-date-section pattern */
     .header-tracking-section {
         display: flex !important;
+        flex-direction: column !important;
+        align-items: flex-end !important;
         justify-self: end !important;
         min-width: 0 !important;
     }
 
-    .header-barcode-display {
-        display: flex !important;
-        align-items: stretch !important;
-        gap: 10px !important;
-        background: none !important;
-        border: none !important;
-        padding: 0 !important;
-    }
-
-    .header-barcode-label-stack {
-        display: flex !important;
-        flex-direction: column !important;
-        justify-content: space-between !important;
-        align-items: flex-end !important;
-        padding: 2px 0 !important;
-    }
-
-    .header-barcode-label-stack .order-section-header {
+    .header-tracking-section .order-section-header {
         justify-content: flex-end !important;
         text-align: right !important;
         margin: 0 !important;
     }
 
-    .header-barcode-display #orderBarcode {
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        padding: 3px 5px !important;
-        background: white !important;
-        border: 1px solid #e5e7eb !important;
-        border-radius: 2px !important;
-        flex-shrink: 0 !important;
-    }
-
-    .header-barcode-display #orderBarcode svg {
-        height: 44px !important;
-        width: auto !important;
-        max-width: 160px !important;
-        display: block !important;
-    }
-
-    .header-barcode-display .barcode-number {
+    .header-tracking-section .barcode-number {
         font-family: 'Monaco', 'Consolas', monospace !important;
         font-size: 0.68rem !important;
         font-weight: 700 !important;
@@ -239,6 +198,29 @@
         background: none !important;
         border: none !important;
         white-space: nowrap !important;
+    }
+
+    /* Barcode SVG sits beside the tracking section as its own grid cell */
+    .header-barcode-svg {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 2px 4px !important;
+        background: white !important;
+        border: 1px solid #e5e7eb !important;
+        border-radius: 2px !important;
+        flex-shrink: 0 !important;
+        line-height: 0 !important;
+        min-height: 0 !important;
+        justify-self: end !important;
+        align-self: center !important;
+    }
+
+    .header-barcode-svg svg {
+        height: 40px !important;
+        width: auto !important;
+        max-width: 160px !important;
+        display: block !important;
     }
 
     /* Hide old standalone barcode card on print (no longer rendered but safety) */
@@ -622,19 +604,7 @@
         gap: 4px !important;
     }
 
-    #orderBarcode {
-        border: 1px solid #e5e7eb !important;
-        border-radius: 3px !important;
-        padding: 4px !important;
-        background: white !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-    }
-    
-    #orderBarcode svg {
-        max-height: 45px !important;
-    }
+    /* Legacy #orderBarcode print rules removed — use .header-barcode-svg for the in-header barcode */
 
     .barcode-number {
         font-family: 'Monaco', 'Consolas', monospace !important;

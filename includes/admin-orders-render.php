@@ -1459,32 +1459,30 @@ window.orderDueDate = '<?= htmlspecialchars($order['selectedDate']) ?>'; // Lega
   <!-- Order Status Card -->
   <div class="header status-<?= $currentStatus ?>">
     <div class="header-top-row">
-      <div class="header-top-left">
-        <div class="submitted-row">
-          <span class="submitted-label">Submitted:</span>
-          <strong class="submitted-date"><?= date('l, F j, Y \a\t g:i A', strtotime($order['submittedAt'])) ?></strong>
-        </div>
-        <div class="header-top-divider"></div>
-        <div class="priority-tier-row">
-          <span class="priority-tier-label">Priority Tier:</span>
-          <?php
-          // Determine priority class based on tier
-          $priorityClass = 'priority-tier-standard';
-          $tier = strtolower($order['pricing']['tier']);
-          if (strpos($tier, 'last minute') !== false) {
-            $priorityClass = 'priority-tier-lastminute';
-          } elseif (strpos($tier, 'early') !== false) {
-            $priorityClass = 'priority-tier-early';
-          } elseif (strpos($tier, 'rush') !== false) {
-            $priorityClass = 'priority-tier-rush';
-          } elseif (strpos($tier, 'urgent') !== false) {
-            $priorityClass = 'priority-tier-urgent';
-          } elseif (strpos($tier, 'critical') !== false) {
-            $priorityClass = 'priority-tier-critical';
-          }
-          ?>
-          <span class="priority-tier-badge <?= $priorityClass ?>" id="priority_tier_badge"><?= htmlspecialchars($order['pricing']['tier']) ?></span>
-        </div>
+      <div class="submitted-row">
+        <span class="submitted-label">Submitted:</span>
+        <strong class="submitted-date"><?= date('l, F j, Y \a\t g:i A', strtotime($order['submittedAt'])) ?></strong>
+      </div>
+      <div class="header-top-divider"></div>
+      <div class="priority-tier-row">
+        <span class="priority-tier-label">Priority Tier:</span>
+        <?php
+        // Determine priority class based on tier
+        $priorityClass = 'priority-tier-standard';
+        $tier = strtolower($order['pricing']['tier']);
+        if (strpos($tier, 'last minute') !== false) {
+          $priorityClass = 'priority-tier-lastminute';
+        } elseif (strpos($tier, 'early') !== false) {
+          $priorityClass = 'priority-tier-early';
+        } elseif (strpos($tier, 'rush') !== false) {
+          $priorityClass = 'priority-tier-rush';
+        } elseif (strpos($tier, 'urgent') !== false) {
+          $priorityClass = 'priority-tier-urgent';
+        } elseif (strpos($tier, 'critical') !== false) {
+          $priorityClass = 'priority-tier-critical';
+        }
+        ?>
+        <span class="priority-tier-badge <?= $priorityClass ?>" id="priority_tier_badge"><?= htmlspecialchars($order['pricing']['tier']) ?></span>
       </div>
       <div class="header-top-right">
         <span class="current-status-label">Status:</span>
@@ -1593,14 +1591,10 @@ window.orderDueDate = '<?= htmlspecialchars($order['selectedDate']) ?>'; // Lega
         <?php endif; ?>
       </div>
       <div class="header-tracking-section">
-        <div class="header-barcode-display">
-          <div class="header-barcode-label-stack">
-            <div class="order-section-header">Tracking Code</div>
-            <div class="barcode-number" id="orderBarcodeText"><?= $trackingNumber ?></div>
-          </div>
-          <div id="orderBarcode">Generating barcode...</div>
-        </div>
+        <div class="order-section-header">Tracking Code</div>
+        <div class="barcode-number" id="orderBarcodeText"><?= $trackingNumber ?></div>
       </div>
+      <div id="orderBarcode" class="header-barcode-svg">Generating barcode...</div>
     </div>
     
     <!-- Hidden input for priority tier in edit mode -->

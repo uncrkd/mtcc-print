@@ -529,15 +529,7 @@ textarea.field-control {
     gap: var(--space-sm);
 }
 
-#orderBarcode {
-    border: 1px solid #e5e7eb;
-    border-radius: 4px;
-    padding: 8px;
-    background: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
+/* Legacy #orderBarcode rules removed — barcode is now inside the header card with .header-barcode-svg class */
 
 .barcode-number {
     font-family: 'Monaco', 'Consolas', monospace;
