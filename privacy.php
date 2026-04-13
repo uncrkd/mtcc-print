@@ -88,7 +88,8 @@ $lastUpdated = 'April 13, 2026';
     <div class="content">
 
       <h2>1. Overview</h2>
-      <p><strong>Print Stuff</strong> ("we," "us," "our") operates the poster printing service at <strong>mtcc.print-stuff.ca</strong>. This Privacy Policy explains how we collect, use, and protect your personal information when you use our services.</p>
+      <p><strong>Print Stuff</strong> ("we," "us," "our") operates the poster printing service at <strong>mtcc.print-stuff.ca</strong>. This Privacy Policy explains how we collect, use, and protect your personal information when you use our services, in accordance with Canada's <strong>Personal Information Protection and Electronic Documents Act (PIPEDA)</strong>.</p>
+      <p>Print Stuff is an independent service provider and is not affiliated with, owned by, or endorsed by the Metro Toronto Convention Centre (MTCC).</p>
 
       <h2>2. Information We Collect</h2>
       <p>When you place an order, we collect the following information:</p>
@@ -134,7 +135,7 @@ $lastUpdated = 'April 13, 2026';
       </ul>
       <p>You may request deletion of your data at any time by contacting us.</p>
 
-      <h2>7. Third-Party Services</h2>
+      <h2>7. Third-Party Services and Cross-Border Data Transfers</h2>
       <p>We use the following third-party services that may process your data:</p>
       <ul>
         <li><strong>Stripe</strong> &mdash; Payment processing (<a href="https://stripe.com/privacy" target="_blank">Privacy Policy</a>)</li>
@@ -142,8 +143,12 @@ $lastUpdated = 'April 13, 2026';
         <li><strong>Google</strong> &mdash; Maps and routing for delivery logistics</li>
       </ul>
       <p>We do not sell, rent, or trade your personal information to any third party.</p>
+      <p><strong>Cross-border transfers:</strong> Some of our third-party service providers (including Stripe) may process or store data on servers located outside of Canada, including in the United States. When your data is transferred outside of Canada, it remains subject to the privacy laws and protections outlined in this policy and the respective provider's privacy commitments.</p>
 
-      <h2>8. Cookies</h2>
+      <h2>8. Data Breach Notification</h2>
+      <p>In the event of a data breach that creates a real risk of significant harm to you, we will notify affected individuals and the Office of the Privacy Commissioner of Canada as required by PIPEDA. Notification will include a description of the breach, the types of information involved, and steps you can take to reduce the risk of harm.</p>
+
+      <h2>9. Cookies</h2>
       <p>Our website uses minimal cookies:</p>
       <ul>
         <li><strong>Session cookies:</strong> Required for order processing and form functionality</li>
@@ -151,25 +156,30 @@ $lastUpdated = 'April 13, 2026';
         <li><strong>Third-party cookies:</strong> Stripe and Tawk.to may set cookies for their functionality</li>
       </ul>
 
-      <h2>9. Marketing Communications</h2>
+      <h2>10. Marketing Communications</h2>
       <p>If you opt in to marketing communications during checkout, we may send you updates about upcoming events and special offers. You can unsubscribe at any time by contacting us or clicking the unsubscribe link in any marketing email. We comply with Canada's Anti-Spam Legislation (CASL).</p>
 
-      <h2>10. Your Rights</h2>
-      <p>You have the right to:</p>
+      <h2>11. Your Rights Under PIPEDA</h2>
+      <p>Under PIPEDA, you have the right to:</p>
       <ul>
         <li>Request access to the personal information we hold about you</li>
         <li>Request correction of inaccurate information</li>
         <li>Request deletion of your personal information</li>
-        <li>Withdraw consent for marketing communications</li>
+        <li>Withdraw consent for marketing communications at any time</li>
+        <li>File a complaint with the <a href="https://www.priv.gc.ca/" target="_blank">Office of the Privacy Commissioner of Canada</a> if you believe your privacy rights have been violated</li>
       </ul>
-      <p>To exercise any of these rights, contact us at the details below.</p>
+      <p>To exercise any of these rights, contact our Privacy Officer at the details below. We will respond to access requests within 30 days.</p>
 
-      <h2>11. Changes to This Policy</h2>
+      <h2>12. Governing Law</h2>
+      <p>This Privacy Policy is governed by the laws of the <strong>Province of Ontario</strong> and the federal laws of Canada, including PIPEDA.</p>
+
+      <h2>13. Changes to This Policy</h2>
       <p>We may update this policy from time to time. The "Last updated" date at the top indicates the most recent revision.</p>
 
-      <h2>12. Contact Us</h2>
-      <p>For privacy-related questions or requests:</p>
+      <h2>14. Privacy Officer and Contact</h2>
+      <p>Print Stuff's Privacy Officer is responsible for overseeing compliance with this policy and PIPEDA. For privacy-related questions, access requests, or complaints:</p>
       <ul>
+        <li><strong>Privacy Officer:</strong> George Chatjaveridi</li>
         <li><strong>Email:</strong> <a href="mailto:orders@printstuff.ca">orders@printstuff.ca</a></li>
         <li><strong>Phone:</strong> <a href="tel:4378828822">(437) 882-8822</a></li>
         <li><strong>Website:</strong> <a href="https://print-stuff.ca">print-stuff.ca</a></li>
