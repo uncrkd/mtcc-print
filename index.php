@@ -377,7 +377,7 @@ require_once 'includes/icons.php';
               </div>
             </div>
             <input id="customerPhone" name="customerPhone" type="tel" placeholder="(416) 555-0123" class="phone-number-input" required>
-            <span class="phone-valid-icon" id="phoneValidIcon">&#10013;</span>
+            <span class="phone-valid-icon" id="phoneValidIcon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.801 10A10 10 0 1 1 17 3.335"/><path d="m9 11 3 3L22 4"/></svg></span>
           </div>
         </div>
       </div>
@@ -388,7 +388,7 @@ require_once 'includes/icons.php';
           <label for="customerEmail">Email Address <span class="required-field">*</span></label>
           <div class="email-input-wrapper">
             <input id="customerEmail" name="customerEmail" type="email" placeholder="e.g. john@university.ca" class="field-control" required>
-            <span class="email-valid-icon" id="emailValidIcon">&#10013;</span>
+            <span class="email-valid-icon" id="emailValidIcon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.801 10A10 10 0 1 1 17 3.335"/><path d="m9 11 3 3L22 4"/></svg></span>
           </div>
         </div>
         <div class="field">
@@ -424,7 +424,7 @@ require_once 'includes/icons.php';
         <div id="deliveryDetails" class="delivery-details">
           <div id="mtccMessage" class="delivery-message">
             <h4 class="delivery-title">MTCC Delivery Details</h4>
-            <p class="delivery-text">Your order will be ready for pick-up on <strong id="d">your selected delivery date</strong> by <strong>4:00 PM</strong> at:</p>
+            <p class="delivery-text">Your order will be ready for pick-up on <strong id="deliveryDateText">your selected delivery date</strong> by <strong>4:00 PM</strong> at:</p>
             <div class="delivery-address" id="mtccAddressDisplay">
               <strong>Exhibitor Services / Business Centre Office</strong><br>
               Metro Toronto Convention Centre<br>

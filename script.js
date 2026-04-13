@@ -671,6 +671,10 @@ function updateDateDisplay() {
         }
         
         elements.dateDisplay.classList.add('has-date');
+
+        // Also update the MTCC delivery message with the selected date
+        var deliveryDateText = document.getElementById('deliveryDateText');
+        if (deliveryDateText) deliveryDateText.textContent = formattedDate;
       } catch (error) {
         console.error('Error formatting date:', error);
         const placeholderSpan = elements.dateDisplay.querySelector('.date-placeholder');
