@@ -23,6 +23,18 @@
             "created_by": "system",
             "last_login": null,
             "login_count": 0
+        },
+        "mtcc": {
+            "name": "MTCC Business Centre",
+            "password_hash": "$2y$10$vJsELrUwXoYXJz4joe9rT.bIL5NA9Xi9cBCSqQ5siFRQ4LHSfqgri",
+            "role": "mtcc_staff",
+            "custom_permissions": null,
+            "active": true,
+            "must_change_password": true,
+            "created_at": "2026-04-13T00:00:00-04:00",
+            "created_by": "system",
+            "last_login": null,
+            "login_count": 0
         }
     },
     "roles": {
@@ -89,6 +101,17 @@
             "permissions": [
                 "orders_view",
                 "events_view"
+            ]
+        },
+        "mtcc_staff": {
+            "label": "MTCC Staff",
+            "description": "MTCC venue staff. View orders with simplified info, limited status changes (pickedup/unclaimed/missing), commission analytics.",
+            "tracked": true,
+            "is_system_role": false,
+            "permissions": [
+                "orders_view",
+                "orders_status_mtcc",
+                "mtcc_analytics"
             ]
         },
         "reports_only": {
@@ -166,6 +189,16 @@
             "label": "Role Management",
             "description": "Edit role definitions and permissions",
             "category": "system"
+        },
+        "orders_status_mtcc": {
+            "label": "MTCC Status Changes",
+            "description": "Change order status to pickedup, unclaimed, or missing only",
+            "category": "orders"
+        },
+        "mtcc_analytics": {
+            "label": "MTCC Analytics",
+            "description": "View simplified MTCC analytics with commission info",
+            "category": "orders"
         }
     },
     "settings": {

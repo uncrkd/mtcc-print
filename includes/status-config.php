@@ -237,10 +237,9 @@ function outputStatusConfigScript($role = 'admin') {
     $jsLabels = [];
     $jsColors = [];
     foreach ($config as $code => $def) {
-        $label = $def['labels'][$role] ?? null;
-        if ($label !== null) {
-            $jsLabels[$code] = $label;
-        }
+        // Use role-specific label, falling back to admin label so JS always has a label for every status
+        $label = $def['labels'][$role] ?? $def['labels']['admin'] ?? $code;
+        $jsLabels[$code] = $label;
         $jsColors[$code] = $def['color'];
     }
     echo '<script>';

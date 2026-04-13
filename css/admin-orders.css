@@ -3263,3 +3263,246 @@ body.login-page {
     display: none;
   }
 }
+
+/* ===== MTCC STAFF ANALYTICS DASHBOARD ===== */
+
+.mtcc-analytics {
+  padding: 0 20px 20px;
+}
+
+.mtcc-section-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 20px 0 12px;
+}
+
+.mtcc-section-label:first-child {
+  margin-top: 0;
+}
+
+/* Per-event cards */
+.mtcc-events-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.mtcc-event-card {
+  background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.mtcc-event-name {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mtcc-event-stats {
+  display: flex;
+  gap: 16px;
+}
+
+.mtcc-event-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mtcc-stat-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.mtcc-stat-label {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.mtcc-stat-commission .mtcc-stat-value {
+  color: var(--primary);
+}
+
+/* Summary cards */
+.mtcc-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.mtcc-card {
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.mtcc-card-highlight {
+  background: linear-gradient(135deg, #faf5ff 0%, #ffffff 100%);
+  border-color: var(--primary);
+}
+
+.mtcc-card-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.mtcc-card-icon {
+  font-size: 1rem;
+}
+
+.mtcc-card-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.mtcc-card-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+  margin-bottom: 8px;
+}
+
+.mtcc-card-highlight .mtcc-card-value {
+  color: var(--primary);
+}
+
+.mtcc-card-formula {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  font-style: italic;
+}
+
+.mtcc-card-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.mtcc-card-note {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.mtcc-rate-good { color: var(--success) !important; }
+.mtcc-rate-ok { color: #d97706 !important; }
+.mtcc-rate-low { color: var(--error) !important; }
+
+/* Status breakdown chips */
+.mtcc-status-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.mtcc-status-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f8fafc;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.mtcc-chip-count {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.mtcc-chip-label {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+/* Statements table */
+.mtcc-statements-table {
+  margin-bottom: 8px;
+}
+
+.stmt-list-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.stmt-list-table th {
+  text-align: left;
+  padding: 10px 14px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: var(--text-secondary);
+  background: #f8fafc;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.stmt-list-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid #f3f4f6;
+  color: var(--text-primary);
+}
+
+.stmt-list-table tr:last-child td { border-bottom: none; }
+
+.mtcc-view-stmt-btn {
+  display: inline-block;
+  padding: 4px 14px;
+  background: var(--primary);
+  color: white;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+.mtcc-view-stmt-btn:hover { opacity: 0.9; }
+
+/* MTCC responsive */
+@media (max-width: 768px) {
+  .mtcc-summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .mtcc-events-grid {
+    grid-template-columns: 1fr;
+  }
+  .mtcc-event-stats {
+    flex-wrap: wrap;
+  }
+  .mtcc-card-value {
+    font-size: 1.4rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .mtcc-summary-grid {
+    grid-template-columns: 1fr;
+  }
+}

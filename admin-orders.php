@@ -22,6 +22,17 @@ $canViewAnalytics = hasPermission('dashboard_analytics');
 $canDeleteOrders = hasPermission('orders_delete');
 $canViewVendor = in_array($_SESSION['admin_role'] ?? '', ['god_mode', 'super_admin']);
 
+// MTCC staff conditional rendering
+$isMtccStaff = (getCurrentAdminRole() === 'mtcc_staff');
+$canChangeMtccStatus = hasPermission('orders_status_mtcc');
+$canViewMtccAnalytics = hasPermission('mtcc_analytics');
+$statusRole = $isMtccStaff ? 'mtcc_staff' : 'admin';
+
+// Allow MTCC staff access (they have orders_view)
+if ($isMtccStaff) {
+    require_once __DIR__ . '/includes/site-settings.php';
+}
+
 // ============================================================
 // AJAX HANDLERS - Must be FIRST before any HTML output
 // ============================================================
@@ -37,8 +48,22 @@ if (isset($_POST['update_status'])) {
         exit;
     }
     
-    // Check if user has permission to edit orders
-    if (!hasPermission('orders_edit')) {
+    // Permission check: MTCC staff can only set pickedup/unclaimed/missing
+    $isMtccStaffUser = (getCurrentAdminRole() === 'mtcc_staff');
+    if ($isMtccStaffUser) {
+        if (!hasPermission('orders_status_mtcc')) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'error' => 'Insufficient permissions']);
+            exit;
+        }
+        $mtccAllowed = ['pickedup', 'unclaimed', 'missing'];
+        $requestedStatus = $_POST['status'] ?? '';
+        if (!in_array($requestedStatus, $mtccAllowed)) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'error' => 'MTCC staff can only set status to: Picked Up, Unclaimed, or Missing']);
+            exit;
+        }
+    } elseif (!hasPermission('orders_edit')) {
         header('Content-Type: application/json');
         echo json_encode(['success' => false, 'error' => 'You do not have permission to change order status']);
         exit;
@@ -401,7 +426,11 @@ if ( isset( $_POST[ 'bulk_update' ] ) && isAdminLoggedIn() ) {
   exit;
 }
 
-// Handle order view
+// Handle order view — MTCC staff cannot access full detail page (slideout only)
+if ( isset( $_GET[ 'view' ] ) && isAdminLoggedIn() && (getCurrentAdminRole() === 'mtcc_staff') ) {
+  header('Location: admin-orders.php');
+  exit;
+}
 if ( isset( $_GET[ 'view' ] ) && isAdminLoggedIn() ) {
   $referenceCode = $_GET[ 'view' ];
   $orderDir = 'uploads/orders/';
@@ -439,11 +468,13 @@ $preflightLog = file_exists($preflightLogFile) ? (json_decode(file_get_contents(
 $preflightEntries = $preflightLog['entries'] ?? [];
 
 // Status configuration - uses centralized status-config.php
-$statusLabelsMap = getStatusLabelsForRole('admin');
+// For MTCC staff, use mtcc_staff labels with admin labels as fallback (no "Unknown" badges)
+$adminLabelsMap = getStatusLabelsForRole('admin');
+$roleLabelsMap = getStatusLabelsForRole($statusRole);
 $statusColorsMap = getStatusColors();
 $statusConfig = [];
-foreach ($statusLabelsMap as $code => $label) {
-  $statusConfig[$code] = [ 'label' => $label, 'color' => $statusColorsMap[$code] ?? '#6b7280', 'class' => $code ];
+foreach ($adminLabelsMap as $code => $label) {
+  $statusConfig[$code] = [ 'label' => $roleLabelsMap[$code] ?? $label, 'color' => $statusColorsMap[$code] ?? '#6b7280', 'class' => $code ];
 }
 
 // Admin is logged in - show orders
@@ -905,6 +936,106 @@ if (count($paidUnassigned) > 0) {
     ];
 }
 
+// Filter alerts for MTCC staff — only show venue-relevant alerts
+if ($isMtccStaff) {
+    $mtccAlertFilters = ['pastdue', 'duetoday', 'status-delivered'];
+    $alerts = array_values(array_filter($alerts, function($a) use ($mtccAlertFilters) {
+        return in_array($a['filter'], $mtccAlertFilters);
+    }));
+}
+
+// ============================================================
+// MTCC ANALYTICS — Simplified metrics with commission
+// ============================================================
+$mtccAnalytics = [];
+if ($isMtccStaff) {
+    $siteSettings = getSiteSettings();
+    $commRate = $siteSettings['mtcc_commission_rate'] ?? 0.10;
+    $commRatePct = round($commRate * 100);
+
+    // Active statuses for revenue (excludes cancelled/refunded)
+    $revenueStatuses = ['paid', 'preflight', 'file_issue', 'printing', 'ready', 'dispatched', 'shipped', 'delivered', 'pickedup'];
+
+    // Gross revenue from paid+ orders
+    $grossRevenue = 0;
+    $validOrderCount = 0;
+    foreach ($orders as $o) {
+        if (in_array($o['status'] ?? '', $revenueStatuses)) {
+            $grossRevenue += $o['pricing']['total'] ?? 0;
+            $validOrderCount++;
+        }
+    }
+
+    // Rolling period calculations
+    $todayStr = date('Y-m-d');
+    $weekStart = date('Y-m-d', strtotime('monday this week'));
+    $monthStart = date('Y-m-01');
+
+    $todayRevenue = 0; $todayOrders = 0;
+    $weekRevenue = 0; $weekOrders = 0;
+    $monthRevenue = 0; $monthOrders = 0;
+
+    foreach ($orders as $o) {
+        if (!in_array($o['status'] ?? '', $revenueStatuses)) continue;
+        $submitted = isset($o['submittedAt']) ? date('Y-m-d', strtotime($o['submittedAt'])) : '';
+        $total = $o['pricing']['total'] ?? 0;
+
+        if ($submitted === $todayStr) { $todayRevenue += $total; $todayOrders++; }
+        if ($submitted >= $weekStart) { $weekRevenue += $total; $weekOrders++; }
+        if ($submitted >= $monthStart) { $monthRevenue += $total; $monthOrders++; }
+    }
+
+    // Per-event breakdown (active events only)
+    $eventBreakdown = [];
+    foreach ($orders as $o) {
+        if (!in_array($o['status'] ?? '', $revenueStatuses)) continue;
+        $prefix = strtoupper(explode('-', $o['referenceCode'] ?? '')[0]);
+        $eventName = $o['event']['name'] ?? $o['event']['acronym'] ?? $prefix;
+        if (!isset($eventBreakdown[$prefix])) {
+            $eventBreakdown[$prefix] = ['name' => $eventName, 'orders' => 0, 'revenue' => 0];
+        }
+        $eventBreakdown[$prefix]['orders']++;
+        $eventBreakdown[$prefix]['revenue'] += $o['pricing']['total'] ?? 0;
+    }
+    // Add commission to each event
+    foreach ($eventBreakdown as &$ev) {
+        $ev['commission'] = $ev['revenue'] * $commRate;
+    }
+    unset($ev);
+
+    // Status breakdown using MTCC labels
+    $mtccStatusLabels = getStatusLabelsForRole('mtcc_staff');
+    $statusBreakdown = [];
+    foreach ($orders as $o) {
+        $status = $o['status'] ?? 'unpaid';
+        $label = $mtccStatusLabels[$status] ?? null;
+        if ($label !== null) {
+            $statusBreakdown[$label] = ($statusBreakdown[$label] ?? 0) + 1;
+        }
+    }
+
+    $mtccAnalytics = [
+        'total_orders' => count($orders),
+        'valid_order_count' => $validOrderCount,
+        'gross_revenue' => $grossRevenue,
+        'commission_rate' => $commRate,
+        'commission_rate_pct' => $commRatePct,
+        'commission_total' => $grossRevenue * $commRate,
+        'today_orders' => $todayOrders,
+        'today_revenue' => $todayRevenue,
+        'today_commission' => $todayRevenue * $commRate,
+        'week_orders' => $weekOrders,
+        'week_revenue' => $weekRevenue,
+        'week_commission' => $weekRevenue * $commRate,
+        'month_orders' => $monthOrders,
+        'month_revenue' => $monthRevenue,
+        'month_commission' => $monthRevenue * $commRate,
+        'on_time_rate' => $analytics['on_time_rate'] ?? 0,
+        'event_breakdown' => $eventBreakdown,
+        'status_breakdown' => $statusBreakdown,
+    ];
+}
+
 // Main orders list
 ?>
 <!DOCTYPE html>
@@ -965,6 +1096,22 @@ if (count($paidUnassigned) > 0) {
 
 <!-- Icon Library for JavaScript -->
 <?php outputIconsScript(); ?>
+
+<!-- Permission bridge for JavaScript -->
+<script>
+window.PERMS = {
+  canEdit: <?= json_encode($canEditOrders) ?>,
+  canCreate: <?= json_encode($canCreateOrders) ?>,
+  canDelete: <?= json_encode($canDeleteOrders) ?>,
+  canViewVendor: <?= json_encode($canViewVendor) ?>,
+  canViewAnalytics: <?= json_encode($canViewAnalytics) ?>,
+  isMtccStaff: <?= json_encode($isMtccStaff) ?>,
+  canChangeMtccStatus: <?= json_encode($canChangeMtccStatus) ?>,
+  allowedStatuses: <?= json_encode($isMtccStaff ? ['pickedup', 'unclaimed', 'missing'] : null) ?>,
+  role: <?= json_encode(getCurrentAdminRole()) ?>
+};
+</script>
+<?php outputStatusConfigScript($statusRole); ?>
 
 </head>
 <body>
@@ -1357,21 +1504,193 @@ if (count($paidUnassigned) > 0) {
   </div>
 </div>
 
+
+</script>
+
+<?php endif; ?>
+
+<?php if ($isMtccStaff && $canViewMtccAnalytics): ?>
+<!-- MTCC Analytics Dashboard -->
+<div class="mtcc-analytics" id="mtccAnalyticsContainer">
+
+  <!-- Per-event running totals -->
+  <?php if (!empty($mtccAnalytics['event_breakdown'])): ?>
+  <div class="mtcc-section-label"><?= ICON_CALENDAR ?> Active Events</div>
+  <div class="mtcc-events-grid">
+    <?php foreach ($mtccAnalytics['event_breakdown'] as $prefix => $ev): ?>
+    <div class="mtcc-event-card">
+      <div class="mtcc-event-name"><?= htmlspecialchars($ev['name']) ?></div>
+      <div class="mtcc-event-stats">
+        <div class="mtcc-event-stat">
+          <span class="mtcc-stat-value"><?= $ev['orders'] ?></span>
+          <span class="mtcc-stat-label">Orders</span>
+        </div>
+        <div class="mtcc-event-stat">
+          <span class="mtcc-stat-value">$<?= number_format($ev['revenue'], 2) ?></span>
+          <span class="mtcc-stat-label">Revenue</span>
+        </div>
+        <div class="mtcc-event-stat mtcc-stat-commission">
+          <span class="mtcc-stat-value">$<?= number_format($ev['commission'], 2) ?></span>
+          <span class="mtcc-stat-label">Commission</span>
+        </div>
+      </div>
+    </div>
+    <?php endforeach; ?>
+  </div>
+  <?php endif; ?>
+
+  <!-- Summary cards -->
+  <div class="mtcc-section-label"><?= ICON_CHART_UP ?> Summary</div>
+  <div class="mtcc-summary-grid">
+
+    <!-- Total Orders -->
+    <div class="mtcc-card">
+      <div class="mtcc-card-header">
+        <span class="mtcc-card-icon"><?= ICON_PACKAGE ?></span>
+        <span class="mtcc-card-title">Total Orders</span>
+      </div>
+      <div class="mtcc-card-value"><?= $mtccAnalytics['valid_order_count'] ?></div>
+      <div class="mtcc-card-breakdown">
+        <span>Today: <?= $mtccAnalytics['today_orders'] ?></span>
+        <span>This Week: <?= $mtccAnalytics['week_orders'] ?></span>
+        <span>This Month: <?= $mtccAnalytics['month_orders'] ?></span>
+      </div>
+    </div>
+
+    <!-- Gross Revenue -->
+    <div class="mtcc-card">
+      <div class="mtcc-card-header">
+        <span class="mtcc-card-icon"><?= ICON_MONEY_BAG ?></span>
+        <span class="mtcc-card-title">Gross Revenue</span>
+      </div>
+      <div class="mtcc-card-value">$<?= number_format($mtccAnalytics['gross_revenue'], 2) ?></div>
+      <div class="mtcc-card-breakdown">
+        <span>Today: $<?= number_format($mtccAnalytics['today_revenue'], 2) ?></span>
+        <span>This Week: $<?= number_format($mtccAnalytics['week_revenue'], 2) ?></span>
+        <span>This Month: $<?= number_format($mtccAnalytics['month_revenue'], 2) ?></span>
+      </div>
+    </div>
+
+    <!-- Commission -->
+    <div class="mtcc-card mtcc-card-highlight">
+      <div class="mtcc-card-header">
+        <span class="mtcc-card-icon"><?= ICON_STAR ?></span>
+        <span class="mtcc-card-title">Commission</span>
+      </div>
+      <div class="mtcc-card-value">$<?= number_format($mtccAnalytics['commission_total'], 2) ?></div>
+      <div class="mtcc-card-formula"><?= $mtccAnalytics['commission_rate_pct'] ?>% of $<?= number_format($mtccAnalytics['gross_revenue'], 2) ?></div>
+      <div class="mtcc-card-breakdown">
+        <span>Today: $<?= number_format($mtccAnalytics['today_commission'], 2) ?></span>
+        <span>This Week: $<?= number_format($mtccAnalytics['week_commission'], 2) ?></span>
+        <span>This Month: $<?= number_format($mtccAnalytics['month_commission'], 2) ?></span>
+      </div>
+    </div>
+
+    <!-- On-Time Rate -->
+    <div class="mtcc-card">
+      <div class="mtcc-card-header">
+        <span class="mtcc-card-icon"><?= ICON_CHECK_GREEN ?></span>
+        <span class="mtcc-card-title">On-Time Delivery</span>
+      </div>
+      <div class="mtcc-card-value <?= $mtccAnalytics['on_time_rate'] >= 95 ? 'mtcc-rate-good' : ($mtccAnalytics['on_time_rate'] >= 85 ? 'mtcc-rate-ok' : 'mtcc-rate-low') ?>"><?= $mtccAnalytics['on_time_rate'] ?>%</div>
+      <div class="mtcc-card-note">of delivered orders on or before due date</div>
+    </div>
+
+  </div>
+
+  <!-- Status breakdown bar -->
+  <?php if (!empty($mtccAnalytics['status_breakdown'])): ?>
+  <div class="mtcc-status-bar">
+    <div class="mtcc-section-label"><?= ICON_FLAG ?> Order Status</div>
+    <div class="mtcc-status-chips">
+      <?php
+      $mtccStatusColors = getStatusColors();
+      $allConfig = getStatusConfig();
+      foreach ($mtccAnalytics['status_breakdown'] as $label => $count):
+        // Find color for this label
+        $color = '#6b7280';
+        foreach ($allConfig as $code => $def) {
+          if (($def['labels']['mtcc_staff'] ?? '') === $label) {
+            $color = $def['color'];
+            break;
+          }
+        }
+      ?>
+      <div class="mtcc-status-chip" style="border-left: 3px solid <?= $color ?>;">
+        <span class="mtcc-chip-count"><?= $count ?></span>
+        <span class="mtcc-chip-label"><?= htmlspecialchars($label) ?></span>
+      </div>
+      <?php endforeach; ?>
+    </div>
+  </div>
+  <?php endif; ?>
+
+  <!-- Statements section — past event commission reports -->
+  <?php
+  $archivedEvents = $eventsData['archived'] ?? [];
+  if (!empty($archivedEvents)):
+  ?>
+  <div class="mtcc-section-label"><?= ICON_MEMO ?> Commission Statements</div>
+  <div class="mtcc-statements-table">
+    <table class="stmt-list-table">
+      <thead>
+        <tr>
+          <th>Event</th>
+          <th>Dates</th>
+          <th>Orders</th>
+          <th>Revenue</th>
+          <th>Commission</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <?php foreach ($archivedEvents as $ev):
+          $evRevenue = $ev['totalRevenue'] ?? 0;
+          $evCommission = $evRevenue * $commRate;
+        ?>
+        <tr>
+          <td style="font-weight: 600;"><?= htmlspecialchars($ev['name'] ?? $ev['acronym']) ?></td>
+          <td style="color: #6b7280; font-size: 0.82rem;"><?= htmlspecialchars($ev['dates'] ?? '') ?></td>
+          <td><?= $ev['orderCount'] ?? 0 ?></td>
+          <td>$<?= number_format($evRevenue, 2) ?></td>
+          <td style="color: #7c3aed; font-weight: 600;">$<?= number_format($evCommission, 2) ?></td>
+          <td><a href="admin/mtcc-statement.php?event=<?= urlencode($ev['acronym'] ?? '') ?>" class="mtcc-view-stmt-btn">View</a></td>
+        </tr>
+        <?php endforeach; ?>
+      </tbody>
+    </table>
+  </div>
+  <?php endif; ?>
+
+</div>
+<?php endif; ?>
+
 <!-- Pass data to JavaScript -->
 <script>
-// Pass PHP data to JavaScript
+<?php
+// Sanitize orders for MTCC staff — strip vendor/COGS/PII, keep name + price
+$jsOrders = $orders;
+if ($isMtccStaff) {
+    $jsOrders = array_map(function($o) {
+        unset($o['customerInfo']['email']);
+        unset($o['customerInfo']['phone']);
+        unset($o['vendor_pricing']);
+        unset($o['vendor_name']);
+        unset($o['vendor_id']);
+        if (isset($o['pricing'])) {
+            unset($o['pricing']['cogs']);
+            unset($o['pricing']['margin']);
+        }
+        return $o;
+    }, $jsOrders);
+}
+?>
 window.dashboardData = {
-  analytics: <?= json_encode($analytics) ?>,
-  orders: <?= json_encode($orders) ?>,
+  analytics: <?= json_encode($isMtccStaff && isset($mtccAnalytics) ? $mtccAnalytics : $analytics) ?>,
+  orders: <?= json_encode($jsOrders) ?>,
   activeEventPrefixes: <?= json_encode(array_keys($activeEventPrefixes)) ?>
 };
-
-// Analytics initialization is handled by admin-dashboard.js DashboardController.setupAnalyticsUpdates()
-	
 </script>
-	
-	
-<?php endif; ?>
 	
 <!-- Table Card Wrapper -->
 <div class="table-card-wrapper">
@@ -1584,14 +1903,14 @@ window.dashboardData = {
       <tr class="<?= $order['status'] ?? 'unpaid' ?>" 
                             data-reference="<?= strtolower($order['referenceCode'] ?? '') ?>"
                             data-customer="<?= strtolower($order['customerInfo']['name'] ?? '') ?>"
-                            data-email="<?= strtolower($order['customerInfo']['email'] ?? '') ?>"
+                            <?php if (!$isMtccStaff): ?>data-email="<?= strtolower($order['customerInfo']['email'] ?? '') ?>"<?php endif; ?>
                             data-status="<?= $order['status'] ?? 'unpaid' ?>"
                             data-priority="<?= $turnaroundClass ?>"
                             data-submitted="<?= isset($order['submittedAt']) ? strtotime($order['submittedAt']) : 0 ?>"
                             data-deadline="<?= isset($order['selectedDate']) ? strtotime($order['selectedDate']) : 0 ?>"
                             data-duedate="<?= $order['selectedDate'] ?? '' ?>"
                             data-value="<?= $order['pricing']['total'] ?? 0 ?>"
-                            data-cogs="<?= isset($order['vendor_pricing']['total']) ? $order['vendor_pricing']['total'] : 0 ?>"
+                            <?php if (!$isMtccStaff): ?>data-cogs="<?= isset($order['vendor_pricing']['total']) ? $order['vendor_pricing']['total'] : 0 ?>"<?php endif; ?>
                             data-event-status="<?= isset($activeEventPrefixes[strtoupper(explode('-', $order['referenceCode'] ?? '')[0])]) ? 'active' : 'archived' ?>"> 
         
         <!-- Checkbox Column -->
@@ -1627,7 +1946,7 @@ window.dashboardData = {
         <!-- Customer Column -->
         <td>
           <div class="cell-main"><?= htmlspecialchars($order['customerInfo']['name'] ?? 'Unknown') ?></div>
-          <div class="cell-micro"><?= htmlspecialchars($order['customerInfo']['email'] ?? '') ?></div>
+          <?php if (!$isMtccStaff): ?><div class="cell-micro"><?= htmlspecialchars($order['customerInfo']['email'] ?? '') ?></div><?php endif; ?>
         </td>
         
         <!-- Due Date Column -->
@@ -1703,34 +2022,40 @@ window.dashboardData = {
         
         <!-- Actions Column - SANDWICH MENU -->
         <td><div class="action-menu-container">
-            <button class="action-menu-trigger" onclick="toggleActionMenu(event, '<?= $orderRefCode ?>')" 
+            <button class="action-menu-trigger" onclick="toggleActionMenu(event, '<?= $orderRefCode ?>')"
                 title="Order Actions"> <span class="menu-icon"><?= SYMBOL_DOTS_VERTICAL ?></span> </button>
-            <div class="action-menu-dropdown" id="menu_<?= htmlspecialchars($orderRefCode) ?>"> 
+            <div class="action-menu-dropdown" id="menu_<?= htmlspecialchars($orderRefCode) ?>">
               <!-- View & Edit Section -->
-              <div class="menu-section"> 
-                <a href="?view=<?= urlencode($orderRefCode) ?>" class="menu-item"> <span class="menu-icon"><?= ICON_USER ?></span> <span>View Details</span> </a> 
+              <div class="menu-section">
+                <?php if ($isMtccStaff): ?>
+                <button class="menu-item" onclick="OrderSlideout.open('<?= htmlspecialchars($orderRefCode) ?>')"> <span class="menu-icon"><?= ICON_USER ?></span> <span>View Details</span> </button>
+                <?php else: ?>
+                <a href="?view=<?= urlencode($orderRefCode) ?>" class="menu-item"> <span class="menu-icon"><?= ICON_USER ?></span> <span>View Details</span> </a>
+                <?php endif; ?>
                 <?php if ($canEditOrders): ?>
-                <a href="?view=<?= urlencode($orderRefCode) ?>&edit=1" class="menu-item"> <span class="menu-icon"><?= ICON_PENCIL ?></span> <span>Edit Order</span> </a> 
+                <a href="?view=<?= urlencode($orderRefCode) ?>&edit=1" class="menu-item"> <span class="menu-icon"><?= ICON_PENCIL ?></span> <span>Edit Order</span> </a>
                 <?php endif; ?>
               </div>
               <div class="menu-divider"></div>
-              
+
               <!-- File & Print Section -->
               <div class="menu-section">
-                <?php if (isset($order['uploadedFile'])): ?>
+                <?php if (!$isMtccStaff && isset($order['uploadedFile'])): ?>
                 <a href="?download=<?= urlencode($orderRefCode) ?>" class="menu-item"> <span class="menu-icon"><?= ICON_DOWNLOAD ?></span> <span>Download File</span> </a>
-                <?php else: ?>
-                <div class="menu-item disabled"> <span class="menu-icon"><?= ICON_SIREN ?></span> <span>No File Available</span> </div>
                 <?php endif; ?>
                 <button class="menu-item" onclick="printOrderFromMenu('<?= $orderRefCode ?>')"> <span class="menu-icon"><?= ICON_PRINTER ?></span> <span>Print Order</span> </button>
+                <?php if (!$isMtccStaff): ?>
                 <button class="menu-item" onclick="printLabelFromMenu('<?= $orderRefCode ?>')"> <span class="menu-icon"><?= ICON_PACKAGE ?></span> <span>Print Label</span> </button>
+                <?php endif; ?>
               </div>
+
+              <?php if ($canDeleteOrders): ?>
               <div class="menu-divider"></div>
-              
               <!-- Danger Section -->
               <div class="menu-section">
                 <button class="menu-item danger" onclick="deleteOrderFromMenu('<?= $orderRefCode ?>')"> <span class="menu-icon"><?= ICON_PENCIL ?></span> <span>Delete Order</span> </button>
               </div>
+              <?php endif; ?>
             </div>
           </div></td>
       </tr>
@@ -1747,10 +2072,16 @@ window.dashboardData = {
     <span class="queue-bulk-count" id="bulkToolbarCount">0</span>
     <span class="queue-bulk-label">selected</span>
     <button class="queue-bulk-btn queue-bulk-push" onclick="bulkChangeStatus()">Change Status</button>
+    <?php if (!$isMtccStaff): ?>
     <button class="queue-bulk-btn queue-bulk-batch" onclick="printSelectedOrders()">Print Labels</button>
+    <?php endif; ?>
     <button class="queue-bulk-btn" onclick="exportSelectedOrders()" style="background: rgba(255,255,255,0.1); color: white;">Export CSV</button>
+    <?php if (!$isMtccStaff): ?>
     <button class="queue-bulk-btn" onclick="downloadSelectedFiles()" style="background: rgba(255,255,255,0.1); color: white;">Download Files</button>
+    <?php endif; ?>
+    <?php if ($canDeleteOrders): ?>
     <button class="queue-bulk-btn queue-bulk-issue" onclick="bulkDeleteOrders()">Delete</button>
+    <?php endif; ?>
     <button class="queue-bulk-clear" onclick="clearAllSelections()">&#10005;</button>
   </div>
 </div>

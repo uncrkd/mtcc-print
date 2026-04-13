@@ -818,30 +818,41 @@ function createQuickStatusDropdown(referenceCode, currentStatus) {
     dropdown.dataset.referenceCode = referenceCode;
     
     // Status order - grouped logically
-    const statusGroups = [
-        ['unpaid', 'paid'],
-        ['preflight', 'file_issue', 'printing'],
-        ['ready', 'shipped', 'delivered', 'pickedup', 'unclaimed', 'missing', 'cancelled']
-    ];
-    
+    // MTCC staff can only set: pickedup, unclaimed, missing
+    const perms = window.PERMS || {};
+    const labels = window.STATUS_LABELS || {};
+    let statusGroups;
+
+    if (perms.isMtccStaff && perms.allowedStatuses) {
+        statusGroups = [perms.allowedStatuses];
+    } else {
+        statusGroups = [
+            ['unpaid', 'paid'],
+            ['preflight', 'file_issue', 'printing'],
+            ['ready', 'shipped', 'delivered', 'pickedup', 'unclaimed', 'missing', 'cancelled']
+        ];
+    }
+
     statusGroups.forEach((group, groupIndex) => {
         group.forEach(status => {
             const config = quickStatusConfig[status];
+            if (!config) return;
             const item = document.createElement('button');
             item.className = 'quick-status-dropdown-item';
             if (status === currentStatus) {
                 item.classList.add('current');
             }
             item.dataset.status = status;
-            // Use badge-style display
-            item.innerHTML = `<span class="status-badge status-${status}">${config.icon} ${config.label}</span>`;
+            // Use role-appropriate label from window.STATUS_LABELS if available
+            const displayLabel = labels[status] || config.label;
+            item.innerHTML = `<span class="status-badge status-${status}">${config.icon} ${displayLabel}</span>`;
             item.addEventListener('click', (e) => {
                 e.stopPropagation();
                 handleQuickStatusSelect(referenceCode, status, currentStatus);
             });
             dropdown.appendChild(item);
         });
-        
+
         // Add divider between groups (except after last group)
         if (groupIndex < statusGroups.length - 1) {
             const divider = document.createElement('div');

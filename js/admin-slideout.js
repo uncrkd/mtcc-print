@@ -58,12 +58,14 @@ var OrderSlideout = (function() {
   function fmtDateTime(s) { if (!s) return ''; var d = new Date(s); return isNaN(d) ? s : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }); }
   function fmtMoney(v) { var n = parseFloat(v); return isNaN(n) ? '$0.00' : '$' + n.toFixed(2); }
 
-  var STATUS_LABELS = {
+  // Use role-appropriate labels from PHP if available, otherwise fall back to admin defaults
+  var STATUS_LABELS_DEFAULT = {
     unpaid:'Unpaid', paid:'Paid', preflight:'Sent to Vendor', file_issue:'File Issue',
     printing:'Printing', ready:'Ready to Ship', dispatched:'Courier Assigned',
     shipped:'Shipped', delivered:'Delivered', pickedup:'Picked Up',
     unclaimed:'Unclaimed', missing:'Missing', cancelled:'Cancelled', refunded:'Refunded'
   };
+  var STATUS_LABELS = window.STATUS_LABELS || STATUS_LABELS_DEFAULT;
   var TIME_LABELS = { '9am':'9:00 AM', '12pm':'12:00 PM', '3pm':'3:00 PM', '6pm':'6:00 PM', 'anytime':'Anytime' };
 
   function renderHeader(order) {
@@ -81,9 +83,15 @@ var OrderSlideout = (function() {
   function renderFooter(order) {
     var ref = esc(order.referenceCode || '');
     var el = document.getElementById('slideoutFooter');
-    el.innerHTML =
-      '<a href="?view=' + encodeURIComponent(ref) + '" class="so-footer-btn so-btn-primary">View Full Details</a>' +
-      '<a href="?view=' + encodeURIComponent(ref) + '&edit=1" class="so-footer-btn so-btn-secondary">Edit Order</a>';
+    var perms = window.PERMS || {};
+
+    if (perms.isMtccStaff) {
+      el.innerHTML = '<button class="so-footer-btn so-btn-secondary" onclick="OrderSlideout.close()">Close</button>';
+    } else {
+      el.innerHTML =
+        '<a href="?view=' + encodeURIComponent(ref) + '" class="so-footer-btn so-btn-primary">View Full Details</a>' +
+        '<a href="?view=' + encodeURIComponent(ref) + '&edit=1" class="so-footer-btn so-btn-secondary">Edit Order</a>';
+    }
   }
 
   function renderBody(order) {
@@ -97,16 +105,20 @@ var OrderSlideout = (function() {
     var deliveryTime = order.deliveryTime || 'anytime';
     var material = (order.material === 'fabric') ? 'Fabric' : 'Poster';
     var vendorName = order.vendor_name || '';
+    var perms = window.PERMS || {};
+    var isMtcc = perms.isMtccStaff;
 
-    // ---- FILE DOWNLOAD ----
-    var filePath = file.path || (file.savedName ? 'uploads/files/' + file.savedName : '');
-    if (filePath) {
-      h += '<div class="so-section">';
-      h += '<a href="' + esc(filePath) + '" class="so-download-btn" download>';
-      h += '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>';
-      h += ' Download File</a>';
-      h += '<div class="so-file-info">' + esc(file.originalName || file.savedName || '') + '</div>';
-      h += '</div>';
+    // ---- FILE DOWNLOAD (hidden for MTCC) ----
+    if (!isMtcc) {
+      var filePath = file.path || (file.savedName ? 'uploads/files/' + file.savedName : '');
+      if (filePath) {
+        h += '<div class="so-section">';
+        h += '<a href="' + esc(filePath) + '" class="so-download-btn" download>';
+        h += '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>';
+        h += ' Download File</a>';
+        h += '<div class="so-file-info">' + esc(file.originalName || file.savedName || '') + '</div>';
+        h += '</div>';
+      }
     }
 
     // ---- ORDER DETAILS ----
@@ -119,7 +131,7 @@ var OrderSlideout = (function() {
     h += '<span class="so-spec-lbl">Delivery</span><span class="so-spec-val">' + (delivery === 'mtcc' ? 'MTCC Pick-up' : 'Address Delivery') + '</span>';
     h += '<span class="so-spec-lbl">Event</span><span class="so-spec-val">' + esc(event.name || event.acronym || 'N/A') + '</span>';
     h += '<span class="so-spec-lbl">Tier</span><span class="so-spec-val">' + esc(pricing.tier || 'Standard') + '</span>';
-    if (vendorName) h += '<span class="so-spec-lbl">Vendor</span><span class="so-spec-val">' + esc(vendorName) + '</span>';
+    if (vendorName && !isMtcc) h += '<span class="so-spec-lbl">Vendor</span><span class="so-spec-val">' + esc(vendorName) + '</span>';
     h += '</div></div>';
 
     // ---- CUSTOMER ----
@@ -127,20 +139,33 @@ var OrderSlideout = (function() {
     h += '<div class="so-section-label">Customer</div>';
     h += '<div class="so-spec-grid">';
     h += '<span class="so-spec-lbl">Name</span><span class="so-spec-val">' + esc(ci.name || 'N/A') + '</span>';
-    h += '<span class="so-spec-lbl">Email</span><span class="so-spec-val"><a href="mailto:' + esc(ci.email || '') + '">' + esc(ci.email || 'N/A') + '</a></span>';
-    h += '<span class="so-spec-lbl">Phone</span><span class="so-spec-val">' + esc(ci.phone || 'N/A') + '</span>';
+    if (!isMtcc) {
+      h += '<span class="so-spec-lbl">Email</span><span class="so-spec-val"><a href="mailto:' + esc(ci.email || '') + '">' + esc(ci.email || 'N/A') + '</a></span>';
+      h += '<span class="so-spec-lbl">Phone</span><span class="so-spec-val">' + esc(ci.phone || 'N/A') + '</span>';
+    }
     if (ci.company) h += '<span class="so-spec-lbl">Company</span><span class="so-spec-val">' + esc(ci.company) + '</span>';
     h += '</div></div>';
 
     // ---- PRICING ----
-    h += '<div class="so-section">';
-    h += '<div class="so-section-label">Pricing</div>';
-    h += '<div class="so-price-grid">';
-    h += '<span>Base Price</span><span>' + fmtMoney(pricing.basePrice) + '</span>';
-    if (pricing.deliveryFee > 0) h += '<span>Delivery Fee</span><span>' + fmtMoney(pricing.deliveryFee) + '</span>';
-    h += '<span>Tax (HST 13%)</span><span>' + fmtMoney(pricing.tax) + '</span>';
-    h += '<span class="so-price-total">Total</span><span class="so-price-total">' + fmtMoney(pricing.total) + '</span>';
-    h += '</div></div>';
+    if (isMtcc) {
+      // MTCC sees only the total — no breakdown
+      if (pricing.total) {
+        h += '<div class="so-section">';
+        h += '<div class="so-section-label">Order Total</div>';
+        h += '<div class="so-price-grid">';
+        h += '<span class="so-price-total">Total</span><span class="so-price-total">' + fmtMoney(pricing.total) + '</span>';
+        h += '</div></div>';
+      }
+    } else {
+      h += '<div class="so-section">';
+      h += '<div class="so-section-label">Pricing</div>';
+      h += '<div class="so-price-grid">';
+      h += '<span>Base Price</span><span>' + fmtMoney(pricing.basePrice) + '</span>';
+      if (pricing.deliveryFee > 0) h += '<span>Delivery Fee</span><span>' + fmtMoney(pricing.deliveryFee) + '</span>';
+      h += '<span>Tax (HST 13%)</span><span>' + fmtMoney(pricing.tax) + '</span>';
+      h += '<span class="so-price-total">Total</span><span class="so-price-total">' + fmtMoney(pricing.total) + '</span>';
+      h += '</div></div>';
+    }
 
     // ---- TIMELINE ----
     h += '<div class="so-section">';
@@ -221,11 +246,13 @@ var OrderSlideout = (function() {
       h += '<div class="so-note-empty">No notes yet.</div>';
     }
 
-    // Add note form
-    h += '<div class="so-add-note" id="soAddNoteForm">';
-    h += '<textarea class="so-note-input" id="soNoteInput" placeholder="Add a note..." rows="2"></textarea>';
-    h += '<button class="so-note-save" onclick="OrderSlideout.saveNote()">Add Note</button>';
-    h += '</div>';
+    // Add note form (hidden for MTCC staff)
+    if (!isMtcc) {
+      h += '<div class="so-add-note" id="soAddNoteForm">';
+      h += '<textarea class="so-note-input" id="soNoteInput" placeholder="Add a note..." rows="2"></textarea>';
+      h += '<button class="so-note-save" onclick="OrderSlideout.saveNote()">Add Note</button>';
+      h += '</div>';
+    }
     h += '</div>';
 
     document.getElementById('slideoutContent').innerHTML = h;

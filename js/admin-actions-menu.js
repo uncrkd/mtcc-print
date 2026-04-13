@@ -92,16 +92,22 @@ function createActionsDropdown() {
     
     let html = '';
     
+    // Permission-aware menu building
+    const perms = window.PERMS || {};
+    const isMtcc = perms.isMtccStaff;
+
     // Selection-specific actions
     if (hasSelection) {
-        html += `
-        <div class="actions-menu-section">
-            <div class="actions-menu-item" onclick="toggleStatusSubmenuInline(event)">
-                <span class="menu-icon">&#128681;</span>
-                <span class="menu-label">Change Status (${selectedCount})</span>
-                <span class="submenu-arrow" id="statusArrowInline">&#9655;</span>
-            </div>
-            <div id="statusSubmenuInline" class="status-submenu-inline">
+        // Status submenu — MTCC staff only sees pickedup/unclaimed/missing
+        let statusItems = '';
+        if (isMtcc) {
+            const labels = window.STATUS_LABELS || {};
+            statusItems = `
+                <div class="submenu-item" onclick="bulkChangeStatus('pickedup', event)"><span class="status-badge status-pickedup">&#9989; ${labels.pickedup || 'Picked Up'}</span></div>
+                <div class="submenu-item" onclick="bulkChangeStatus('unclaimed', event)"><span class="status-badge status-unclaimed">&#128236; ${labels.unclaimed || 'Unclaimed'}</span></div>
+                <div class="submenu-item" onclick="bulkChangeStatus('missing', event)"><span class="status-badge status-missing">&#9888; ${labels.missing || 'Missing'}</span></div>`;
+        } else {
+            statusItems = `
                 <div class="submenu-item" onclick="bulkChangeStatus('unpaid', event)"><span class="status-badge status-unpaid">&#9203; Unpaid</span></div>
                 <div class="submenu-item" onclick="bulkChangeStatus('paid', event)"><span class="status-badge status-paid">&#128176; Paid</span></div>
                 <div class="submenu-divider"></div>
@@ -115,29 +121,40 @@ function createActionsDropdown() {
                 <div class="submenu-item" onclick="bulkChangeStatus('pickedup', event)"><span class="status-badge status-pickedup">&#9989; Picked Up</span></div>
                 <div class="submenu-item" onclick="bulkChangeStatus('unclaimed', event)"><span class="status-badge status-unclaimed">&#128236; Unclaimed</span></div>
                 <div class="submenu-item" onclick="bulkChangeStatus('missing', event)"><span class="status-badge status-missing">&#9888; Missing</span></div>
-                <div class="submenu-item" onclick="bulkChangeStatus('cancelled', event)"><span class="status-badge status-cancelled">&#10006; Cancelled</span></div>
+                <div class="submenu-item" onclick="bulkChangeStatus('cancelled', event)"><span class="status-badge status-cancelled">&#10006; Cancelled</span></div>`;
+        }
+
+        html += `
+        <div class="actions-menu-section">
+            <div class="actions-menu-item" onclick="toggleStatusSubmenuInline(event)">
+                <span class="menu-icon">&#128681;</span>
+                <span class="menu-label">Change Status (${selectedCount})</span>
+                <span class="submenu-arrow" id="statusArrowInline">&#9655;</span>
+            </div>
+            <div id="statusSubmenuInline" class="status-submenu-inline">
+                ${statusItems}
             </div>
             <div class="actions-menu-item" onclick="printSelectedOrders()">
                 <span class="menu-icon">&#128424;&#65039;</span>
                 <span class="menu-label">Print Orders (${selectedCount})</span>
             </div>
-            <div class="actions-menu-item" onclick="printSelectedLabels()">
+            ${!isMtcc ? `<div class="actions-menu-item" onclick="printSelectedLabels()">
                 <span class="menu-icon">&#127991;&#65039;</span>
                 <span class="menu-label">Print Labels (${selectedCount})</span>
-            </div>
+            </div>` : ''}
             <div class="actions-menu-item" onclick="exportSelectedOrders()">
                 <span class="menu-icon">&#8599;&#65039;]</span>
                 <span class="menu-label">Export Selected (${selectedCount})</span>
             </div>
-            <div class="actions-menu-item" onclick="downloadSelectedFiles()">
+            ${!isMtcc ? `<div class="actions-menu-item" onclick="downloadSelectedFiles()">
                 <span class="menu-icon">&#128229;</span>
                 <span class="menu-label">Download Files (${selectedCount})</span>
-            </div>
-            <div class="actions-menu-divider"></div>
+            </div>` : ''}
+            ${!isMtcc && perms.canDelete ? `<div class="actions-menu-divider"></div>
             <div class="actions-menu-item action-danger" onclick="bulkDeleteOrders()">
                 <span class="menu-icon">&#128465;</span>
                 <span class="menu-label">Delete Orders (${selectedCount})</span>
-            </div>
+            </div>` : ''}
             <div class="actions-menu-divider"></div>
         </div>`;
     }
@@ -157,7 +174,7 @@ function createActionsDropdown() {
             <span class="menu-icon">&#128196;</span>
             <span class="menu-label">Export as PDF</span>
         </div>
-        <div class="actions-menu-item" onclick="printAllOrders()">
+        ${!isMtcc ? `<div class="actions-menu-item" onclick="printAllOrders()">
             <span class="menu-icon">&#128424;&#65039;</span>
             <span class="menu-label">Print All Orders</span>
         </div>
@@ -169,7 +186,7 @@ function createActionsDropdown() {
         <a href="admin-bulk-upload.php" class="actions-menu-item" style="text-decoration:none;color:inherit;">
             <span class="menu-icon">&#128229;</span>
             <span class="menu-label">Bulk Upload Orders</span>
-        </a>
+        </a>` : ''}
     </div>`;
     
     // Clear selection (only if items selected)
