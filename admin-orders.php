@@ -945,61 +945,66 @@ if ($isMtccStaff) {
 }
 
 // ============================================================
-// MTCC ANALYTICS — Simplified metrics with commission
+// MTCC ANALYTICS — Venue fee calculated on BASE PRICE only (excludes tax + delivery fees)
 // ============================================================
 $mtccAnalytics = [];
+$venueRate = 0;
+$venueRatePct = 0;
 if ($isMtccStaff) {
     $siteSettings = getSiteSettings();
-    $commRate = $siteSettings['mtcc_commission_rate'] ?? 0.10;
-    $commRatePct = round($commRate * 100);
+    $venueRate = $siteSettings['mtcc_venue_fee_rate'] ?? 0.10;
+    $venueRatePct = round($venueRate * 100);
 
     // Active statuses for revenue (excludes cancelled/refunded)
     $revenueStatuses = ['paid', 'preflight', 'file_issue', 'printing', 'ready', 'dispatched', 'shipped', 'delivered', 'pickedup'];
 
-    // Gross revenue from paid+ orders
-    $grossRevenue = 0;
+    // Revenue breakdown: base price (fee-eligible), delivery fees, tax, gross total
+    $totalBase = 0; $totalDelivery = 0; $totalTax = 0; $grossRevenue = 0;
     $validOrderCount = 0;
     foreach ($orders as $o) {
         if (in_array($o['status'] ?? '', $revenueStatuses)) {
+            $totalBase += $o['pricing']['basePrice'] ?? 0;
+            $totalDelivery += $o['pricing']['deliveryFee'] ?? 0;
+            $totalTax += $o['pricing']['tax'] ?? 0;
             $grossRevenue += $o['pricing']['total'] ?? 0;
             $validOrderCount++;
         }
     }
 
-    // Rolling period calculations
+    // Rolling period calculations — all on basePrice
     $todayStr = date('Y-m-d');
     $weekStart = date('Y-m-d', strtotime('monday this week'));
     $monthStart = date('Y-m-01');
 
-    $todayRevenue = 0; $todayOrders = 0;
-    $weekRevenue = 0; $weekOrders = 0;
-    $monthRevenue = 0; $monthOrders = 0;
+    $todayBase = 0; $todayOrders = 0;
+    $weekBase = 0; $weekOrders = 0;
+    $monthBase = 0; $monthOrders = 0;
 
     foreach ($orders as $o) {
         if (!in_array($o['status'] ?? '', $revenueStatuses)) continue;
         $submitted = isset($o['submittedAt']) ? date('Y-m-d', strtotime($o['submittedAt'])) : '';
-        $total = $o['pricing']['total'] ?? 0;
+        $base = $o['pricing']['basePrice'] ?? 0;
 
-        if ($submitted === $todayStr) { $todayRevenue += $total; $todayOrders++; }
-        if ($submitted >= $weekStart) { $weekRevenue += $total; $weekOrders++; }
-        if ($submitted >= $monthStart) { $monthRevenue += $total; $monthOrders++; }
+        if ($submitted === $todayStr) { $todayBase += $base; $todayOrders++; }
+        if ($submitted >= $weekStart) { $weekBase += $base; $weekOrders++; }
+        if ($submitted >= $monthStart) { $monthBase += $base; $monthOrders++; }
     }
 
-    // Per-event breakdown (active events only)
+    // Per-event breakdown
     $eventBreakdown = [];
     foreach ($orders as $o) {
         if (!in_array($o['status'] ?? '', $revenueStatuses)) continue;
         $prefix = strtoupper(explode('-', $o['referenceCode'] ?? '')[0]);
         $eventName = $o['event']['name'] ?? $o['event']['acronym'] ?? $prefix;
         if (!isset($eventBreakdown[$prefix])) {
-            $eventBreakdown[$prefix] = ['name' => $eventName, 'orders' => 0, 'revenue' => 0];
+            $eventBreakdown[$prefix] = ['name' => $eventName, 'orders' => 0, 'base_revenue' => 0, 'gross_revenue' => 0];
         }
         $eventBreakdown[$prefix]['orders']++;
-        $eventBreakdown[$prefix]['revenue'] += $o['pricing']['total'] ?? 0;
+        $eventBreakdown[$prefix]['base_revenue'] += $o['pricing']['basePrice'] ?? 0;
+        $eventBreakdown[$prefix]['gross_revenue'] += $o['pricing']['total'] ?? 0;
     }
-    // Add commission to each event
     foreach ($eventBreakdown as &$ev) {
-        $ev['commission'] = $ev['revenue'] * $commRate;
+        $ev['venue_fee'] = $ev['base_revenue'] * $venueRate;
     }
     unset($ev);
 
@@ -1017,19 +1022,22 @@ if ($isMtccStaff) {
     $mtccAnalytics = [
         'total_orders' => count($orders),
         'valid_order_count' => $validOrderCount,
+        'total_base' => $totalBase,
+        'total_delivery' => $totalDelivery,
+        'total_tax' => $totalTax,
         'gross_revenue' => $grossRevenue,
-        'commission_rate' => $commRate,
-        'commission_rate_pct' => $commRatePct,
-        'commission_total' => $grossRevenue * $commRate,
+        'venue_fee_rate' => $venueRate,
+        'venue_fee_rate_pct' => $venueRatePct,
+        'venue_fee_total' => $totalBase * $venueRate,
         'today_orders' => $todayOrders,
-        'today_revenue' => $todayRevenue,
-        'today_commission' => $todayRevenue * $commRate,
+        'today_base' => $todayBase,
+        'today_venue_fee' => $todayBase * $venueRate,
         'week_orders' => $weekOrders,
-        'week_revenue' => $weekRevenue,
-        'week_commission' => $weekRevenue * $commRate,
+        'week_base' => $weekBase,
+        'week_venue_fee' => $weekBase * $venueRate,
         'month_orders' => $monthOrders,
-        'month_revenue' => $monthRevenue,
-        'month_commission' => $monthRevenue * $commRate,
+        'month_base' => $monthBase,
+        'month_venue_fee' => $monthBase * $venueRate,
         'on_time_rate' => $analytics['on_time_rate'] ?? 0,
         'event_breakdown' => $eventBreakdown,
         'status_breakdown' => $statusBreakdown,
@@ -1526,12 +1534,12 @@ window.PERMS = {
           <span class="mtcc-stat-label">Orders</span>
         </div>
         <div class="mtcc-event-stat">
-          <span class="mtcc-stat-value">$<?= number_format($ev['revenue'], 2) ?></span>
-          <span class="mtcc-stat-label">Revenue</span>
+          <span class="mtcc-stat-value">$<?= number_format($ev['base_revenue'], 2) ?></span>
+          <span class="mtcc-stat-label">Base Revenue</span>
         </div>
-        <div class="mtcc-event-stat mtcc-stat-commission">
-          <span class="mtcc-stat-value">$<?= number_format($ev['commission'], 2) ?></span>
-          <span class="mtcc-stat-label">Commission</span>
+        <div class="mtcc-event-stat mtcc-stat-venue-fee">
+          <span class="mtcc-stat-value">$<?= number_format($ev['venue_fee'], 2) ?></span>
+          <span class="mtcc-stat-label">Venue Fee</span>
         </div>
       </div>
     </div>
@@ -1557,32 +1565,33 @@ window.PERMS = {
       </div>
     </div>
 
-    <!-- Gross Revenue -->
+    <!-- Base Revenue -->
     <div class="mtcc-card">
       <div class="mtcc-card-header">
         <span class="mtcc-card-icon"><?= ICON_MONEY_BAG ?></span>
-        <span class="mtcc-card-title">Gross Revenue</span>
+        <span class="mtcc-card-title">Base Revenue</span>
       </div>
-      <div class="mtcc-card-value">$<?= number_format($mtccAnalytics['gross_revenue'], 2) ?></div>
+      <div class="mtcc-card-value">$<?= number_format($mtccAnalytics['total_base'], 2) ?></div>
+      <div class="mtcc-card-note">Excludes HST + delivery fees</div>
       <div class="mtcc-card-breakdown">
-        <span>Today: $<?= number_format($mtccAnalytics['today_revenue'], 2) ?></span>
-        <span>This Week: $<?= number_format($mtccAnalytics['week_revenue'], 2) ?></span>
-        <span>This Month: $<?= number_format($mtccAnalytics['month_revenue'], 2) ?></span>
+        <span>Today: $<?= number_format($mtccAnalytics['today_base'], 2) ?></span>
+        <span>This Week: $<?= number_format($mtccAnalytics['week_base'], 2) ?></span>
+        <span>This Month: $<?= number_format($mtccAnalytics['month_base'], 2) ?></span>
       </div>
     </div>
 
-    <!-- Commission -->
+    <!-- Venue Fee -->
     <div class="mtcc-card mtcc-card-highlight">
       <div class="mtcc-card-header">
         <span class="mtcc-card-icon"><?= ICON_STAR ?></span>
-        <span class="mtcc-card-title">Commission</span>
+        <span class="mtcc-card-title">Venue Fee</span>
       </div>
-      <div class="mtcc-card-value">$<?= number_format($mtccAnalytics['commission_total'], 2) ?></div>
-      <div class="mtcc-card-formula"><?= $mtccAnalytics['commission_rate_pct'] ?>% of $<?= number_format($mtccAnalytics['gross_revenue'], 2) ?></div>
+      <div class="mtcc-card-value">$<?= number_format($mtccAnalytics['venue_fee_total'], 2) ?></div>
+      <div class="mtcc-card-formula"><?= $venueRatePct ?>% of $<?= number_format($mtccAnalytics['total_base'], 2) ?> base revenue</div>
       <div class="mtcc-card-breakdown">
-        <span>Today: $<?= number_format($mtccAnalytics['today_commission'], 2) ?></span>
-        <span>This Week: $<?= number_format($mtccAnalytics['week_commission'], 2) ?></span>
-        <span>This Month: $<?= number_format($mtccAnalytics['month_commission'], 2) ?></span>
+        <span>Today: $<?= number_format($mtccAnalytics['today_venue_fee'], 2) ?></span>
+        <span>This Week: $<?= number_format($mtccAnalytics['week_venue_fee'], 2) ?></span>
+        <span>This Month: $<?= number_format($mtccAnalytics['month_venue_fee'], 2) ?></span>
       </div>
     </div>
 
@@ -1604,16 +1613,11 @@ window.PERMS = {
     <div class="mtcc-section-label"><?= ICON_FLAG ?> Order Status</div>
     <div class="mtcc-status-chips">
       <?php
-      $mtccStatusColors = getStatusColors();
       $allConfig = getStatusConfig();
       foreach ($mtccAnalytics['status_breakdown'] as $label => $count):
-        // Find color for this label
         $color = '#6b7280';
         foreach ($allConfig as $code => $def) {
-          if (($def['labels']['mtcc_staff'] ?? '') === $label) {
-            $color = $def['color'];
-            break;
-          }
+          if (($def['labels']['mtcc_staff'] ?? '') === $label) { $color = $def['color']; break; }
         }
       ?>
       <div class="mtcc-status-chip" style="border-left: 3px solid <?= $color ?>;">
@@ -1625,12 +1629,12 @@ window.PERMS = {
   </div>
   <?php endif; ?>
 
-  <!-- Statements section — past event commission reports -->
+  <!-- Revenue Reports — past events -->
   <?php
   $archivedEvents = $eventsData['archived'] ?? [];
   if (!empty($archivedEvents)):
   ?>
-  <div class="mtcc-section-label"><?= ICON_MEMO ?> Commission Statements</div>
+  <div class="mtcc-section-label"><?= ICON_MEMO ?> Revenue Reports</div>
   <div class="mtcc-statements-table">
     <table class="stmt-list-table">
       <thead>
@@ -1638,22 +1642,22 @@ window.PERMS = {
           <th>Event</th>
           <th>Dates</th>
           <th>Orders</th>
-          <th>Revenue</th>
-          <th>Commission</th>
+          <th>Base Revenue</th>
+          <th>Venue Fee</th>
           <th></th>
         </tr>
       </thead>
       <tbody>
         <?php foreach ($archivedEvents as $ev):
-          $evRevenue = $ev['totalRevenue'] ?? 0;
-          $evCommission = $evRevenue * $commRate;
+          $evBaseRevenue = $ev['baseRevenue'] ?? $ev['totalRevenue'] ?? 0;
+          $evVenueFee = $evBaseRevenue * $venueRate;
         ?>
         <tr>
           <td style="font-weight: 600;"><?= htmlspecialchars($ev['name'] ?? $ev['acronym']) ?></td>
           <td style="color: #6b7280; font-size: 0.82rem;"><?= htmlspecialchars($ev['dates'] ?? '') ?></td>
           <td><?= $ev['orderCount'] ?? 0 ?></td>
-          <td>$<?= number_format($evRevenue, 2) ?></td>
-          <td style="color: #7c3aed; font-weight: 600;">$<?= number_format($evCommission, 2) ?></td>
+          <td>$<?= number_format($evBaseRevenue, 2) ?></td>
+          <td style="color: #7c3aed; font-weight: 600;">$<?= number_format($evVenueFee, 2) ?></td>
           <td><a href="admin/mtcc-statement.php?event=<?= urlencode($ev['acronym'] ?? '') ?>" class="mtcc-view-stmt-btn">View</a></td>
         </tr>
         <?php endforeach; ?>

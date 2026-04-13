@@ -17,7 +17,7 @@ function getSiteSettings() {
     if ($cached !== null) return $cached;
 
     $defaults = [
-        'mtcc_commission_rate' => 0.10,
+        'mtcc_venue_fee_rate' => 0.10,
         'mtcc_contact_email' => '',
         'mtcc_digest_enabled' => false,
     ];

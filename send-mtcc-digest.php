@@ -20,8 +20,8 @@ require_once __DIR__ . '/email-status-notifications.php'; // for sendEmailSMTP
 $settings = getSiteSettings();
 $recipientEmail = $settings['mtcc_contact_email'] ?? '';
 $digestEnabled = $settings['mtcc_digest_enabled'] ?? false;
-$commRate = $settings['mtcc_commission_rate'] ?? 0.10;
-$commRatePct = round($commRate * 100);
+$feeRate = $settings['mtcc_venue_fee_rate'] ?? 0.10;
+$feeRatePct = round($feeRate * 100);
 
 if (!$digestEnabled || !$recipientEmail) {
     error_log('MTCC Digest: Disabled or no recipient email configured');
@@ -59,29 +59,27 @@ if (is_dir($orderDir)) {
 $todayStr = date('Y-m-d');
 $monthStart = date('Y-m-01');
 
-$todayOrders = 0; $todayRevenue = 0;
-$monthOrders = 0; $monthRevenue = 0;
+$todayOrders = 0; $todayBase = 0;
+$monthOrders = 0; $monthBase = 0;
 $readyForPickup = 0; $pickedUpToday = 0;
 $eventBreakdown = [];
+$feeRatePct = round($feeRate * 100);
 
 foreach ($orders as $o) {
     $status = $o['status'] ?? 'unpaid';
     if (!in_array($status, $revenueStatuses)) continue;
 
     $submitted = isset($o['submittedAt']) ? date('Y-m-d', strtotime($o['submittedAt'])) : '';
-    $total = $o['pricing']['total'] ?? 0;
+    $base = $o['pricing']['basePrice'] ?? 0;
     $prefix = strtoupper(explode('-', $o['referenceCode'] ?? '')[0]);
 
     // Only count active events in digest
     if (!in_array($prefix, $activeAcronyms)) continue;
 
-    if ($submitted === $todayStr) { $todayOrders++; $todayRevenue += $total; }
-    if ($submitted >= $monthStart) { $monthOrders++; $monthRevenue += $total; }
+    if ($submitted === $todayStr) { $todayOrders++; $todayBase += $base; }
+    if ($submitted >= $monthStart) { $monthOrders++; $monthBase += $base; }
 
-    // Ready for pickup count
     if ($status === 'delivered') $readyForPickup++;
-
-    // Picked up today (check if status changed today — approximate via submittedAt)
     if ($status === 'pickedup') $pickedUpToday++;
 
     // Per-event breakdown
@@ -90,16 +88,16 @@ foreach ($orders as $o) {
         foreach ($activeEvents as $ev) {
             if (strtoupper($ev['acronym'] ?? '') === $prefix) { $evName = $ev['name'] ?? $prefix; break; }
         }
-        $eventBreakdown[$prefix] = ['name' => $evName, 'today_orders' => 0, 'today_revenue' => 0];
+        $eventBreakdown[$prefix] = ['name' => $evName, 'today_orders' => 0, 'today_base' => 0];
     }
     if ($submitted === $todayStr) {
         $eventBreakdown[$prefix]['today_orders']++;
-        $eventBreakdown[$prefix]['today_revenue'] += $total;
+        $eventBreakdown[$prefix]['today_base'] += $base;
     }
 }
 
-$todayCommission = $todayRevenue * $commRate;
-$monthCommission = $monthRevenue * $commRate;
+$todayFee = $todayBase * $feeRate;
+$monthFee = $monthBase * $feeRate;
 
 // Skip if no activity today
 if ($todayOrders === 0 && $readyForPickup === 0 && $pickedUpToday === 0) {
@@ -113,8 +111,8 @@ $body = '';
 // Today's summary
 $body .= emailSummaryBox(
     emailDetailRow('New Orders', $todayOrders)
-    . emailDetailRow('Revenue', '$' . number_format($todayRevenue, 2))
-    . emailDetailRow('Commission (' . $commRatePct . '%)', '$' . number_format($todayCommission, 2), true),
+    . emailDetailRow('Base Revenue', '$' . number_format($todayBase, 2))
+    . emailDetailRow('Venue Fee (' . $feeRatePct . '%)', '$' . number_format($todayFee, 2), true),
     "Today's Activity"
 );
 
@@ -130,7 +128,7 @@ if (count($eventBreakdown) > 1) {
     $eventRows = '';
     foreach ($eventBreakdown as $prefix => $ev) {
         if ($ev['today_orders'] === 0) continue;
-        $eventRows .= emailDetailRow($ev['name'], $ev['today_orders'] . ' orders · $' . number_format($ev['today_revenue'], 2));
+        $eventRows .= emailDetailRow($ev['name'], $ev['today_orders'] . ' orders · $' . number_format($ev['today_base'], 2));
     }
     if ($eventRows) {
         $body .= emailSummaryBox($eventRows, 'By Event');
@@ -139,9 +137,9 @@ if (count($eventBreakdown) > 1) {
 
 // Month-to-date
 $body .= emailCalloutPurple(
-    'Month-to-Date Commission',
-    '<strong style="font-size: 18px;">$' . number_format($monthCommission, 2) . '</strong><br>'
-    . $monthOrders . ' orders &middot; $' . number_format($monthRevenue, 2) . ' revenue'
+    'Month-to-Date Venue Fee',
+    '<strong style="font-size: 18px;">$' . number_format($monthFee, 2) . '</strong><br>'
+    . $monthOrders . ' orders &middot; $' . number_format($monthBase, 2) . ' base revenue'
 );
 
 // CTA
@@ -156,7 +154,7 @@ $html = emailTemplate(
 );
 
 // Send
-$subject = 'MTCC Daily Summary - ' . date('M j') . ': ' . $todayOrders . ' orders, $' . number_format($todayCommission, 2) . ' commission';
+$subject = 'MTCC Daily Summary - ' . date('M j') . ': ' . $todayOrders . ' orders, $' . number_format($todayFee, 2) . ' venue fee';
 
 $sent = false;
 if (function_exists('sendEmailSMTP')) {

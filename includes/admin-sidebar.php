@@ -36,7 +36,8 @@ function getSidebarNavItems() {
     
     // ---- Workflow ----
     $workflow = [];
-    if (function_exists('hasAnyPermission') && hasAnyPermission(['orders_edit', 'orders_view'])) {
+    $isMtccRole = (($_SESSION['admin_role'] ?? '') === 'mtcc_staff');
+    if (!$isMtccRole && function_exists('hasAnyPermission') && hasAnyPermission(['orders_edit', 'orders_view'])) {
         $workflow['production'] = [
             'url' => 'admin/production.php',
             'label' => 'Production',
@@ -48,7 +49,7 @@ function getSidebarNavItems() {
             ],
         ];
     }
-    if (function_exists('hasAnyPermission') && hasAnyPermission(['events_edit', 'events_view'])) {
+    if (!$isMtccRole && function_exists('hasAnyPermission') && hasAnyPermission(['events_edit', 'events_view'])) {
         $workflow['events'] = [
             'url' => 'admin/events-manager.php',
             'label' => 'Events',

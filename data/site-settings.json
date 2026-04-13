@@ -1,5 +1,5 @@
 {
-    "mtcc_commission_rate": 0.10,
+    "mtcc_venue_fee_rate": 0.10,
     "mtcc_contact_email": "businesscentre@mtcc.com",
     "mtcc_digest_enabled": true,
     "last_updated": "2026-04-13T00:00:00-04:00"
