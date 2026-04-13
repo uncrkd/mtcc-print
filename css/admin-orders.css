@@ -3265,6 +3265,7 @@ body.login-page {
 }
 
 /* ===== MTCC STAFF ANALYTICS DASHBOARD ===== */
+/* Reuses .analytics-card, .card-header, .card-content, .primary-metric, .secondary-metric from admin-tables.css */
 
 .mtcc-analytics {
   padding: 0 20px 20px;
@@ -3283,132 +3284,38 @@ body.login-page {
   margin-top: 0;
 }
 
-/* Per-event cards */
-.mtcc-events-grid {
+/* Card grid — replaces gridstack for MTCC (no drag-drop) */
+.mtcc-cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 12px;
-}
-
-.mtcc-event-card {
-  background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 16px;
-}
-
-.mtcc-event-name {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin-bottom: 12px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.mtcc-event-stats {
-  display: flex;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 16px;
 }
 
-.mtcc-event-stat {
+/* Event card inline metrics */
+.mtcc-event-metrics {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  gap: 20px;
+  margin-top: 4px;
 }
 
-.mtcc-stat-value {
+.mtcc-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.mtcc-metric-val {
   font-size: 1rem;
   font-weight: 700;
   color: var(--text-primary);
 }
 
-.mtcc-stat-label {
-  font-size: 0.7rem;
+.mtcc-metric-lbl {
+  font-size: 0.65rem;
   color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.3px;
 }
-
-.mtcc-stat-venue-fee .mtcc-stat-value {
-  color: var(--primary);
-}
-
-/* Summary cards */
-.mtcc-summary-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 12px;
-}
-
-.mtcc-card {
-  background: #ffffff;
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-}
-
-.mtcc-card-highlight {
-  background: linear-gradient(135deg, #faf5ff 0%, #ffffff 100%);
-  border-color: var(--primary);
-}
-
-.mtcc-card-header {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 10px;
-}
-
-.mtcc-card-icon {
-  font-size: 1rem;
-}
-
-.mtcc-card-title {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-}
-
-.mtcc-card-value {
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  line-height: 1.2;
-  margin-bottom: 8px;
-}
-
-.mtcc-card-highlight .mtcc-card-value {
-  color: var(--primary);
-}
-
-.mtcc-card-formula {
-  font-size: 0.78rem;
-  color: var(--text-secondary);
-  margin-bottom: 8px;
-  font-style: italic;
-}
-
-.mtcc-card-breakdown {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-}
-
-.mtcc-card-note {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-}
-
-.mtcc-rate-good { color: var(--success) !important; }
-.mtcc-rate-ok { color: #d97706 !important; }
-.mtcc-rate-low { color: var(--error) !important; }
 
 /* Status breakdown chips */
 .mtcc-status-chips {
@@ -3487,22 +3394,16 @@ body.login-page {
 
 /* MTCC responsive */
 @media (max-width: 768px) {
-  .mtcc-summary-grid {
+  .mtcc-cards-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-  .mtcc-events-grid {
-    grid-template-columns: 1fr;
-  }
-  .mtcc-event-stats {
+  .mtcc-event-metrics {
     flex-wrap: wrap;
-  }
-  .mtcc-card-value {
-    font-size: 1.4rem;
   }
 }
 
 @media (max-width: 480px) {
-  .mtcc-summary-grid {
+  .mtcc-cards-grid {
     grid-template-columns: 1fr;
   }
 }

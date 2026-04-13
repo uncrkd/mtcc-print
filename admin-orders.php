@@ -1518,28 +1518,33 @@ window.PERMS = {
 <?php endif; ?>
 
 <?php if ($isMtccStaff && $canViewMtccAnalytics): ?>
-<!-- MTCC Analytics Dashboard -->
+<!-- MTCC Analytics Dashboard — uses same .analytics-card classes as admin -->
 <div class="mtcc-analytics" id="mtccAnalyticsContainer">
 
   <!-- Per-event running totals -->
   <?php if (!empty($mtccAnalytics['event_breakdown'])): ?>
   <div class="mtcc-section-label"><?= ICON_CALENDAR ?> Active Events</div>
-  <div class="mtcc-events-grid">
+  <div class="mtcc-cards-grid">
     <?php foreach ($mtccAnalytics['event_breakdown'] as $prefix => $ev): ?>
-    <div class="mtcc-event-card">
-      <div class="mtcc-event-name"><?= htmlspecialchars($ev['name']) ?></div>
-      <div class="mtcc-event-stats">
-        <div class="mtcc-event-stat">
-          <span class="mtcc-stat-value"><?= $ev['orders'] ?></span>
-          <span class="mtcc-stat-label">Orders</span>
-        </div>
-        <div class="mtcc-event-stat">
-          <span class="mtcc-stat-value">$<?= number_format($ev['base_revenue'], 2) ?></span>
-          <span class="mtcc-stat-label">Base Revenue</span>
-        </div>
-        <div class="mtcc-event-stat mtcc-stat-venue-fee">
-          <span class="mtcc-stat-value">$<?= number_format($ev['venue_fee'], 2) ?></span>
-          <span class="mtcc-stat-label">Venue Fee</span>
+    <div class="analytics-card compact" style="border-top-color: <?= ($ev['venue_fee'] > 0) ? 'var(--primary)' : '#e5e7eb' ?>;">
+      <div class="card-header">
+        <span class="card-icon"><?= ICON_CALENDAR ?></span>
+        <span class="card-title"><?= htmlspecialchars($ev['name']) ?></span>
+      </div>
+      <div class="card-content">
+        <div class="mtcc-event-metrics">
+          <div class="mtcc-metric">
+            <span class="mtcc-metric-val"><?= $ev['orders'] ?></span>
+            <span class="mtcc-metric-lbl">Orders</span>
+          </div>
+          <div class="mtcc-metric">
+            <span class="mtcc-metric-val">$<?= number_format($ev['base_revenue'], 2) ?></span>
+            <span class="mtcc-metric-lbl">Revenue</span>
+          </div>
+          <div class="mtcc-metric">
+            <span class="mtcc-metric-val" style="color: var(--primary);">$<?= number_format($ev['venue_fee'], 2) ?></span>
+            <span class="mtcc-metric-lbl">Venue Fee</span>
+          </div>
         </div>
       </div>
     </div>
@@ -1549,83 +1554,87 @@ window.PERMS = {
 
   <!-- Summary cards -->
   <div class="mtcc-section-label"><?= ICON_CHART_UP ?> Summary</div>
-  <div class="mtcc-summary-grid">
+  <div class="mtcc-cards-grid">
 
     <!-- Total Orders -->
-    <div class="mtcc-card">
-      <div class="mtcc-card-header">
-        <span class="mtcc-card-icon"><?= ICON_PACKAGE ?></span>
-        <span class="mtcc-card-title">Total Orders</span>
+    <div class="analytics-card compact">
+      <div class="card-header">
+        <span class="card-icon"><?= ICON_PACKAGE ?></span>
+        <span class="card-title">Total Orders</span>
       </div>
-      <div class="mtcc-card-value"><?= $mtccAnalytics['valid_order_count'] ?></div>
-      <div class="mtcc-card-breakdown">
-        <span>Today: <?= $mtccAnalytics['today_orders'] ?></span>
-        <span>This Week: <?= $mtccAnalytics['week_orders'] ?></span>
-        <span>This Month: <?= $mtccAnalytics['month_orders'] ?></span>
+      <div class="card-content">
+        <div class="primary-metric"><?= $mtccAnalytics['valid_order_count'] ?></div>
+        <div class="secondary-metric">
+          Today: <strong><?= $mtccAnalytics['today_orders'] ?></strong>
+          &middot; Week: <strong><?= $mtccAnalytics['week_orders'] ?></strong>
+          &middot; Month: <strong><?= $mtccAnalytics['month_orders'] ?></strong>
+        </div>
       </div>
     </div>
 
     <!-- Base Revenue -->
-    <div class="mtcc-card">
-      <div class="mtcc-card-header">
-        <span class="mtcc-card-icon"><?= ICON_MONEY_BAG ?></span>
-        <span class="mtcc-card-title">Base Revenue</span>
+    <div class="analytics-card compact">
+      <div class="card-header">
+        <span class="card-icon"><?= ICON_MONEY_BAG ?></span>
+        <span class="card-title">Base Revenue</span>
       </div>
-      <div class="mtcc-card-value">$<?= number_format($mtccAnalytics['total_base'], 2) ?></div>
-      <div class="mtcc-card-note">Excludes HST + delivery fees</div>
-      <div class="mtcc-card-breakdown">
-        <span>Today: $<?= number_format($mtccAnalytics['today_base'], 2) ?></span>
-        <span>This Week: $<?= number_format($mtccAnalytics['week_base'], 2) ?></span>
-        <span>This Month: $<?= number_format($mtccAnalytics['month_base'], 2) ?></span>
+      <div class="card-content">
+        <div class="primary-metric">$<?= number_format($mtccAnalytics['total_base'], 2) ?></div>
+        <div class="secondary-metric">Excludes HST + delivery fees</div>
+        <div class="secondary-metric" style="margin-top: 4px;">
+          Today: <strong>$<?= number_format($mtccAnalytics['today_base'], 2) ?></strong>
+          &middot; Month: <strong>$<?= number_format($mtccAnalytics['month_base'], 2) ?></strong>
+        </div>
       </div>
     </div>
 
-    <!-- Venue Fee -->
-    <div class="mtcc-card mtcc-card-highlight">
-      <div class="mtcc-card-header">
-        <span class="mtcc-card-icon"><?= ICON_STAR ?></span>
-        <span class="mtcc-card-title">Venue Fee</span>
+    <!-- Venue Fee — highlight card -->
+    <div class="analytics-card compact" style="background: linear-gradient(90deg, rgba(64,0,128,1) 0%, rgba(115,0,196,1) 100%); border-top: none;">
+      <div class="card-header" style="border-bottom-color: var(--primary);">
+        <span class="card-icon"><?= ICON_STAR ?></span>
+        <span class="card-title" style="color: white;">Venue Fee</span>
       </div>
-      <div class="mtcc-card-value">$<?= number_format($mtccAnalytics['venue_fee_total'], 2) ?></div>
-      <div class="mtcc-card-formula"><?= $venueRatePct ?>% of $<?= number_format($mtccAnalytics['total_base'], 2) ?> base revenue</div>
-      <div class="mtcc-card-breakdown">
-        <span>Today: $<?= number_format($mtccAnalytics['today_venue_fee'], 2) ?></span>
-        <span>This Week: $<?= number_format($mtccAnalytics['week_venue_fee'], 2) ?></span>
-        <span>This Month: $<?= number_format($mtccAnalytics['month_venue_fee'], 2) ?></span>
+      <div class="card-content">
+        <div class="primary-metric" style="color: white;">$<?= number_format($mtccAnalytics['venue_fee_total'], 2) ?></div>
+        <div class="secondary-metric" style="color: rgba(255,255,255,0.7);"><?= $venueRatePct ?>% of $<?= number_format($mtccAnalytics['total_base'], 2) ?> base</div>
+        <div class="secondary-metric" style="color: rgba(255,255,255,0.7); margin-top: 4px;">
+          Today: <strong style="color: var(--green);">$<?= number_format($mtccAnalytics['today_venue_fee'], 2) ?></strong>
+          &middot; Month: <strong style="color: var(--green);">$<?= number_format($mtccAnalytics['month_venue_fee'], 2) ?></strong>
+        </div>
       </div>
     </div>
 
     <!-- On-Time Rate -->
-    <div class="mtcc-card">
-      <div class="mtcc-card-header">
-        <span class="mtcc-card-icon"><?= ICON_CHECK_GREEN ?></span>
-        <span class="mtcc-card-title">On-Time Delivery</span>
+    <div class="analytics-card compact">
+      <div class="card-header">
+        <span class="card-icon"><?= ICON_CHECK_GREEN ?></span>
+        <span class="card-title">On-Time Delivery</span>
       </div>
-      <div class="mtcc-card-value <?= $mtccAnalytics['on_time_rate'] >= 95 ? 'mtcc-rate-good' : ($mtccAnalytics['on_time_rate'] >= 85 ? 'mtcc-rate-ok' : 'mtcc-rate-low') ?>"><?= $mtccAnalytics['on_time_rate'] ?>%</div>
-      <div class="mtcc-card-note">of delivered orders on or before due date</div>
+      <div class="card-content">
+        <div class="primary-metric" style="color: <?= $mtccAnalytics['on_time_rate'] >= 95 ? 'var(--success)' : ($mtccAnalytics['on_time_rate'] >= 85 ? '#d97706' : 'var(--error)') ?>;"><?= $mtccAnalytics['on_time_rate'] ?>%</div>
+        <div class="secondary-metric">of delivered orders on or before due date</div>
+      </div>
     </div>
 
   </div>
 
-  <!-- Status breakdown bar -->
+  <!-- Status breakdown -->
   <?php if (!empty($mtccAnalytics['status_breakdown'])): ?>
-  <div class="mtcc-status-bar">
-    <div class="mtcc-section-label"><?= ICON_FLAG ?> Order Status</div>
-    <div class="mtcc-status-chips">
-      <?php
-      $allConfig = getStatusConfig();
-      foreach ($mtccAnalytics['status_breakdown'] as $label => $count):
-        $color = '#6b7280';
-        foreach ($allConfig as $code => $def) {
-          if (($def['labels']['mtcc_staff'] ?? '') === $label) { $color = $def['color']; break; }
-        }
-      ?>
-      <div class="mtcc-status-chip" style="border-left: 3px solid <?= $color ?>;">
-        <span class="mtcc-chip-count"><?= $count ?></span>
-        <span class="mtcc-chip-label"><?= htmlspecialchars($label) ?></span>
-      </div>
-      <?php endforeach; ?>
+  <div class="mtcc-section-label"><?= ICON_FLAG ?> Order Status</div>
+  <div class="mtcc-status-chips">
+    <?php
+    $allConfig = getStatusConfig();
+    foreach ($mtccAnalytics['status_breakdown'] as $label => $count):
+      $color = '#6b7280';
+      foreach ($allConfig as $code => $def) {
+        if (($def['labels']['mtcc_staff'] ?? '') === $label) { $color = $def['color']; break; }
+      }
+    ?>
+    <div class="mtcc-status-chip" style="border-left: 3px solid <?= $color ?>;">
+      <span class="mtcc-chip-count"><?= $count ?></span>
+      <span class="mtcc-chip-label"><?= htmlspecialchars($label) ?></span>
     </div>
+    <?php endforeach; ?>
   </div>
   <?php endif; ?>
 
