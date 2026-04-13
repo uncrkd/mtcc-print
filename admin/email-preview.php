@@ -14,7 +14,7 @@ $name = 'Sarah Johnson';
 $order = [
     'referenceCode' => $refCode,
     'customerInfo' => ['name' => $name, 'email' => 'sarah@university.ca', 'phone' => '+1 416 555 0123', 'company' => 'University of Toronto'],
-    'event' => ['acronym' => 'CPMA', 'name' => 'Canadian Produce Marketing Association'],
+    'event' => ['acronym' => 'CPMA', 'name' => 'Canadian Produce Marketing Association', 'building' => 'north'],
     'dimensions' => ['width' => 48, 'height' => 36],
     'material' => 'poster',
     'selectedDate' => date('Y-m-d', strtotime('+5 days')),
@@ -24,7 +24,8 @@ $order = [
     'submittedAt' => date('Y-m-d H:i:s'),
     'paidAt' => date('Y-m-d H:i:s'),
     'status' => 'paid',
-    'refund' => ['refundAmount' => 96.05, 'refundType' => 'full', 'refundReason' => 'customer_request', 'refundedAt' => date('Y-m-d H:i:s')]
+    'uploadedFile' => ['originalName' => 'research-poster-2026.pdf', 'size' => 8540160],
+    'refund' => ['amount' => 96.05, 'refundType' => 'full', 'refundReason' => 'customer_request', 'refundedAt' => date('Y-m-d H:i:s')]
 ];
 
 // Build templates

@@ -629,7 +629,7 @@ require_once 'includes/icons.php';
   <!--End of Tawk.to Script-->
 
   <div class="order-terms-note">
-    By proceeding, you agree to our <a href="/terms" target="_blank">Terms of Service</a> and <a href="/privacy" target="_blank">Privacy Policy</a>.
+    By proceeding, you agree to our <a href="/terms">Terms of Service</a> and <a href="/privacy">Privacy Policy</a>.
   </div>
   <div class="footer">&copy; <span id="yr"></span> Print Stuff</div>
 
