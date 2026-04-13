@@ -447,7 +447,7 @@ function generateDeliveredMTCCEmailHTML($order, $referenceCode, $customerName) {
  </p>
  
  <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
- Your poster order <strong style="color: #7c3aed;">' . htmlspecialchars($referenceCode) . '</strong> has been delivered and is ready for pickup!
+ Your poster order <strong style="color: #7c3aed;">' . htmlspecialchars($referenceCode) . '</strong> is ready for pickup!
  </p>
  
  <!-- Pickup Location Box -->
