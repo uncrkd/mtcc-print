@@ -157,7 +157,7 @@ $lastUpdated = 'April 13, 2026';
       <h2>11. Event Cancellation or Venue Changes</h2>
       <ul>
         <li>If a convention or event is cancelled, relocated, or significantly rescheduled <strong>before your order enters production</strong>, you may cancel for a full refund.</li>
-        <li>If your order is <strong>already in production or completed</strong> when an event is cancelled, we will issue a <strong>store credit</strong> for the full order value, valid for 12 months and applicable to any future order.</li>
+        <li>If your order is <strong>already in production or completed</strong> when an event is cancelled, you may choose one of the following: (a) a <strong>full store credit</strong> for the order value, valid for 12 months and applicable to any future order; or (b) a <strong>50% refund</strong> to your original payment method.</li>
         <li>Print Stuff is not responsible for event cancellations, venue changes, or scheduling modifications made by event organizers or MTCC. These circumstances are beyond our control.</li>
       </ul>
 
