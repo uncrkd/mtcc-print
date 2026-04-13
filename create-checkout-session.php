@@ -53,7 +53,6 @@ try {
         $pricing = [
             'basePrice' => (float)($_POST['basePrice'] ?? 0),
             'deliveryFee' => (float)($_POST['deliveryFee'] ?? 0),
-            'conversionFee' => (float)($_POST['conversionFee'] ?? 0),
             'subtotal' => (float)($_POST['subtotal'] ?? 0),
             'tax' => (float)($_POST['tax'] ?? 0),
             'total' => (float)($_POST['total'] ?? 0),
@@ -114,25 +113,24 @@ try {
         'total' => $pricing['total'] ?? 0,
         'tier' => $pricing['tier'] ?? '',
         'deliveryFee' => $pricing['deliveryFee'] ?? 0,
-        'conversionFee' => $pricing['conversionFee'] ?? 0,
     ];
-    
+
     $validation = validateOrderPricing($validationInput);
-    
+
     if (!$validation['valid']) {
         throw new Exception($validation['message']);
     }
-    
+
     // If server recalculated a different price, use the server price
     if ($validation['corrected']) {
         $pricing['basePrice'] = $validation['server_price'];
         $pricing['tier'] = $validation['server_tier']['label'] ?? $pricing['tier'];
-        
+
         // Recalculate totals with server price
-        $pricing['subtotal'] = $pricing['basePrice'] + $pricing['deliveryFee'] + $pricing['conversionFee'];
+        $pricing['subtotal'] = $pricing['basePrice'] + $pricing['deliveryFee'];
         $pricing['tax'] = round($pricing['subtotal'] * 0.13, 2);
         $pricing['total'] = round($pricing['subtotal'] + $pricing['tax'], 2);
-        
+
         error_log('Order pricing corrected by server validation. New total: $' . $pricing['total']);
     }
     
@@ -234,21 +232,6 @@ try {
                     'description' => 'Delivery to your specified location',
                 ],
                 'unit_amount' => round($pricing['deliveryFee'] * 100),
-            ],
-            'quantity' => 1,
-        ];
-    }
-    
-    // Conversion fee (if applicable)
-    if (!empty($pricing['conversionFee']) && $pricing['conversionFee'] > 0) {
-        $lineItems[] = [
-            'price_data' => [
-                'currency' => 'cad',
-                'product_data' => [
-                    'name' => 'File Conversion Fee',
-                    'description' => 'PowerPoint/Office file conversion to print-ready format',
-                ],
-                'unit_amount' => round($pricing['conversionFee'] * 100),
             ],
             'quantity' => 1,
         ];

@@ -476,7 +476,6 @@ function assembleAdminOrderData($postData, $fileInfo, $referenceCode) {
             'tier' => $postData['priority_tier'] ?: 'Standard (5 Days)',
             'basePrice' => floatval($postData['base_price'] ?: 0),
             'deliveryFee' => floatval($postData['delivery_fee'] ?: 0),
-            'conversionFee' => floatval($postData['conversion_fee'] ?: 0),
             'tax' => floatval($postData['tax'] ?: 0),
             'total' => floatval($postData['total'] ?: 0)
         ],

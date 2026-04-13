@@ -807,7 +807,6 @@ createCustomEventLegend(containerId, labels, data, colors, prefixData) {
         let pendingRevenue = 0, pendingBaseRevenue = 0, pendingOrders = 0;
         let cancelledRevenue = 0, cancelledOrders = 0;
         let refundedRevenue = 0, refundedOrders = 0;
-        let fileConversionRevenue = 0;
         let posterCount = 0, fabricCount = 0;
         let mtccCount = 0, officeCount = 0;
         let paidOrderCount = 0; // Count of paid+ orders
@@ -827,7 +826,6 @@ createCustomEventLegend(containerId, labels, data, colors, prefixData) {
         orders.forEach(order => {
             const total = parseFloat(order.pricing?.total || 0);
             const basePrice = parseFloat(order.pricing?.basePrice || 0);
-            const fileConv = parseFloat(order.pricing?.conversionFee || 0);
             const status = order.status || '';
             const orderDate = (order.submittedAt || '').split(/[T ]/)[0];
             
@@ -857,7 +855,6 @@ createCustomEventLegend(containerId, labels, data, colors, prefixData) {
             if (paidStatuses.includes(status)) {
                 totalRevenue += total;
                 totalBaseRevenue += basePrice;
-                fileConversionRevenue += fileConv;
                 paidOrderCount++;
                 
                 if (orderDate === today) {
@@ -946,18 +943,13 @@ createCustomEventLegend(containerId, labels, data, colors, prefixData) {
         
         // Calculate additional metrics
         const avgBasePrice = paidOrderCount > 0 ? totalBaseRevenue / paidOrderCount : 0;
-        
-        // Calculate file conversion percentage
-        const fileConversionPercentage = totalRevenue > 0 ? ((fileConversionRevenue / totalRevenue) * 100).toFixed(1) : '0.0';
-        
+
         // Update revenue cards
         const updates = {
             'todayRevenue': '$' + fmt(todayRevenue),
             'todayOrdersCount': todayOrders,
             'avgOrderValue': '$' + fmt(avgOrderValue),
             'avgBasePrice': '$' + fmt(avgBasePrice),
-            'fileConversionRevenue': '$' + fmt(fileConversionRevenue),
-            'fileConversionPercentage': fileConversionPercentage + '%',
             'totalRevenue': '$' + fmt(totalRevenue),
             'totalBaseRevenue': '$' + fmt(totalBaseRevenue),
             'mtccVenueFee': '$' + fmt(mtccVenueFee),

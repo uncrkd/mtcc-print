@@ -6,17 +6,15 @@
 const config = {
   maxFileSize: 100 * 1024 * 1024, // 100MB
   allowedTypes: ['.pdf', '.ai', '.eps', '.psd', '.png', '.jpg', '.jpeg', '.tiff', '.tif', '.webp', '.gif', '.bmp', '.svg', '.pptx', '.indd'],
-  freeConversionTypes: ['.pdf'],
-  conversionFee: 5.00,
   taxRate: 0.13,
   // SIMPLIFIED: Removed timezone objects, using simple hour values
   tiers: [
-    { key: 'early', cls: 'early', icon: '&#128077;', label: 'Early', days: '10+ Days', lead: 10, cutoffHour: 17 }, // 5:00pm
-    { key: 'standard', cls: 'standard', icon: '&#128197;', label: 'Standard', days: '5 Days', lead: 5, cutoffHour: 17 }, // 5:00pm
-    { key: '3days', cls: 'rush', icon: '&#127939;', label: 'Rush', days: '3 Days', lead: 3, cutoffHour: 17 }, // 5:00pm
-    { key: '2days', cls: 'urgent', icon: '&#128293;', label: 'Urgent', days: '2 Days', lead: 2, cutoffHour: 17 }, // 5:00pm
-    { key: 'nextday', cls: 'critical', icon: '&#128680;', label: 'Critical', days: 'Next Day', lead: 1, cutoffHour: 15 }, // 3:00pm
-    { key: 'sameday', cls: 'lastminute', icon: '&#128128;', label: 'Last Minute', days: 'Same Day', lead: 0, cutoffHour: 15 } // 3:00pm
+    { key: 'early', cls: 'early', icon: '&#128077;', label: 'Best Value', days: '10+ Days Turnaround', lead: 10, cutoffHour: 17 }, // 5:00pm
+    { key: 'standard', cls: 'standard', icon: '&#128197;', label: 'Standard', days: '5 Days Turnaround', lead: 5, cutoffHour: 17 }, // 5:00pm
+    { key: '3days', cls: 'rush', icon: '&#127939;', label: 'Rush', days: '3 Days Turnaround', lead: 3, cutoffHour: 17 }, // 5:00pm
+    { key: '2days', cls: 'urgent', icon: '&#128293;', label: 'Express', days: '2 Days Turnaround', lead: 2, cutoffHour: 17 }, // 5:00pm
+    { key: 'nextday', cls: 'critical', icon: '&#128680;', label: 'Priority', days: 'Next Day Turnaround', lead: 1, cutoffHour: 15 }, // 3:00pm
+    { key: 'sameday', cls: 'lastminute', icon: '&#128128;', label: "We'll Get It Done", days: 'Same-Day Turnaround', lead: 0, cutoffHour: 15 } // 3:00pm
   ],
   // Updated fallback data to match CSV column names exactly
   fallbackPricingData: {
@@ -52,7 +50,6 @@ const state = {
   selectedMaterial: 'poster',
   uploadedFile: null,
   deliveryOption: null,
-  conversionFee: 0,
   pricingData: null,
   pricingLoaded: false,
   countdownInterval: null,
@@ -74,7 +71,6 @@ const elements = {
   customerPhone: null,
   submitButton: null,
   pricing: null,
-  conversionFeeRow: null,
   materialToggle: null,
   posterOption: null,
   fabricOption: null,
@@ -549,27 +545,72 @@ function updateMTCCDeliveryDetails(building) {
   if (postalEl) postalEl.textContent = postal;
 }
 
-// Set date picker min (today) and max (event end date)
+// ===== FLATPICKR DATE PICKER =====
+// Custom calendar with purple available dates and grey unavailable dates.
+// Replaces native <input type="date"> for visual control on all devices.
+var flatpickrInstance = null;
+
+function initFlatpickr() {
+  if (!elements.date || typeof flatpickr === 'undefined') return;
+  if (flatpickrInstance) return; // already initialized
+
+  flatpickrInstance = flatpickr(elements.date, {
+    dateFormat: 'Y-m-d',
+    disableMobile: true, // force custom calendar on mobile too
+    appendTo: document.querySelector('.date-input-container'),
+    minDate: 'today',
+    static: true,
+    onChange: function (selectedDates, dateStr) {
+      state.selectedDate = dateStr || null;
+      updateDeliveryTimeOptions();
+      updateDateDisplay();
+      updatePricingVisibility();
+      updateOrderSummary();
+      updateSubmitButtonState();
+      generateAlternativeSizes();
+    },
+    onDayCreate: function (dObj, dStr, fp, dayElem) {
+      // Style available vs unavailable days
+      var dateStr = dayElem.dateObj.getFullYear() + '-' +
+        String(dayElem.dateObj.getMonth() + 1).padStart(2, '0') + '-' +
+        String(dayElem.dateObj.getDate()).padStart(2, '0');
+
+      if (!dayElem.classList.contains('flatpickr-disabled') &&
+          !dayElem.classList.contains('prevMonthDay') &&
+          !dayElem.classList.contains('nextMonthDay')) {
+        dayElem.classList.add('fp-available');
+      }
+    }
+  });
+}
+
 function updateDatePickerRestrictions() {
   if (!elements.date || !state.selectedEvent) return;
-  
-  // Min date: today
+
   var today = new Date();
-  var minDate = today.getFullYear() + '-' + 
-    String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+  var minDate = today.getFullYear() + '-' +
+    String(today.getMonth() + 1).padStart(2, '0') + '-' +
     String(today.getDate()).padStart(2, '0');
-  
-  // Max date: event end date
   var maxDate = state.selectedEvent.endDate || '';
-  
-  elements.date.min = minDate;
-  elements.date.max = maxDate;
-  
-  
+
+  // Initialize Flatpickr on first call
+  initFlatpickr();
+
+  if (flatpickrInstance) {
+    flatpickrInstance.set('minDate', minDate);
+    if (maxDate) flatpickrInstance.set('maxDate', maxDate);
+    flatpickrInstance.redraw();
+  } else {
+    // Fallback: native input
+    elements.date.min = minDate;
+    elements.date.max = maxDate;
+  }
+
   // If current selection is out of range, clear it
   if (state.selectedDate) {
     if (state.selectedDate < minDate || (maxDate && state.selectedDate > maxDate)) {
-      elements.date.value = '';
+      if (flatpickrInstance) flatpickrInstance.clear();
+      else elements.date.value = '';
       state.selectedDate = null;
       updateDateDisplay();
     }
@@ -577,9 +618,13 @@ function updateDatePickerRestrictions() {
 }
 
 function clearDatePickerRestrictions() {
-  if (!elements.date) return;
-  elements.date.min = '';
-  elements.date.max = '';
+  if (flatpickrInstance) {
+    flatpickrInstance.set('minDate', null);
+    flatpickrInstance.set('maxDate', null);
+  } else if (elements.date) {
+    elements.date.min = '';
+    elements.date.max = '';
+  }
 }
 
 function handleDateChange() {
@@ -749,20 +794,32 @@ function updateSubmitButtonState() {
     }
   }
 }
+// Lucide circle-check-big SVG — used for the completed-state form status badges
+// Color is hardcoded green (var(--green) = #059669) rather than `currentColor`
+// because some mobile browsers (Chrome) don't reliably inherit currentColor on
+// SVGs injected via innerHTML.
+var LUCIDE_CIRCLE_CHECK_BIG =
+  '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" ' +
+  'fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" ' +
+  'stroke-linejoin="round" class="lucide lucide-circle-check-big">' +
+  '<path d="M21.801 10A10 10 0 1 1 17 3.335"/>' +
+  '<path d="m9 11 3 3L22 4"/></svg>';
+
 function updateStatusBadge(badgeId, isComplete) {
   const badge = document.getElementById(badgeId);
   if (!badge) return;
-  
+
+  const indicator = badge.querySelector('.status-indicator');
+  if (!indicator) return;
+
   if (isComplete) {
     badge.classList.add('completed');
     badge.classList.remove('incomplete');
-    const icon = badge.querySelector('.status-icon-modern');
-    if (icon) icon.textContent = '&#10004;';
+    indicator.innerHTML = LUCIDE_CIRCLE_CHECK_BIG;
   } else {
     badge.classList.add('incomplete');
     badge.classList.remove('completed');
-    const icon = badge.querySelector('.status-icon-modern');
-    if (icon) icon.textContent = '!';
+    indicator.innerHTML = '<span class="status-icon-modern">&#10006;</span>';
   }
 }
 
@@ -1061,25 +1118,39 @@ function updateMaterialDelta() {
 }
 
 // ===== FILE HANDLING =====
+
+// Show inline error in the upload zone (replaces alert() for better UX)
+function showUploadError(message) {
+  var zone = elements.uploadZone;
+  if (!zone) return;
+  var existing = zone.querySelector('.upload-inline-error');
+  if (existing) existing.remove();
+  var el = document.createElement('div');
+  el.className = 'upload-inline-error';
+  el.innerHTML = '&#9888;&#65039; ' + message;
+  zone.appendChild(el);
+  // Auto-dismiss after 8 seconds
+  setTimeout(function () { if (el.parentNode) el.remove(); }, 8000);
+}
+
 function handleFiles(files) {
   if (files.length === 0) return;
-  
+
   const file = files[0];
   const fileExt = '.' + file.name.split('.').pop().toLowerCase();
-  
+
   if (file.size > config.maxFileSize) {
-    alert('File is too large. Maximum size is 100MB.');
+    showUploadError('File is too large. Maximum size is 100MB.');
     return false;
   }
-  
+
   if (!config.allowedTypes.includes(fileExt)) {
-    alert('File format not supported. Please use: ' + config.allowedTypes.join(', '));
+    showUploadError('File format not supported. Accepted: PDF, AI, EPS, PSD, PNG, JPG, TIFF, SVG, PPTX');
     return false;
   }
-  
+
   state.uploadedFile = file;
-  
-  checkConversionFee(file);
+
   updateFileDisplay(file);
   updateOrderSummary();
   updateSubmitButtonState();
@@ -1098,7 +1169,6 @@ function updateFileDisplay(file) {
   if (window.uploadProgressRunning) return;
 
   var fileExt = file.name.split('.').pop().toLowerCase();
-  var needsConversion = !config.freeConversionTypes.includes('.' + fileExt);
   var canPreview = IMAGE_TYPES.indexOf(fileExt) !== -1 || fileExt === 'pdf';
 
   // Hide original upload zone content
@@ -1119,11 +1189,6 @@ function updateFileDisplay(file) {
     ? '<div class="file-thumb-container" id="fileThumbContainer"><div class="file-thumb-loading"><div class="file-thumb-spinner"></div></div></div>'
     : '<div class="file-thumb-container file-thumb-icon-only"><div class="file-thumb-type-label">' + fileExt.toUpperCase() + '</div></div>';
 
-  // Conversion fee row
-  var convRow = needsConversion
-    ? '<div class="file-detail-row"><span class="file-detail-label">Note:</span><span class="file-detail-value file-detail-conversion">+$' + config.conversionFee.toFixed(2) + ' conversion fee (non-PDF)</span></div>'
-    : '';
-
   previewElement.innerHTML =
     '<div class="file-preview-card" id="filePreviewCard">' +
       '<div class="file-preview-card-inner">' +
@@ -1138,7 +1203,6 @@ function updateFileDisplay(file) {
             '<div class="file-detail-row"><span class="file-detail-label">Format:</span><span class="file-detail-value">' + fileExt.toUpperCase() + '</span></div>' +
             '<div class="file-detail-row"><span class="file-detail-label">Size:</span><span class="file-detail-value">' + formatFileSize(file.size) + '</span></div>' +
             '<div class="file-detail-row" id="fileDimsRow" style="display:none"><span class="file-detail-label">Dimensions:</span><span class="file-detail-value" id="fileDimsValue"></span></div>' +
-            convRow +
           '</div>' +
           '<div class="file-preview-status" id="filePreviewStatus">' +
             '<div class="file-status-loading">Analysing file...</div>' +
@@ -1555,48 +1619,8 @@ function removeFile() {
     uploadContent.style.display = 'flex';
   }
 
-  checkConversionFee(null);
   updateOrderSummary();
   updateSubmitButtonState();
-}
-
-function checkConversionFee(file) {
-  if (!file) {
-    state.conversionFee = 0;
-    const hiddenConversionFee = document.getElementById('hiddenConversionFee');
-    if (hiddenConversionFee) {
-      hiddenConversionFee.value = '0';
-    }
-    if (elements.conversionFeeRow) {
-      elements.conversionFeeRow.style.display = 'none';
-    }
-    return 0;
-  }
-  
-  const fileExt = '.' + file.name.split('.').pop().toLowerCase();
-  const needsConversion = !config.freeConversionTypes.includes(fileExt);
-  
-  if (needsConversion) {
-    state.conversionFee = config.conversionFee;
-    const hiddenConversionFee = document.getElementById('hiddenConversionFee');
-    if (hiddenConversionFee) {
-      hiddenConversionFee.value = config.conversionFee.toString();
-    }
-    if (elements.conversionFeeRow) {
-      elements.conversionFeeRow.style.display = 'flex';
-    }
-  } else {
-    state.conversionFee = 0;
-    const hiddenConversionFee = document.getElementById('hiddenConversionFee');
-    if (hiddenConversionFee) {
-      hiddenConversionFee.value = '0';
-    }
-    if (elements.conversionFeeRow) {
-      elements.conversionFeeRow.style.display = 'none';
-    }
-  }
-  
-  return state.conversionFee;
 }
 
 function getFileIcon(extension) {
@@ -1688,18 +1712,16 @@ function selectDeliveryOption(option) {
 function calculateOrderTotal() {
   const tierData = getBestAvailableTier();
   if (!tierData) return null;
-  
+
   const basePrice = tierData.price;
   const deliveryFee = state.deliveryOption === 'office' ? 10.00 : 0.00;
-  const conversionFee = state.conversionFee || 0;
-  const subtotal = basePrice + deliveryFee + conversionFee;
+  const subtotal = basePrice + deliveryFee;
   const tax = subtotal * config.taxRate;
   const total = subtotal + tax;
-  
+
   return {
     basePrice: basePrice,
     deliveryFee: deliveryFee,
-    conversionFee: conversionFee,
     subtotal: subtotal,
     tax: tax,
     total: total,
@@ -1756,152 +1778,122 @@ function getBestAvailableTier() {
   return closestTier;
 }
 
-// Weekend-aware cutoff date calculation
-// Returns the cutoff datetime for a given tier and delivery date
-function getCutoffDate(inDate, leadDays, cutoffHour, deliveryTimeValue) {
-  const cutoff = new Date(inDate);
-  const deliveryDay = cutoff.getDay(); // 0=Sun, 6=Sat
-  
-  // === SAME-DAY (lead=0) ===
-  if (leadDays === 0) {
-    // For weekend delivery dates, cutoff is Friday 3 PM
-    if (deliveryDay === 0 || deliveryDay === 6) {
-      // Walk back to Friday
-      while (cutoff.getDay() !== 5) {
-        cutoff.setDate(cutoff.getDate() - 1);
-      }
-      cutoff.setHours(15, 0, 0, 0); // Friday 3 PM
-      return cutoff;
-    }
-    // Monday delivery: check if delivery time is 9am
-    if (deliveryDay === 1 && deliveryTimeValue === '9am') {
-      // Monday 9am needs Friday production - cutoff is Friday 3 PM
-      const friday = new Date(cutoff);
-      friday.setDate(friday.getDate() - 3); // Monday - 3 = Friday
-      friday.setHours(15, 0, 0, 0);
-      return friday;
-    }
-    // Normal weekday same-day: use the gate hour for the selected delivery time
-    // The "hard wall" is 3 PM (cutoffHour=15) - no same-day after 3 PM
-    cutoff.setHours(cutoffHour, 0, 0, 0);
-    return cutoff;
-  }
-  
-  // === NEXT-DAY (lead=1) ===
-  if (leadDays === 1) {
-    // For Monday delivery ordered from weekend context
-    if (deliveryDay === 1) {
-      // Cutoff is Friday 3 PM for Monday next-day
-      const friday = new Date(cutoff);
-      friday.setDate(friday.getDate() - 3);
-      friday.setHours(cutoffHour, 0, 0, 0);
-      return friday;
-    }
-    // Weekend delivery with 1-day lead = not realistic (would be day before = Fri/Sat)
-    if (deliveryDay === 0 || deliveryDay === 6) {
-      // Walk back to the last weekday before delivery
-      const prevDay = new Date(cutoff);
-      prevDay.setDate(prevDay.getDate() - 1);
-      while (prevDay.getDay() === 0 || prevDay.getDay() === 6) {
-        prevDay.setDate(prevDay.getDate() - 1);
-      }
-      prevDay.setHours(cutoffHour, 0, 0, 0);
-      return prevDay;
-    }
-    // Normal weekday next-day
-    cutoff.setDate(cutoff.getDate() - 1);
-    // Skip weekends going backwards
-    while (cutoff.getDay() === 0 || cutoff.getDay() === 6) {
-      cutoff.setDate(cutoff.getDate() - 1);
-    }
-    cutoff.setHours(cutoffHour, 0, 0, 0);
-    return cutoff;
-  }
-  
-  // === 2+ DAY TIERS ===
-  let remainingDays = leadDays;
-  while (remainingDays > 0) {
-    cutoff.setDate(cutoff.getDate() - 1);
-    const dow = cutoff.getDay();
-    if (dow !== 0 && dow !== 6) {
-      remainingDays--;
-    }
-  }
-  cutoff.setHours(cutoffHour, 0, 0, 0);
-  return cutoff;
+// ===== PRODUCTION DEADLINE MODEL =====
+// Single source of truth for "when must this print be physically ready at the vendor".
+// All tier order cutoffs derive from this by walking back business days.
+//
+// Rules:
+//   - Weekday delivery @ 9am  → previous business day @ 2 PM
+//   - Weekday delivery @ Xpm  → same day @ (X - 3h)  [3-hour production window]
+//   - Sat/Sun delivery        → Friday before @ 2 PM  [no weekend printing]
+//   - Monday delivery @ 9am   → Friday before @ 2 PM  [weekend hold + overnight]
+//
+// Business-day walks skip Sat, Sun, and any date in window.HOLIDAYS.
+
+function isHolidayDate(date) {
+  if (!window.HOLIDAYS) return false;
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return Object.prototype.hasOwnProperty.call(window.HOLIDAYS, `${y}-${m}-${d}`);
 }
 
-// Helper: is a given date a weekend day?
+function isBusinessDay(date) {
+  const dow = date.getDay();
+  if (dow === 0 || dow === 6) return false;
+  return !isHolidayDate(date);
+}
+
+function walkBackBusinessDays(fromDate, numDays) {
+  const d = new Date(fromDate);
+  let remaining = numDays;
+  while (remaining > 0) {
+    d.setDate(d.getDate() - 1);
+    if (isBusinessDay(d)) remaining--;
+  }
+  return d;
+}
+
+function getPreviousBusinessDay(date) {
+  const prev = new Date(date);
+  do {
+    prev.setDate(prev.getDate() - 1);
+  } while (!isBusinessDay(prev));
+  return prev;
+}
+
 function isWeekendDay(date) {
   const d = date.getDay();
   return d === 0 || d === 6;
 }
 
-// Helper: get the previous business day (Friday if Sat/Sun/Mon)
-function getPreviousBusinessDay(date) {
-  const prev = new Date(date);
-  prev.setDate(prev.getDate() - 1);
-  while (prev.getDay() === 0 || prev.getDay() === 6) {
-    prev.setDate(prev.getDate() - 1);
+// Given a delivery date and time, return the production deadline datetime.
+// This is the "print-must-be-ready" moment — ALL tier cutoffs walk back from here.
+function getProductionDeadline(deliveryDate, deliveryTimeValue) {
+  const delivery = new Date(deliveryDate);
+  delivery.setHours(0, 0, 0, 0);
+  const deliveryDay = delivery.getDay();
+
+  // Sat/Sun delivery → Friday before @ 2 PM
+  if (deliveryDay === 0 || deliveryDay === 6) {
+    const fri = new Date(delivery);
+    while (fri.getDay() !== 5) {
+      fri.setDate(fri.getDate() - 1);
+    }
+    // If that Friday is itself a holiday, walk further back to last business day
+    while (!isBusinessDay(fri)) {
+      fri.setDate(fri.getDate() - 1);
+    }
+    fri.setHours(14, 0, 0, 0);
+    return fri;
   }
-  return prev;
+
+  // Monday delivery @ 9am → Friday before @ 2 PM (weekend hold + overnight)
+  if (deliveryDay === 1 && deliveryTimeValue === '9am') {
+    const fri = getPreviousBusinessDay(delivery);
+    fri.setHours(14, 0, 0, 0);
+    return fri;
+  }
+
+  // Weekday delivery @ 9am → previous business day @ 2 PM
+  if (deliveryTimeValue === '9am') {
+    const prev = getPreviousBusinessDay(delivery);
+    prev.setHours(14, 0, 0, 0);
+    return prev;
+  }
+
+  // Weekday delivery @ 12pm/3pm/6pm/anytime → same day @ (deliveryHour - 3h)
+  // 12pm → 9am, 3pm → 12pm, 6pm/anytime → 3pm
+  const deliveryHourMap = { '12pm': 12, '3pm': 15, '6pm': 18, 'anytime': 18 };
+  const deliveryHour = deliveryHourMap[deliveryTimeValue] || 18;
+  const deadline = new Date(delivery);
+  deadline.setHours(deliveryHour - 3, 0, 0, 0);
+  return deadline;
 }
 
-// Determine if a tier should be BLOCKED (greyed out) for a given delivery date + time
-// Only blocks tiers when the delivery is close enough that normal lead-time cutoffs
-// don't adequately capture the constraint. Far-out deliveries are never blocked here
-// (the getCutoffDate expiry mechanism handles those).
+// Tier order-cutoff: walk back leadDays business days from production deadline,
+// set tier cutoff hour. Same-day tier (lead=0) uses the production deadline itself
+// (no cutoff-hour override) because the production deadline IS the last moment to order.
+function getCutoffDate(inDate, leadDays, cutoffHour, deliveryTimeValue) {
+  const productionDeadline = getProductionDeadline(inDate, deliveryTimeValue);
+
+  if (leadDays === 0) {
+    // Last Minute: cutoff = production deadline exactly
+    return productionDeadline;
+  }
+
+  const cutoff = walkBackBusinessDays(productionDeadline, leadDays);
+  cutoff.setHours(cutoffHour, 0, 0, 0);
+  return cutoff;
+}
+
+// With the production-deadline model, tier availability is purely a function of
+// whether the tier's order cutoff is still in the future. No more hard-coded
+// "weekend blocks everything" rules — if the math works, the tier is offered.
+// This function is retained for API compatibility with existing call sites but
+// always returns false (never blocks). Actual availability comes from comparing
+// getCutoffDate() against now in the tier rendering loop.
 function isTierBlockedByDeliveryTime(tierKey, deliveryDate, deliveryTimeValue) {
-  const now = new Date();
-  const currentHour = now.getHours();
-  const deliveryDay = deliveryDate.getDay();
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const deliveryMidnight = new Date(deliveryDate);
-  deliveryMidnight.setHours(0, 0, 0, 0);
-  const daysDiff = Math.round((deliveryMidnight - today) / (1000 * 60 * 60 * 24));
-  const nowDay = now.getDay();
-  
-  // Same-day tier is never blocked by delivery time rules (only by time-based cutoffs)
-  if (tierKey === 'sameday') return false;
-  
-  // === NEXT-DAY TIER BLOCKING ===
-  if (tierKey === 'nextday') {
-    // 9am delivery on literal next business day: overnight turnaround not realistic
-    // Only block when delivery is genuinely tomorrow (or next Mon from Fri)
-    if (deliveryTimeValue === '9am') {
-      if (daysDiff <= 1) return true;
-      // Friday ordering for Monday 9am: next-day means produce Fri afternoon, deliver Mon 9am
-      if (nowDay === 5 && deliveryDay === 1 && daysDiff <= 3) return true;
-    }
-    // After 3 PM, next-day only blocked for literal next-day delivery
-    if (currentHour >= 15 && daysDiff <= 1) return true;
-    return false;
-  }
-  
-  // === WEEKEND DELIVERY BLOCKING ===
-  // Weekend delivery (Sat/Sun) = only same-day tier available, block everything else
-  if (deliveryDay === 0 || deliveryDay === 6) {
-    return true;
-  }
-  
-  // === MONDAY RULES ===
-  // Monday 9am from the preceding Fri/Sat/Sun: overnight turnaround, only sameday realistic
-  if (deliveryDay === 1 && deliveryTimeValue === '9am' && daysDiff > 0 && daysDiff <= 3) {
-    return true;
-  }
-  
-  // Ordering from Sat/Sun for the IMMEDIATELY NEXT Monday only (not future Mondays)
-  if (deliveryDay === 1 && (nowDay === 0 || nowDay === 6) && daysDiff > 0 && daysDiff <= 2) {
-    return true;
-  }
-  
-  // Monday before 9am for same-day Monday delivery
-  if (deliveryDay === 1 && nowDay === 1 && currentHour < 9 && daysDiff === 0) {
-    return true;
-  }
-  
-  // All other combinations: tier is not blocked
   return false;
 }
 
@@ -2018,7 +2010,14 @@ function updatePricingVisibility() {
     updatePricing();
   } else if (!state.pricingLoaded) {
     if (elements.pricing) {
-      elements.pricing.innerHTML = '<div class="pricing-placeholder"><div class="placeholder-icon">&#128176;</div><div class="placeholder-title">Loading pricing data...</div><div class="placeholder-subtitle">Please wait while we fetch current rates</div></div>';
+      elements.pricing.innerHTML = '<div class="skeleton-pricing">' +
+        '<div class="skeleton-bar" style="width:65%;height:16px;margin:0 auto 10px;"></div>' +
+        '<div class="skeleton-bar" style="width:40%;height:12px;margin:0 auto 18px;"></div>' +
+        '<div class="skeleton-cards-row">' +
+        Array(6).fill('<div class="skeleton-card"><div class="skeleton-card-header"></div><div class="skeleton-card-body"><div class="skeleton-bar" style="width:60%;height:10px;"></div><div class="skeleton-bar" style="width:80%;height:28px;"></div><div class="skeleton-bar" style="width:50%;height:10px;"></div></div><div class="skeleton-card-footer"></div></div>').join('') +
+        '</div>' +
+        '<div class="skeleton-bar" style="width:75%;height:14px;margin:14px auto 0;"></div>' +
+        '</div>';
     }
   } else {
     if (elements.pricing) {
@@ -2060,22 +2059,33 @@ function updatePricing() {
     return;
   }
   
-  // Find best available tier for countdown
+  // Find best available tier for countdown + most-expensive still-available tier
+  // (used for active-card savings calculation)
   let bestAvailableTier = null;
   let closestTime = Infinity;
-  
+  let maxAvailableTier = null;
+  let maxAvailablePrice = 0;
+
   config.tiers.forEach(function(tier) {
     const cutoff = getCutoffDate(inDate, tier.lead, tier.cutoffHour, deliveryTimeValue);
     const isExpired = cutoff <= now;
     const priceValue = row[tier.key] || 0;
     // Check if this tier is blocked by delivery time rules
     const isBlocked = isTierBlockedByDeliveryTime(tier.key, inDate, deliveryTimeValue);
-    
-    if (!isExpired && !isBlocked && cutoff.getTime() < closestTime && priceValue > 0) {
-      closestTime = cutoff.getTime();
-      bestAvailableTier = tier;
+
+    if (!isExpired && !isBlocked && priceValue > 0) {
+      if (cutoff.getTime() < closestTime) {
+        closestTime = cutoff.getTime();
+        bestAvailableTier = tier;
+      }
+      if (priceValue > maxAvailablePrice) {
+        maxAvailablePrice = priceValue;
+        maxAvailableTier = tier;
+      }
     }
   });
+
+  const bestAvailablePrice = bestAvailableTier ? (row[bestAvailableTier.key] || 0) : 0;
   
   // Show toast ONLY when a tier expired via countdown (not user date/time changes)
   var newBestKey = bestAvailableTier ? bestAvailableTier.key : null;
@@ -2095,20 +2105,16 @@ function updatePricing() {
   const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   let pricingHTML = '';
 
-  // Delivery date anchor header — full format, plain text
+  // Delivery date anchor header — two-line format with date emphasis + lesson subline
   const fullMonthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-  const deliveryMonth = monthNames[inDate.getMonth()];
   const deliveryFullMonth = fullMonthNames[inDate.getMonth()];
   const deliveryDay = inDate.getDate();
-  const deliveryYear = inDate.getFullYear();
   const deliveryWeekday = dayNames[inDate.getDay()];
   var deliveryTimeDisplay = deliveryTimeValue === 'anytime' ? '' : ' @ ' + deliveryTimeValue.replace(/^(\d+)(am|pm)$/i, '$1:00 $2');
-  // Shortened delivery anchor
-  var deliveryShortDisplay = deliveryWeekday.substring(0, 3) + ', ' + deliveryMonth + ' ' + deliveryDay + deliveryTimeDisplay;
+  var deliveryFullDisplay = deliveryWeekday + ', ' + deliveryFullMonth + ' ' + deliveryDay + deliveryTimeDisplay;
   pricingHTML += '<div class="pricing-delivery-anchor">';
-  pricingHTML += 'Prices for <strong>' + deliveryShortDisplay + '</strong> delivery &mdash; order earlier for a lower price';
-  pricingHTML += ' <span class="pricing-anchor-info" tabindex="0" role="button" aria-label="Pricing info">?</span>';
-  pricingHTML += '<div class="pricing-anchor-tooltip">All options deliver on the same date &mdash; the only difference is when you order.</div>';
+  pricingHTML += '<div class="pricing-anchor-headline">Pricing for delivery on <strong>' + deliveryFullDisplay + '</strong></div>';
+  pricingHTML += '<div class="pricing-anchor-subline">Order earlier for a lower price</div>';
   pricingHTML += '</div>';
 
   pricingHTML += '<div class="pricing-cards-row">';
@@ -2135,6 +2141,13 @@ function updatePricing() {
 
     pricingHTML += '<div class="' + cardClasses.join(' ') + '">';
 
+    // "Your Price Today" pill — only on the active card. Lives inside the
+    // card so it positions relative to the card itself (works on both desktop
+    // single-row and mobile wrapped grid without JS).
+    if (isBest) {
+      pricingHTML += '<div class="pricing-card-ribbon ' + tier.cls + '">Your Price Today</div>';
+    }
+
     // Header — two lines: tier name + turnaround
     pricingHTML += '<div class="pricing-card-header ' + tier.cls + '">';
     pricingHTML += '<div class="pricing-card-header-label">' + tier.label + '</div>';
@@ -2153,8 +2166,10 @@ function updatePricing() {
       pricingHTML += '<div class="pricing-card-price pricing-card-price-expired">' + priceText + '</div>';
       pricingHTML += '</div>';
     } else {
-      // Active card — date section + price-only action + submit-by footer
+      // Active / future card — order-by caption + date section + price + loss-framing
       pricingHTML += '<div class="pricing-card-date-section">';
+      pricingHTML += '<div class="pricing-card-order-by-label ' + tier.cls + '">Order By</div>';
+      pricingHTML += '<div class="pricing-card-order-by-divider"></div>';
       pricingHTML += '<div class="pricing-card-month">' + cutoffMonth + '</div>';
       pricingHTML += '<div class="pricing-card-day">' + cutoffDay + '</div>';
       pricingHTML += '<div class="pricing-card-weekday">' + cutoffWeekday + '</div>';
@@ -2162,28 +2177,67 @@ function updatePricing() {
       pricingHTML += '<div class="pricing-card-divider"></div>';
       pricingHTML += '<div class="pricing-card-action-section">';
       pricingHTML += '<div class="pricing-card-price ' + tier.cls + '">' + priceText + '</div>';
+
+      // Loss-framing subline: active card uses the immediately-next tier delta
+      // (the realistic counterfactual) but the wording stays implicit — most
+      // customers naturally read "You save $15 today" against the next card.
+      // Future cards show their own per-tier cost-to-wait below.
+      if (isBest && bestAvailableTier) {
+        var bestIdx = config.tiers.findIndex(function (t) { return t.key === bestAvailableTier.key; });
+        if (bestIdx >= 0 && bestIdx < config.tiers.length - 1) {
+          var nextTier = config.tiers[bestIdx + 1];
+          var nextPrice = row[nextTier.key] || 0;
+          var savings = Math.round(nextPrice - priceValue);
+          if (savings > 0) {
+            pricingHTML += '<div class="pricing-card-savings-active ' + tier.cls + '">You save $' + savings + ' today</div>';
+          }
+        }
+      } else if (!isBest && bestAvailableTier) {
+        var extra = Math.round(priceValue - bestAvailablePrice);
+        if (extra > 0) {
+          pricingHTML += '<div class="pricing-card-savings-future">$' + extra + ' more if you wait</div>';
+        }
+      }
+
       pricingHTML += '</div>';
     }
 
     pricingHTML += '</div>'; // close .pricing-card-body
 
-    // Footer — submit-by for active, empty for expired
+    // Footer — order-by for active, empty for expired
     if (isUnavailable) {
       pricingHTML += '<div class="pricing-card-footer pricing-card-footer-expired"><div class="pricing-card-cutoff">&nbsp;</div></div>';
     } else {
       pricingHTML += '<div class="pricing-card-footer">';
-      pricingHTML += '<div class="pricing-card-cutoff">Submit by ' + cutoffTimeStr + ' (EST)</div>';
+      pricingHTML += '<div class="pricing-card-cutoff">Cut-off ' + cutoffTimeStr + ' (EST)</div>';
       pricingHTML += '</div>';
     }
 
     pricingHTML += '</div>'; // close .pricing-card
   });
 
-  pricingHTML += '</div>';
-
-  // Unified countdown timer (below all cards) — tier name + color matched
+  // Row-level "Prices if you order later" bracket — spans across future tiers.
+  // The "Your Price Today" pill lives inside the active card itself (above).
   if (bestAvailableTier) {
-    pricingHTML += '<div class="pricing-countdown ' + bestAvailableTier.cls + '" id="pricingCountdown"><strong>' + bestAvailableTier.label + '</strong> price expires in: calculating...</div>';
+    var activeIdx = config.tiers.findIndex(function(t) { return t.key === bestAvailableTier.key; });
+    if (activeIdx >= 0 && activeIdx < config.tiers.length - 1) {
+      pricingHTML += '<div class="pricing-row-ribbon pricing-row-ribbon-wait">';
+      pricingHTML += '<span class="wait-line wait-line-left"></span>';
+      pricingHTML += '<span class="wait-text">Prices if you order later</span>';
+      pricingHTML += '<span class="wait-line wait-line-right"></span>';
+      pricingHTML += '</div>';
+    }
+  }
+
+  pricingHTML += '</div>'; // close .pricing-cards-row
+
+  // Unified countdown timer (below all cards) — wrapped so the triangle pointer
+  // can position itself relative to the active card above.
+  if (bestAvailableTier) {
+    pricingHTML += '<div class="pricing-countdown-wrapper">';
+    pricingHTML += '<div class="pricing-countdown-pointer ' + bestAvailableTier.cls + '" id="pricingCountdownPointer"></div>';
+    pricingHTML += '<div class="pricing-countdown ' + bestAvailableTier.cls + '" id="pricingCountdown">Lock in your <strong>' + bestAvailableTier.label + '</strong> rate &mdash; calculating...</div>';
+    pricingHTML += '</div>';
   }
 
   if (elements.pricing) {
@@ -2192,7 +2246,65 @@ function updatePricing() {
 
   if (bestAvailableTier) {
     startCountdown(bestAvailableTier, inDate);
+    // rAF ensures layout is flushed before we measure card rects
+    requestAnimationFrame(positionPricingRibbons);
   }
+}
+
+// Position the "Prices if you order later" bracket and the countdown
+// triangle pointer — both anchored to the active card's bounding rect.
+// (The "Your Price Today" pill is now inside the active card itself,
+// no JS positioning needed.)
+function positionPricingRibbons() {
+  var row = document.querySelector('.pricing-cards-row');
+  var activeCard = document.querySelector('.pricing-card.best-available');
+  var waitRibbon = document.querySelector('.pricing-row-ribbon-wait');
+  var pointer = document.getElementById('pricingCountdownPointer');
+
+  if (!row || !activeCard) return;
+
+  var rowRect = row.getBoundingClientRect();
+  var cardRect = activeCard.getBoundingClientRect();
+  var cardRightInRow = cardRect.right - rowRect.left;
+
+  // Stretch "Prices if you order later" ribbon from active card's right edge
+  // to the row's right edge. Hide on mobile (multi-row grid layout).
+  if (waitRibbon) {
+    var isMultiRow = window.matchMedia('(max-width: 600px)').matches;
+    if (isMultiRow) {
+      waitRibbon.style.display = 'none';
+    } else {
+      var gap = 10;
+      var leftPos = cardRightInRow + gap;
+      var waitWidth = rowRect.width - leftPos - 4;
+      if (waitWidth > 200) {
+        waitRibbon.style.left = leftPos + 'px';
+        waitRibbon.style.width = waitWidth + 'px';
+        waitRibbon.style.display = '';
+      } else {
+        waitRibbon.style.display = 'none';
+      }
+    }
+  }
+
+  // Countdown triangle pointer — centered under active card, relative to countdown wrapper
+  if (pointer) {
+    var wrapper = pointer.parentElement;
+    if (wrapper) {
+      var wrapperRect = wrapper.getBoundingClientRect();
+      var cardCenterInWrapper = cardRect.left + (cardRect.width / 2) - wrapperRect.left;
+      pointer.style.left = cardCenterInWrapper + 'px';
+    }
+  }
+}
+
+// Reposition ribbons/pointer on resize (throttled)
+if (typeof window !== 'undefined') {
+  var pricingRibbonResizeTimer = null;
+  window.addEventListener('resize', function() {
+    if (pricingRibbonResizeTimer) clearTimeout(pricingRibbonResizeTimer);
+    pricingRibbonResizeTimer = setTimeout(positionPricingRibbons, 100);
+  });
 }
 
 // Toast notification for tier expiry
@@ -2239,7 +2351,7 @@ function startCountdown(tier, inDate) {
         return;
       }
 
-      const countdownText = '<strong>' + tier.label + '</strong> price expires in: ' + formatCountdown(timeLeft);
+      const countdownText = 'Lock in your <strong>' + tier.label + '</strong> rate &mdash; ' + formatCountdown(timeLeft) + ' remaining';
       const minutesLeft = timeLeft / (1000 * 60);
 
       var colorClass = '';
@@ -2280,86 +2392,25 @@ function formatCountdown(timeLeft) {
 // ===== UTILITY FUNCTIONS =====
 
 // ===== DELIVERY TIME FUNCTIONS =====
-// Determines if a delivery time option is available for a given date
+// A delivery time option is available if its production deadline is still in the
+// future. This uses the same getProductionDeadline() function that drives pricing,
+// so the logic is guaranteed to be consistent between tier availability and time
+// option availability.
 function isDeliveryTimeAvailable(timeOption, selectedDate) {
   if (!selectedDate) return true;
-  
+
   var now = new Date();
   var deliveryDate = parseSelectedDate(selectedDate);
   var today = new Date();
   today.setHours(0, 0, 0, 0);
   var deliveryMidnight = new Date(deliveryDate);
   deliveryMidnight.setHours(0, 0, 0, 0);
-  
-  var daysDiff = Math.round((deliveryMidnight - today) / (1000 * 60 * 60 * 24));
-  var deliveryDay = deliveryDate.getDay(); // 0=Sun, 6=Sat
-  var currentHour = now.getHours();
-  var nowDay = now.getDay();
-  
-  // 2+ days out: all delivery times available (no gate restrictions)
-  // But check weekend rules first
-  if (daysDiff >= 2) {
-    // Weekend delivery date: only available if ordered before Friday 3 PM
-    if (deliveryDay === 0 || deliveryDay === 6) {
-      return isBeforeFridayCutoff(now, deliveryDate);
-    }
-    // Monday delivery, 9am: needs Friday production
-    if (deliveryDay === 1 && timeOption.value === '9am') {
-      return isBeforeFridayCutoff(now, deliveryDate);
-    }
-    return true;
-  }
-  
-  // Same-day delivery (daysDiff === 0)
-  if (daysDiff === 0) {
-    // Weekend today: can't order same-day (vendor closed)
-    if (nowDay === 0 || nowDay === 6) return false;
-    
-    // Apply the gate rules
-    if (timeOption.gateContext === 'previous_day') {
-      // 9am: disabled if past 3 PM previous business day
-      // On the delivery day itself, the previous day's 3 PM has always passed
-      return false;
-    }
-    // same_day gate: disabled after gateHour today
-    return currentHour < timeOption.gateHour;
-  }
-  
-  // Next-day delivery (daysDiff === 1)
-  if (daysDiff === 1) {
-    // If tomorrow is weekend: only available if today is Friday before 3 PM
-    if (deliveryDay === 0 || deliveryDay === 6) {
-      return isBeforeFridayCutoff(now, deliveryDate);
-    }
-    // Monday delivery from Sunday: check if 9am (needs Friday production, too late)
-    if (deliveryDay === 1 && nowDay === 0) {
-      if (timeOption.value === '9am') return false; // Can't produce Sunday for Monday 9am
-      return true; // Other times available, same-day pricing
-    }
-    // Normal next-day: 9am disabled after 3 PM today (previous_day gate)
-    if (timeOption.gateContext === 'previous_day') {
-      return currentHour < timeOption.gateHour;
-    }
-    // 12pm, 3pm, 6pm, anytime: always available for next-day
-    return true;
-  }
-  
-  // Negative daysDiff (past date) - shouldn't happen but guard against it
-  return false;
-}
 
-// Helper: check if current time is before Friday 3 PM relative to a delivery date
-function isBeforeFridayCutoff(now, deliveryDate) {
-  var nowDay = now.getDay();
-  var currentHour = now.getHours();
-  
-  // Find the Friday before or on the delivery date
-  // If it's currently Friday and before 3 PM, weekend delivery is available
-  if (nowDay === 5 && currentHour < 15) return true;
-  // If it's Mon-Thu, we haven't reached Friday yet, so Friday cutoff hasn't passed
-  if (nowDay >= 1 && nowDay <= 4) return true;
-  // If it's Friday after 3 PM, Saturday, or Sunday - too late
-  return false;
+  // Guard against past dates
+  if (deliveryMidnight < today) return false;
+
+  var productionDeadline = getProductionDeadline(deliveryDate, timeOption.value);
+  return productionDeadline > now;
 }
 
 // Check if a date should be disabled in the date picker
@@ -2384,8 +2435,11 @@ function updateDeliveryTimeOptions() {
     var optionElement = deliveryTimeSelect.querySelector('option[value="' + option.value + '"]');
     if (optionElement) {
       var isAvailable = isDeliveryTimeAvailable(option, selectedDate);
+      // Hide unavailable options entirely instead of greying them out —
+      // cleaner dropdown with only actionable choices, zero confusion.
+      optionElement.style.display = isAvailable ? '' : 'none';
       optionElement.disabled = !isAvailable;
-      optionElement.textContent = isAvailable ? option.label : option.label + ' (not available)';
+      optionElement.textContent = option.label;
       if (isAvailable) anyAvailable = true;
     }
   });
@@ -2499,10 +2553,8 @@ function bindEvents() {
   if (dateContainer && elements.date) {
     dateContainer.addEventListener('click', function(e) {
       e.preventDefault();
-      elements.date.focus();
-      if (elements.date.showPicker) {
-        elements.date.showPicker();
-      }
+      if (flatpickrInstance) { flatpickrInstance.open(); }
+      else { elements.date.focus(); if (elements.date.showPicker) elements.date.showPicker(); }
     });
   } else {
     console.error('âŒ Date container or date element not found', { 
@@ -2515,12 +2567,8 @@ function bindEvents() {
     elements.dateDisplay.addEventListener('click', function(e) {
       e.stopPropagation();
       e.preventDefault();
-      if (elements.date) {
-        elements.date.focus();
-        if (elements.date.showPicker) {
-          elements.date.showPicker();
-        }
-      }
+      if (flatpickrInstance) { flatpickrInstance.open(); }
+      else if (elements.date) { elements.date.focus(); if (elements.date.showPicker) elements.date.showPicker(); }
     });
   }
   
@@ -2704,7 +2752,6 @@ function bindEvents() {
         formData.set('deliveryOption', state.deliveryOption || 'pickup');
         formData.set('eventAcronym', state.selectedEvent?.acronym || '');
         formData.set('eventName', state.selectedEvent?.name || '');
-        formData.set('conversionFee', state.conversionFee || 0);
         formData.set('countryCode', selectedCountry?.dialCode || '');
         formData.set('selectedDate', state.selectedDate || '');
         formData.set('deliveryTime', state.selectedDeliveryTime || 'anytime');
@@ -2722,6 +2769,8 @@ function bindEvents() {
         const result = await response.json();
         
         if (result.success && result.checkoutUrl) {
+          // Clear saved form state — order is being submitted
+          clearFormState();
           // Redirect to Stripe Checkout
           window.location.href = result.checkoutUrl;
         } else {
@@ -2758,7 +2807,6 @@ function initializeElements() {
   elements.customerPhone = document.getElementById('customerPhone');
   elements.submitButton = document.querySelector('.submit-button');
   elements.pricing = document.getElementById('pricing');
-  elements.conversionFeeRow = document.querySelector('.conversion-fee-row');
   elements.materialToggle = document.getElementById('materialToggle');
   elements.posterOption = document.getElementById('posterOption');
   elements.fabricOption = document.getElementById('fabricOption');
@@ -2883,7 +2931,6 @@ document.addEventListener('DOMContentLoaded', function() {
       updateDeliveryTimeOptions();
       updateDatePickerRestrictions();
       generateAlternativeSizes();
-      checkConversionFee(null);
       updatePricingVisibility();
       update();
       updateSubmitButtonState();
@@ -2893,8 +2940,10 @@ document.addEventListener('DOMContentLoaded', function() {
       if (yearElement) {
         yearElement.textContent = new Date().getFullYear();
       }
-      
-      
+
+      // Restore saved form state (localStorage) after everything is initialized
+      restoreFormState();
+
     } catch (error) {
       console.error('??  Error during initialization:', error);
     }
@@ -2902,5 +2951,270 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Start initialization
   init();
+
+  // ===== STALE PRICING REFRESH =====
+  // If the customer leaves the tab open for a long time, pricing data could
+  // go stale (tier expires, countdown shows wrong time). Refresh pricing data
+  // every 5 minutes AND when the tab regains focus.
+  var PRICING_REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
+  setInterval(function () {
+    if (state.pricingLoaded && state.selectedDate) {
+      updateDeliveryTimeOptions();
+    }
+  }, PRICING_REFRESH_INTERVAL);
+
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden && state.pricingLoaded && state.selectedDate) {
+      updateDeliveryTimeOptions();
+    }
+  });
 });
 
+// ===== FORM STATE PERSISTENCE (localStorage) =====
+// Saves key form fields so customers can resume after accidental tab close.
+// State expires after 24 hours and is cleared on successful form submission.
+
+var FORM_STORAGE_KEY = 'mtcc_order_form';
+var FORM_STORAGE_TTL = 24 * 60 * 60 * 1000; // 24 hours
+
+function saveFormState() {
+  try {
+    var data = {
+      eventValue: document.getElementById('eventSelect') ? document.getElementById('eventSelect').value : '',
+      date: state.selectedDate || '',
+      deliveryTime: state.selectedDeliveryTime || 'anytime',
+      width: state.dimensions.width || '',
+      height: state.dimensions.height || '',
+      material: state.selectedMaterial || 'poster',
+      deliveryOption: state.deliveryOption || '',
+      customerName: (document.getElementById('customerName') || {}).value || '',
+      customerEmail: (document.getElementById('customerEmail') || {}).value || '',
+      customerPhone: (document.getElementById('customerPhone') || {}).value || '',
+      customerCompany: (document.getElementById('customerCompany') || {}).value || '',
+      additionalNotes: (document.getElementById('additionalNotes') || {}).value || '',
+      savedAt: Date.now()
+    };
+    localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(data));
+  } catch (e) { /* localStorage unavailable or full — silently fail */ }
+}
+
+function restoreFormState() {
+  try {
+    var raw = localStorage.getItem(FORM_STORAGE_KEY);
+    if (!raw) return;
+    var data = JSON.parse(raw);
+
+    // Expire after 24 hours
+    if (Date.now() - data.savedAt > FORM_STORAGE_TTL) {
+      localStorage.removeItem(FORM_STORAGE_KEY);
+      return;
+    }
+
+    // Restore event selection
+    var eventSelect = document.getElementById('eventSelect');
+    if (data.eventValue && eventSelect) {
+      eventSelect.value = data.eventValue;
+      eventSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    // Restore date (after short delay so event change propagates first)
+    setTimeout(function () {
+      if (data.date) {
+        var dateInput = document.getElementById('d');
+        if (dateInput) {
+          dateInput.value = data.date;
+          dateInput.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      }
+
+      // Restore delivery time
+      if (data.deliveryTime) {
+        var timeSelect = document.getElementById('deliveryTime');
+        if (timeSelect) {
+          timeSelect.value = data.deliveryTime;
+          state.selectedDeliveryTime = data.deliveryTime;
+        }
+      }
+
+      // Restore dimensions
+      if (data.width) {
+        var wInput = document.getElementById('w');
+        if (wInput) { wInput.value = data.width; wInput.dispatchEvent(new Event('input', { bubbles: true })); }
+      }
+      if (data.height) {
+        var hInput = document.getElementById('h');
+        if (hInput) { hInput.value = data.height; hInput.dispatchEvent(new Event('input', { bubbles: true })); }
+      }
+
+      // Restore material
+      if (data.material && data.material !== state.selectedMaterial) {
+        toggleMaterial(data.material);
+      }
+
+      // Restore delivery option
+      if (data.deliveryOption) {
+        selectDeliveryOption(data.deliveryOption);
+      }
+
+      // Restore customer info fields
+      var fields = {
+        customerName: data.customerName,
+        customerEmail: data.customerEmail,
+        customerPhone: data.customerPhone,
+        customerCompany: data.customerCompany,
+        additionalNotes: data.additionalNotes
+      };
+      Object.keys(fields).forEach(function (id) {
+        if (fields[id]) {
+          var el = document.getElementById(id);
+          if (el) el.value = fields[id];
+        }
+      });
+
+      // Trigger full state update
+      updatePricingVisibility();
+      updateSubmitButtonState();
+    }, 200);
+
+  } catch (e) { /* silently fail */ }
+}
+
+function clearFormState() {
+  try { localStorage.removeItem(FORM_STORAGE_KEY); } catch (e) {}
+}
+
+// Auto-save on any form field change (debounced)
+(function () {
+  var saveTimer = null;
+  function debouncedSave() {
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveFormState, 1000);
+  }
+  document.addEventListener('change', debouncedSave);
+  document.addEventListener('input', debouncedSave);
+})();
+
+// ===== SOCIAL PROOF POPUP =====
+// Loads recent customer orders + fallback nudges from recent-orders.php and
+// shows them as bottom-left toast popups at intervals. Desktop only.
+// Capped at 4 popups per session to avoid annoyance.
+(function () {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return;
+
+  // Skip on mobile — bottom-left popup conflicts with mobile chrome
+  if (window.matchMedia && window.matchMedia('(max-width: 600px)').matches) return;
+
+  var SP = {
+    orders: [],
+    stats: [],
+    loaded: false,
+    shownCount: 0,
+    maxShown: 3,
+    initialDelay: 7000,   // first popup within 7s of page load
+    interval: 90000,      // subsequent popups every 90s
+    holdTime: 15000       // each popup visible for 15s
+  };
+
+  function loadSocialProof() {
+    fetch('recent-orders.php')
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        SP.orders = (data && data.orders) || [];
+        SP.stats = (data && data.stats) || [];
+        SP.loaded = true;
+        scheduleNext(SP.initialDelay);
+      })
+      .catch(function () { /* silently fail — no popup is fine */ });
+  }
+
+  function scheduleNext(delay) {
+    if (SP.shownCount >= SP.maxShown) return;
+    setTimeout(function () {
+      showPopup();
+      scheduleNext(SP.interval);
+    }, delay);
+  }
+
+  function showPopup() {
+    var content = pickContent();
+    if (!content) return;
+
+    // Remove any existing toast first
+    var existing = document.querySelector('.social-proof-toast');
+    if (existing) existing.remove();
+
+    var toast = document.createElement('div');
+    toast.className = 'social-proof-toast';
+    toast.innerHTML =
+      '<div class="sp-toast-icon">&#10004;</div>' +
+      '<div class="sp-toast-body">' + content + '</div>' +
+      '<button class="sp-toast-close" aria-label="Dismiss">&times;</button>';
+
+    toast.querySelector('.sp-toast-close').addEventListener('click', function () {
+      hidePopup(toast);
+    });
+
+    document.body.appendChild(toast);
+    SP.shownCount++;
+
+    // Trigger entrance animation on next frame
+    requestAnimationFrame(function () { toast.classList.add('show'); });
+
+    // Auto-dismiss after hold time
+    setTimeout(function () { hidePopup(toast); }, SP.holdTime);
+  }
+
+  function hidePopup(toast) {
+    if (!toast) return;
+    toast.classList.remove('show');
+    setTimeout(function () { if (toast.parentNode) toast.remove(); }, 400);
+  }
+
+  function pickContent() {
+    var orders = SP.orders;
+    var stats = SP.stats;
+
+    // 3+ real orders → only show real orders, cycling
+    if (orders.length >= 3) {
+      return formatOrder(orders[SP.shownCount % orders.length]);
+    }
+
+    // 1-2 real orders → alternate between real and stats
+    if (orders.length > 0) {
+      if (SP.shownCount % 2 === 0) {
+        return formatOrder(orders[SP.shownCount % orders.length]);
+      }
+    }
+
+    // Fallback to stats (also used when 0 real orders)
+    if (stats.length === 0) return null;
+    return '<em>' + stats[SP.shownCount % stats.length] + '</em>';
+  }
+
+  function formatOrder(order) {
+    if (!order) return null;
+    var html = '<strong>' + escapeHtml(order.name) + '</strong> ordered a ';
+    html += '<strong>' + escapeHtml(order.dimensions) + '</strong> poster';
+    if (order.event) {
+      html += ' for <strong>' + escapeHtml(order.event) + '</strong>';
+    }
+    html += ' &mdash; <span class="sp-time">' + escapeHtml(order.relativeTime) + '</span>';
+    return html;
+  }
+
+  function escapeHtml(str) {
+    if (typeof str !== 'string') return '';
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  // Init when page is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadSocialProof);
+  } else {
+    loadSocialProof();
+  }
+})();

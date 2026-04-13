@@ -206,7 +206,7 @@ $referenceCode = $_GET['ref'] ?? 'Unknown';
 </head>
 <body>
     <div class="success-container">
-        <div class="success-icon">ðŸŽ‰</div>
+        <div class="success-icon"><?= ICON_PARTY ?></div>
         <h1>Order Submitted!</h1>
         
         <div class="reference-code">
@@ -251,7 +251,7 @@ $referenceCode = $_GET['ref'] ?? 'Unknown';
         </div>
         
         <div class="contact-info">
-            <h3>ðŸ““Â¾ Need to make changes or have questions?</h3>
+            <h3><?= ICON_PHONE ?> Need to make changes or have questions?</h3>
             <p><strong>Email:</strong> orders@printstuff.ca</p>
             <p><strong>Phone:</strong> (437) 882-8822</p>
             <p><strong>Reference your order number:</strong> <?= htmlspecialchars($referenceCode) ?></p>
@@ -259,7 +259,7 @@ $referenceCode = $_GET['ref'] ?? 'Unknown';
         
         <div class="action-buttons">
             <a href="/" class="btn btn-primary"><?= ICON_MEMO ?> Submit Another Order</a>
-            <a href="mailto:orders@printstuff.com?subject=Order #: <?= urlencode($referenceCode) ?>" class="btn btn-secondary">âœ“ Contact Us</a>
+            <a href="mailto:orders@printstuff.com?subject=Order #: <?= urlencode($referenceCode) ?>" class="btn btn-secondary"><?= ICON_ENVELOPE ?> Contact Us</a>
         </div>
         
         <div class="footer">

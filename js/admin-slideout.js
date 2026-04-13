@@ -138,7 +138,6 @@ var OrderSlideout = (function() {
     h += '<div class="so-price-grid">';
     h += '<span>Base Price</span><span>' + fmtMoney(pricing.basePrice) + '</span>';
     if (pricing.deliveryFee > 0) h += '<span>Delivery Fee</span><span>' + fmtMoney(pricing.deliveryFee) + '</span>';
-    if (pricing.conversionFee > 0) h += '<span>Conversion Fee</span><span>' + fmtMoney(pricing.conversionFee) + '</span>';
     h += '<span>Tax (HST 13%)</span><span>' + fmtMoney(pricing.tax) + '</span>';
     h += '<span class="so-price-total">Total</span><span class="so-price-total">' + fmtMoney(pricing.total) + '</span>';
     h += '</div></div>';

@@ -130,7 +130,7 @@ function getEventOrderAnalytics() {
                 error_log("No pricing.total found in $referenceCode");
             }
             
-            // Add to base revenue (NEW: Only basePrice, no delivery, conversion fees, or tax)
+            // Add to base revenue (only basePrice, no delivery fee or tax)
             if (isset($orderData['pricing']['basePrice'])) {
                 $baseRevenue = round((float)$orderData['pricing']['basePrice'], 2);
                 $analytics[$eventPrefix]['baseRevenue'] = round($analytics[$eventPrefix]['baseRevenue'] + $baseRevenue, 2);

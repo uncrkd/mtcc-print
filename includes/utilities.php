@@ -498,7 +498,6 @@ function handleOrderSave() {
 $orderData['pricing'] = [
     'basePrice' => (float)$_POST['base_price'],
     'deliveryFee' => (float)$_POST['delivery_fee'],
-    'conversionFee' => (float)($_POST['conversion_fee'] ?? 0),
     'tax' => (float)$_POST['tax'],
     'total' => (float)$_POST['total'],
     'tier' => $_POST['priority_tier']

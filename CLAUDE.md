@@ -270,7 +270,7 @@ Files stored as `{refCode}_{date}-order.json` in `uploads/orders/`:
   "deliveryOption": "mtcc",
   "deliveryAddress": { "attn":"", "company":"", "address":"", "unit":"", "city":"", "province":"", "postal":"", "instructions":"" },
   "pricing": {
-    "basePrice": 47.00, "deliveryFee": 0, "conversionFee": 0,
+    "basePrice": 47.00, "deliveryFee": 0,
     "tax": 6.11, "total": 53.11, "tier": "Standard", "tierKey": "standard", "sqft": 12
   },
   "uploadedFile": { "originalName": "poster.pdf", "savedName": "1710000000_poster.pdf", "path": "uploads/files/1710000000_poster.pdf", "size": 5242880 },

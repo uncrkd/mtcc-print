@@ -100,6 +100,12 @@ define('ICON_UPLOAD',           '&#128228;');         // ðŸ“¤
 define('ICON_DOWNLOAD',         '&#128229;');         // ðŸ“¥
 define('ICON_PLUS',             '&#10133;');          // âž•
 
+// --- Misc ---
+define('ICON_CART',             '&#128722;');         // shopping cart
+define('ICON_BULB',             '&#128161;');         // light bulb
+define('ICON_PHONE',            '&#128222;');         // phone receiver
+define('ICON_PIN',              '&#128205;');         // round pushpin
+
 // --- Checkmarks & Status Indicators ---
 define('ICON_CHECK_GREEN',      '&#9989;');           // âœ…
 define('ICON_CHECK_MARK',       '&#10004;');          // âœ”

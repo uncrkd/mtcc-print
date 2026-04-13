@@ -625,10 +625,6 @@ $analytics = [
     $validOrders = array_filter($orders, function($o) use ($paid_statuses) { return in_array($o['status'] ?? '', $paid_statuses); });
     return count($validOrders) > 0 ? array_sum(array_column(array_column($validOrders, 'pricing'), 'total')) / count($validOrders) : 0;
   })($orders),
-  'file_conversion_revenue' => array_sum( array_map( function( $o ) use ($paid_statuses) {
-  if (!in_array($o['status'] ?? '', $paid_statuses)) return 0;
-  return isset( $o[ 'pricing' ][ 'conversionFee' ] ) ? $o[ 'pricing' ][ 'conversionFee' ] : 0;
-}, $orders ) ),
 // Total revenue - ONLY paid+ orders
 'total_revenue_excluding_cancelled' => array_sum( array_map( function( $o ) use ($paid_statuses) {
   return in_array($o['status'] ?? '', $paid_statuses) ? ($o['pricing']['total'] ?? 0) : 0;
@@ -641,7 +637,6 @@ $analytics = [
 'mtcc_venue_fee' => array_sum( array_map( function( $o ) use ($paid_statuses) {
   return in_array($o['status'] ?? '', $paid_statuses) ? ($o['pricing']['basePrice'] ?? 0) : 0;
 }, $orders ) ) * 0.10,
-'file_conversion_percentage' => 0, // Will calculate below
 'avg_base_price' => 0, // Will calculate below
   'status_breakdown' => [],
   'size_breakdown' => [],
@@ -765,11 +760,6 @@ foreach ( $orders as $order ) {
   }
 }
 $analytics[ 'turnaround_breakdown' ] = $turnarounds;
-
-// Calculate file conversion percentage (based on paid+ revenue)
-if ( $analytics['total_revenue_excluding_cancelled'] > 0 ) {
-  $analytics['file_conversion_percentage'] = ( $analytics['file_conversion_revenue'] / $analytics['total_revenue_excluding_cancelled'] ) * 100;
-}
 
 // Calculate average base price (paid+ orders only)
 $paid_orders = array_filter( $orders, function( $o ) use ($paid_statuses) { return in_array($o['status'] ?? '', $paid_statuses); } );
@@ -1076,21 +1066,6 @@ if (count($paidUnassigned) > 0) {
     </div>
 
     <!-- File Conversions -->
-    <div class="grid-stack-item" gs-id="file-conversions" gs-x="8" gs-y="0" gs-w="4" gs-h="6" gs-min-w="4" gs-min-h="3">
-      <div class="grid-stack-item-content">
-        <div class="analytics-card compact">
-          <div class="card-header">
-            <span class="card-icon"><?= ICON_FOLDER ?></span>
-            <span class="card-title">File Conversions</span>
-          </div>
-          <div class="card-content">
-            <div class="primary-metric" id="fileConversionRevenue">$<?= number_format($analytics['file_conversion_revenue'], 2) ?></div>
-            <div class="secondary-metric"><strong id="fileConversionPercentage"><?= number_format($analytics['file_conversion_percentage'], 1) ?>%</strong> of revenue</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <!-- Total Revenue & Orders -->
     <div class="grid-stack-item" gs-id="total-revenue" gs-x="12" gs-y="0" gs-w="6" gs-h="6" gs-min-w="4" gs-min-h="3">
       <div class="grid-stack-item-content">

@@ -192,26 +192,6 @@ class AnalyticsCalculator {
     }
     
     /**
-     * Calculate file conversion fee revenue
-     * @param array $orders Array of orders
-     * @param array $includeStatuses Only include these statuses
-     * @return float Conversion fee total
-     */
-    public static function getConversionFeeRevenue($orders, $includeStatuses = null) {
-        if ($includeStatuses === null) {
-            $includeStatuses = self::PAID_STATUSES;
-        }
-        
-        $total = 0;
-        foreach ($orders as $order) {
-            if (in_array($order['status'] ?? '', $includeStatuses)) {
-                $total += (float)($order['pricing']['conversionFee'] ?? 0);
-            }
-        }
-        return $total;
-    }
-    
-    /**
      * Get complete revenue breakdown
      * @param array $orders Array of orders
      * @return array Revenue breakdown with all components
@@ -227,23 +207,21 @@ class AnalyticsCalculator {
         
         $baseRevenue = self::getBaseRevenue($orders);
         $deliveryRevenue = self::getDeliveryRevenue($orders);
-        $conversionRevenue = self::getConversionFeeRevenue($orders);
         $hstCollected = self::getHSTCollected($orders);
         $grossRevenue = self::getGrossRevenue($orders, ['cancelled']);
         $refundedRevenue = self::getRefundedRevenue($orders);
         $netRevenue = $grossRevenue - $refundedRevenue;
         $venueFee = self::getMTCCVenueFee($orders);
-        
+
         return [
             'gross_revenue' => $grossRevenue,
             'refunded_revenue' => $refundedRevenue,
             'net_revenue' => $netRevenue,
             'base_revenue' => $baseRevenue,
             'delivery_revenue' => $deliveryRevenue,
-            'conversion_revenue' => $conversionRevenue,
             'hst_collected' => $hstCollected,
             'venue_fee' => $venueFee,
-            'subtotal' => $baseRevenue + $deliveryRevenue + $conversionRevenue,
+            'subtotal' => $baseRevenue + $deliveryRevenue,
             'paid_order_count' => count($paidOrders),
             'refunded_order_count' => count($refundedOrders)
         ];
@@ -658,38 +636,35 @@ class AnalyticsCalculator {
                     'base_revenue' => 0,
                     'hst_collected' => 0,
                     'delivery_fees' => 0,
-                    'conversion_fees' => 0,
                     'refunded_count' => 0,
                     'refunded_amount' => 0,
                     'cancelled_count' => 0,
                     'venue_fee' => 0
                 ];
             }
-            
+
             $status = $order['status'] ?? '';
             $pricing = $order['pricing'] ?? [];
             $total = (float)($pricing['total'] ?? 0);
             $base = (float)($pricing['basePrice'] ?? 0);
             $tax = (float)($pricing['tax'] ?? 0);
             $deliveryFee = (float)($pricing['deliveryFee'] ?? 0);
-            $conversionFee = (float)($pricing['conversionFee'] ?? 0);
-            
+
             if ($status === 'cancelled') {
                 $events[$prefix]['cancelled_count']++;
             } elseif ($status === 'refunded') {
                 $events[$prefix]['refunded_count']++;
-                $refundAmount = isset($order['refund']['refundAmount']) 
-                    ? (float)$order['refund']['refundAmount'] 
+                $refundAmount = isset($order['refund']['refundAmount'])
+                    ? (float)$order['refund']['refundAmount']
                     : $total;
                 $events[$prefix]['refunded_amount'] += $refundAmount;
-                
+
                 if (!$excludeCancelledRefunded) {
                     $events[$prefix]['order_count']++;
                     $events[$prefix]['gross_revenue'] += $total;
                     $events[$prefix]['base_revenue'] += $base;
                     $events[$prefix]['hst_collected'] += $tax;
                     $events[$prefix]['delivery_fees'] += $deliveryFee;
-                    $events[$prefix]['conversion_fees'] += $conversionFee;
                 }
             } else {
                 $events[$prefix]['order_count']++;
@@ -697,7 +672,6 @@ class AnalyticsCalculator {
                 $events[$prefix]['base_revenue'] += $base;
                 $events[$prefix]['hst_collected'] += $tax;
                 $events[$prefix]['delivery_fees'] += $deliveryFee;
-                $events[$prefix]['conversion_fees'] += $conversionFee;
             }
         }
         

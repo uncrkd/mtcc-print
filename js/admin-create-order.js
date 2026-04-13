@@ -34,27 +34,13 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeFormHandlers();
     initializeDateInputs();
 
-    // Hook file upload to existing conversion fee logic
+    // File upload preview
     const fileInput = document.getElementById('fileInput');
     if (fileInput) {
         fileInput.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
                 updateFilePreview(file);
-
-                // Auto-calculate conversion fee based on file type
-                const fileName = file.name.toLowerCase();
-                const isPDF = fileName.endsWith('.pdf');
-                const conversionFeeInput = document.getElementById('conversion_fee');
-
-                if (conversionFeeInput) {
-                    conversionFeeInput.value = isPDF ? '0.00' : '5.00';
-                    updateTotal();
-
-                    if (!isPDF) {
-                        showCreateOrderNotification('File conversion fee applied: $5.00 for non-PDF files', 'info');
-                    }
-                }
             }
         });
     }
@@ -613,9 +599,8 @@ function updatePricing() {
 function updateTotal() {
     const basePrice = parseFloat(document.getElementById('base_price').value) || 0;
     const deliveryFee = parseFloat(document.getElementById('delivery_fee').value) || 0;
-    const conversionFee = parseFloat(document.getElementById('conversion_fee').value) || 0;
 
-    const subtotal = basePrice + deliveryFee + conversionFee;
+    const subtotal = basePrice + deliveryFee;
     const tax = subtotal * 0.13;
     const total = subtotal + tax;
 
@@ -644,13 +629,8 @@ function updateFilePreview(file) {
 function removeFile() {
     const fileInput = document.getElementById('fileInput');
     const uploadZone = document.getElementById('uploadZone');
-    const conversionFeeInput = document.getElementById('conversion_fee');
 
     fileInput.value = '';
-    if (conversionFeeInput) {
-        conversionFeeInput.value = '0.00';
-        updateTotal();
-    }
 
     // Restore original upload zone
     uploadZone.innerHTML = '<div class="upload-icon">' + CREATE_ORDER_CONFIG.icons.download + '</div>' +

@@ -620,7 +620,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'selectedDate' => trim($_POST['selectedDate']),
             'deliveryTime' => isset($_POST['deliveryTime']) ? trim($_POST['deliveryTime']) : 'anytime',
             'deliveryOption' => trim($_POST['deliveryOption']),
-            'conversionFee' => isset($_POST['conversionFee']) ? (float)$_POST['conversionFee'] : 0,
             'customerInfo' => [
                 'name' => trim($_POST['customerName']),
                 'company' => isset($_POST['customerCompany']) ? trim($_POST['customerCompany']) : '',
@@ -632,7 +631,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'pricing' => [
                 'basePrice' => isset($_POST['basePrice']) ? (float)$_POST['basePrice'] : 0,
                 'deliveryFee' => isset($_POST['deliveryFee']) ? (float)$_POST['deliveryFee'] : 0,
-                'conversionFee' => isset($_POST['conversionFee']) ? (float)$_POST['conversionFee'] : 0,
                 'subtotal' => isset($_POST['subtotal']) ? (float)$_POST['subtotal'] : 0,
                 'tax' => isset($_POST['tax']) ? (float)$_POST['tax'] : 0,
                 'total' => isset($_POST['total']) ? (float)$_POST['total'] : 0,
@@ -667,20 +665,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'total' => $orderData['pricing']['total'] ?? 0,
             'tier' => $orderData['pricing']['tier'] ?? '',
             'deliveryFee' => $orderData['pricing']['deliveryFee'] ?? 0,
-            'conversionFee' => $orderData['pricing']['conversionFee'] ?? 0,
         ];
-        
+
         $validation = validateOrderPricing($validationInput);
-        
+
         if (!$validation['valid']) {
             throw new Exception($validation['message']);
         }
-        
+
         // If server recalculated a different price, use the server price
         if ($validation['corrected']) {
             $orderData['pricing']['basePrice'] = $validation['server_price'];
             $orderData['pricing']['tier'] = $validation['server_tier']['label'] ?? $orderData['pricing']['tier'];
-            $orderData['pricing']['subtotal'] = $validation['server_price'] + $orderData['pricing']['deliveryFee'] + $orderData['pricing']['conversionFee'];
+            $orderData['pricing']['subtotal'] = $validation['server_price'] + $orderData['pricing']['deliveryFee'];
             $orderData['pricing']['tax'] = round($orderData['pricing']['subtotal'] * 0.13, 2);
             $orderData['pricing']['total'] = round($orderData['pricing']['subtotal'] + $orderData['pricing']['tax'], 2);
             $orderData['pricing']['server_corrected'] = true;

@@ -164,21 +164,6 @@ try {
         ];
     }
     
-    // Conversion fee
-    $conversionFee = $pricing['conversionFee'] ?? 0;
-    if ($conversionFee > 0) {
-        $lineItems[] = [
-            'price_data' => [
-                'currency' => 'cad',
-                'product_data' => [
-                    'name' => 'File Conversion Fee',
-                ],
-                'unit_amount' => round($conversionFee * 100),
-            ],
-            'quantity' => 1,
-        ];
-    }
-    
     // Tax
     $tax = $pricing['tax'] ?? 0;
     if ($tax > 0) {

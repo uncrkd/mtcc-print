@@ -18,12 +18,12 @@ return [
     // ===== PRICING TIERS =====
     // Ordered cheapest to most expensive
     'tiers' => [
-        ['key' => 'early',    'cls' => 'early',      'icon' => '&#128077;', 'label' => 'Early',       'days' => '10+ Days',  'lead' => 10, 'cutoffHour' => 17],
-        ['key' => 'standard', 'cls' => 'standard',   'icon' => '&#128197;', 'label' => 'Standard',    'days' => '5 Days',    'lead' => 5,  'cutoffHour' => 17],
-        ['key' => '3days',    'cls' => 'rush',        'icon' => '&#127939;', 'label' => 'Rush',        'days' => '3 Days',    'lead' => 3,  'cutoffHour' => 17],
-        ['key' => '2days',    'cls' => 'urgent',      'icon' => '&#128293;', 'label' => 'Urgent',      'days' => '2 Days',    'lead' => 2,  'cutoffHour' => 17],
-        ['key' => 'nextday',  'cls' => 'critical',    'icon' => '&#128680;', 'label' => 'Critical',    'days' => 'Next Day',  'lead' => 1,  'cutoffHour' => 15],
-        ['key' => 'sameday',  'cls' => 'lastminute',  'icon' => '&#128128;', 'label' => 'Last Minute',  'days' => 'Same Day',  'lead' => 0,  'cutoffHour' => 15],
+        ['key' => 'early',    'cls' => 'early',      'icon' => '&#128077;', 'label' => 'Best Value',         'days' => '10+ Days Turnaround', 'lead' => 10, 'cutoffHour' => 17],
+        ['key' => 'standard', 'cls' => 'standard',   'icon' => '&#128197;', 'label' => 'Standard',           'days' => '5 Days Turnaround',   'lead' => 5,  'cutoffHour' => 17],
+        ['key' => '3days',    'cls' => 'rush',        'icon' => '&#127939;', 'label' => 'Rush',               'days' => '3 Days Turnaround',   'lead' => 3,  'cutoffHour' => 17],
+        ['key' => '2days',    'cls' => 'urgent',      'icon' => '&#128293;', 'label' => 'Express',            'days' => '2 Days Turnaround',   'lead' => 2,  'cutoffHour' => 17],
+        ['key' => 'nextday',  'cls' => 'critical',    'icon' => '&#128680;', 'label' => 'Priority',           'days' => 'Next Day Turnaround', 'lead' => 1,  'cutoffHour' => 15],
+        ['key' => 'sameday',  'cls' => 'lastminute',  'icon' => '&#128128;', 'label' => "We'll Get It Done",  'days' => 'Same-Day Turnaround', 'lead' => 0,  'cutoffHour' => 15],
     ],
 
     // ===== DELIVERY TIME OPTIONS =====
@@ -47,35 +47,29 @@ return [
         'anytime' => ['gate_context' => 'same_day',     'gate_hour' => 15],  // Disabled after 3 PM today (same as 6pm)
     ],
 
-    // ===== PRICING RULES =====
-    'pricing_rules' => [
-        // Next-day 9 AM delivery always uses same-day pricing (requires previous-day production)
-        'nextday_9am_tier' => 'sameday',
-        // After this hour, next-day non-9AM orders switch to same-day pricing
-        'nextday_sameday_switch_hour' => 15,   // 3 PM
-        // Weekend delivery (Sat/Sun) and Monday 9 AM = same-day pricing
-        'weekend_delivery_tier' => 'sameday',
-        // Orders placed Sat/Sun or Mon before 9 AM for Monday delivery = same-day pricing
-        'weekend_order_monday_tier' => 'sameday',
-        'monday_sameday_cutoff_hour' => 9,     // Before 9 AM Monday = same-day pricing for Monday
+    // ===== PRODUCTION DEADLINE RULES =====
+    // The production deadline is "when the finished print must be ready at the vendor".
+    // All tier order-cutoffs are computed by walking back business days from this deadline.
+    // Lead-time business-day walks skip Sat, Sun, and any date listed in data/holidays.json.
+    'production_rules' => [
+        // Unified 3-hour minimum production window for same-day delivery times.
+        // Production deadline for a weekday delivery = delivery time minus 3 hours.
+        // (e.g. 12pm delivery → 9am deadline, 3pm delivery → 12pm deadline, 6pm → 3pm.)
+        'production_window_hours' => 3,
+
+        // 9am delivery needs overnight hold — production deadline is previous business day @ 2 PM.
+        'nineam_prev_day_cutoff_hour' => 14,   // 2 PM
+
+        // Weekend delivery (Sat/Sun) or Monday 9am delivery → Friday before @ 2 PM.
+        'friday_weekend_cutoff_hour' => 14,    // 2 PM
     ],
 
     // ===== WEEKEND / BUSINESS RULES =====
     'business_rules' => [
         'weekend_printing' => false,           // No vendor printing on weekends
-        'friday_cutoff_hour' => 15,            // 3 PM Friday = cutoff for weekend/Monday 9 AM orders
+        'holidays_file' => 'data/holidays.json',
         'vendor_weekday_open' => '09:00',
         'vendor_weekday_close' => '18:00',
-        'vendor_daily_cutoff' => '15:00',
-    ],
-
-    // ===== VENDOR FULFILLMENT BUFFERS =====
-    'vendor_buffers' => [
-        '9am'     => ['buffer_hours' => 0, 'previous_day_pickup' => true],   // Overnight hold
-        '12pm'    => ['buffer_hours' => 1],
-        '3pm'     => ['buffer_hours' => 2],
-        '6pm'     => ['buffer_hours' => 2],
-        'anytime' => ['buffer_hours' => 2],   // Same as 6pm
     ],
 
     // ===== GLOBAL BUFFERS =====

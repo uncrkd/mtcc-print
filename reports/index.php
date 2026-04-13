@@ -693,7 +693,6 @@ function getFilterLabel($type, $value) {
  <th class="text-right">Orders</th>
  <th class="text-right">Base</th>
  <th class="text-right">Delivery</th>
- <th class="text-right">File Fees</th>
  <th class="text-right">HST</th>
  <th class="text-right col-gross">Gross</th>
  <th class="text-right col-refund">Refunds</th>
@@ -716,7 +715,6 @@ function getFilterLabel($type, $value) {
  <td class="text-right"><?= number_format($event['order_count']) ?></td>
  <td class="text-right"><?= formatMoney($event['base_revenue']) ?></td>
  <td class="text-right"><?= formatMoney($event['delivery_fees']) ?></td>
- <td class="text-right"><?= formatMoney($event['conversion_fees']) ?></td>
  <td class="text-right"><?= formatMoney($event['hst_collected']) ?></td>
  <td class="text-right col-gross"><?= formatMoney($event['gross_revenue']) ?></td>
  <td class="text-right col-refund"><?= $event['refunded_amount'] > 0 ? '-' . formatMoney($event['refunded_amount']) : '-' ?></td>
@@ -735,7 +733,6 @@ function getFilterLabel($type, $value) {
  <td class="text-right"><?= number_format(array_sum(array_column($eventAnalytics, 'order_count'))) ?></td>
  <td class="text-right"><?= formatMoney(array_sum(array_column($eventAnalytics, 'base_revenue'))) ?></td>
  <td class="text-right"><?= formatMoney(array_sum(array_column($eventAnalytics, 'delivery_fees'))) ?></td>
- <td class="text-right"><?= formatMoney(array_sum(array_column($eventAnalytics, 'conversion_fees'))) ?></td>
  <td class="text-right"><?= formatMoney(array_sum(array_column($eventAnalytics, 'hst_collected'))) ?></td>
  <td class="text-right col-gross"><strong><?= formatMoney($totalGross) ?></strong></td>
  <td class="text-right col-refund">-<?= formatMoney(array_sum(array_column($eventAnalytics, 'refunded_amount'))) ?></td>

@@ -141,11 +141,11 @@ function exportCSV($filename, $analytics, $orders, $startDate, $endDate, $select
     
     // Order Details
     fputcsv($output, ['ORDER DETAILS']);
-    fputcsv($output, ['Reference', 'Date', 'Customer', 'Email', 'Size', 'Material', 'Status', 'Base Price', 'Delivery Fee', 'Conversion Fee', 'HST', 'Total']);
-    
+    fputcsv($output, ['Reference', 'Date', 'Customer', 'Email', 'Size', 'Material', 'Status', 'Base Price', 'Delivery Fee', 'HST', 'Total']);
+
     foreach ($orders as $order) {
         if (($order['status'] ?? '') === 'cancelled') continue;
-        
+
         $pricing = $order['pricing'] ?? [];
         fputcsv($output, [
             $order['referenceCode'] ?? '',
@@ -157,7 +157,6 @@ function exportCSV($filename, $analytics, $orders, $startDate, $endDate, $select
             $order['status'] ?? 'unpaid',
             '$' . formatMoney($pricing['basePrice'] ?? 0),
             '$' . formatMoney($pricing['deliveryFee'] ?? 0),
-            '$' . formatMoney($pricing['conversionFee'] ?? 0),
             '$' . formatMoney($pricing['tax'] ?? 0),
             '$' . formatMoney($pricing['total'] ?? 0)
         ]);
@@ -288,17 +287,17 @@ function exportXLSXWithPhpSpreadsheet($filename, $analytics, $orders, $startDate
     $orderSheet = $spreadsheet->createSheet();
     $orderSheet->setTitle('Order Details');
     
-    $headers = ['Reference', 'Date', 'Customer', 'Email', 'Size', 'Material', 'Status', 'Base Price', 'Delivery Fee', 'Conversion Fee', 'HST', 'Total'];
+    $headers = ['Reference', 'Date', 'Customer', 'Email', 'Size', 'Material', 'Status', 'Base Price', 'Delivery Fee', 'HST', 'Total'];
     $col = 'A';
     foreach ($headers as $header) {
         $orderSheet->setCellValue($col . '1', $header);
         $col++;
     }
-    
+
     $row = 2;
     foreach ($orders as $order) {
         if (($order['status'] ?? '') === 'cancelled') continue;
-        
+
         $pricing = $order['pricing'] ?? [];
         $orderSheet->setCellValue('A' . $row, $order['referenceCode'] ?? '');
         $orderSheet->setCellValue('B' . $row, date('Y-m-d', strtotime($order['paidAt'] ?? $order['submittedAt'] ?? '')));
@@ -309,13 +308,12 @@ function exportXLSXWithPhpSpreadsheet($filename, $analytics, $orders, $startDate
         $orderSheet->setCellValue('G' . $row, $order['status'] ?? 'unpaid');
         $orderSheet->setCellValue('H' . $row, $pricing['basePrice'] ?? 0);
         $orderSheet->setCellValue('I' . $row, $pricing['deliveryFee'] ?? 0);
-        $orderSheet->setCellValue('J' . $row, $pricing['conversionFee'] ?? 0);
-        $orderSheet->setCellValue('K' . $row, $pricing['tax'] ?? 0);
-        $orderSheet->setCellValue('L' . $row, $pricing['total'] ?? 0);
+        $orderSheet->setCellValue('J' . $row, $pricing['tax'] ?? 0);
+        $orderSheet->setCellValue('K' . $row, $pricing['total'] ?? 0);
         $row++;
     }
-    
-    $orderSheet->getStyle('H2:L' . ($row - 1))->getNumberFormat()->setFormatCode('$#,##0.00');
+
+    $orderSheet->getStyle('H2:K' . ($row - 1))->getNumberFormat()->setFormatCode('$#,##0.00');
     
     // Auto-size columns for all sheets
     foreach ($spreadsheet->getAllSheets() as $sh) {

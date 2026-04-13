@@ -93,7 +93,6 @@ function generateCustomerEmailHTML($order, $referenceCode) {
  
  $basePrice = isset($order['pricing']['basePrice']) ? number_format($order['pricing']['basePrice'], 2) : '0.00';
  $deliveryFee = isset($order['pricing']['deliveryFee']) ? number_format($order['pricing']['deliveryFee'], 2) : '0.00';
- $conversionFee = isset($order['pricing']['conversionFee']) ? number_format($order['pricing']['conversionFee'], 2) : '0.00';
  $tax = isset($order['pricing']['tax']) ? number_format($order['pricing']['tax'], 2) : '0.00';
  $total = isset($order['pricing']['total']) ? number_format($order['pricing']['total'], 2) : '0.00';
  
@@ -445,21 +444,6 @@ function generateCustomerEmailHTML($order, $referenceCode) {
  </tr>';
  }
  
- // Add conversion fee if > 0
- if (isset($order['pricing']['conversionFee']) && $order['pricing']['conversionFee'] > 0) {
- $html .= '
- <tr>
- <td style="padding: 6px 0; border-bottom: 1px solid #e5e7eb;">
- <table cellpadding="0" cellspacing="0" style="width: 100%;">
- <tr>
- <td style="color: #6b7280; font-size: 12px;">File Conversion</td>
- <td style="text-align: right; color: #374151; font-size: 12px;">$' . $conversionFee . '</td>
- </tr>
- </table>
- </td>
- </tr>';
- }
- 
  $html .= '
  <tr>
  <td style="padding: 6px 0; border-bottom: 1px solid #e5e7eb;">
@@ -491,7 +475,7 @@ function generateCustomerEmailHTML($order, $referenceCode) {
  <div style="margin-top: 25px; text-align: center;">
  <a href="https://mtcc.print-stuff.ca/status?ref=' . $referenceCode . '" 
  style="display: inline-block; padding: 14px 32px; background-color: #10b981; color: #ffffff; font-size: 14px; font-weight: 600; text-decoration: none; border-radius: 8px; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);">
- ðŸ“ Track Your Order
+ <?= ICON_PIN ?> Track Your Order
  </a>
  <div style="color: #6b7280; font-size: 11px; margin-top: 10px;">Check your order status anytime</div>
  </div>

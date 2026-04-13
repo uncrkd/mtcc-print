@@ -261,7 +261,6 @@ try {
                 'pricing' => [
                     'basePrice' => (float)($pricing['basePrice'] ?? 0),
                     'deliveryFee' => (float)($pricing['deliveryFee'] ?? 0),
-                    'conversionFee' => (float)($pricing['conversionFee'] ?? 0),
                     'subtotal' => (float)($pricing['subtotal'] ?? 0),
                     'tax' => (float)($pricing['tax'] ?? 0),
                     'total' => (float)($pricing['total'] ?? 0),
@@ -430,7 +429,6 @@ function generateCustomerEmailHTML($orderData) {
     
     $basePrice = number_format($orderData['pricing']['basePrice'] ?? 0, 2);
     $deliveryFee = number_format($orderData['pricing']['deliveryFee'] ?? 0, 2);
-    $conversionFee = number_format($orderData['pricing']['conversionFee'] ?? 0, 2);
     $tax = number_format($orderData['pricing']['tax'] ?? 0, 2);
     
     $deliveryOption = $orderData['deliveryOption'] ?? $orderData['deliveryMethod'] ?? 'pickup';
@@ -629,256 +627,467 @@ function generateBusinessEmailHTML($orderData) {
     <title><?php echo $paymentVerified ? 'Payment Successful' : 'Payment Issue'; ?></title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
             font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, #faf8ff 0%, #f0f9ff 100%);
+            background: linear-gradient(135deg, #faf8ff 0%, #ede9fe 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 20px;
         }
-        
-        .container {
-            background: white;
+
+        /* ── Main card ── */
+        .card {
+            background: #ffffff;
             border-radius: 16px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-            max-width: 500px;
+            box-shadow: 0 8px 32px rgba(124, 58, 237, 0.15);
+            max-width: 480px;
             width: 100%;
-            padding: 40px;
+            overflow: hidden;
+            position: relative;
+        }
+        .card::before {
+            content: '';
+            position: absolute;
+            width: 180px; height: 180px;
+            top: -60px; right: -60px;
+            background: linear-gradient(135deg, rgba(5,150,105,0.06) 0%, transparent 100%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        /* ── Logo strip — sits OUTSIDE the card, above it ── */
+        .header-logos {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .header-logos img {
+            max-width: 280px;
+            width: 85%;
+            height: auto;
+        }
+
+        /* ── Success header band (first child of card — gets top rounded corners) ── */
+        .card-header-band {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            padding: 16px 32px;
+            text-align: center;
+            position: relative;
+            border-radius: 16px 16px 0 0;
+        }
+        .card-header-band::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, rgba(255,255,255,0.3), transparent);
+        }
+        .paid-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            backdrop-filter: blur(4px);
+        }
+
+        /* ── Card body ── */
+        .card-body {
+            padding: 32px 32px 28px;
             text-align: center;
         }
-        
-        .success-container {
-            border: 2px solid #10b981;
-        }
-        
-        .error-container {
-            border: 2px solid #ef4444;
-        }
-        
-        .icon {
-            font-size: 5rem;
-            margin-bottom: 20px;
-        }
-        
-        .success-icon {
-            animation: bounce 1s ease-in-out;
-        }
-        
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-            40% { transform: translateY(-20px); }
-            60% { transform: translateY(-10px); }
-        }
-        
+
         h1 {
-            margin-bottom: 10px;
-            font-size: 2.5rem;
+            color: #059669;
+            font-size: 2rem;
             font-weight: 700;
+            margin-bottom: 8px;
+            animation: fadeUp 0.6s ease-out;
         }
-        
-        .success h1 { color: #10b981; }
-        .error h1 { color: #ef4444; }
-        
-        .reference-code {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
-            padding: 15px 25px;
-            border-radius: 12px;
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin: 30px 0;
-            letter-spacing: 1px;
-            box-shadow: rgba(16, 185, 129, 0.3) 0px 8px 24px;
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        
-        .message {
+        .subtitle {
             color: #374151;
-            font-size: 1.1rem;
+            font-size: 0.95rem;
             line-height: 1.6;
-            margin-bottom: 30px;
+            margin-bottom: 24px;
         }
-        
-        .paid-badge {
-            display: inline-block;
-            background: #10b981;
-            color: white;
-            padding: 8px 20px;
-            border-radius: 20px;
-            font-weight: 600;
-            margin-bottom: 20px;
+        .subtitle strong {
+            color: #059669;
         }
-        
-        .next-steps {
-            background: #f8fafc;
+
+        /* ── Order summary section ── */
+        .order-summary {
+            background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+            border: 1px solid #e5e7eb;
             border-radius: 12px;
-            padding: 25px;
-            margin: 30px 0;
+            padding: 20px;
+            margin-bottom: 20px;
             text-align: left;
         }
-        
-        .next-steps h3 {
-            color: #7c3aed;
-            margin-bottom: 15px;
+        .order-ref {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #059669;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e5e7eb;
         }
-        
+        .order-details {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .order-detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.88rem;
+        }
+        .order-detail-label {
+            color: #6b7280;
+            font-weight: 500;
+        }
+        .order-detail-value {
+            color: #1e1b2e;
+            font-weight: 600;
+        }
+        .order-total-row {
+            margin-top: 8px;
+            padding-top: 10px;
+            border-top: 1px solid #e5e7eb;
+        }
+        .order-total-row .order-detail-value {
+            color: #059669;
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        /* ── Email confirmation badge ── */
+        .email-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: center;
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            border: 1px solid #059669;
+            border-radius: 12px;
+            padding: 10px 16px;
+            margin-bottom: 24px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #059669;
+            box-shadow: 0 1px 2px rgba(5, 150, 105, 0.15);
+        }
+        .email-badge-icon {
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        /* ── Next steps section ── */
+        .next-steps {
+            background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+            text-align: left;
+        }
+        .next-steps-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #374151;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 14px;
+        }
         .step {
             display: flex;
-            align-items: flex-start;
+            align-items: center;
             gap: 12px;
-            margin-bottom: 15px;
-            padding: 10px;
+            padding: 10px 12px;
             background: white;
             border-radius: 8px;
-            border-left: 4px solid #10b981;
+            border-left: 3px solid #10b981;
+            margin-bottom: 8px;
+            font-size: 0.88rem;
+            color: #374151;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
         }
-        
-        .step-number {
+        .step:last-of-type { margin-bottom: 0; }
+        .step-dot {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
             background: #10b981;
             color: white;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.8rem;
-            font-weight: 600;
+            font-size: 0.7rem;
+            font-weight: 700;
             flex-shrink: 0;
         }
-        
-        .contact-info {
-            background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%);
-            border: 2px solid #10b981;
-            border-radius: 12px;
-            padding: 20px;
-            margin: 30px 0;
-        }
-        
-        .contact-info h3 {
+        .steps-closing {
+            text-align: center;
+            margin-top: 16px;
+            padding-top: 14px;
+            border-top: 1px solid #e5e7eb;
             color: #059669;
-            margin-bottom: 10px;
+            font-weight: 700;
+            font-size: 0.9rem;
         }
-        
-        .btn {
-            display: inline-block;
-            padding: 12px 24px;
-            border-radius: 8px;
+
+        /* ── Contact ── */
+        .contact {
+            color: #6b7280;
+            font-size: 0.82rem;
+            margin-bottom: 20px;
+        }
+        .contact-heading {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .contact a {
+            color: #7c3aed;
             text-decoration: none;
             font-weight: 600;
-            transition: all 0.2s;
-            margin: 5px;
         }
-        
-        .btn-primary {
+        .contact a:hover { text-decoration: underline; }
+        .contact-divider {
+            display: inline-block;
+            width: 1px;
+            height: 12px;
+            background: #d1d5db;
+            vertical-align: middle;
+            margin: 0 6px;
+        }
+        /* Lucide check SVG inline */
+        .lucide-check {
+            display: inline-block;
+            vertical-align: -3px;
+        }
+
+        /* ── CTA button (matches project btn-primary) ── */
+        .btn {
+            display: inline-block;
+            padding: 14px 32px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.95rem;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
             background: #7c3aed;
             color: white;
+            box-shadow: 0 2px 8px rgba(124, 58, 237, 0.25);
         }
-        
-        .btn-primary:hover {
+        .btn:hover {
             background: #5b21b6;
+            transform: translateY(-2px);
+            box-shadow: rgba(124, 58, 237, 0.4) 0px 8px 24px;
         }
-        
-        .footer {
-            margin-top: 40px;
-            color: #6b7280;
-            font-size: 0.85rem;
+
+        /* ── Footer ── */
+        .card-footer {
+            background: linear-gradient(135deg, #fafbfc 0%, #ffffff 100%);
+            border-top: 1px solid #f3f4f6;
+            padding: 16px 32px;
+            text-align: center;
+            color: #9ca3af;
+            font-size: 0.75rem;
         }
-        
+
+        /* ── Error variant ── */
+        .error-card { border-top: 4px solid #ef4444; }
+        .error-card h1 { color: #ef4444; }
+
+        /* ── Responsive ── */
         @media (max-width: 600px) {
-            .container { padding: 30px 25px; }
-            h1 { font-size: 2rem; }
-            .reference-code { font-size: 1.2rem; }
+            .card-header-band { padding: 22px 24px 20px; }
+            .card-body { padding: 24px 22px 20px; }
+            h1 { font-size: 1.65rem; }
+            .header-logos img { max-width: 200px; }
+            .order-detail-row { font-size: 0.82rem; }
+            .step { font-size: 0.82rem; padding: 8px 10px; }
+            .card-footer { padding: 14px 22px; }
         }
     </style>
 </head>
 <body>
-    <?php if ($paymentVerified && $orderRef): ?>
-    <div class="container success-container success">
-        <div class="icon success-icon"><img src="mtcc-ps-logo.png"></div>
-        <div class="paid-badge">&#10004; PAYMENT SUCCESSFUL</div>
-        <h1>Thank You!</h1>
-        
-        <div class="reference-code">
-            Order #<?= htmlspecialchars($orderRef) ?>
+    <?php if ($paymentVerified && $orderRef):
+        // Extract order details for the success page
+        $customerName = htmlspecialchars($orderData['customerInfo']['name'] ?? $orderData['name'] ?? 'there');
+        $customerEmail = htmlspecialchars($orderData['customerInfo']['email'] ?? $orderData['email'] ?? '');
+        $width = $orderData['dimensions']['width'] ?? '0';
+        $height = $orderData['dimensions']['height'] ?? '0';
+        $material = ucfirst($orderData['material'] ?? 'poster');
+        $tier = htmlspecialchars($orderData['pricing']['tier'] ?? 'Standard');
+        $total = number_format($orderData['pricing']['total'] ?? 0, 2);
+        $selectedDate = $orderData['selectedDate'] ?? date('Y-m-d');
+        $deliveryDateFull = date('l, F j', strtotime($selectedDate));
+        $deliveryTimeValue = $orderData['deliveryTime'] ?? 'anytime';
+        $deliveryTimeLabels = ['anytime' => '', '9am' => ' by 9:00 AM', '12pm' => ' by 12:00 PM', '3pm' => ' by 3:00 PM', '6pm' => ' by 6:00 PM'];
+        $deliveryTimeDisplay = $deliveryTimeLabels[$deliveryTimeValue] ?? '';
+        $deliveryOption = $orderData['deliveryOption'] ?? 'mtcc';
+        $deliveryLocation = ($deliveryOption === 'mtcc' || $deliveryOption === 'pickup')
+            ? 'MTCC' : 'your address';
+        $eventName = htmlspecialchars($orderData['event']['name'] ?? $orderData['eventName'] ?? '');
+    ?>
+    <!-- ── Logos OUTSIDE the card ── -->
+    <div class="header-logos">
+        <img src="mtcc-ps-logo.png" alt="MTCC + Print Stuff">
+    </div>
+
+    <div class="card">
+
+        <!-- ── Green header band (top of card, rounded corners) ── -->
+        <div class="card-header-band">
+            <div class="paid-badge"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="lucide-check"><path d="M21.801 10A10 10 0 1 1 17 3.335"/><path d="m9 11 3 3L22 4"/></svg> Payment Confirmed</div>
         </div>
-        
-        <p class="message">
-            Your payment has been processed and your poster order is confirmed! 
-            You'll receive a confirmation email shortly.
-        </p>
-        
-        <div class="next-steps">
-            <h3>&#128203; What Happens Next:</h3>
-            
-            <div class="step">
-                <div class="step-number">1</div>
-                <div style="color: #374151;">
-                    <strong>Confirmation email:</strong> Check your inbox for order details
+
+        <!-- ── Card body ── -->
+        <div class="card-body">
+
+            <h1>You're All Set!</h1>
+
+            <p class="subtitle">
+                Your poster is confirmed and heading to production.<br>
+                <strong>We'll take it from here.</strong>
+            </p>
+
+            <!-- Order summary card -->
+            <div class="order-summary">
+                <div class="order-ref">Order #<?= htmlspecialchars($orderRef) ?></div>
+                <div class="order-details">
+                    <div class="order-detail-row">
+                        <span class="order-detail-label">Customer</span>
+                        <span class="order-detail-value"><?= $customerName ?></span>
+                    </div>
+                    <div class="order-detail-row">
+                        <span class="order-detail-label">Size</span>
+                        <span class="order-detail-value"><?= $width ?>" &#215; <?= $height ?>"</span>
+                    </div>
+                    <div class="order-detail-row">
+                        <span class="order-detail-label">Material</span>
+                        <span class="order-detail-value"><?= $material ?></span>
+                    </div>
+                    <?php if ($eventName): ?>
+                    <div class="order-detail-row">
+                        <span class="order-detail-label">Event</span>
+                        <span class="order-detail-value"><?= $eventName ?></span>
+                    </div>
+                    <?php endif; ?>
+                    <div class="order-detail-row">
+                        <span class="order-detail-label">Turnaround</span>
+                        <span class="order-detail-value"><?= $tier ?></span>
+                    </div>
+                    <div class="order-detail-row">
+                        <span class="order-detail-label">Delivery</span>
+                        <span class="order-detail-value"><?= $deliveryDateFull ?><?= $deliveryTimeDisplay ?></span>
+                    </div>
+                    <div class="order-detail-row order-total-row">
+                        <span class="order-detail-label">Total Paid</span>
+                        <span class="order-detail-value">$<?= $total ?> CAD</span>
+                    </div>
                 </div>
             </div>
-            
-            <div class="step">
-                <div class="step-number">2</div>
-                <div style="color: #374151;">
-                    <strong>File review:</strong> Our team will check your artwork for print quality
+
+            <!-- Email confirmation badge -->
+            <?php if ($customerEmail): ?>
+            <div class="email-badge">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-check"><path d="M21.801 10A10 10 0 1 1 17 3.335"/><path d="m9 11 3 3L22 4"/></svg>
+                Confirmation email sent to <?= $customerEmail ?>
+            </div>
+            <?php endif; ?>
+
+            <!-- What happens now — 3 confident steps -->
+            <div class="next-steps">
+                <div class="next-steps-title">What happens now</div>
+
+                <div class="step">
+                    <div class="step-dot">1</div>
+                    <span>We review your file for print quality</span>
+                </div>
+
+                <div class="step">
+                    <div class="step-dot">2</div>
+                    <span>Your poster is printed and prepared</span>
+                </div>
+
+                <div class="step">
+                    <div class="step-dot">3</div>
+                    <span>Delivered to <?= $deliveryLocation ?> on <strong><?= $deliveryDateFull ?></strong></span>
+                </div>
+
+                <div class="steps-closing">
+                    That's it. We handle everything from here.
                 </div>
             </div>
-            
-            <div class="step">
-                <div class="step-number">3</div>
-                <div style="color: #374151;">
-                    <strong>Production:</strong> Your poster will be printed and prepared for delivery
-                </div>
+
+            <!-- Contact — subtle, an option not a necessity -->
+            <div class="contact">
+                <div class="contact-heading">Questions? We're here.</div>
+                <a href="mailto:orders@printstuff.ca">orders@printstuff.ca</a>
+                <span class="contact-divider"></span>
+                <a href="tel:4378828822">(437) 882-8822</a>
+                <span class="contact-divider"></span>
+                <a href="javascript:void(0)" onclick="if(window.Tawk_API)Tawk_API.maximize();">Live Chat</a>
             </div>
-            
-            <div class="step">
-                <div class="step-number">4</div>
-                <div style="color: #374151;">
-                    <strong>Delivery:</strong> We'll deliver according to your selected timeline
-                </div>
-            </div>
+
+            <a href="/" class="btn">Submit Another Order</a>
         </div>
-        
-        <div class="contact-info">
-            <h3>&#128222; Questions about your order?</h3>
-            <p style="margin: 5px 0; color: #374151;"><strong>Email:</strong> orders@printstuff.ca</p>
-            <p style="margin: 5px 0; color: #374151;"><strong>Phone:</strong> (437) 882-8822</p>
-            <p style="margin: 5px 0; color: #374151;"><strong>Reference:</strong> <?= htmlspecialchars($orderRef) ?></p>
-        </div>
-        
-        <a href="/" class="btn btn-primary">Submit Another Order</a>
-        
-        <div class="footer">
-            <p>Thank you for choosing Print Stuff!</p>
-            <p>&copy; <?= date('Y') ?> Print Stuff - Big or small, we print it all.</p>
+
+        <!-- ── Footer ── -->
+        <div class="card-footer">
+            &copy; <?= date('Y') ?> Print Stuff &#183; Big or small, we print it all.
         </div>
     </div>
-    
+
     <?php else: ?>
-    <div class="container error-container error">
-        <div class="icon">&#9888;&#65039;</div>
-        <h1>Payment Issue</h1>
-        
-        <p class="message">
-            <?= htmlspecialchars($error ?? 'There was an issue processing your payment. Please try again or contact support.') ?>
-        </p>
-        
-        <div class="contact-info" style="background: #fef2f2; border-color: #ef4444;">
-            <h3 style="color: #dc2626;">Need Help?</h3>
-            <p style="margin: 5px 0; color: #374151;"><strong>Email:</strong> orders@printstuff.ca</p>
-            <p style="margin: 5px 0; color: #374151;"><strong>Phone:</strong> (437) 882-8822</p>
+    <div class="card error-card">
+        <div style="padding: 32px; text-align: center;">
+            <div style="font-size: 4rem; margin-bottom: 16px;">&#9888;&#65039;</div>
+            <h1>Payment Issue</h1>
+            <p class="subtitle" style="margin-bottom: 24px;">
+                <?= htmlspecialchars($error ?? 'There was an issue processing your payment. Please try again or contact support.') ?>
+            </p>
+
+            <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 16px; margin-bottom: 24px;">
+                <div style="color: #dc2626; font-weight: 700; margin-bottom: 6px;">Need Help?</div>
+                <div style="color: #374151; font-size: 0.9rem;">
+                    <strong>Email:</strong> <a href="mailto:orders@printstuff.ca" style="color: #7c3aed; text-decoration: none;">orders@printstuff.ca</a><br>
+                    <strong>Phone:</strong> <a href="tel:4378828822" style="color: #7c3aed; text-decoration: none;">(437) 882-8822</a>
+                </div>
+            </div>
+
+            <a href="/" class="btn">&#8592; Try Again</a>
         </div>
-        
-        <a href="/" class="btn btn-primary">&larr; Try Again</a>
     </div>
     <?php endif; ?>
+
+    <!--Start of Tawk.to Script-->
+    <script type="text/javascript">
+    var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+    (function(){
+    var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+    s1.async=true;
+    s1.src='https://embed.tawk.to/69bcadcf600a121c36fa7a4b/1jk4gdsmg';
+    s1.charset='UTF-8';
+    s1.setAttribute('crossorigin','*');
+    s0.parentNode.insertBefore(s1,s0);
+    })();
+    </script>
+    <!--End of Tawk.to Script-->
 </body>
 </html>

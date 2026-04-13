@@ -1135,12 +1135,6 @@ function generateBulkOrderPrint( $orders, $statuses ) {
           <div class="pricing-label">Delivery</div>
           <div class="pricing-value">$<?= number_format($order['pricing']['deliveryFee'] ?? $order['pricing']['delivery'] ?? 0, 2) ?></div>
         </div>
-        <?php if (isset($order['pricing']['conversionFee']) && $order['pricing']['conversionFee'] > 0): ?>
-        <div class="pricing-item">
-          <div class="pricing-label">File Fee</div>
-          <div class="pricing-value">$<?= number_format($order['pricing']['conversionFee'], 2) ?></div>
-        </div>
-        <?php endif; ?>
         <div class="pricing-item">
           <div class="pricing-label">Tax (13%)</div>
           <div class="pricing-value">$<?= number_format($order['pricing']['tax'] ?? 0, 2) ?></div>
@@ -1781,13 +1775,6 @@ window.orderDueDate = '<?= htmlspecialchars($order['selectedDate']) ?>'; // Lega
     </div>
   </div>
   <div class="field">
-    <label for="conversion_fee">Conversion Fee</label>
-    <div style="display: flex; align-items: center;">
-      <span style="background: #e5e7eb; padding: 8px 12px; border-radius: 6px 0 0 6px; border: 1px solid #d1d5db; border-right: none; color: #374151; font-weight: 600;">$</span>
-      <input type="number" step="0.01" id="conversion_fee" name="conversion_fee" value="<?= number_format($order['pricing']['conversionFee'] ?? 0, 2, '.', '') ?>" class="field-control" required min="0" style="border-radius: 0 6px 6px 0; border-left: none;">
-    </div>
-  </div>
-  <div class="field">
     <label for="tax">Tax (13%)</label>
     <div style="display: flex; align-items: center;">
       <span style="background: #f3f4f6; padding: 8px 12px; border-radius: 6px 0 0 6px; border: 1px solid #d1d5db; border-right: none; color: #9ca3af; font-weight: 600;">$</span>
@@ -1974,12 +1961,6 @@ window.orderDueDate = '<?= htmlspecialchars($order['selectedDate']) ?>'; // Lega
             <div class="pricing-label">Delivery</div>
             <div class="pricing-value">$<?= number_format($order['pricing']['deliveryFee'], 2) ?></div>
           </div>
-          <?php if (isset($order['pricing']['conversionFee']) && $order['pricing']['conversionFee'] > 0): ?>
-          <div class="pricing-item">
-            <div class="pricing-label">File Fee</div>
-            <div class="pricing-value">$<?= number_format($order['pricing']['conversionFee'], 2) ?></div>
-          </div>
-          <?php endif; ?>
           <div class="pricing-item">
             <div class="pricing-label">Tax (13%)</div>
             <div class="pricing-value">$<?= number_format($order['pricing']['tax'], 2) ?></div>
@@ -2354,27 +2335,25 @@ document.addEventListener('DOMContentLoaded', function() {
 function initializePricingCalculator() {
     const basePrice = document.getElementById('base_price');
     const deliveryFee = document.getElementById('delivery_fee');
-    const conversionFee = document.getElementById('conversion_fee');
     const taxField = document.getElementById('tax');
     const totalField = document.getElementById('total');
-    
+
     // Only run if all fields exist (edit mode)
-    if (!basePrice || !deliveryFee || !conversionFee || !taxField || !totalField) {
+    if (!basePrice || !deliveryFee || !taxField || !totalField) {
         return;
     }
-    
+
     function recalculatePricing() {
         const base = parseFloat(basePrice.value) || 0;
         const delivery = parseFloat(deliveryFee.value) || 0;
-        const conversion = parseFloat(conversionFee.value) || 0;
-        
-        const subtotal = base + delivery + conversion;
+
+        const subtotal = base + delivery;
         const tax = subtotal * 0.13; // 13% HST
         const total = subtotal + tax;
-        
+
         taxField.value = tax.toFixed(2);
         totalField.value = total.toFixed(2);
-        
+
         // Flash the total field to show it updated
         totalField.style.transition = 'background-color 0.3s';
         totalField.style.backgroundColor = '#bbf7d0';
@@ -2382,14 +2361,13 @@ function initializePricingCalculator() {
             totalField.style.backgroundColor = '';
         }, 300);
     }
-    
+
     // Listen for changes on editable fields
     basePrice.addEventListener('input', recalculatePricing);
     deliveryFee.addEventListener('input', recalculatePricing);
-    conversionFee.addEventListener('input', recalculatePricing);
-    
+
     // Also recalculate on blur to ensure proper formatting
-    [basePrice, deliveryFee, conversionFee].forEach(field => {
+    [basePrice, deliveryFee].forEach(field => {
         field.addEventListener('blur', function() {
             if (this.value === '' || isNaN(parseFloat(this.value))) {
                 this.value = '0.00';

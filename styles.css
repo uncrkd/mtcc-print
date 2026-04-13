@@ -38,9 +38,14 @@
   font-family: 'Montserrat', sans-serif; 
 }
 
-body { 
-  background: var(--bg); 
-  color: var(--text); 
+html {
+  overflow-x: hidden;
+}
+body {
+  background: var(--bg);
+  color: var(--text);
+  min-width: 100%;
+  overflow-x: hidden;
 }
 
 /* ===== EMOJI ICON RENDERING ===== */
@@ -412,18 +417,6 @@ body {
   width: 100%;
   height: 100%;
   cursor: pointer;
-}
-
-.date-display {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  cursor: pointer;
-  background: white;
-  width: 100%;
-  height: 100%;
-  color: var(--primary);
-  font-weight: 600;
 }
 
 .date-placeholder {
@@ -1175,11 +1168,6 @@ body {
   word-break: break-all;
 }
 
-.file-detail-conversion {
-  color: #b45309;
-  font-weight: 600;
-}
-
 .file-detail-vector {
   display: inline-block;
   font-size: 0.65rem;
@@ -1374,20 +1362,6 @@ body {
   padding: 4px 10px;
   border-radius: 16px;
   border: 1px solid rgba(124, 58, 237, 0.12);
-}
-
-.conversion-note-card {
-  font-size: 12px;
-  color: #0369a1;
-  font-weight: 500;
-  background: rgba(59, 130, 246, 0.08);
-  padding: 4px 10px;
-  border-radius: 16px;
-  border: 1px solid rgba(59, 130, 246, 0.12);
-  text-align: center;
-  line-height: 1.3;
-  max-width: 100%;
-  word-break: break-word;
 }
 
 .upload-size-note-card {
@@ -1920,13 +1894,25 @@ body {
 /* Delivery date anchor header above cards — plain text, no box */
 .pricing-delivery-anchor {
   text-align: center;
-  font-size: 0.9rem;
-  color: var(--subtext);
-  padding: 0.4rem 0;
-  margin-bottom: 0.25rem;
+  padding: 0.5rem 0 0.6rem;
+  margin-bottom: 0.5rem;
 }
-.pricing-delivery-anchor strong {
+.pricing-anchor-headline {
+  font-size: 1.05rem;
+  font-weight: 600;
   color: var(--text);
+  line-height: 1.3;
+}
+.pricing-anchor-headline strong {
+  font-weight: 800;
+  color: var(--text);
+}
+.pricing-anchor-subline {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--subtext);
+  margin-top: 0.2rem;
+  font-style: italic;
 }
 
 /* Info icon tooltip — positioned above */
@@ -1985,23 +1971,125 @@ body {
 
 /* Cards are direct children of the row now (no wrapper) */
 
-/* Active card pulse animation */
-@keyframes activeCardPulse {
-  0% { transform: translateY(-3px) scale(1); }
-  50% { transform: translateY(-3px) scale(1.02); }
-  100% { transform: translateY(-3px) scale(1); }
-}
+/* Active "Your Price" card — scaled up, tier-shadowed, ribbon on top */
 .pricing-card.best-available {
-  animation: activeCardPulse 0.6s ease-out 0.3s 1;
+  position: relative;
+  z-index: 2;
+  overflow: visible;
+  transform: scale(1.06);
+  margin: 0.5rem 0.4rem;
+}
+/* Re-clip the rounded corners on header/footer since the active card drops overflow:hidden */
+.pricing-card.best-available .pricing-card-header {
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+}
+.pricing-card.best-available .pricing-card-footer {
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
 }
 
+/* "Your Current Price" ribbon — tier-colored pill floating above the card with a gap */
+.pricing-card-ribbon {
+  position: absolute;
+  top: -1.4rem;
+  left: 50%;
+  transform: translateX(-50%);
+  color: white;
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  white-space: nowrap;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.22);
+  z-index: 3;
+}
+.pricing-card-ribbon.early    { background: var(--green); }
+.pricing-card-ribbon.standard { background: var(--blue); }
+.pricing-card-ribbon.rush     { background: #a16207; }
+.pricing-card-ribbon.urgent   { background: var(--orange); }
+.pricing-card-ribbon.critical { background: var(--red); }
+.pricing-card-ribbon.lastminute { background: var(--primary); }
+
 .pricing-cards-row {
+  position: relative;
   display: flex;
   gap: 0.5rem;
   overflow: visible;
-  padding: 0.5rem 0.25rem 0.5rem;
+  padding: 2.6rem 0.25rem 1rem;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
+}
+
+/* "Prices if you order later" bracket — absolutely positioned in the row,
+   anchored to the active card's right edge via JS. (The "Your Price Today"
+   pill lives inside the active card itself — see .pricing-card-ribbon below.) */
+.pricing-row-ribbon {
+  position: absolute;
+  top: 0.5rem;
+  z-index: 5;
+  box-sizing: border-box;
+}
+
+/* "Prices if you order later" — subtle bracket layout. The thin horizontal
+   stroke is a 1.5px-tall background bar, vertically centered alongside the
+   text via flex align-items, so the text sits ON the line. The downward hooks
+   and arrowheads are pseudo-elements anchored to the line's outer ends. */
+.pricing-row-ribbon-wait {
+  background: none;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  height: 1.4rem;
+  pointer-events: none;
+}
+.pricing-row-ribbon-wait .wait-line {
+  flex: 1;
+  height: 1.5px;
+  background: #94a3b8;
+  position: relative;
+  min-width: 0;
+}
+/* Vertical hook descending from the line's outer end */
+.pricing-row-ribbon-wait .wait-line-left::before,
+.pricing-row-ribbon-wait .wait-line-right::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  width: 1.5px;
+  height: 6px;
+  background: #94a3b8;
+}
+.pricing-row-ribbon-wait .wait-line-left::before  { left: 0; }
+.pricing-row-ribbon-wait .wait-line-right::before { right: 0; }
+/* Arrowhead at the bottom of each hook, pointing down */
+.pricing-row-ribbon-wait .wait-line-left::after,
+.pricing-row-ribbon-wait .wait-line-right::after {
+  content: '';
+  position: absolute;
+  top: 6px;
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid #94a3b8;
+}
+.pricing-row-ribbon-wait .wait-line-left::after  { left: -3.25px; }
+.pricing-row-ribbon-wait .wait-line-right::after { right: -3.25px; }
+.pricing-row-ribbon-wait .wait-text {
+  padding: 0 0.6rem;
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #64748b;
+  white-space: nowrap;
+  line-height: 1;
 }
 
 .pricing-cards-row::-webkit-scrollbar {
@@ -2063,9 +2151,33 @@ body {
   padding: 0.5rem 0.4rem 0;
 }
 
-/* Date section (month, day, weekday) */
+/* Date section (order-by caption + month, day, weekday) */
 .pricing-card-date-section {
-  padding: 0.5rem 0.25rem 0.5rem;
+  padding: 0 0 0.4rem;
+}
+
+/* Order-by caption — tier-tinted edge-to-edge strip, bold tier-colored text */
+.pricing-card-order-by-label {
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  line-height: 1.2;
+  padding: 0.45rem 0.25rem;
+  margin: -0.5rem -0.4rem 0;
+}
+.pricing-card-order-by-label.early    { background: #ecfdf5; color: var(--green); }
+.pricing-card-order-by-label.standard { background: #eff6ff; color: var(--blue); }
+.pricing-card-order-by-label.rush     { background: #fefce8; color: #a16207; }
+.pricing-card-order-by-label.urgent   { background: #fff7ed; color: var(--orange); }
+.pricing-card-order-by-label.critical { background: #fef2f2; color: var(--red); }
+.pricing-card-order-by-label.lastminute { background: #f5f3ff; color: var(--primary); }
+
+/* Full-width divider beneath the order-by caption */
+.pricing-card-order-by-divider {
+  height: 1px;
+  background: #e5e7eb;
+  margin: 0 -0.4rem 0.5rem;
 }
 
 .pricing-card-month {
@@ -2140,6 +2252,32 @@ body {
   margin-bottom: 0.2rem;
 }
 
+/* Loss-framing subline on active card — color matches the active tier */
+.pricing-card-savings-active {
+  font-size: 0.58rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-top: 0.15rem;
+  line-height: 1.2;
+}
+.pricing-card-savings-active.early      { color: var(--green); }
+.pricing-card-savings-active.standard   { color: var(--blue); }
+.pricing-card-savings-active.rush       { color: #a16207; }
+.pricing-card-savings-active.urgent     { color: var(--orange); }
+.pricing-card-savings-active.critical   { color: var(--red); }
+.pricing-card-savings-active.lastminute { color: var(--primary); }
+
+/* Loss-framing subline on future cards — cost-to-wait in warm amber */
+.pricing-card-savings-future {
+  font-size: 0.55rem;
+  font-weight: 700;
+  color: #b45309;
+  margin-top: 0.15rem;
+  line-height: 1.2;
+  font-style: italic;
+}
+
 /* Price colors per tier */
 .pricing-card-price.early { color: var(--green); }
 .pricing-card-price.standard { color: var(--blue); }
@@ -2185,12 +2323,12 @@ body {
 }
 
 /* Best available card highlight — reduced shadow */
-.pricing-card.best-available.early { box-shadow: 0 0 0 2px var(--green), 0 4px 12px rgba(5,150,105,0.2); transform: translateY(-3px); }
-.pricing-card.best-available.standard { box-shadow: 0 0 0 2px var(--blue), 0 4px 12px rgba(2,132,199,0.2); transform: translateY(-3px); }
-.pricing-card.best-available.rush { box-shadow: 0 0 0 2px var(--yellow), 0 4px 12px rgba(234,179,8,0.2); transform: translateY(-3px); }
-.pricing-card.best-available.urgent { box-shadow: 0 0 0 2px var(--orange), 0 4px 12px rgba(234,88,12,0.2); transform: translateY(-3px); }
-.pricing-card.best-available.critical { box-shadow: 0 0 0 2px var(--red), 0 4px 12px rgba(220,38,38,0.2); transform: translateY(-3px); }
-.pricing-card.best-available.lastminute { box-shadow: 0 0 0 2px var(--primary), 0 4px 12px rgba(124,58,237,0.2); transform: translateY(-3px); }
+.pricing-card.best-available.early    { box-shadow: 0 0 0 2px var(--green),   0 12px 28px -6px rgba(5, 150, 105, 0.45); }
+.pricing-card.best-available.standard { box-shadow: 0 0 0 2px var(--blue),    0 12px 28px -6px rgba(2, 132, 199, 0.45); }
+.pricing-card.best-available.rush     { box-shadow: 0 0 0 2px var(--yellow),  0 12px 28px -6px rgba(234, 179, 8, 0.45); }
+.pricing-card.best-available.urgent   { box-shadow: 0 0 0 2px var(--orange),  0 12px 28px -6px rgba(234, 88, 12, 0.45); }
+.pricing-card.best-available.critical { box-shadow: 0 0 0 2px var(--red),     0 12px 28px -6px rgba(220, 38, 38, 0.45); }
+.pricing-card.best-available.lastminute { box-shadow: 0 0 0 2px var(--primary), 0 12px 28px -6px rgba(124, 58, 237, 0.45); }
 
 /* Unavailable cards */
 .pricing-card.not-available {
@@ -2207,16 +2345,46 @@ body {
   color: #9ca3af;
 }
 
+/* Countdown wrapper — positioning context for the triangle pointer */
+.pricing-countdown-wrapper {
+  position: relative;
+  margin-top: 0.4rem;
+}
+
+/* Triangle pointer — JS sets `left` to the active card's center X.
+   Saturated tier color so it's visually prominent (not the pale bar tint). */
+.pricing-countdown-pointer {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-left: 14px solid transparent;
+  border-right: 14px solid transparent;
+  border-bottom: 12px solid transparent;
+  transform: translateX(-50%);
+  transition: left 0.25s ease-out;
+  z-index: 4;
+  pointer-events: none;
+}
+.pricing-countdown-pointer.early      { border-bottom-color: var(--green); }
+.pricing-countdown-pointer.standard   { border-bottom-color: var(--blue); }
+.pricing-countdown-pointer.rush       { border-bottom-color: #eab308; }
+.pricing-countdown-pointer.urgent     { border-bottom-color: var(--orange); }
+.pricing-countdown-pointer.critical   { border-bottom-color: var(--red); }
+.pricing-countdown-pointer.lastminute { border-bottom-color: var(--primary); }
+
 /* Unified countdown (replaces desktop/mobile split) */
 .pricing-countdown {
   background: var(--primary-light);
   padding: 0;
   border-radius: var(--radius);
+  border: 2px solid transparent;
+  box-sizing: border-box;
   font-size: 0.9rem;
   color: var(--primary);
   font-weight: 600;
   text-align: center;
-  margin-top: 0.5rem;
   max-height: 0;
   overflow: hidden;
   transition: max-height 0.3s ease-out, padding 0.3s ease-out;
@@ -2227,13 +2395,14 @@ body {
   padding: var(--space-sm) var(--space-md);
 }
 
-/* Countdown tier color matching */
-.pricing-countdown.early { background: #ecfdf5; color: var(--green); }
-.pricing-countdown.standard { background: #eff6ff; color: var(--blue); }
-.pricing-countdown.rush { background: #fefce8; color: #a16207; }
-.pricing-countdown.urgent { background: #fff7ed; color: var(--orange); }
-.pricing-countdown.critical { background: #fef2f2; color: var(--red); }
-.pricing-countdown.lastminute { background: var(--primary-light); color: var(--primary); }
+/* Countdown tier color matching — background tint + saturated tier border
+   that visually attaches to the triangle pointer above */
+.pricing-countdown.early      { background: #ecfdf5; color: var(--green);   border-color: var(--green); }
+.pricing-countdown.standard   { background: #eff6ff; color: var(--blue);    border-color: var(--blue); }
+.pricing-countdown.rush       { background: #fefce8; color: #a16207;        border-color: #eab308; }
+.pricing-countdown.urgent     { background: #fff7ed; color: var(--orange);  border-color: var(--orange); }
+.pricing-countdown.critical   { background: #fef2f2; color: var(--red);     border-color: var(--red); }
+.pricing-countdown.lastminute { background: var(--primary-light); color: var(--primary); border-color: var(--primary); }
 
 /* Countdown urgency escalation — overrides tier colors when time is low */
 .pricing-countdown.countdown-warning {
@@ -2252,11 +2421,35 @@ body {
   .pricing-cards-row {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 0.4rem;
+    /* row-gap is large enough to fit the in-card "Your Price Today" pill that
+       overflows above the active card on row 2. */
+    column-gap: 0.4rem;
+    row-gap: 1.6rem;
     overflow-x: visible;
+    /* Top padding clears the pill above the active card on row 1. */
+    padding: 1.6rem 0.25rem 0.75rem;
   }
   .pricing-card {
     min-width: 0;
+  }
+  /* Disable scale on active card — would overlap neighbors in tight 3-col grid.
+     The tier-colored ring + shadow + savings text + in-card pill still
+     distinguish it clearly. */
+  .pricing-card.best-available {
+    transform: none;
+    margin: 0;
+  }
+  /* "Prices if you order later" bracket spans multiple cards horizontally and
+     doesn't translate to the wrapped grid layout — keep it hidden on mobile. */
+  .pricing-row-ribbon-wait {
+    display: none !important;
+  }
+  /* In-card "Your Price Today" pill scales down on mobile to fit narrow cards. */
+  .pricing-card-ribbon {
+    font-size: 0.52rem;
+    padding: 0.3rem 0.55rem;
+    top: -1.1rem;
+    letter-spacing: 0.4px;
   }
   .pricing-card-day {
     font-size: 1.8rem;
@@ -2265,21 +2458,40 @@ body {
     font-size: 1rem;
   }
   .pricing-card-cutoff {
-    font-size: 0.6rem;
-  }
-  .pricing-delivery-anchor {
-    font-size: 0.75rem;
-    padding: 0.3rem 0;
-  }
-  .pricing-card-cutoff {
     font-size: 0.55rem;
   }
-  .pricing-anchor-tooltip {
-    white-space: normal;
-    width: 250px;
+  .pricing-delivery-anchor {
+    padding: 0.3rem 0;
+  }
+  .pricing-anchor-headline {
+    font-size: 0.9rem;
+    line-height: 1.35;
+  }
+  /* Force the bold delivery date onto its own line on mobile — reads much
+     better than wrapping mid-phrase */
+  .pricing-anchor-headline strong {
+    display: block;
+    margin-top: 0.15rem;
+  }
+  .pricing-anchor-subline {
+    font-size: 0.7rem;
+    margin-top: 0.3rem;
+  }
+  /* Tighter savings text so it fits on narrow cards without wrapping */
+  .pricing-card-savings-active {
+    font-size: 0.5rem;
+    letter-spacing: 0.2px;
+  }
+  .pricing-card-savings-future {
+    font-size: 0.48rem;
   }
   .pricing-card-header-turnaround {
     font-size: 0.45rem;
+  }
+  .pricing-card-order-by-label {
+    font-size: 0.62rem;
+    padding: 0.3rem 0.2rem;
+    letter-spacing: 0.4px;
   }
 }
 
@@ -3477,16 +3689,6 @@ button:focus {
   font-size: 0.95rem;
 }
 
-.conversion-fee-row {
-  display: none;
-}
-
-.conversion-fee {
-  font-weight: 500;
-  color: var(--blue);
-  font-size: 0.95rem;
-}
-
 .subtotal-row {
   border-bottom: 1px solid #f3f4f6;
 }
@@ -3669,17 +3871,24 @@ button:focus {
 }
 
 .status-badge-modern.completed .status-indicator {
-  background: var(--green);
-  border-color: var(--green);
+  /* When completed, the Lucide circle-check-big SVG provides its own circle —
+     drop the wrapper border/fill so the SVG renders cleanly. */
+  background: transparent;
+  border: none;
+  width: 22px;
+  height: 22px;
+}
+
+.status-badge-modern.completed .status-indicator svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* SVG strokes inherit `currentColor` which is var(--green) on .completed */
 }
 
 .status-icon-modern {
   font-size: 0.6rem;
   line-height: 1;
-}
-
-.status-badge-modern.completed .status-icon-modern {
-  color: white;
 }
 
 .status-text-modern {
@@ -3699,6 +3908,227 @@ button:focus {
 
 .order-confidence-note strong {
   color: var(--primary);
+}
+
+/* ===== SKELETON LOADING ===== */
+.skeleton-bar {
+  background: #e5e7eb;
+  border-radius: 6px;
+  position: relative;
+  overflow: hidden;
+}
+.skeleton-bar::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.5) 50%, transparent 100%);
+  animation: skeleton-shimmer 1.8s ease-in-out infinite;
+}
+@keyframes skeleton-shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+.skeleton-pricing {
+  padding: 10px 0;
+}
+.skeleton-cards-row {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0 0.25rem;
+}
+.skeleton-card {
+  flex: 1 1 0;
+  min-width: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+.skeleton-card-header {
+  height: 36px;
+  background: #e5e7eb;
+  position: relative;
+  overflow: hidden;
+}
+.skeleton-card-header::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%);
+  animation: skeleton-shimmer 1.8s ease-in-out infinite;
+}
+.skeleton-card-body {
+  padding: 12px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.skeleton-card-footer {
+  height: 24px;
+  background: #f3f4f6;
+}
+@media (max-width: 600px) {
+  .skeleton-cards-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.4rem;
+  }
+}
+
+/* ===== FLATPICKR THEME OVERRIDES ===== */
+/* All day cells — squarish rounded squares instead of circles */
+/* Override Flatpickr's default 150px border-radius to rounded squares */
+.flatpickr-day {
+  border-radius: 8px !important;
+  max-width: 36px;
+  height: 36px;
+  line-height: 36px;
+  margin: 2px;
+}
+/* Available dates — purple tint */
+.flatpickr-day.fp-available {
+  background: #f5f3ff;
+  border-color: #ede9fe;
+  color: #5b21b6;
+  font-weight: 600;
+}
+.flatpickr-day.fp-available:hover {
+  background: #7c3aed;
+  border-color: #7c3aed;
+  color: white;
+}
+/* Selected date — solid purple */
+.flatpickr-day.selected,
+.flatpickr-day.selected:hover {
+  background: #7c3aed !important;
+  border-color: #7c3aed !important;
+  color: white !important;
+}
+/* Today marker */
+.flatpickr-day.today {
+  border-color: #7c3aed;
+}
+.flatpickr-day.today:hover {
+  background: #7c3aed;
+  color: white;
+}
+/* Disabled dates — grey */
+.flatpickr-day.flatpickr-disabled {
+  color: #d1d5db !important;
+  background: transparent;
+}
+/* Calendar container — more internal padding */
+.flatpickr-calendar {
+  font-family: 'Montserrat', sans-serif;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(124, 58, 237, 0.15);
+  border: 1px solid #e5e7eb;
+  padding: 8px;
+}
+.flatpickr-innerContainer {
+  padding: 0 4px 4px;
+}
+.flatpickr-months .flatpickr-month {
+  background: #7c3aed;
+  color: white;
+  border-radius: 12px 12px 0 0;
+}
+.flatpickr-months .flatpickr-prev-month,
+.flatpickr-months .flatpickr-next-month {
+  fill: white;
+  color: white;
+}
+.flatpickr-months .flatpickr-prev-month:hover svg,
+.flatpickr-months .flatpickr-next-month:hover svg {
+  fill: #ede9fe;
+}
+.flatpickr-current-month .flatpickr-monthDropdown-months {
+  background: #7c3aed;
+  color: white;
+}
+span.flatpickr-weekday {
+  color: #6b7280;
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+/* Static positioning within the date container */
+.date-input-container .flatpickr-calendar.static {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  z-index: 100;
+}
+/* Flatpickr wraps the input in .flatpickr-wrapper (inline-block by default).
+   display:contents removes the wrapper from layout entirely — its children
+   (hidden input + calendar) become direct children of .date-input-container
+   for layout purposes. This prevents the wrapper from adding height. */
+.date-input-container .flatpickr-wrapper {
+  display: contents;
+}
+/* Hide the native date input when Flatpickr is active */
+.date-input-hidden.flatpickr-input {
+  visibility: hidden;
+  height: 0;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  position: absolute;
+}
+
+/* ===== TERMS & PRIVACY ===== */
+.order-terms-note {
+  font-size: 0.7rem;
+  color: var(--subtext);
+  text-align: center;
+  margin: 1rem 0 0.25rem;
+}
+.order-terms-note a {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 600;
+}
+.order-terms-note a:hover {
+  text-decoration: underline;
+}
+
+/* ===== UPLOAD INLINE ERROR ===== */
+.upload-inline-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-top: 10px;
+  text-align: center;
+  animation: fadeUp 0.3s ease-out;
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== MARKETING CONSENT ===== */
+.consent-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: center;
+  margin-top: 10px;
+  font-size: 0.7rem;
+  color: var(--subtext);
+  cursor: pointer;
+  line-height: 1.3;
+}
+.consent-label input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--primary);
+  cursor: pointer;
+  flex-shrink: 0;
 }
 
 /* ===== SUBMIT BUTTON IMPROVEMENTS ===== */
@@ -4255,8 +4685,8 @@ textarea.field-control {
   }
 
   .field-control-card {
-    height: 32px;
-    font-size: 0.8rem;
+    height: 40px;
+    font-size: 16px; /* Prevent iOS zoom on focus */
   }
 
   /* Mobile-specific: Card 2C - Similar sizes 2 per row */
@@ -4357,7 +4787,7 @@ textarea.field-control {
 .date-time-row {
   display: flex;
   gap: 8px;
-  align-items: stretch;
+  align-items: center;
 }
 
 .date-time-row .date-input-container {
@@ -4370,6 +4800,7 @@ textarea.field-control {
   display: flex;
   align-items: center;
   min-width: 140px;
+  flex-shrink: 0;
 }
 
 .time-select-wrapper .time-icon {
@@ -4406,7 +4837,8 @@ textarea.field-control {
   font-weight: 600;
   color: var(--primary);
   width: 100%;
-  height: 100%;
+  height: var(--input-height);
+  box-sizing: border-box;
 }
 
 .time-select:focus {
@@ -4423,10 +4855,16 @@ textarea.field-control {
 .date-display {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
   cursor: pointer;
   background: white;
+  color: var(--primary);
+  font-weight: 600;
+  width: 100%;
   position: relative;
+  height: var(--input-height);
+  box-sizing: border-box;
 }
 
 .date-display .date-icon {
@@ -4799,11 +5237,6 @@ textarea.field-control {
   background: #f3e8ff;
   padding: 0.1rem 0.35rem;
   border-radius: 3px;
-}
-
-.conversion-fee-small {
-  font-size: 0.55rem;
-  color: #ef4444;
 }
 
 /* Upload Success Compact - Horizontal */
@@ -5371,11 +5804,6 @@ textarea.field-control {
 .upload-formats-line {
   font-size: 0.8rem;
   color: var(--subtext);
-}
-
-.conversion-fee {
-  color: var(--blue);
-  font-weight: 600;
 }
 
 /* Upload success state for horizontal layout */
@@ -6438,5 +6866,75 @@ textarea.field-control {
     max-width: 90vw;
     font-size: 0.85rem;
     padding: 12px 18px;
+  }
+}
+
+/* ===== SOCIAL PROOF TOAST (bottom-left popup, desktop only) ===== */
+.social-proof-toast {
+  position: fixed;
+  bottom: 1.5rem;
+  left: -420px;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  max-width: 340px;
+  padding: 0.85rem 1rem 0.85rem 0.9rem;
+  background: white;
+  border-radius: 12px;
+  border-left: 4px solid var(--green);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: #334155;
+  z-index: 9999;
+  opacity: 0;
+  transition: left 0.45s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+}
+.social-proof-toast.show {
+  left: 1.5rem;
+  opacity: 1;
+}
+.sp-toast-icon {
+  font-size: 1rem;
+  color: var(--green);
+  flex-shrink: 0;
+  margin-top: 1px;
+  line-height: 1;
+}
+.sp-toast-body {
+  flex: 1;
+  min-width: 0;
+}
+.sp-toast-body strong {
+  color: #1e293b;
+  font-weight: 700;
+}
+.sp-toast-body em {
+  font-style: italic;
+  color: #475569;
+}
+.sp-toast-body .sp-time {
+  color: #94a3b8;
+  white-space: nowrap;
+  font-size: 0.72rem;
+}
+.sp-toast-close {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  line-height: 1;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 0 2px;
+  margin: -2px -4px 0 0;
+  flex-shrink: 0;
+  transition: color 0.15s ease;
+}
+.sp-toast-close:hover {
+  color: #475569;
+}
+@media (max-width: 600px) {
+  .social-proof-toast {
+    display: none !important;
   }
 }

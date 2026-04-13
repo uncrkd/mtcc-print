@@ -84,198 +84,146 @@ function findPricingRow($area, $material = 'poster') {
 }
 
 /**
- * Check if a tier is blocked by delivery time rules
- * Mirrors isTierBlockedByDeliveryTime() in script.js
+ * Load statutory holidays map from data/holidays.json.
+ * Returns ['YYYY-MM-DD' => 'Holiday name', ...].
+ */
+function getHolidaysMap() {
+    static $holidays = null;
+    if ($holidays === null) {
+        $path = __DIR__ . '/../data/holidays.json';
+        if (!file_exists($path)) {
+            $holidays = [];
+            return $holidays;
+        }
+        $data = json_decode(file_get_contents($path), true);
+        $holidays = isset($data['holidays']) && is_array($data['holidays']) ? $data['holidays'] : [];
+    }
+    return $holidays;
+}
+
+function isHolidayDatePHP(DateTime $date) {
+    $key = $date->format('Y-m-d');
+    $holidays = getHolidaysMap();
+    return isset($holidays[$key]);
+}
+
+function isBusinessDayPHP(DateTime $date) {
+    $dow = (int)$date->format('w');
+    if ($dow === 0 || $dow === 6) return false;
+    return !isHolidayDatePHP($date);
+}
+
+function walkBackBusinessDaysPHP(DateTime $fromDate, $numDays) {
+    $d = clone $fromDate;
+    $remaining = (int)$numDays;
+    while ($remaining > 0) {
+        $d->modify('-1 day');
+        if (isBusinessDayPHP($d)) $remaining--;
+    }
+    return $d;
+}
+
+function getPreviousBusinessDayPHP(DateTime $date) {
+    $prev = clone $date;
+    do {
+        $prev->modify('-1 day');
+    } while (!isBusinessDayPHP($prev));
+    return $prev;
+}
+
+/**
+ * Production deadline for a given delivery date + time.
+ * Mirrors getProductionDeadline() in script.js.
+ *
+ * Rules:
+ *   - Sat/Sun delivery        → Friday before @ 2 PM
+ *   - Monday delivery @ 9am   → Friday before @ 2 PM
+ *   - Weekday delivery @ 9am  → previous business day @ 2 PM
+ *   - Weekday delivery @ Xpm  → same day @ (X - 3h)
+ */
+function getProductionDeadlinePHP($deliveryDate, $deliveryTimeValue) {
+    $delivery = $deliveryDate instanceof DateTime ? clone $deliveryDate : new DateTime($deliveryDate);
+    $delivery->setTime(0, 0, 0);
+    $deliveryDow = (int)$delivery->format('w');
+
+    // Sat/Sun → preceding business day (Friday unless Fri is a holiday) @ 2 PM
+    if ($deliveryDow === 0 || $deliveryDow === 6) {
+        $fri = clone $delivery;
+        while ((int)$fri->format('w') !== 5) {
+            $fri->modify('-1 day');
+        }
+        while (!isBusinessDayPHP($fri)) {
+            $fri->modify('-1 day');
+        }
+        $fri->setTime(14, 0, 0);
+        return $fri;
+    }
+
+    // Monday delivery @ 9am → previous business day (typically Fri) @ 2 PM
+    if ($deliveryDow === 1 && $deliveryTimeValue === '9am') {
+        $prev = getPreviousBusinessDayPHP($delivery);
+        $prev->setTime(14, 0, 0);
+        return $prev;
+    }
+
+    // Weekday @ 9am → previous business day @ 2 PM
+    if ($deliveryTimeValue === '9am') {
+        $prev = getPreviousBusinessDayPHP($delivery);
+        $prev->setTime(14, 0, 0);
+        return $prev;
+    }
+
+    // Weekday @ 12pm/3pm/6pm/anytime → delivery hour minus 3h
+    $deliveryHourMap = ['12pm' => 12, '3pm' => 15, '6pm' => 18, 'anytime' => 18];
+    $deliveryHour = isset($deliveryHourMap[$deliveryTimeValue]) ? $deliveryHourMap[$deliveryTimeValue] : 18;
+    $deadline = clone $delivery;
+    $deadline->setTime($deliveryHour - 3, 0, 0);
+    return $deadline;
+}
+
+/**
+ * Tier availability is now purely a function of "is the cutoff still in the future".
+ * Retained for API compatibility — always returns false (never blocks structurally).
+ * The calculateBestTier() loop still checks cutoff-vs-now expiry, which is the real gate.
  */
 function isTierBlocked($tierKey, $deliveryDate, $deliveryTimeValue) {
-    $now = new DateTime();
-    $delivery = new DateTime($deliveryDate);
-    $currentHour = (int)$now->format('G');
-    $deliveryDow = (int)$delivery->format('w'); // 0=Sun, 6=Sat
-    $nowDow = (int)$now->format('w');
-    
-    $today = new DateTime();
-    $today->setTime(0, 0, 0);
-    $deliveryMidnight = clone $delivery;
-    $deliveryMidnight->setTime(0, 0, 0);
-    $daysDiff = (int)$today->diff($deliveryMidnight)->format('%r%a');
-    
-    // Same-day tier is never blocked by delivery time rules
-    if ($tierKey === 'sameday') return false;
-    
-    // Next-day tier: only block when delivery is genuinely the next business day
-    if ($tierKey === 'nextday') {
-        // 9am on literal next day: overnight turnaround not realistic
-        if ($deliveryTimeValue === '9am') {
-            if ($daysDiff <= 1) return true;
-            // Friday ordering for Monday 9am next-day
-            if ($nowDow === 5 && $deliveryDow === 1 && $daysDiff <= 3) return true;
-        }
-        // After 3 PM, only blocked for literal next-day delivery
-        if ($currentHour >= 15 && $daysDiff <= 1) return true;
-        return false;
-    }
-    
-    // Weekend delivery blocks all non-sameday tiers
-    if ($deliveryDow === 0 || $deliveryDow === 6) return true;
-    
-    // Monday 9am from preceding Fri/Sat/Sun: only sameday realistic
-    if ($deliveryDow === 1 && $deliveryTimeValue === '9am' && $daysDiff > 0 && $daysDiff <= 3) return true;
-    
-    // Ordering from Sat/Sun for the immediately next Monday only
-    if ($deliveryDow === 1 && ($nowDow === 0 || $nowDow === 6) && $daysDiff > 0 && $daysDiff <= 2) return true;
-    
-    // Monday before 9am for same-day Monday delivery
-    if ($deliveryDow === 1 && $nowDow === 1 && $currentHour < 9 && $daysDiff === 0) return true;
-    
     return false;
 }
 
 /**
- * Calculate the cutoff date for a given tier, delivery date, and delivery time
- * Mirrors getCutoffDate() in script.js
+ * Tier order cutoff = walk back leadDays business days from production deadline,
+ * set tier cutoff hour. Same-day tier (lead=0) uses production deadline directly.
+ * Mirrors getCutoffDate() in script.js.
  */
 function getCutoffDateTime($deliveryDate, $leadDays, $cutoffHour, $deliveryTimeValue = 'anytime') {
-    $delivery = new DateTime($deliveryDate);
-    $deliveryDow = (int)$delivery->format('w');
-    
-    // Same-day (lead=0)
-    if ($leadDays === 0) {
-        // Weekend delivery: cutoff is Friday 3 PM
-        if ($deliveryDow === 0 || $deliveryDow === 6) {
-            $cutoff = clone $delivery;
-            while ((int)$cutoff->format('w') !== 5) {
-                $cutoff->modify('-1 day');
-            }
-            $cutoff->setTime(15, 0, 0);
-            return $cutoff;
-        }
-        // Monday 9am: cutoff is Friday 3 PM
-        if ($deliveryDow === 1 && $deliveryTimeValue === '9am') {
-            $cutoff = clone $delivery;
-            $cutoff->modify('-3 days'); // Monday - 3 = Friday
-            $cutoff->setTime(15, 0, 0);
-            return $cutoff;
-        }
-        // Normal weekday same-day
-        $cutoff = clone $delivery;
-        $cutoff->setTime($cutoffHour, 0, 0);
-        return $cutoff;
+    $productionDeadline = getProductionDeadlinePHP($deliveryDate, $deliveryTimeValue);
+
+    if ((int)$leadDays === 0) {
+        return $productionDeadline;
     }
-    
-    // Next-day (lead=1)
-    if ($leadDays === 1) {
-        // Monday delivery: cutoff is Friday
-        if ($deliveryDow === 1) {
-            $cutoff = clone $delivery;
-            $cutoff->modify('-3 days');
-            $cutoff->setTime($cutoffHour, 0, 0);
-            return $cutoff;
-        }
-        // Weekend delivery
-        if ($deliveryDow === 0 || $deliveryDow === 6) {
-            $cutoff = clone $delivery;
-            $cutoff->modify('-1 day');
-            while ((int)$cutoff->format('w') === 0 || (int)$cutoff->format('w') === 6) {
-                $cutoff->modify('-1 day');
-            }
-            $cutoff->setTime($cutoffHour, 0, 0);
-            return $cutoff;
-        }
-        // Normal weekday
-        $cutoff = clone $delivery;
-        $cutoff->modify('-1 day');
-        while ((int)$cutoff->format('w') === 0 || (int)$cutoff->format('w') === 6) {
-            $cutoff->modify('-1 day');
-        }
-        $cutoff->setTime($cutoffHour, 0, 0);
-        return $cutoff;
-    }
-    
-    // 2+ day tiers
-    $cutoff = clone $delivery;
-    $remaining = $leadDays;
-    while ($remaining > 0) {
-        $cutoff->modify('-1 day');
-        $dow = (int)$cutoff->format('w');
-        if ($dow !== 0 && $dow !== 6) {
-            $remaining--;
-        }
-    }
-    $cutoff->setTime($cutoffHour, 0, 0);
+
+    $cutoff = walkBackBusinessDaysPHP($productionDeadline, (int)$leadDays);
+    $cutoff->setTime((int)$cutoffHour, 0, 0);
     return $cutoff;
 }
 
 /**
- * Check if a delivery time is available for a given date
- * Mirrors isDeliveryTimeAvailable() in script.js
+ * A delivery time is available iff its production deadline is still in the future.
+ * Mirrors isDeliveryTimeAvailable() in script.js.
  */
 function isDeliveryTimeAvailable($timeValue, $deliveryDate) {
-    $config = getDeliveryConfig();
-    if (!$config) return true; // Fail open if config missing
-    
-    $gates = $config['delivery_time_gates'] ?? [];
-    if (!isset($gates[$timeValue])) return true;
-    
-    $gate = $gates[$timeValue];
     $now = new DateTime();
     $delivery = new DateTime($deliveryDate);
-    
+
     $today = new DateTime();
     $today->setTime(0, 0, 0);
     $deliveryMidnight = clone $delivery;
     $deliveryMidnight->setTime(0, 0, 0);
-    $daysDiff = (int)$today->diff($deliveryMidnight)->format('%r%a');
-    
-    $currentHour = (int)$now->format('G');
-    $nowDow = (int)$now->format('w');
-    $deliveryDow = (int)$delivery->format('w');
-    
-    // 2+ days: generally available except weekend rules
-    if ($daysDiff >= 2) {
-        if ($deliveryDow === 0 || $deliveryDow === 6) {
-            return isBeforeFridayCutoffPHP($now);
-        }
-        if ($deliveryDow === 1 && $timeValue === '9am') {
-            return isBeforeFridayCutoffPHP($now);
-        }
-        return true;
-    }
-    
-    // Same-day
-    if ($daysDiff === 0) {
-        if ($nowDow === 0 || $nowDow === 6) return false;
-        if ($gate['gate_context'] === 'previous_day') return false;
-        return $currentHour < $gate['gate_hour'];
-    }
-    
-    // Next-day
-    if ($daysDiff === 1) {
-        if ($deliveryDow === 0 || $deliveryDow === 6) {
-            return isBeforeFridayCutoffPHP($now);
-        }
-        if ($deliveryDow === 1 && $nowDow === 0) {
-            return ($timeValue !== '9am');
-        }
-        if ($gate['gate_context'] === 'previous_day') {
-            return $currentHour < $gate['gate_hour'];
-        }
-        return true;
-    }
-    
-    return false;
-}
 
-/**
- * Helper: is current time before Friday 3 PM?
- */
-function isBeforeFridayCutoffPHP($now) {
-    $dow = (int)$now->format('w');
-    $hour = (int)$now->format('G');
-    
-    if ($dow === 5 && $hour < 15) return true;
-    if ($dow >= 1 && $dow <= 4) return true;
-    return false;
+    if ($deliveryMidnight < $today) return false;
+
+    $productionDeadline = getProductionDeadlinePHP($delivery, $timeValue);
+    return $productionDeadline > $now;
 }
 
 /**
@@ -337,7 +285,6 @@ function validateOrderPricing($orderData) {
     $submittedTotal = (float)($orderData['total'] ?? 0);
     $submittedTier = $orderData['tier'] ?? '';
     $deliveryFee = (float)($orderData['deliveryFee'] ?? 0);
-    $conversionFee = (float)($orderData['conversionFee'] ?? 0);
     $taxRate = 0.13;
     
     $result = [
@@ -386,7 +333,7 @@ function validateOrderPricing($orderData) {
     $result['server_price'] = $serverTier['price'];
     
     // Calculate server total
-    $serverSubtotal = $serverTier['price'] + $deliveryFee + $conversionFee;
+    $serverSubtotal = $serverTier['price'] + $deliveryFee;
     $serverTax = round($serverSubtotal * $taxRate, 2);
     $result['server_total'] = round($serverSubtotal + $serverTax, 2);
     

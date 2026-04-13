@@ -144,7 +144,7 @@ if ($tempRef) {
 </head>
 <body>
     <div class="container">
-        <div class="icon">ðŸ›’</div>
+        <div class="icon"><?= ICON_CART ?></div>
         <h1>Payment Cancelled</h1>
         
         <p class="message">
@@ -152,7 +152,7 @@ if ($tempRef) {
         </p>
         
         <div class="info-box">
-            <h3>ðŸ’¡ Your information is safe</h3>
+            <h3><?= ICON_BULB ?> Your information is safe</h3>
             <p>
                 Your order details were not saved since payment wasn't completed. 
                 You'll need to fill out the form again to place a new order.

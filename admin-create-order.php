@@ -379,13 +379,6 @@ foreach ($statusLabelsMap as $code => $label) {
                             </div>
                         </div>
                         <div class="field">
-                            <label for="conversion_fee">Conversion</label>
-                            <div style="display: flex; align-items: center;">
-                                <span style="background: #e5e7eb; padding: 8px 10px; border-radius: 6px 0 0 6px; border: 1px solid #d1d5db; border-right: none; color: #374151; font-weight: 600; flex-shrink: 0;">$</span>
-                                <input type="number" step="0.01" id="conversion_fee" name="conversion_fee" class="field-control" min="0" value="5" onchange="updateTotal()" style="border-radius: 0 6px 6px 0; border-left: none; flex: 1; min-width: 0; width: 100%; padding-left: 6px; padding-right: 6px;">
-                            </div>
-                        </div>
-                        <div class="field">
                             <label for="tax">Tax (13%)</label>
                             <div style="display: flex; align-items: center;">
                                 <span style="background: #f3f4f6; padding: 8px 10px; border-radius: 6px 0 0 6px; border: 1px solid #d1d5db; border-right: none; color: #9ca3af; font-weight: 600; flex-shrink: 0;">$</span>

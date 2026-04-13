@@ -16,17 +16,28 @@ require_once 'includes/icons.php';
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0" />
   <title>MTCC Poster Pricing | Print Stuff</title>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet" />
   <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
-  <link rel="stylesheet" href="styles.css?v=20260318">
+  <link rel="stylesheet" href="styles.css?v=20260413-wrapper-contents">
+  <!-- Flatpickr date picker (custom-styled available/unavailable dates) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <!-- PDF.js for file thumbnail previews -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <!-- Icon Library for JavaScript -->
   <?php outputIconsScript(); ?>
 </head>
 <body>
+  <noscript>
+    <div style="max-width:600px;margin:40px auto;padding:32px;background:#fff;border-radius:16px;border:2px solid #7c3aed;text-align:center;font-family:Montserrat,sans-serif;box-shadow:0 8px 32px rgba(124,58,237,0.15);">
+      <div style="font-size:2.5rem;margin-bottom:12px;">&#9888;&#65039;</div>
+      <h2 style="color:#7c3aed;margin-bottom:12px;">JavaScript Required</h2>
+      <p style="color:#374151;line-height:1.6;margin-bottom:20px;">Our order form needs JavaScript to calculate pricing, validate your files, and process secure payments. Please enable JavaScript in your browser settings, then refresh this page.</p>
+      <p style="color:#6b7280;font-size:0.85rem;">Need help? <a href="mailto:orders@printstuff.ca" style="color:#7c3aed;">orders@printstuff.ca</a> &#183; <a href="tel:4378828822" style="color:#7c3aed;">(437) 882-8822</a></p>
+    </div>
+  </noscript>
   <div class="container">
     
     <!-- Hero Banner -->
@@ -51,7 +62,6 @@ require_once 'includes/icons.php';
     <!-- Hidden fields for JavaScript-controlled values -->
     <input type="hidden" id="hiddenMaterial" name="material" value="poster">
     <input type="hidden" id="hiddenDeliveryOption" name="deliveryOption" value="">
-    <input type="hidden" id="hiddenConversionFee" name="conversionFee" value="0">
     <input type="hidden" id="hiddenEventAcronym" name="eventAcronym" value="">
     <input type="hidden" id="hiddenEventName" name="eventName" value="">
     <input type="hidden" id="hiddenEventBuilding" name="eventBuilding" value="">
@@ -216,8 +226,8 @@ require_once 'includes/icons.php';
                     <div class="upload-icon-compact">&#128194;</div>
                     <div class="upload-text-compact">
                       <div class="upload-main-line"><strong>Click to upload</strong> or drag file</div>
-                      <div class="upload-formats-compact"><span class="pdf-preferred">PDF preferred</span> <span class="conversion-fee-small">(+$5 non-PDF)</span></div>
-                      <div class="upload-formats-small">JPG, PNG, AI, EPS, PSD, TIFF, SVG, PPTX • Max 100MB</div>
+                      <div class="upload-formats-compact"><span class="pdf-preferred">Any file format accepted</span></div>
+                      <div class="upload-formats-small">PDF, JPG, PNG, AI, EPS, PSD, TIFF, SVG, PPTX • Max 100MB</div>
                     </div>
                   </div>
 
@@ -496,14 +506,6 @@ require_once 'includes/icons.php';
               <span class="summary-price" id="summaryDeliveryFee">-</span>
             </div>
 
-            <div id="conversionFeeRow" class="summary-row conversion-fee-row">
-              <div class="summary-label">
-                <div class="summary-title">File Conversion:</div>
-                <div class="summary-content">Non-PDF file conversion to print format</div>
-              </div>
-              <span class="summary-price conversion-fee">$5.00</span>
-            </div>
-
             <div class="summary-row subtotal-row">
               <span class="subtotal-label">Subtotal</span>
               <span class="subtotal-price" id="summarySubtotal">-</span>
@@ -578,6 +580,10 @@ require_once 'includes/icons.php';
               <span class="submit-loading-text">Submitting your order...</span>
             </div>
           </button>
+          <label class="consent-label">
+            <input type="checkbox" name="marketingConsent" id="marketingConsent" checked>
+            <span>Keep me updated on upcoming events and special offers</span>
+          </label>
         </div>
       </div>
       <div class="summary-completion-footer">
@@ -622,18 +628,27 @@ require_once 'includes/icons.php';
   </script>
   <!--End of Tawk.to Script-->
 
-  <div class="footer">© <span id="yr"></span> Print Stuff</div>
+  <div class="order-terms-note">
+    By proceeding, you agree to our <a href="/terms" target="_blank">Terms of Service</a> and <a href="/privacy" target="_blank">Privacy Policy</a>.
+  </div>
+  <div class="footer">&copy; <span id="yr"></span> Print Stuff</div>
 
 	<?php
     // Inject delivery configuration as inline JS (single source of truth)
     $deliveryConfig = require __DIR__ . '/delivery-config.php';
     echo '<script>window.DELIVERY_CONFIG = ' . json_encode($deliveryConfig) . ';</script>';
 
+    // Inject statutory holidays map so client-side production-deadline math can
+    // skip non-business days identically to server-side validation.
+    $holidaysData = json_decode(file_get_contents(__DIR__ . '/data/holidays.json'), true);
+    $holidaysMap = isset($holidaysData['holidays']) ? $holidaysData['holidays'] : [];
+    echo '<script>window.HOLIDAYS = ' . json_encode($holidaysMap) . ';</script>';
+
     // Inject MTCC locations data for dynamic delivery details
     $mtccLocations = json_decode(file_get_contents(__DIR__ . '/data/mtcc-locations.json'), true);
     echo '<script>window.MTCC_LOCATIONS = ' . json_encode($mtccLocations) . ';</script>';
   ?>
-	<script src="script.js?v=20260226-delivery-enforcement"></script>
+	<script src="script.js?v=20260412-datepicker"></script>
   <script>
     // Similar Sizes Toggle Functionality
     document.addEventListener('DOMContentLoaded', function() {
