@@ -179,7 +179,7 @@ $lastUpdated = 'April 13, 2026';
       <h2>14. Privacy Officer and Contact</h2>
       <p>Print Stuff's Privacy Officer is responsible for overseeing compliance with this policy and PIPEDA. For privacy-related questions, access requests, or complaints:</p>
       <ul>
-        <li><strong>Privacy Officer:</strong> George Chatjaveridi</li>
+        <li><strong>Privacy Officer:</strong> George Chatjaveridis</li>
         <li><strong>Email:</strong> <a href="mailto:orders@printstuff.ca">orders@printstuff.ca</a></li>
         <li><strong>Phone:</strong> <a href="tel:4378828822">(437) 882-8822</a></li>
         <li><strong>Website:</strong> <a href="https://print-stuff.ca">print-stuff.ca</a></li>

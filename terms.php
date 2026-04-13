@@ -134,34 +134,52 @@ $lastUpdated = 'April 13, 2026';
       <h2>8. Production and Delivery</h2>
       <ul>
         <li>Production timelines are based on business days. We do not print on weekends or statutory holidays.</li>
-        <li><strong>MTCC Pickup:</strong> Orders are available for pickup at the Metro Toronto Convention Centre Business Centre during business hours (Mon&ndash;Fri, 8 AM&ndash;4 PM).</li>
+        <li><strong>MTCC Pickup:</strong> Orders are available for pickup at the Metro Toronto Convention Centre Business Centre (available in both North and South buildings) during MTCC business hours (Mon&ndash;Fri, 8 AM&ndash;4 PM).</li>
         <li><strong>Address Delivery:</strong> A flat $10.00 CAD delivery fee applies. Delivery is within the Greater Toronto Area.</li>
         <li>We make every effort to meet your selected delivery date. In the rare event of a delay, we will notify you promptly.</li>
       </ul>
 
-      <h2>9. Cancellations and Refunds</h2>
+      <h2>9. MTCC Facility Access and Pickup</h2>
+      <ul>
+        <li>Pickup at MTCC is subject to the facility's operating hours, building access policies, and any restrictions imposed by the convention centre. Print Stuff does not control MTCC's building access, hours, or security protocols.</li>
+        <li>If MTCC closes unexpectedly, changes its hours, or restricts access for any reason (including emergencies, maintenance, or event-specific security), we will make reasonable efforts to coordinate an alternative pickup arrangement or delivery.</li>
+        <li><strong>Pickup authorization:</strong> To collect an order, a valid <strong>order reference number</strong> and the <strong>name on the order</strong> must be provided. If someone other than the original customer will be picking up, the customer must notify us in advance with the authorized person's name by emailing <a href="mailto:orders@printstuff.ca">orders@printstuff.ca</a> or noting it in their order.</li>
+        <li>Print Stuff is not liable for orders picked up by unauthorized individuals who provide a valid order reference number and name.</li>
+      </ul>
+
+      <h2>10. Cancellations and Refunds</h2>
       <ul>
         <li><strong>Before production:</strong> You may cancel your order for a full refund by contacting us at <a href="mailto:orders@printstuff.ca">orders@printstuff.ca</a>.</li>
         <li><strong>During or after production:</strong> Cancellations are not possible once printing has begun. Refunds are handled on a case-by-case basis.</li>
         <li><strong>Quality issues:</strong> If your poster has a print quality defect caused by us, we will reprint it at no charge or issue a full refund.</li>
       </ul>
 
-      <h2>10. Intellectual Property</h2>
+      <h2>11. Event Cancellation or Venue Changes</h2>
+      <ul>
+        <li>If a convention or event is cancelled, relocated, or significantly rescheduled <strong>before your order enters production</strong>, you may cancel for a full refund.</li>
+        <li>If your order is <strong>already in production or completed</strong> when an event is cancelled, we will issue a <strong>store credit</strong> for the full order value, valid for 12 months and applicable to any future order.</li>
+        <li>Print Stuff is not responsible for event cancellations, venue changes, or scheduling modifications made by event organizers or MTCC. These circumstances are beyond our control.</li>
+      </ul>
+
+      <h2>12. Intellectual Property</h2>
       <p>You represent and warrant that you own or have the right to print the content in your submitted file. By uploading a file, you grant Print Stuff a limited, non-exclusive license to reproduce and print your content solely for the purpose of fulfilling your order. We do not claim ownership of your uploaded files.</p>
 
-      <h2>11. Indemnification</h2>
+      <h2>13. Indemnification</h2>
       <p>You agree to indemnify, defend, and hold harmless Print Stuff, its owners, employees, and partners from any claims, damages, losses, liabilities, costs, or expenses (including legal fees) arising out of or related to: (a) your breach of these Terms; (b) your uploaded content infringing the rights of any third party; or (c) your use of our services.</p>
 
-      <h2>12. Limitation of Liability</h2>
+      <h2>14. Limitation of Liability</h2>
       <p>Our total liability for any claim related to our services is limited to the amount you paid for the specific order in question. We are not liable for indirect, incidental, or consequential damages, including but not limited to lost profits, missed presentations, event-related costs, or travel expenses.</p>
 
-      <h2>13. Governing Law and Dispute Resolution</h2>
+      <h2>15. Governing Law and Dispute Resolution</h2>
       <p>These Terms are governed by the laws of the <strong>Province of Ontario</strong> and the federal laws of Canada applicable therein. Any disputes arising from these Terms or our services shall be resolved in the courts of Ontario, Canada. Before pursuing legal action, both parties agree to attempt to resolve disputes through good-faith communication.</p>
 
-      <h2>14. Changes to These Terms</h2>
+      <h2>16. Force Majeure</h2>
+      <p>Print Stuff is not liable for delays or failure to perform our obligations caused by circumstances beyond our reasonable control, including but not limited to: natural disasters, extreme weather, power outages, equipment failure, supplier delays, public health emergencies, government actions, or disruptions at MTCC or other delivery locations.</p>
+
+      <h2>17. Changes to These Terms</h2>
       <p>We may update these terms from time to time. The "Last updated" date at the top of this page indicates the most recent revision. Continued use of our services after changes constitutes acceptance of the updated terms.</p>
 
-      <h2>15. Contact Us</h2>
+      <h2>18. Contact Us</h2>
       <p>If you have questions about these terms, contact us:</p>
       <ul>
         <li><strong>Email:</strong> <a href="mailto:orders@printstuff.ca">orders@printstuff.ca</a></li>
