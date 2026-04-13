@@ -42,18 +42,20 @@ if (file_exists(__DIR__ . '/../email-fulfillment.php') && !defined('FULFILLMENT_
     $vn = 'FastPrint Toronto';
     $pr = ['total' => 56.50, 'base' => 45, 'packing' => 5, 'additional' => 0, 'tax' => 6.50];
     $reason = 'Price exceeds budget. Please revise and resubmit.';
+    $data = ['status' => 'confirmed'];
     if (function_exists('buildPriceSubmittedEmail')) $templates['price_submitted'] = ['name' => 'Price Submitted', 'recipient' => 'Admin', 'trigger' => 'Vendor submits price', 'html' => buildPriceSubmittedEmail($refCode, $vn, $pr)];
-    if (function_exists('buildPriceApprovedEmail')) $templates['price_approved'] = ['name' => 'Price Approved', 'recipient' => 'Vendor', 'trigger' => 'Admin approves', 'html' => buildPriceApprovedEmail($refCode, $vn, $pr)];
-    if (function_exists('buildPriceRejectedEmail')) $templates['price_rejected'] = ['name' => 'Price Rejected', 'recipient' => 'Vendor', 'trigger' => 'Admin rejects', 'html' => buildPriceRejectedEmail($refCode, $vn, $pr, $reason)];
-    if (function_exists('buildOrderConfirmedEmail')) $templates['order_confirmed'] = ['name' => 'Order Confirmed', 'recipient' => 'Admin', 'trigger' => 'Vendor confirms', 'html' => buildOrderConfirmedEmail($refCode, $vn)];
-    if (function_exists('buildOrderReadyEmail')) $templates['order_ready'] = ['name' => 'Order Ready', 'recipient' => 'Admin', 'trigger' => 'Vendor marks ready', 'html' => buildOrderReadyEmail($refCode, $vn)];
+    if (function_exists('buildPriceApprovedEmail')) $templates['price_approved'] = ['name' => 'Price Approved', 'recipient' => 'Vendor', 'trigger' => 'Admin approves', 'html' => buildPriceApprovedEmail($refCode, $vn, $pr, 'Admin')];
+    if (function_exists('buildPriceRejectedEmail')) $templates['price_rejected'] = ['name' => 'Price Rejected', 'recipient' => 'Vendor', 'trigger' => 'Admin rejects', 'html' => buildPriceRejectedEmail($refCode, $vn, $pr, $reason, 'Admin')];
+    if (function_exists('buildOrderConfirmedEmail')) $templates['order_confirmed'] = ['name' => 'Order Confirmed', 'recipient' => 'Admin', 'trigger' => 'Vendor confirms', 'html' => buildOrderConfirmedEmail($refCode, $vn, $data)];
+    if (function_exists('buildOrderReadyEmail')) $templates['order_ready'] = ['name' => 'Order Ready', 'recipient' => 'Admin', 'trigger' => 'Vendor marks ready', 'html' => buildOrderReadyEmail($refCode, $vn, $data)];
 }
 
 // Vendor order
 if (file_exists(__DIR__ . '/../includes/production-email.php')) {
     @require_once __DIR__ . '/../includes/production-email.php';
     if (function_exists('generateVendorEmailHTML')) {
-        $templates['vendor_order'] = ['name' => 'Vendor Order Assignment', 'recipient' => 'Vendor', 'trigger' => 'Admin pushes to preflight', 'html' => generateVendorEmailHTML($order, 'https://mtcc.print-stuff.ca/fulfillment/?token=PREVIEW')];
+        $sampleVendor = ['name' => 'FastPrint Toronto', 'email' => 'vendor@fastprint.ca'];
+        $templates['vendor_order'] = ['name' => 'Vendor Order Assignment', 'recipient' => 'Vendor', 'trigger' => 'Admin pushes to preflight', 'html' => generateVendorEmailHTML($sampleVendor, $order, 'Please prioritize this order.', 'https://mtcc.print-stuff.ca', 'PREVIEW_TOKEN')];
     }
 }
 
@@ -85,7 +87,7 @@ $active = $_GET['template'] ?? array_key_first($templates);
         .info .l{font-size:.65rem;color:#6b7280;font-weight:600}.info .v{color:#374151;font-weight:600}
         .note{background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:9px 14px;margin-bottom:12px;font-size:.75rem;color:#92400e}
         .fr{background:#fff;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.1);overflow:hidden}
-        .fr iframe{width:100%;min-height:700px;border:none}
+        .fr iframe{width:100%;min-height:800px;border:none}
         .empty{text-align:center;padding:60px;color:#6b7280}
         .sn{padding:8px 14px;font-size:.68rem;color:#9ca3af;line-height:1.4}
         @media(max-width:768px){.wrap{flex-direction:column}.side{width:100%;border-right:none;border-bottom:1px solid #e5e7eb}}
