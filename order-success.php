@@ -6,266 +6,293 @@ $referenceCode = $_GET['ref'] ?? 'Unknown';
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Order Submitted Successfully - <?= htmlspecialchars($referenceCode) ?></title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0">
+    <title>Order Submitted - <?= htmlspecialchars($referenceCode) ?> - Print Stuff</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Montserrat', sans-serif;
+            font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
             background: linear-gradient(135deg, #faf8ff 0%, #ede9fe 100%);
-            margin: 0;
-            padding: 20px;
             min-height: 100vh;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
+            padding: 20px;
         }
-        
-        .success-container {
-            background: white;
+        .header-logos { text-align: center; margin-bottom: 20px; }
+        .header-logos img { max-width: 280px; width: 85%; height: auto; }
+        .card {
+            background: #ffffff;
             border-radius: 16px;
-            padding: 50px 40px;
             box-shadow: 0 8px 32px rgba(124, 58, 237, 0.15);
-            text-align: center;
-            max-width: 600px;
+            max-width: 480px;
             width: 100%;
-            border: 2px solid #7c3aed;
+            overflow: hidden;
+            position: relative;
         }
-        
-        .success-icon {
-            font-size: 5rem;
-            margin-bottom: 20px;
-            animation: bounce 1s ease-in-out;
+        .card::before {
+            content: '';
+            position: absolute;
+            width: 180px; height: 180px;
+            top: -60px; right: -60px;
+            background: linear-gradient(135deg, rgba(124,58,237,0.06) 0%, transparent 100%);
+            border-radius: 50%;
+            pointer-events: none;
         }
-        
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-            40% { transform: translateY(-20px); }
-            60% { transform: translateY(-10px); }
+        .card-header-band {
+            background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%);
+            padding: 16px 32px;
+            text-align: center;
+            border-radius: 16px 16px 0 0;
+            position: relative;
         }
-        
+        .card-header-band::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, rgba(255,255,255,0.3), transparent);
+        }
+        .header-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            backdrop-filter: blur(4px);
+        }
+        .card-body { padding: 32px 32px 28px; text-align: center; }
         h1 {
             color: #7c3aed;
-            margin-bottom: 10px;
-            font-size: 2.5rem;
+            font-size: 1.8rem;
             font-weight: 700;
+            margin-bottom: 8px;
+            animation: fadeUp 0.6s ease-out;
         }
-        
-        .reference-code {
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .subtitle {
+            color: #374151;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+        .subtitle strong { color: #7c3aed; }
+        .order-ref-card {
             background: linear-gradient(135deg, #10b981 0%, #059669 100%);
             color: white;
-            padding: 15px 25px;
+            padding: 14px 24px;
             border-radius: 12px;
-            font-size: 1.5rem;
+            font-size: 1.25rem;
             font-weight: 700;
-            margin: 30px 0;
-            letter-spacing: 1px;
-            box-shadow: rgba(16, 185, 129, 0.3) 0px 8px 24px;
+            margin-bottom: 24px;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
         }
-        
-        .success-message {
-            color: #374151;
-            font-size: 1.1rem;
-            line-height: 1.6;
-            margin-bottom: 30px;
-        }
-        
         .next-steps {
-            background: #f8fafc;
+            background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+            border: 1px solid #e5e7eb;
             border-radius: 12px;
-            padding: 25px;
-            margin: 30px 0;
+            padding: 20px;
+            margin-bottom: 24px;
             text-align: left;
         }
-        
-        .next-steps h3 {
-            color: #7c3aed;
-            margin-bottom: 15px;
-            font-size: 1.2rem;
+        .next-steps-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #374151;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 14px;
         }
-        
         .step {
             display: flex;
-            align-items: flex-start;
+            align-items: center;
             gap: 12px;
-            margin-bottom: 15px;
-            padding: 10px;
+            padding: 10px 12px;
             background: white;
             border-radius: 8px;
-            border-left: 4px solid #7c3aed;
+            border-left: 3px solid #7c3aed;
+            margin-bottom: 8px;
+            font-size: 0.88rem;
+            color: #374151;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
         }
-        
-        .step-number {
+        .step:last-of-type { margin-bottom: 0; }
+        .step-dot {
+            width: 22px; height: 22px;
+            border-radius: 50%;
             background: #7c3aed;
             color: white;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.8rem;
-            font-weight: 600;
+            font-size: 0.7rem;
+            font-weight: 700;
             flex-shrink: 0;
         }
-        
-        .step-text {
-            color: #374151;
-            font-size: 0.95rem;
-            line-height: 1.4;
-        }
-        
-        .contact-info {
-            background: linear-gradient(135deg, #ede9fe 0%, #f0f9ff 100%);
-            border: 2px solid #7c3aed;
-            border-radius: 12px;
-            padding: 20px;
-            margin: 30px 0;
-        }
-        
-        .contact-info h3 {
+        .step-note {
+            font-size: 0.75rem;
             color: #7c3aed;
-            margin-bottom: 10px;
+            margin-top: 4px;
         }
-        
-        .contact-info p {
-            color: #374151;
-            margin: 5px 0;
-            font-size: 0.95rem;
+        .steps-closing {
+            text-align: center;
+            margin-top: 16px;
+            padding-top: 14px;
+            border-top: 1px solid #e5e7eb;
+            color: #7c3aed;
+            font-weight: 700;
+            font-size: 0.9rem;
         }
-        
-        .action-buttons {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            margin-top: 30px;
-            flex-wrap: wrap;
+        .contact {
+            color: #6b7280;
+            font-size: 0.82rem;
+            margin-bottom: 20px;
         }
-        
+        .contact-heading { font-weight: 600; margin-bottom: 4px; }
+        .contact a { color: #7c3aed; text-decoration: none; font-weight: 600; }
+        .contact a:hover { text-decoration: underline; }
+        .contact-divider {
+            display: inline-block;
+            width: 1px; height: 12px;
+            background: #d1d5db;
+            vertical-align: middle;
+            margin: 0 6px;
+        }
+        .contact-ref {
+            font-size: 0.78rem;
+            color: #6b7280;
+            margin-top: 6px;
+        }
         .btn {
-            padding: 12px 24px;
-            border-radius: 8px;
+            display: inline-block;
+            padding: 14px 32px;
+            border-radius: 12px;
             text-decoration: none;
-            font-weight: 600;
-            transition: all 0.2s;
-            border: none;
-            cursor: pointer;
+            font-weight: 700;
             font-size: 0.95rem;
-        }
-        
-        .btn-primary {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
             background: #7c3aed;
             color: white;
+            box-shadow: 0 2px 8px rgba(124, 58, 237, 0.25);
         }
-        
-        .btn-primary:hover {
+        .btn:hover {
             background: #5b21b6;
-            transform: translateY(-1px);
+            transform: translateY(-2px);
+            box-shadow: rgba(124, 58, 237, 0.4) 0px 8px 24px;
         }
-        
-        .btn-secondary {
-            background: #6b7280;
-            color: white;
+        .card-footer {
+            background: linear-gradient(135deg, #fafbfc 0%, #ffffff 100%);
+            border-top: 1px solid #f3f4f6;
+            padding: 16px 32px;
+            text-align: center;
+            color: #9ca3af;
+            font-size: 0.75rem;
         }
-        
-        .btn-secondary:hover {
-            background: #4b5563;
-            transform: translateY(-1px);
-        }
-        
-        .footer {
-            margin-top: 40px;
-            color: #6b7280;
-            font-size: 0.85rem;
-        }
-        
         @media (max-width: 600px) {
-            .success-container {
-                padding: 30px 25px;
-            }
-            
-            h1 {
-                font-size: 2rem;
-            }
-            
-            .reference-code {
-                font-size: 1.2rem;
-                padding: 12px 20px;
-            }
-            
-            .action-buttons {
-                flex-direction: column;
-            }
-            
-            .btn {
-                width: 100%;
-                text-align: center;
-            }
+            .card-header-band { padding: 14px 24px; }
+            .card-body { padding: 24px 22px 20px; }
+            h1 { font-size: 1.5rem; }
+            .order-ref-card { font-size: 1.1rem; padding: 12px 20px; }
+            .step { font-size: 0.82rem; padding: 8px 10px; }
+            .card-footer { padding: 14px 22px; }
+            .header-logos img { max-width: 220px; }
         }
     </style>
 </head>
 <body>
-    <div class="success-container">
-        <div class="success-icon"><?= ICON_PARTY ?></div>
-        <h1>Order Submitted!</h1>
-        
-        <div class="reference-code">
-            Order #<?= htmlspecialchars($referenceCode) ?>
+    <div class="header-logos">
+        <img src="mtcc-ps-logo.png" alt="MTCC + Print Stuff">
+    </div>
+
+    <div class="card">
+        <div class="card-header-band">
+            <div class="header-badge"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M21.801 10A10 10 0 1 1 17 3.335"/><path d="m9 11 3 3L22 4"/></svg> Order Received</div>
         </div>
-        
-        <p class="success-message">
-            Your poster order has been successfully submitted and our team has been notified. 
-            We'll review your request and get back to you quickly!
-        </p>
-        
-        <div class="next-steps">
-            <h3><?= ICON_CLIPBOARD ?> What Happens Next:</h3>
-            
-            <div class="step">
-                <div class="step-number">1</div>
-                <div class="step-text">
-                    <strong>Immediate confirmation:</strong> You should receive an email confirmation within a few minutes
+
+        <div class="card-body">
+            <h1>Order Submitted!</h1>
+
+            <div class="order-ref-card">
+                Order #<?= htmlspecialchars($referenceCode) ?>
+            </div>
+
+            <p class="subtitle">
+                Your poster order has been received and our team has been notified.<br>
+                <strong>We'll get back to you shortly with next steps.</strong>
+            </p>
+
+            <div class="next-steps">
+                <div class="next-steps-title">What happens now</div>
+
+                <div class="step">
+                    <div class="step-dot">1</div>
+                    <div>
+                        <span>You'll receive an email confirmation within a few minutes</span>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-dot">2</div>
+                    <div>
+                        <span>We review your file for print quality</span>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-dot">3</div>
+                    <div>
+                        <span>We'll send you a payment link within 18 minutes</span>
+                        <div class="step-note">Payment is required to lock in your price and start production</div>
+                    </div>
+                </div>
+
+                <div class="steps-closing">
+                    Check your inbox &mdash; we'll be in touch soon.
                 </div>
             </div>
-            
-            <div class="step">
-                <div class="step-number">2</div>
-                <div class="step-text">
-                    <strong>File review:</strong> Our team will check your artwork file for print quality and compatibility
-                </div>
+
+            <div class="contact">
+                <div class="contact-heading">Questions? We're here.</div>
+                <a href="mailto:orders@printstuff.ca">orders@printstuff.ca</a>
+                <span class="contact-divider"></span>
+                <a href="tel:4378828822">(437) 882-8822</a>
+                <span class="contact-divider"></span>
+                <a href="javascript:void(0)" onclick="if(window.Tawk_API)Tawk_API.maximize();">Live Chat</a>
+                <div class="contact-ref">Reference: <strong><?= htmlspecialchars($referenceCode) ?></strong></div>
             </div>
-            
-            <div class="step">
-                <div class="step-number">3</div>
-                <div class="step-text">
-                    <strong>Quick response:</strong> We'll email you within 18 minutes with a payment link and next steps. <br/><span style="font-size: 0.8rem; color: #7c3aed;"><strong>Note: </strong> Payments are required as soon as possible to guarantee your price. Late payments may result in higher pricing.</span>
-                </div>
-            </div>
-            
-            <div class="step">
-                <div class="step-number">4</div>
-                <div class="step-text">
-                    <strong>Production & delivery:</strong> Once we receive your payment, we'll send your poster to print and deliver according to your selected timeline. <br/><span style="font-size: 0.8rem; color: #7c3aed;"><strong>Note: </strong> We cannot send your order to print without payment.</span>
-                </div>
-            </div>
+
+            <a href="/" class="btn">Submit Another Order</a>
         </div>
-        
-        <div class="contact-info">
-            <h3><?= ICON_PHONE ?> Need to make changes or have questions?</h3>
-            <p><strong>Email:</strong> orders@printstuff.ca</p>
-            <p><strong>Phone:</strong> (437) 882-8822</p>
-            <p><strong>Reference your order number:</strong> <?= htmlspecialchars($referenceCode) ?></p>
-        </div>
-        
-        <div class="action-buttons">
-            <a href="/" class="btn btn-primary"><?= ICON_MEMO ?> Submit Another Order</a>
-            <a href="mailto:orders@printstuff.com?subject=Order #: <?= urlencode($referenceCode) ?>" class="btn btn-secondary"><?= ICON_ENVELOPE ?> Contact Us</a>
-        </div>
-        
-        <div class="footer">
-            <p>Thank you for choosing Print Stuff for your poster printing needs!</p>
-            <p>&copy; <?= date('Y') ?> Print Stuff - Professional Poster Printing</p>
+
+        <div class="card-footer">
+            &copy; <?= date('Y') ?> Print Stuff &middot; Big or small, we print it all.
         </div>
     </div>
+
+    <!--Start of Tawk.to Script-->
+    <script type="text/javascript">
+    var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+    (function(){
+    var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+    s1.async=true;
+    s1.src='https://embed.tawk.to/69bcadcf600a121c36fa7a4b/1jk4gdsmg';
+    s1.charset='UTF-8';
+    s1.setAttribute('crossorigin','*');
+    s0.parentNode.insertBefore(s1,s0);
+    })();
+    </script>
+    <!--End of Tawk.to Script-->
 </body>
 </html>
