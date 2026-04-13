@@ -665,15 +665,15 @@ function generateBusinessEmailHTML($orderData) {
             margin-bottom: 20px;
         }
         .header-logos img {
-            max-width: 280px;
-            width: 85%;
+            max-width: 360px;
+            width: 90%;
             height: auto;
         }
 
         /* ── Success header band (first child of card — gets top rounded corners) ── */
         .card-header-band {
             background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            padding: 16px 32px;
+            padding: 28px 32px;
             text-align: center;
             position: relative;
             border-radius: 16px 16px 0 0;

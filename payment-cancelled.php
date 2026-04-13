@@ -34,7 +34,7 @@ if ($tempRef) {
             padding: 20px;
         }
         .header-logos { text-align: center; margin-bottom: 20px; }
-        .header-logos img { max-width: 280px; width: 85%; height: auto; }
+        .header-logos img { max-width: 360px; width: 90%; height: auto; }
         .card {
             background: #ffffff;
             border-radius: 16px;
@@ -46,7 +46,7 @@ if ($tempRef) {
         }
         .card-header-band {
             background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-            padding: 16px 32px;
+            padding: 28px 32px;
             text-align: center;
             border-radius: 16px 16px 0 0;
         }

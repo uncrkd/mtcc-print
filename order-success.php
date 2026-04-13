@@ -22,7 +22,7 @@ $referenceCode = $_GET['ref'] ?? 'Unknown';
             padding: 20px;
         }
         .header-logos { text-align: center; margin-bottom: 20px; }
-        .header-logos img { max-width: 280px; width: 85%; height: auto; }
+        .header-logos img { max-width: 360px; width: 90%; height: auto; }
         .card {
             background: #ffffff;
             border-radius: 16px;
@@ -43,7 +43,7 @@ $referenceCode = $_GET['ref'] ?? 'Unknown';
         }
         .card-header-band {
             background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%);
-            padding: 16px 32px;
+            padding: 28px 32px;
             text-align: center;
             border-radius: 16px 16px 0 0;
             position: relative;
