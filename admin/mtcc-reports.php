@@ -220,7 +220,7 @@ $currentYear = date('Y');
 </head>
 <body>
 
-<?php require_once __DIR__ . '/../includes/admin-sidebar.php'; renderSidebar('orders'); ?>
+<?php require_once __DIR__ . '/../includes/admin-sidebar.php'; renderSidebar('mtcc_reports'); ?>
 <script src="../js/admin-sidebar.js"></script>
 
 <div class="reports-wrap">
