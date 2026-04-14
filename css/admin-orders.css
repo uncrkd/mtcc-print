@@ -3360,7 +3360,7 @@ body.login-page {
   color: var(--primary);
 }
 
-/* MTCC Live Status Cards — operational at-a-glance, full-size cards */
+/* MTCC Live Status Cards — clickable filters, dashed outline to distinguish from stat cards */
 .mtcc-live-cards {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -3369,101 +3369,124 @@ body.login-page {
 }
 
 .mtcc-live-card {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 18px 20px;
+  gap: 12px;
+  padding: 12px 14px;
   background: white;
   border: 1px solid var(--border-color);
-  border-left-width: 4px;
-  border-radius: 12px;
+  border-radius: 10px;
   box-shadow: rgba(0, 0, 0, 0.12) 0px 1px 3px, rgba(0, 0, 0, 0.24) 0px 1px 2px;
   cursor: pointer;
   text-align: left;
   font-family: inherit;
   transition: all 0.15s ease;
+  /* Dashed "clickable" indicator — inset outline */
+  outline: 1.5px dashed var(--border-color);
+  outline-offset: -5px;
 }
 
 .mtcc-live-card:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
 .mtcc-live-icon {
   flex-shrink: 0;
-  width: 42px;
-  height: 42px;
+  width: 34px;
+  height: 34px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
 }
 
-.mtcc-live-body {
+.mtcc-live-text {
   flex: 1;
   min-width: 0;
-}
-
-.mtcc-live-count {
-  font-size: 1.8rem;
-  font-weight: 700;
-  line-height: 1;
-  letter-spacing: -0.5px;
-  margin-bottom: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  /* Vertical dashed divider between text and count */
+  border-right: 1px dashed var(--border-color);
+  padding-right: 12px;
 }
 
 .mtcc-live-label-main {
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 700;
   color: var(--text-primary);
-  margin-bottom: 2px;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .mtcc-live-label-sub {
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   color: var(--text-secondary);
   font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* Color variants — left border + icon tint */
-.mtcc-live-amber { border-left-color: #f59e0b; }
+.mtcc-live-count {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.5px;
+  min-width: 32px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+/* Color variants — dashed outline + icon tint + count color */
+.mtcc-live-amber { outline-color: #fcd34d; }
 .mtcc-live-amber .mtcc-live-icon { background: #fffbeb; color: #d97706; }
+.mtcc-live-amber .mtcc-live-text { border-right-color: #fcd34d; }
 .mtcc-live-amber .mtcc-live-count { color: #d97706; }
-.mtcc-live-amber:hover { border-color: #f59e0b; }
+.mtcc-live-amber:hover { outline-color: #f59e0b; }
 
-.mtcc-live-green { border-left-color: #10b981; }
+.mtcc-live-green { outline-color: #86efac; }
 .mtcc-live-green .mtcc-live-icon { background: #ecfdf5; color: #059669; }
+.mtcc-live-green .mtcc-live-text { border-right-color: #86efac; }
 .mtcc-live-green .mtcc-live-count { color: #059669; }
-.mtcc-live-green:hover { border-color: #10b981; }
+.mtcc-live-green:hover { outline-color: #10b981; }
 
-.mtcc-live-red { border-left-color: #ef4444; }
+.mtcc-live-red { outline-color: #fca5a5; }
 .mtcc-live-red .mtcc-live-icon { background: #fef2f2; color: #dc2626; }
+.mtcc-live-red .mtcc-live-text { border-right-color: #fca5a5; }
 .mtcc-live-red .mtcc-live-count { color: #dc2626; }
-.mtcc-live-red:hover { border-color: #ef4444; }
+.mtcc-live-red:hover { outline-color: #ef4444; }
 
-.mtcc-live-grey { border-left-color: #9ca3af; }
+.mtcc-live-grey { outline-color: #d1d5db; }
 .mtcc-live-grey .mtcc-live-icon { background: #f3f4f6; color: #6b7280; }
+.mtcc-live-grey .mtcc-live-text { border-right-color: #d1d5db; }
 .mtcc-live-grey .mtcc-live-count { color: #374151; }
-.mtcc-live-grey:hover { border-color: #9ca3af; }
+.mtcc-live-grey:hover { outline-color: #9ca3af; }
 
 /* Muted when count is 0 */
 .mtcc-live-muted {
-  opacity: 0.55;
+  opacity: 0.5;
 }
 .mtcc-live-muted:hover {
   opacity: 0.85;
 }
 
-/* Active state when filter applied */
+/* Active state — dashed outline becomes solid */
 .mtcc-live-active {
-  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2), 0 4px 12px rgba(0,0,0,0.1);
+  outline-style: solid;
+  outline-width: 2px;
   transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
 }
-.mtcc-live-active.mtcc-live-amber { border-color: #f59e0b; background: #fffbeb; }
-.mtcc-live-active.mtcc-live-green { border-color: #10b981; background: #ecfdf5; }
-.mtcc-live-active.mtcc-live-red { border-color: #ef4444; background: #fef2f2; }
-.mtcc-live-active.mtcc-live-grey { border-color: #9ca3af; background: #f3f4f6; }
+.mtcc-live-active .mtcc-live-text { border-right-style: solid; }
+.mtcc-live-active.mtcc-live-amber { background: #fffbeb; outline-color: #d97706; }
+.mtcc-live-active.mtcc-live-green { background: #ecfdf5; outline-color: #059669; }
+.mtcc-live-active.mtcc-live-red { background: #fef2f2; outline-color: #dc2626; }
+.mtcc-live-active.mtcc-live-grey { background: #f3f4f6; outline-color: #6b7280; }
 
 /* Active filter banner — shows above order table when filter applied */
 .mtcc-filter-banner {

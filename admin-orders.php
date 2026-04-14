@@ -1645,46 +1645,46 @@ window.dashboardData = {
 
   <button class="mtcc-live-card mtcc-live-amber" data-mtcc-filter="arriving" onclick="mtccFilterLive('arriving', event)">
     <div class="mtcc-live-icon">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
     </div>
-    <div class="mtcc-live-body">
-      <div class="mtcc-live-count"><?= $arrivingTodayCount ?></div>
+    <div class="mtcc-live-text">
       <div class="mtcc-live-label-main">Arriving Today</div>
       <div class="mtcc-live-label-sub">Couriers en route</div>
     </div>
+    <div class="mtcc-live-count"><?= $arrivingTodayCount ?></div>
   </button>
 
   <button class="mtcc-live-card mtcc-live-green" data-mtcc-filter="ready" onclick="mtccFilterLive('ready', event)">
     <div class="mtcc-live-icon">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 9.4l-9-5.19M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 9.4l-9-5.19M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
     </div>
-    <div class="mtcc-live-body">
-      <div class="mtcc-live-count"><?= $readyNowCount ?></div>
+    <div class="mtcc-live-text">
       <div class="mtcc-live-label-main">Ready for Pickup</div>
       <div class="mtcc-live-label-sub">At MTCC now</div>
     </div>
+    <div class="mtcc-live-count"><?= $readyNowCount ?></div>
   </button>
 
   <button class="mtcc-live-card mtcc-live-red<?= $overdueCount === 0 ? ' mtcc-live-muted' : '' ?>" data-mtcc-filter="overdue" onclick="mtccFilterLive('overdue', event)">
     <div class="mtcc-live-icon">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
     </div>
-    <div class="mtcc-live-body">
-      <div class="mtcc-live-count"><?= $overdueCount ?></div>
+    <div class="mtcc-live-text">
       <div class="mtcc-live-label-main">Overdue</div>
       <div class="mtcc-live-label-sub">Past due date</div>
     </div>
+    <div class="mtcc-live-count"><?= $overdueCount ?></div>
   </button>
 
   <button class="mtcc-live-card mtcc-live-grey<?= $issuesCount === 0 ? ' mtcc-live-muted' : '' ?>" data-mtcc-filter="issues" onclick="mtccFilterLive('issues', event)">
     <div class="mtcc-live-icon">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
     </div>
-    <div class="mtcc-live-body">
-      <div class="mtcc-live-count"><?= $issuesCount ?></div>
+    <div class="mtcc-live-text">
       <div class="mtcc-live-label-main">Issues</div>
       <div class="mtcc-live-label-sub">Missing / unclaimed</div>
     </div>
+    <div class="mtcc-live-count"><?= $issuesCount ?></div>
   </button>
 
 </div>
