@@ -529,5 +529,14 @@ pickupBlock +
     printSlideout();
   }
 
-  return { open: open, close: close, saveNote: saveNote, print: printSlideout, downloadPDF: downloadPDF };
+  // Print by reference code (without opening the slideout visually).
+  // Used by row-level "Print Order" action for MTCC staff.
+  function printByRef(refCode) {
+    var prevRef = currentRef;
+    currentRef = refCode;
+    try { printSlideout(); } catch (e) { console.error(e); }
+    currentRef = prevRef;
+  }
+
+  return { open: open, close: close, saveNote: saveNote, print: printSlideout, downloadPDF: downloadPDF, printByRef: printByRef };
 })();

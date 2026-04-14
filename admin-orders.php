@@ -1996,6 +1996,25 @@ function mtccFilterTodayPickups() {
   }, WARN_MINUTES * 60 * 1000);
 })();
 
+// MTCC Print Order via row action menu — uses the slideout's clean print template
+// (without flashing the slideout open). Bypasses printOrderFromMenu which loads
+// the full order detail URL (blocked for MTCC staff).
+function mtccPrintOrderFromMenu(referenceCode) {
+  if (typeof closeAllMenus === 'function') closeAllMenus();
+  if (window.OrderSlideout && typeof window.OrderSlideout.printByRef === 'function') {
+    window.OrderSlideout.printByRef(referenceCode);
+  } else if (window.OrderSlideout && typeof window.OrderSlideout.open === 'function') {
+    // Fallback: open then print, then close
+    window.OrderSlideout.open(referenceCode);
+    setTimeout(function() {
+      if (window.OrderSlideout.print) window.OrderSlideout.print();
+      setTimeout(function() { if (window.OrderSlideout.close) window.OrderSlideout.close(); }, 200);
+    }, 100);
+  } else {
+    alert('Print is not available right now. Please open the order details and print from there.');
+  }
+}
+
 // ===== MTCC Printable Daily Pickup List =====
 // Clean, paper-friendly list of orders Ready for Pickup with checkboxes for manual use.
 function mtccPrintPickupList() {
@@ -2046,14 +2065,15 @@ function mtccPrintPickupList() {
         '<td class="pl-ref">#' + ref + '</td>' +
         '<td class="pl-cust">' + name + '</td>' +
         '<td class="pl-due">' + due + (isPastDue ? ' <span class="pl-badge">OVERDUE</span>' : '') + '</td>' +
-        '<td class="pl-event">' + eventName + (buildingLabel ? '<div class="pl-sub">MTCC ' + buildingLabel + '</div>' : '') + '</td>' +
+        '<td class="pl-event">' + eventName + '</td>' +
+        '<td class="pl-bldg">' + (buildingLabel ? 'MTCC ' + buildingLabel : '—') + '</td>' +
         '<td class="pl-size">' + w + '&quot; &times; ' + h + '&quot;</td>' +
         '<td class="pl-notes"></td>' +
       '</tr>';
   });
 
   if (!rows) {
-    rows = '<tr><td colspan="7" class="pl-empty">No orders currently ready for pickup.</td></tr>';
+    rows = '<tr><td colspan="8" class="pl-empty">No orders currently ready for pickup.</td></tr>';
   }
 
   var dateLong = today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
@@ -2064,56 +2084,56 @@ function mtccPrintPickupList() {
     '<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">' +
     '<style>' +
       '* { box-sizing: border-box; margin: 0; padding: 0; }' +
-      'body { font-family: Montserrat, -apple-system, BlinkMacSystemFont, Arial, sans-serif; color: #1e1b2e; background: white; padding: 24px 32px; font-size: 10pt; line-height: 1.3; }' +
+      'body { font-family: Montserrat, -apple-system, BlinkMacSystemFont, Arial, sans-serif; color: #1e1b2e; background: white; padding: 20px 28px; font-size: 10pt; line-height: 1.3; }' +
 
       /* Header */
-      '.pl-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; padding-bottom: 14px; border-bottom: 2px solid #1e1b2e; margin-bottom: 18px; }' +
-      '.pl-brand img { max-width: 170px; height: auto; display: block; }' +
-      '.pl-brand-fallback { font-size: 14pt; font-weight: 700; color: #7c3aed; letter-spacing: 1px; }' +
+      '.pl-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; padding-bottom: 12px; border-bottom: 2px solid #1e1b2e; margin-bottom: 14px; }' +
+      '.pl-brand img { max-width: 150px; height: auto; display: block; }' +
+      '.pl-brand-fallback { font-size: 13pt; font-weight: 700; color: #7c3aed; letter-spacing: 1px; }' +
       '.pl-brand-fallback small { display: block; font-size: 8pt; font-weight: 500; color: #6b7280; letter-spacing: 0.3px; }' +
       '.pl-title { text-align: right; }' +
-      '.pl-title h1 { font-size: 16pt; font-weight: 700; color: #7c3aed; letter-spacing: 0.5px; margin-bottom: 2px; }' +
-      '.pl-title .pl-date { font-size: 10pt; color: #1e1b2e; font-weight: 600; }' +
+      '.pl-title h1 { font-size: 14pt; font-weight: 700; color: #7c3aed; letter-spacing: 0.5px; margin-bottom: 2px; }' +
+      '.pl-title .pl-date { font-size: 9pt; color: #1e1b2e; font-weight: 600; }' +
 
       /* Summary bar */
-      '.pl-summary { display: flex; gap: 32px; padding: 10px 16px; background: #faf8ff; border-radius: 4px; margin-bottom: 18px; }' +
-      '.pl-stat { display: flex; flex-direction: column; }' +
-      '.pl-stat-label { font-size: 8pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #6b7280; }' +
-      '.pl-stat-value { font-size: 16pt; font-weight: 700; color: #1e1b2e; line-height: 1; margin-top: 2px; }' +
+      '.pl-summary { display: flex; gap: 24px; padding: 8px 14px; background: #faf8ff; border-radius: 4px; margin-bottom: 14px; }' +
+      '.pl-stat { display: flex; align-items: baseline; gap: 8px; }' +
+      '.pl-stat-label { font-size: 8pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: #6b7280; }' +
+      '.pl-stat-value { font-size: 13pt; font-weight: 700; color: #1e1b2e; line-height: 1; }' +
       '.pl-stat-value.red { color: #dc2626; }' +
 
-      /* Table */
-      'table { width: 100%; border-collapse: collapse; }' +
-      'thead tr { border-bottom: 2px solid #1e1b2e; }' +
-      'th { text-align: left; padding: 8px 6px; font-size: 8pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #6b7280; }' +
-      'td { padding: 10px 6px; border-bottom: 1px solid #e5e7eb; vertical-align: top; }' +
+      /* Table — single-line rows, 10pt */
+      'table { width: 100%; border-collapse: collapse; table-layout: fixed; }' +
+      'thead tr { border-bottom: 1.5px solid #1e1b2e; }' +
+      'th { text-align: left; padding: 6px 6px; font-size: 8pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: #6b7280; }' +
+      'td { padding: 7px 6px; border-bottom: 1px solid #e5e7eb; vertical-align: middle; font-size: 10pt; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }' +
 
-      /* Columns */
-      '.pl-check { width: 22px; }' +
-      '.pl-check::before { content: ""; display: block; width: 14px; height: 14px; border: 1.5px solid #1e1b2e; border-radius: 2px; margin-top: 1px; }' +
-      '.pl-ref { width: 90px; font-family: "Courier New", monospace; font-size: 10pt; font-weight: 700; color: #7c3aed; white-space: nowrap; }' +
-      '.pl-cust { font-size: 10pt; font-weight: 600; }' +
-      '.pl-due { width: 110px; font-size: 9pt; white-space: nowrap; }' +
-      '.pl-event { font-size: 9pt; color: #374151; }' +
-      '.pl-sub { font-size: 7.5pt; color: #6b7280; margin-top: 1px; }' +
-      '.pl-size { width: 90px; font-size: 9pt; font-family: "Courier New", monospace; white-space: nowrap; }' +
-      '.pl-notes { width: 130px; border-left: 1px dashed #d1d5db; }' +
+      /* Column widths (total must fit letter paper ~7.5in printable) */
+      '.pl-check { width: 22px; padding-top: 9px !important; padding-bottom: 5px !important; }' +
+      '.pl-check::before { content: ""; display: block; width: 12px; height: 12px; border: 1.5px solid #1e1b2e; border-radius: 2px; }' +
+      '.pl-ref { width: 90px; font-family: "Courier New", monospace; font-weight: 700; color: #7c3aed; }' +
+      '.pl-cust { width: 150px; font-weight: 600; }' +
+      '.pl-due { width: 130px; }' +
+      '.pl-event { width: auto; color: #374151; }' +
+      '.pl-bldg { width: 90px; color: #6b7280; font-size: 9pt; }' +
+      '.pl-size { width: 80px; font-family: "Courier New", monospace; font-size: 9pt; }' +
+      '.pl-notes { width: 110px; border-left: 1px dashed #d1d5db; }' +
 
       /* Overdue row */
       '.pl-overdue td { background: #fef2f2; }' +
-      '.pl-badge { display: inline-block; padding: 1px 6px; border-radius: 2px; background: #dc2626; color: white; font-size: 7pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; margin-left: 4px; vertical-align: 1px; }' +
+      '.pl-badge { display: inline-block; padding: 1px 5px; border-radius: 2px; background: #dc2626; color: white; font-size: 7pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; margin-left: 4px; vertical-align: 1px; }' +
 
-      '.pl-empty { text-align: center; color: #9ca3af; padding: 32px 12px !important; font-style: italic; }' +
+      '.pl-empty { text-align: center; color: #9ca3af; padding: 24px 12px !important; font-style: italic; white-space: normal !important; }' +
 
       /* Footer / signature */
-      '.pl-signoff { margin-top: 28px; padding-top: 16px; border-top: 1px solid #e5e7eb; display: flex; gap: 40px; }' +
+      '.pl-signoff { margin-top: 20px; padding-top: 12px; border-top: 1px solid #e5e7eb; display: flex; gap: 32px; }' +
       '.pl-signoff-field { flex: 1; }' +
-      '.pl-signoff-label { font-size: 8pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #6b7280; margin-bottom: 24px; }' +
+      '.pl-signoff-label { font-size: 8pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: #6b7280; margin-bottom: 18px; }' +
       '.pl-signoff-line { border-bottom: 1px solid #1e1b2e; }' +
-      '.pl-footer { margin-top: 18px; text-align: center; font-size: 7pt; color: #9ca3af; letter-spacing: 0.3px; }' +
+      '.pl-footer { margin-top: 14px; text-align: center; font-size: 7pt; color: #9ca3af; letter-spacing: 0.3px; }' +
 
       /* Print behavior */
-      '@media print { body { padding: 12mm 14mm; } @page { size: letter; margin: 0; } thead { display: table-header-group; } tr { page-break-inside: avoid; } }' +
+      '@media print { body { padding: 10mm 12mm; } @page { size: letter; margin: 0; } thead { display: table-header-group; } tr { page-break-inside: avoid; } }' +
     '</style></head><body>' +
 
     '<div class="pl-head">' +
@@ -2139,6 +2159,7 @@ function mtccPrintPickupList() {
         '<th>Customer</th>' +
         '<th>Due</th>' +
         '<th>Event</th>' +
+        '<th>Building</th>' +
         '<th>Size</th>' +
         '<th>Notes</th>' +
       '</tr></thead>' +
@@ -3007,7 +3028,11 @@ document.addEventListener('keydown', function(e) {
                 <?php if (!$isMtccStaff && isset($order['uploadedFile'])): ?>
                 <a href="?download=<?= urlencode($orderRefCode) ?>" class="menu-item"> <span class="menu-icon"><?= ICON_DOWNLOAD ?></span> <span>Download File</span> </a>
                 <?php endif; ?>
+                <?php if ($isMtccStaff): ?>
+                <button class="menu-item" onclick="mtccPrintOrderFromMenu('<?= $orderRefCode ?>')"> <span class="menu-icon"><?= ICON_PRINTER ?></span> <span>Print Order</span> </button>
+                <?php else: ?>
                 <button class="menu-item" onclick="printOrderFromMenu('<?= $orderRefCode ?>')"> <span class="menu-icon"><?= ICON_PRINTER ?></span> <span>Print Order</span> </button>
+                <?php endif; ?>
                 <?php if (!$isMtccStaff): ?>
                 <button class="menu-item" onclick="printLabelFromMenu('<?= $orderRefCode ?>')"> <span class="menu-icon"><?= ICON_PACKAGE ?></span> <span>Print Label</span> </button>
                 <?php endif; ?>
