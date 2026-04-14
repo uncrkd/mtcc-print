@@ -4164,7 +4164,33 @@ body.login-page {
   /* ==========================================================
      Order table → courier-style card list (MTCC view only)
      ========================================================== */
-  .orders-table-container.mtcc-view { overflow: visible; box-shadow: none; background: transparent; padding: 0; }
+
+  /* Break out of the table-card-wrapper on mobile so each card is standalone */
+  .table-card-wrapper {
+    margin: 10px 0 !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    overflow: visible !important;
+  }
+  .table-header-bar {
+    background: white;
+    border-radius: 10px;
+    margin: 0 calc(8px + env(safe-area-inset-left, 0px)) 10px calc(8px + env(safe-area-inset-right, 0px));
+    padding: 10px 12px !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  .orders-table-container,
+  .table-card-wrapper .orders-table-container {
+    overflow: visible !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+  }
+
   .mtcc-view .orders-table,
   .mtcc-view .orders-table thead,
   .mtcc-view .orders-table tbody,
@@ -4177,21 +4203,44 @@ body.login-page {
 
   .mtcc-view .orders-table thead { display: none; }
 
-  /* Each row → polished card (courier-app inspired) */
+  /* Each row → polished standalone card (courier-app inspired) */
   .mtcc-view .orders-table tbody tr {
     background: white;
     border: 1px solid var(--border-color);
-    border-radius: 12px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-    margin: 0 calc(12px + env(safe-area-inset-left, 0px)) 10px calc(12px + env(safe-area-inset-right, 0px));
-    padding: 14px 14px 12px;
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    margin: 0 calc(8px + env(safe-area-inset-left, 0px)) 10px calc(8px + env(safe-area-inset-right, 0px));
+    padding: 12px 14px 10px;
     position: relative;
     transition: transform 0.15s, box-shadow 0.15s;
+    overflow: hidden;
   }
   .mtcc-view .orders-table tbody tr:active {
     transform: scale(0.985);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
   }
+
+  /* Status-colored accent strip on top of each card (courier style) */
+  .mtcc-view .orders-table tbody tr::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--border-color);
+    pointer-events: none;
+  }
+  .mtcc-view .orders-table tbody tr.delivered::before { background: #10b981; }
+  .mtcc-view .orders-table tbody tr.pickedup::before { background: #22c55e; }
+  .mtcc-view .orders-table tbody tr.shipped::before { background: #14b8a6; }
+  .mtcc-view .orders-table tbody tr.dispatched::before { background: #7c3aed; }
+  .mtcc-view .orders-table tbody tr.ready::before { background: #d97706; }
+  .mtcc-view .orders-table tbody tr.printing::before { background: #6366f1; }
+  .mtcc-view .orders-table tbody tr.preflight::before { background: #8b5cf6; }
+  .mtcc-view .orders-table tbody tr.file_issue::before { background: #ea580c; }
+  .mtcc-view .orders-table tbody tr.missing::before,
+  .mtcc-view .orders-table tbody tr.unclaimed::before { background: #dc2626; }
+  .mtcc-view .orders-table tbody tr.cancelled::before,
+  .mtcc-view .orders-table tbody tr.refunded::before { background: #9ca3af; }
 
   /* Hide: checkbox, priority, size columns on mobile (info is in cards anyway) */
   .mtcc-view .orders-table td.checkbox-column,
@@ -4228,13 +4277,19 @@ body.login-page {
     padding-top: 1px;
   }
 
-  /* Right column: cell-main on row 1, cell-micro on row 2 */
+  /* Right column: cell-main on row 1, cell-micro on row 2.
+     Override nowrap/ellipsis rules from admin-tables.css */
   .mtcc-view .orders-table td .cell-main,
   .mtcc-view .orders-table td .cell-micro {
     grid-column: 2;
     text-align: right;
     min-width: 0;
+    max-width: none !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
     overflow-wrap: break-word;
+    word-break: break-word;
   }
   .mtcc-view .orders-table td .cell-main {
     grid-row: 1;
