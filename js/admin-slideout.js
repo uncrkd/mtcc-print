@@ -374,7 +374,7 @@ var OrderSlideout = (function() {
     var deliveryTime = order.deliveryTime || 'anytime';
     var material = (order.material === 'fabric') ? 'Fabric' : 'Poster';
     var building = (event.building || order.building || '').toLowerCase();
-    var buildingLabel = building === 'south' ? 'MTCC South Building' : (building === 'north' ? 'MTCC North Building' : '');
+    var buildingShort = building === 'south' ? 'MTCC South' : (building === 'north' ? 'MTCC North' : '');
     var trackNum = genTrackingNumber(order);
 
     // Address (if delivery is not MTCC)
@@ -433,7 +433,8 @@ var OrderSlideout = (function() {
 '.pp-customer { text-align: center; padding: 14px 20px; background: #faf8ff; border-radius: 6px; margin-bottom: 20px; }' +
 '.pp-customer-label { font-size: 8pt; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #6b7280; margin-bottom: 4px; }' +
 '.pp-customer-name { font-size: 18pt; font-weight: 700; color: #1e1b2e; }' +
-'.pp-customer-event { font-size: 10pt; color: #6b7280; margin-top: 4px; }' +
+'.pp-customer-event { font-size: 10pt; color: #1e1b2e; margin-top: 6px; }' +
+'.pp-event-label { font-size: 8pt; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #6b7280; margin-right: 4px; }' +
 
 /* Sections */
 '.pp-section { margin-bottom: 18px; page-break-inside: avoid; }' +
@@ -478,7 +479,7 @@ var OrderSlideout = (function() {
 '<div class="pp-customer">' +
   '<div class="pp-customer-label">Customer</div>' +
   '<div class="pp-customer-name">' + esc(ci.name || 'N/A') + '</div>' +
-  '<div class="pp-customer-event">' + esc(event.name || event.acronym || 'N/A') + '</div>' +
+  '<div class="pp-customer-event"><span class="pp-event-label">Event:</span> ' + esc(event.name || event.acronym || 'N/A') + '</div>' +
 '</div>' +
 
 /* Order Details */
@@ -489,7 +490,7 @@ var OrderSlideout = (function() {
     '<div><span class="pp-dt">Material</span><span class="pp-dd">' + material + '</span></div>' +
     '<div><span class="pp-dt">Due</span><span class="pp-dd">' + esc(fmtDate(order.selectedDate)) + (TIME_LABELS[deliveryTime] && deliveryTime !== 'anytime' ? ' &middot; by ' + TIME_LABELS[deliveryTime] : '') + '</span></div>' +
     '<div><span class="pp-dt">Tier</span><span class="pp-dd">' + esc(pricing.tier || 'Standard') + '</span></div>' +
-    '<div><span class="pp-dt">Delivery</span><span class="pp-dd">' + (delivery === 'mtcc' ? 'MTCC Pick-up' + (buildingLabel ? ' &middot; ' + esc(buildingLabel) : '') : 'Address Delivery') + '</span></div>' +
+    '<div><span class="pp-dt">Pickup</span><span class="pp-dd">' + (delivery === 'mtcc' ? esc(buildingShort || 'MTCC') : 'Address Delivery') + '</span></div>' +
     (addressLine ? '<div><span class="pp-dt">Address</span><span class="pp-dd">' + esc(addressLine) + '</span></div>' : '<div></div>') +
   '</div>' +
 '</div>' +

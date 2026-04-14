@@ -2029,52 +2029,100 @@ function mtccPrintPickupList() {
     if (o.status === 'delivered') ready.push(o);
   });
 
-  // Sort: overdue first (most overdue at top), then by due date ascending
-  ready.sort(function(a, b) {
-    var aOverdue = a.selectedDate && a.selectedDate < todayStr;
-    var bOverdue = b.selectedDate && b.selectedDate < todayStr;
-    if (aOverdue !== bOverdue) return aOverdue ? -1 : 1;
-    var da = a.selectedDate || '9999-12-31';
-    var db = b.selectedDate || '9999-12-31';
-    if (da !== db) return da < db ? -1 : 1;
-    return (a.referenceCode || '').localeCompare(b.referenceCode || '');
-  });
-
   function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
   function fmtDueDate(s) { if (!s) return '—'; var d = new Date(s); return isNaN(d) ? s : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); }
 
-  // Group by overdue / on-time
-  var overdueCount = 0;
-  var onTimeCount = 0;
-  var rows = '';
+  // Group orders by event acronym (prefix)
+  var groups = {}; // { 'CPMA': { name, acronym, building, orders: [...] } }
+  var overdueCount = 0, onTimeCount = 0;
+
   ready.forEach(function(o) {
-    var ref = esc(o.referenceCode || '');
-    var name = esc((o.customerInfo || {}).name || '');
-    var due = esc(fmtDueDate(o.selectedDate));
-    // Use acronym for compactness on the pickup list (space is tight at 10pt)
-    var eventName = esc((o.event || {}).acronym || (o.event || {}).name || '');
+    var acronym = ((o.event || {}).acronym || (o.referenceCode || '').split('-')[0] || 'Other').toUpperCase();
+    var fullName = (o.event || {}).name || acronym;
     var building = ((o.event || {}).building || o.building || '').toLowerCase();
-    var buildingLabel = building === 'south' ? 'South' : (building === 'north' ? 'North' : '');
-    var w = (o.dimensions || {}).width || '?';
-    var h = (o.dimensions || {}).height || '?';
     var isPastDue = o.selectedDate && o.selectedDate < todayStr;
     if (isPastDue) overdueCount++; else onTimeCount++;
 
-    rows +=
-      '<tr' + (isPastDue ? ' class="pl-overdue"' : '') + '>' +
-        '<td class="pl-check"></td>' +
-        '<td class="pl-ref">#' + ref + '</td>' +
-        '<td class="pl-cust">' + name + '</td>' +
-        '<td class="pl-due">' + due + (isPastDue ? ' <span class="pl-badge">OVERDUE</span>' : '') + '</td>' +
-        '<td class="pl-event">' + eventName + '</td>' +
-        '<td class="pl-bldg">' + (buildingLabel ? 'MTCC ' + buildingLabel : '—') + '</td>' +
-        '<td class="pl-size">' + w + '&quot; &times; ' + h + '&quot;</td>' +
-        '<td class="pl-notes"></td>' +
-      '</tr>';
+    if (!groups[acronym]) {
+      groups[acronym] = { acronym: acronym, name: fullName, building: building, orders: [] };
+    }
+    groups[acronym].orders.push(o);
   });
 
-  if (!rows) {
-    rows = '<tr><td colspan="8" class="pl-empty">No orders currently ready for pickup.</td></tr>';
+  // Sort events: events with overdue items first, then alphabetical
+  var sortedGroups = Object.values(groups);
+  sortedGroups.forEach(function(g) {
+    // Sort orders within each group: overdue first, then by due date
+    g.orders.sort(function(a, b) {
+      var aOverdue = a.selectedDate && a.selectedDate < todayStr;
+      var bOverdue = b.selectedDate && b.selectedDate < todayStr;
+      if (aOverdue !== bOverdue) return aOverdue ? -1 : 1;
+      var da = a.selectedDate || '9999-12-31';
+      var db = b.selectedDate || '9999-12-31';
+      if (da !== db) return da < db ? -1 : 1;
+      return (a.referenceCode || '').localeCompare(b.referenceCode || '');
+    });
+    // Mark if group has any overdue
+    g.hasOverdue = g.orders.some(function(o) { return o.selectedDate && o.selectedDate < todayStr; });
+  });
+  sortedGroups.sort(function(a, b) {
+    if (a.hasOverdue !== b.hasOverdue) return a.hasOverdue ? -1 : 1;
+    return a.name.localeCompare(b.name);
+  });
+
+  // Build a table per event group
+  var eventTables = '';
+  if (sortedGroups.length === 0) {
+    eventTables = '<div class="pl-empty-state">No orders currently ready for pickup.</div>';
+  } else {
+    sortedGroups.forEach(function(g) {
+      var buildingLabel = g.building === 'south' ? 'MTCC South' : (g.building === 'north' ? 'MTCC North' : '');
+      var groupOverdue = g.orders.filter(function(o) { return o.selectedDate && o.selectedDate < todayStr; }).length;
+
+      var groupRows = '';
+      g.orders.forEach(function(o) {
+        var ref = esc(o.referenceCode || '');
+        var name = esc((o.customerInfo || {}).name || '');
+        var due = esc(fmtDueDate(o.selectedDate));
+        var w = (o.dimensions || {}).width || '?';
+        var h = (o.dimensions || {}).height || '?';
+        var isPastDue = o.selectedDate && o.selectedDate < todayStr;
+
+        groupRows +=
+          '<tr' + (isPastDue ? ' class="pl-overdue"' : '') + '>' +
+            '<td class="pl-check"></td>' +
+            '<td class="pl-ref">#' + ref + '</td>' +
+            '<td class="pl-cust">' + name + '</td>' +
+            '<td class="pl-due">' + due + (isPastDue ? ' <span class="pl-badge">OVERDUE</span>' : '') + '</td>' +
+            '<td class="pl-size">' + w + '&quot; &times; ' + h + '&quot;</td>' +
+            '<td class="pl-notes"></td>' +
+          '</tr>';
+      });
+
+      eventTables +=
+        '<div class="pl-group">' +
+          '<div class="pl-group-header">' +
+            '<div class="pl-group-title"><span class="pl-group-acronym">' + esc(g.acronym) + '</span> ' + esc(g.name) + '</div>' +
+            '<div class="pl-group-meta">' +
+              (buildingLabel ? '<span class="pl-group-bldg">' + buildingLabel + '</span>' : '') +
+              '<span class="pl-group-count">' + g.orders.length + ' order' + (g.orders.length !== 1 ? 's' : '') +
+                (groupOverdue > 0 ? ' · <span class="pl-group-overdue">' + groupOverdue + ' overdue</span>' : '') +
+              '</span>' +
+            '</div>' +
+          '</div>' +
+          '<table>' +
+            '<thead><tr>' +
+              '<th></th>' +
+              '<th>Order #</th>' +
+              '<th>Customer</th>' +
+              '<th>Due</th>' +
+              '<th>Size</th>' +
+              '<th>Notes</th>' +
+            '</tr></thead>' +
+            '<tbody>' + groupRows + '</tbody>' +
+          '</table>' +
+        '</div>';
+    });
   }
 
   var dateLong = today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
@@ -2103,13 +2151,23 @@ function mtccPrintPickupList() {
       '.pl-stat-value { font-size: 13pt; font-weight: 700; color: #1e1b2e; line-height: 1; }' +
       '.pl-stat-value.red { color: #dc2626; }' +
 
-      /* Table — single-line rows, 9pt to fit everything without truncation */
+      /* Event group header */
+      '.pl-group { margin-bottom: 18px; page-break-inside: auto; }' +
+      '.pl-group-header { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding: 6px 8px; background: #1e1b2e; color: white; border-radius: 3px 3px 0 0; }' +
+      '.pl-group-title { font-size: 10pt; font-weight: 700; letter-spacing: 0.3px; }' +
+      '.pl-group-acronym { display: inline-block; padding: 1px 6px; background: #7c3aed; color: white; border-radius: 2px; font-family: "Courier New", monospace; font-size: 9pt; font-weight: 700; margin-right: 6px; }' +
+      '.pl-group-meta { font-size: 8pt; color: #d1d5db; display: flex; gap: 12px; align-items: baseline; }' +
+      '.pl-group-bldg { font-weight: 600; letter-spacing: 0.3px; }' +
+      '.pl-group-count { font-size: 8pt; }' +
+      '.pl-group-overdue { color: #fca5a5; font-weight: 700; }' +
+
+      /* Table — single-line rows, 9pt */
       'table { width: 100%; border-collapse: collapse; }' +
       'thead tr { border-bottom: 1.5px solid #1e1b2e; }' +
-      'th { text-align: left; padding: 6px 4px; font-size: 7.5pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: #6b7280; }' +
+      'th { text-align: left; padding: 5px 4px; font-size: 7pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: #6b7280; background: #f3f4f6; }' +
       'td { padding: 7px 4px; border-bottom: 1px solid #e5e7eb; vertical-align: middle; font-size: 9pt; white-space: nowrap; }' +
 
-      /* Zebra striping (subtle grey alt rows) */
+      /* Zebra striping */
       'tbody tr:nth-child(even) td { background: #f9fafb; }' +
 
       /* Columns */
@@ -2117,17 +2175,14 @@ function mtccPrintPickupList() {
       '.pl-check::before { content: ""; display: inline-block; width: 11px; height: 11px; border: 1.5px solid #1e1b2e; border-radius: 2px; vertical-align: middle; }' +
       '.pl-ref { font-family: "Courier New", monospace; font-weight: 700; color: #7c3aed; padding-left: 8px !important; }' +
       '.pl-cust { font-weight: 600; }' +
-      '.pl-due { }' +
-      '.pl-event { color: #374151; }' +
-      '.pl-bldg { color: #6b7280; }' +
       '.pl-size { font-family: "Courier New", monospace; font-size: 8.5pt; }' +
-      '.pl-notes { border-left: 1px dashed #d1d5db; }' +
+      '.pl-notes { border-left: 1px dashed #d1d5db; min-width: 120px; }' +
 
-      /* Overdue row — subtle: red text on due column only, no row background */
+      /* Overdue cue */
       '.pl-overdue .pl-due { color: #dc2626; font-weight: 700; }' +
       '.pl-badge { display: inline-block; padding: 0 4px; border-radius: 2px; background: #dc2626; color: white; font-size: 6.5pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; margin-left: 3px; vertical-align: 1px; }' +
 
-      '.pl-empty { text-align: center; color: #9ca3af; padding: 24px 12px !important; font-style: italic; white-space: normal !important; }' +
+      '.pl-empty-state { text-align: center; color: #9ca3af; padding: 32px 12px; font-style: italic; }' +
 
       /* Footer / signature */
       '.pl-signoff { margin-top: 20px; padding-top: 12px; border-top: 1px solid #e5e7eb; display: flex; gap: 32px; }' +
@@ -2156,19 +2211,7 @@ function mtccPrintPickupList() {
       '<div class="pl-stat"><div class="pl-stat-label">Overdue</div><div class="pl-stat-value' + (overdueCount > 0 ? ' red' : '') + '">' + overdueCount + '</div></div>' +
     '</div>' +
 
-    '<table>' +
-      '<thead><tr>' +
-        '<th></th>' +
-        '<th>Order #</th>' +
-        '<th>Customer</th>' +
-        '<th>Due</th>' +
-        '<th>Event</th>' +
-        '<th>Building</th>' +
-        '<th>Size</th>' +
-        '<th>Notes</th>' +
-      '</tr></thead>' +
-      '<tbody>' + rows + '</tbody>' +
-    '</table>' +
+    eventTables +
 
     '<div class="pl-signoff">' +
       '<div class="pl-signoff-field"><div class="pl-signoff-label">Staff Signature</div><div class="pl-signoff-line"></div></div>' +
