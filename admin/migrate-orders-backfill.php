@@ -34,6 +34,16 @@ foreach ($allEvents as $ev) {
     if ($b) $buildingByPrefix[$prefix] = $b;
 }
 
+// Manual overrides — prefixes not in events.json but with known buildings
+$manualOverrides = [
+    'AAIC' => 'north',
+];
+foreach ($manualOverrides as $prefix => $building) {
+    if (!isset($buildingByPrefix[$prefix])) {
+        $buildingByPrefix[$prefix] = $building;
+    }
+}
+
 // Walk order files
 $orderDir = __DIR__ . '/../uploads/orders/';
 $orderFiles = glob($orderDir . '*.json');
