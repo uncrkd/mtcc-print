@@ -4045,8 +4045,8 @@ body.login-page {
 
 /* ==========================================================
    MTCC MOBILE RESPONSIVE
-   Tablet 960px: 2-col grids, toolbar wraps
-   Phone 640px: 1-col, table becomes a card list
+   Tablet 960px: 2-col grids
+   Phone 640px: 2x2 stat cards, toolbar regrouped, table → cards
    ========================================================== */
 
 @media (max-width: 960px) {
@@ -4058,28 +4058,100 @@ body.login-page {
 }
 
 @media (max-width: 640px) {
-  /* Single-column stacks */
-  .mtcc-live-cards,
-  .mtcc-stats-row { grid-template-columns: 1fr; gap: 10px; }
-  .mtcc-live-count { font-size: 1.3rem; }
-  .mtcc-stat-value { font-size: 1.5rem; }
+  /* Container margins — respect safe-area insets (notch/Dynamic Island on iOS) */
   .mtcc-hero-container,
   .mtcc-stats-row,
   .mtcc-live-cards,
   .mtcc-toolbar,
-  .mtcc-filter-banner { margin-left: 12px; margin-right: 12px; }
+  .mtcc-filter-banner,
+  .mtcc-empty-state,
+  .mtcc-refresh-banner,
+  .mtcc-preview-banner {
+    margin-left: calc(12px + env(safe-area-inset-left, 0px));
+    margin-right: calc(12px + env(safe-area-inset-right, 0px));
+  }
 
-  /* Toolbar: stack everything vertically */
-  .mtcc-toolbar { gap: 8px; }
-  .mtcc-toolbar-btn,
-  .mtcc-toolbar-select { flex: 1 1 100%; max-width: none; justify-content: center; }
+  /* Revenue stat cards — 2 per row, compact fonts */
+  .mtcc-stats-row {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .mtcc-stat {
+    padding: 12px 12px;
+    border-top-width: 2px;
+  }
+  .mtcc-stat-label { font-size: 0.62rem; letter-spacing: 0.3px; }
+  .mtcc-stat-value { font-size: 1.15rem; letter-spacing: -0.3px; }
+  .mtcc-stat-sub { font-size: 0.65rem; }
+
+  /* Live Status cards — 2 per row, compact */
+  .mtcc-live-cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .mtcc-live-card { padding: 10px 12px; gap: 10px; }
+  .mtcc-live-icon { width: 28px; height: 28px; }
+  .mtcc-live-icon svg { width: 16px; height: 16px; }
+  .mtcc-live-text { padding-right: 8px; }
+  .mtcc-live-label-main { font-size: 0.72rem; }
+  .mtcc-live-label-sub { font-size: 0.62rem; }
+  .mtcc-live-count { font-size: 1.1rem; min-width: 24px; }
+  .mtcc-live-card::before { inset: 4px; }
+
+  /* Toolbar — search full-width, then 3 buttons on one row, clear full-width below */
+  .mtcc-toolbar {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .mtcc-toolbar-search {
+    grid-column: 1 / -1;
+    flex: none;
+  }
+  .mtcc-toolbar-input { padding: 12px 14px 12px 40px; font-size: 0.88rem; }
+  .mtcc-toolbar-search-icon { left: 12px; }
+
+  /* Event + Building filters — each take full row, constrained width */
+  .mtcc-toolbar-select {
+    grid-column: 1 / -1;
+    flex: none;
+    max-width: none;
+    width: 100%;
+    min-width: 0;
+    height: 42px;
+  }
+
+  /* Buttons — 3 in a row, Clear full-width below */
+  .mtcc-toolbar-btn {
+    flex: none;
+    justify-content: center;
+    min-height: 44px;
+    font-size: 0.78rem;
+    padding: 0 8px;
+    white-space: nowrap;
+  }
+  .mtcc-toolbar-btn-scan,
+  .mtcc-toolbar-btn-primary {
+    grid-column: span 1;
+  }
+  /* The primary "Print List" button + Scan + Today's Pickups = 3 buttons in the row */
+  /* Clear button — full-width on its own row */
+  .mtcc-toolbar-btn:last-child {
+    grid-column: 1 / -1;
+  }
+  .mtcc-toolbar-count {
+    min-width: 18px;
+    padding: 0 5px;
+    font-size: 0.65rem;
+  }
 
   /* Scanner modal fills screen */
   .mtcc-scanner-box { max-width: 100%; height: 100%; max-height: 100%; border-radius: 0; }
 
   /* ==========================================================
-     Order table → card-list pattern (MTCC view only)
+     Order table → courier-style card list (MTCC view only)
      ========================================================== */
+  .orders-table-container.mtcc-view { overflow: visible; box-shadow: none; background: transparent; padding: 0; }
   .mtcc-view .orders-table,
   .mtcc-view .orders-table thead,
   .mtcc-view .orders-table tbody,
@@ -4090,31 +4162,34 @@ body.login-page {
     box-sizing: border-box;
   }
 
-  /* Hide the thead — labels shown per-cell via ::before */
   .mtcc-view .orders-table thead { display: none; }
 
-  /* Each row = a card */
+  /* Each row → polished card (courier-app inspired) */
   .mtcc-view .orders-table tbody tr {
     background: white;
     border: 1px solid var(--border-color);
-    border-radius: 10px;
-    box-shadow: rgba(0, 0, 0, 0.06) 0 1px 3px;
-    margin: 0 12px 10px;
-    padding: 14px 16px;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    margin: 0 calc(12px + env(safe-area-inset-left, 0px)) 10px calc(12px + env(safe-area-inset-right, 0px));
+    padding: 14px 14px 12px;
     position: relative;
+    transition: transform 0.15s, box-shadow 0.15s;
   }
-  .mtcc-view .orders-table tbody tr:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+  .mtcc-view .orders-table tbody tr:active {
+    transform: scale(0.985);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
 
-  /* Hide columns that aren't useful on phone: checkbox, priority, size */
+  /* Hide: checkbox, priority, size columns on mobile (info is in cards anyway) */
   .mtcc-view .orders-table td.checkbox-column,
   .mtcc-view .orders-table td:nth-child(3),
-  .mtcc-view .orders-table td:nth-child(7) { display: none; }
+  .mtcc-view .orders-table td[data-mobile-label="Size"] { display: none; }
 
-  /* Each cell becomes a labeled row */
+  /* Each cell becomes a labeled data row */
   .mtcc-view .orders-table td {
     padding: 4px 0;
     border: none;
-    font-size: 0.88rem;
+    font-size: 0.82rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -4123,45 +4198,69 @@ body.login-page {
   }
   .mtcc-view .orders-table td .cell-main,
   .mtcc-view .orders-table td .cell-micro { text-align: right; }
+  .mtcc-view .orders-table td .cell-main { font-size: 0.85rem; font-weight: 600; color: var(--text-primary); }
+  .mtcc-view .orders-table td .cell-micro { font-size: 0.7rem; color: var(--text-secondary); }
 
-  /* Order Number — hero row */
-  .mtcc-view .orders-table td.order-number-cell {
-    padding-bottom: 10px;
-    margin-bottom: 8px;
-    border-bottom: 1px solid #f3f4f6;
-    font-size: 1.05rem;
-    font-weight: 700;
-    justify-content: flex-start;
-  }
-
-  /* Inject labels via data attribute (set in PHP) */
+  /* Inject labels via data-mobile-label */
   .mtcc-view .orders-table td[data-mobile-label]::before {
     content: attr(data-mobile-label);
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     font-weight: 700;
     color: var(--text-secondary);
     text-transform: uppercase;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.4px;
     flex-shrink: 0;
   }
 
-  /* Actions dots → top-right corner of the card */
-  .mtcc-view .orders-table td.actions-cell,
+  /* Order number cell — hero of the card */
+  .mtcc-view .orders-table td.order-number-cell {
+    padding: 0 60px 8px 0;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #f3f4f6;
+    font-size: 1rem;
+    font-weight: 700;
+    justify-content: flex-start;
+    display: flex;
+  }
+  .mtcc-view .orders-table td.order-number-cell .order-number {
+    font-size: 1rem;
+    font-family: 'Courier New', monospace;
+    letter-spacing: -0.01em;
+    color: var(--text-primary);
+  }
+  /* Only new-arrival orders keep the green color treatment */
+  .mtcc-view .orders-table td.order-number-cell .new-badge .order-number {
+    color: #059669;
+  }
+
+  /* Actions menu → top-right corner */
   .mtcc-view .orders-table td:last-child {
     position: absolute;
     top: 10px;
     right: 10px;
     width: auto;
     padding: 0;
+    display: block;
   }
   .mtcc-view .orders-table td:last-child::before { display: none; }
 
-  .mtcc-view .orders-table .status-badge { font-size: 0.78rem; }
+  /* Status column */
+  .mtcc-view .orders-table td[data-mobile-label="Status"] {
+    padding-top: 8px;
+    margin-top: 2px;
+    border-top: 1px solid #f3f4f6;
+  }
+  .mtcc-view .orders-table .status-badge { font-size: 0.72rem; padding: 3px 10px; }
+
+  /* Pagination + header bar spacing on mobile */
+  .table-header-bar { flex-wrap: wrap; gap: 8px; padding: 10px 12px; }
 }
 
 @media (max-width: 400px) {
-  .mtcc-view .orders-table tbody tr { padding: 12px 14px; }
-  .mtcc-view .orders-table td { font-size: 0.82rem; }
+  .mtcc-stat-value { font-size: 1rem; }
+  .mtcc-live-count { font-size: 1rem; }
+  .mtcc-live-label-main { font-size: 0.68rem; }
+  .mtcc-view .orders-table tbody tr { padding: 12px 12px 10px; }
 }
 
 /* Status breakdown chips */

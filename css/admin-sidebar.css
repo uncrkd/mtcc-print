@@ -36,13 +36,15 @@
     top: 0;
     left: 0;
     right: 0;
-    height: var(--topbar-height);
+    /* Safe-area: extend background into notch/Dynamic Island area,
+       but push content below it so buttons are tappable */
+    height: calc(var(--topbar-height) + env(safe-area-inset-top, 0px));
+    padding: env(safe-area-inset-top, 0px) calc(20px + env(safe-area-inset-right, 0px)) 0 calc(20px + env(safe-area-inset-left, 0px));
     background: var(--topbar-bg);
     border-bottom: 1px solid var(--topbar-border);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 20px;
     z-index: 1100;
     font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
@@ -173,7 +175,8 @@
 /* Body shift when sidebar present */
 body.has-sidebar {
     margin-left: var(--sidebar-width);
-    padding-top: var(--topbar-height);
+    padding-top: calc(var(--topbar-height) + env(safe-area-inset-top, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
     transition: margin-left var(--sidebar-transition);
 }
 
@@ -488,7 +491,7 @@ body.sidebar-collapsed .sidebar-logout {
     }
     body.has-sidebar {
         margin-left: 0;
-        padding-top: var(--topbar-height);
+        padding-top: calc(var(--topbar-height) + env(safe-area-inset-top, 0px));
     }
     .admin-sidebar {
         transform: translateX(-100%);

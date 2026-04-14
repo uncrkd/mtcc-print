@@ -9,7 +9,7 @@
  * Cache is versioned. Bump CACHE_VERSION on deploy to invalidate old caches.
  */
 
-const CACHE_VERSION = 'mtcc-v3';
+const CACHE_VERSION = 'mtcc-v4';
 const STATIC_CACHE = 'mtcc-static-' + CACHE_VERSION;
 const RUNTIME_CACHE = 'mtcc-runtime-' + CACHE_VERSION;
 
