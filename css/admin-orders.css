@@ -3277,6 +3277,7 @@ body.login-page {
 .mtcc-stat {
   background: white;
   border: 1px solid var(--border-color);
+  border-top: 3px solid var(--primary);
   border-radius: 10px;
   padding: 16px 18px;
   box-shadow: rgba(0, 0, 0, 0.12) 0px 1px 3px, rgba(0, 0, 0, 0.24) 0px 1px 2px;
@@ -3354,6 +3355,7 @@ body.login-page {
 .mtcc-stat-primary {
   background: linear-gradient(135deg, #faf5ff 0%, #ffffff 60%);
   border-color: var(--primary);
+  border-top-width: 4px;
 }
 
 .mtcc-stat-primary .mtcc-stat-value {
@@ -3389,10 +3391,10 @@ body.login-page {
   content: '';
   position: absolute;
   inset: 5px;
-  border: 2px dashed #d1d5db;
+  border: 1px dashed #d1d5db;
   border-radius: 6px;
   pointer-events: none;
-  transition: border 0.15s;
+  transition: inset 0.15s, border 0.15s, border-radius 0.15s;
 }
 
 .mtcc-live-card:hover {
@@ -3417,7 +3419,7 @@ body.login-page {
   flex-direction: column;
   gap: 2px;
   /* Vertical dashed divider between text and count */
-  border-right: 2px dashed #d1d5db;
+  border-right: 1px dashed #d1d5db;
   padding-right: 12px;
 }
 
@@ -3483,14 +3485,16 @@ body.login-page {
   opacity: 0.85;
 }
 
-/* Active state — dashed becomes solid */
+/* Active state — dashed becomes solid, outline moves to 0 offset (hugs the card edge) */
 .mtcc-live-active {
   transform: translateY(-1px);
   box-shadow: 0 4px 16px rgba(0,0,0,0.12);
 }
 .mtcc-live-active::before {
+  inset: 0;
   border-style: solid;
-  border-width: 2.5px;
+  border-width: 2px;
+  border-radius: 10px;
 }
 .mtcc-live-active .mtcc-live-text { border-right-style: solid; }
 .mtcc-live-active.mtcc-live-amber { background: #fffbeb; }

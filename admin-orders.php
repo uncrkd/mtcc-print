@@ -1814,7 +1814,10 @@ function mtccTakeOverTable() {
   if (typeof fm.applyFilters === 'function') fm.applyFilters();
 }
 
-function mtccClearFilters() {
+function mtccClearFilters(silent) {
+  // Reset active filter tracking
+  if (typeof mtccActiveFilters !== 'undefined') mtccActiveFilters.clear();
+
   // Show all rows — remove .filtered-out class and inline display
   var rows = document.querySelectorAll('#ordersTableBody tr');
   rows.forEach(function(row) {
@@ -1827,8 +1830,10 @@ function mtccClearFilters() {
   var searchBox = document.getElementById('searchBox');
   if (searchBox) { searchBox.value = ''; }
 
-  // Reset active card state
-  document.querySelectorAll('.mtcc-live-card').forEach(function(c) { c.classList.remove('mtcc-live-active'); });
+  // Reset active card/button state (skip if called silently from a toggle that already handled it)
+  if (!silent) {
+    document.querySelectorAll('.mtcc-live-card').forEach(function(c) { c.classList.remove('mtcc-live-active'); });
+  }
   document.querySelectorAll('.mtcc-toolbar-btn-primary').forEach(function(b) { b.classList.remove('mtcc-toolbar-active'); });
 
   // Hide banner
@@ -1836,18 +1841,53 @@ function mtccClearFilters() {
   if (banner) banner.style.display = 'none';
 }
 
-// Live Status card filter — filters the order table by operational category
+// Live Status filter — multi-select toggle. Tracks active categories in a Set.
+var mtccActiveFilters = new Set();
+
+function mtccRowMatchesCategory(row, category, todayStr) {
+  var dueDate = row.dataset.duedate || '';
+  var status = row.dataset.status || '';
+  if (category === 'arriving') {
+    return (dueDate === todayStr) && (status === 'shipped' || status === 'dispatched' || status === 'ready');
+  }
+  if (category === 'ready') return (status === 'delivered');
+  if (category === 'overdue') return (status === 'delivered') && dueDate && dueDate < todayStr;
+  if (category === 'issues') return (status === 'missing' || status === 'unclaimed' || status === 'file_issue');
+  return false;
+}
+
 function mtccFilterLive(category, evt) {
+  // Toggle the filter on/off
+  if (mtccActiveFilters.has(category)) {
+    mtccActiveFilters.delete(category);
+  } else {
+    mtccActiveFilters.add(category);
+  }
+
+  // Update card visual states
+  document.querySelectorAll('.mtcc-live-card').forEach(function(c) {
+    var cat = c.getAttribute('data-mtcc-filter');
+    c.classList.toggle('mtcc-live-active', mtccActiveFilters.has(cat));
+  });
+
+  // If no filters active, clear and return
+  if (mtccActiveFilters.size === 0) {
+    mtccClearFilters(true); // silent = don't touch cards (already done above)
+    return;
+  }
+
+  mtccApplyLiveFilters();
+}
+
+function mtccApplyLiveFilters() {
   var today = new Date();
   var y = today.getFullYear();
   var m = String(today.getMonth() + 1).padStart(2, '0');
   var d = String(today.getDate()).padStart(2, '0');
   var todayStr = y + '-' + m + '-' + d;
 
-  // Bypass simpleFilterManager's pagination + eventsMode so we can show all matching rows
   mtccTakeOverTable();
 
-  // Filter labels for the banner
   var labels = {
     arriving: 'Arriving Today',
     ready: 'Ready for Pickup',
@@ -1858,43 +1898,28 @@ function mtccFilterLive(category, evt) {
   var matchCount = 0;
   var rows = document.querySelectorAll('#ordersTableBody tr');
   rows.forEach(function(row) {
-    var dueDate = row.dataset.duedate || '';
-    var status = row.dataset.status || '';
+    // OR logic — row matches if it matches ANY active category
     var show = false;
-
-    if (category === 'arriving') {
-      show = (dueDate === todayStr) && (status === 'shipped' || status === 'dispatched' || status === 'ready');
-    } else if (category === 'ready') {
-      show = (status === 'delivered');
-    } else if (category === 'overdue') {
-      show = (status === 'delivered') && dueDate && dueDate < todayStr;
-    } else if (category === 'issues') {
-      show = (status === 'missing' || status === 'unclaimed' || status === 'file_issue');
-    }
-    // Use the .filtered-out class (same mechanism as simpleFilterManager)
-    // because it has `display: none !important` which inline styles can't override
+    mtccActiveFilters.forEach(function(cat) {
+      if (mtccRowMatchesCategory(row, cat, todayStr)) show = true;
+    });
     row.classList.toggle('filtered-out', !show);
     row.style.display = show ? '' : 'none';
     if (show) matchCount++;
   });
 
-  // Active card styling
-  document.querySelectorAll('.mtcc-live-card').forEach(function(c) { c.classList.remove('mtcc-live-active'); });
-  var clicked = (evt && evt.currentTarget) || document.querySelector('.mtcc-live-card[data-mtcc-filter="' + category + '"]');
-  if (clicked) clicked.classList.add('mtcc-live-active');
-
-  // Show the active-filter banner
+  // Banner — show list of active filter names
   var banner = document.getElementById('mtccFilterBanner');
   var text = document.getElementById('mtccFilterBannerText');
   var count = document.getElementById('mtccFilterBannerCount');
   if (banner && text) {
-    text.textContent = labels[category] || category;
+    var activeLabels = [];
+    mtccActiveFilters.forEach(function(cat) { activeLabels.push(labels[cat] || cat); });
+    text.textContent = activeLabels.join(' + ');
     if (count) count.textContent = '(' + matchCount + ' order' + (matchCount !== 1 ? 's' : '') + ')';
     banner.style.display = 'flex';
-    banner.setAttribute('data-category', category);
   }
 
-  // Scroll to table
   var table = document.getElementById('ordersTable');
   if (table) table.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
