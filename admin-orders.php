@@ -1997,21 +1997,24 @@ function mtccFilterTodayPickups() {
 })();
 
 // ===== MTCC Printable Daily Pickup List =====
-// Generates a clean, paper-friendly list of orders Ready for Pickup today and past.
+// Clean, paper-friendly list of orders Ready for Pickup with checkboxes for manual use.
 function mtccPrintPickupList() {
   if (!window.dashboardData || !window.dashboardData.orders) return;
 
   var today = new Date();
   var todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
 
-  // Gather orders currently at MTCC awaiting pickup (status=delivered)
+  // Gather orders ready for pickup (status=delivered)
   var ready = [];
   window.dashboardData.orders.forEach(function(o) {
     if (o.status === 'delivered') ready.push(o);
   });
 
-  // Sort by due date ascending, then by ref code
+  // Sort: overdue first (most overdue at top), then by due date ascending
   ready.sort(function(a, b) {
+    var aOverdue = a.selectedDate && a.selectedDate < todayStr;
+    var bOverdue = b.selectedDate && b.selectedDate < todayStr;
+    if (aOverdue !== bOverdue) return aOverdue ? -1 : 1;
     var da = a.selectedDate || '9999-12-31';
     var db = b.selectedDate || '9999-12-31';
     if (da !== db) return da < db ? -1 : 1;
@@ -2019,65 +2022,143 @@ function mtccPrintPickupList() {
   });
 
   function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
-  function fmtDueDate(s) { if (!s) return '—'; var d = new Date(s); return isNaN(d) ? s : d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }); }
+  function fmtDueDate(s) { if (!s) return '—'; var d = new Date(s); return isNaN(d) ? s : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); }
 
+  // Group by overdue / on-time
+  var overdueCount = 0;
+  var onTimeCount = 0;
   var rows = '';
   ready.forEach(function(o) {
     var ref = esc(o.referenceCode || '');
     var name = esc((o.customerInfo || {}).name || '');
-    var due = fmtDueDate(o.selectedDate);
-    var event = esc((o.event || {}).name || (o.event || {}).acronym || '');
+    var due = esc(fmtDueDate(o.selectedDate));
+    var eventName = esc((o.event || {}).name || (o.event || {}).acronym || '');
+    var building = ((o.event || {}).building || o.building || '').toLowerCase();
+    var buildingLabel = building === 'south' ? 'South' : (building === 'north' ? 'North' : '');
     var w = (o.dimensions || {}).width || '?';
     var h = (o.dimensions || {}).height || '?';
     var isPastDue = o.selectedDate && o.selectedDate < todayStr;
-    rows += '<tr class="' + (isPastDue ? 'overdue' : '') + '">' +
-      '<td>☐</td>' +
-      '<td class="ref">' + ref + '</td>' +
-      '<td>' + name + '</td>' +
-      '<td>' + due + (isPastDue ? ' ⚠' : '') + '</td>' +
-      '<td>' + event + '</td>' +
-      '<td>' + w + '" × ' + h + '"</td>' +
-    '</tr>';
+    if (isPastDue) overdueCount++; else onTimeCount++;
+
+    rows +=
+      '<tr' + (isPastDue ? ' class="pl-overdue"' : '') + '>' +
+        '<td class="pl-check"></td>' +
+        '<td class="pl-ref">#' + ref + '</td>' +
+        '<td class="pl-cust">' + name + '</td>' +
+        '<td class="pl-due">' + due + (isPastDue ? ' <span class="pl-badge">OVERDUE</span>' : '') + '</td>' +
+        '<td class="pl-event">' + eventName + (buildingLabel ? '<div class="pl-sub">MTCC ' + buildingLabel + '</div>' : '') + '</td>' +
+        '<td class="pl-size">' + w + '&quot; &times; ' + h + '&quot;</td>' +
+        '<td class="pl-notes"></td>' +
+      '</tr>';
   });
 
   if (!rows) {
-    rows = '<tr><td colspan="6" style="text-align:center;color:#9ca3af;padding:24px;">No orders currently ready for pickup.</td></tr>';
+    rows = '<tr><td colspan="7" class="pl-empty">No orders currently ready for pickup.</td></tr>';
   }
 
-  var html =
-    '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Pickup List — ' + today.toLocaleDateString() + '</title>' +
+  var dateLong = today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+  var timestamp = today.toLocaleString();
+
+  var html = '<!DOCTYPE html><html><head><meta charset="UTF-8">' +
+    '<title>Pickup List — ' + today.toLocaleDateString() + '</title>' +
     '<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">' +
     '<style>' +
-      '* { box-sizing: border-box; }' +
-      'body { font-family: Montserrat, sans-serif; margin: 0; padding: 24px 32px; color: #1e1b2e; }' +
-      '.pl-head { display: flex; justify-content: space-between; align-items: flex-end; padding-bottom: 14px; border-bottom: 2px solid #7c3aed; margin-bottom: 20px; }' +
-      '.pl-head img { max-width: 160px; }' +
+      '* { box-sizing: border-box; margin: 0; padding: 0; }' +
+      'body { font-family: Montserrat, -apple-system, BlinkMacSystemFont, Arial, sans-serif; color: #1e1b2e; background: white; padding: 24px 32px; font-size: 10pt; line-height: 1.3; }' +
+
+      /* Header */
+      '.pl-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; padding-bottom: 14px; border-bottom: 2px solid #1e1b2e; margin-bottom: 18px; }' +
+      '.pl-brand img { max-width: 170px; height: auto; display: block; }' +
+      '.pl-brand-fallback { font-size: 14pt; font-weight: 700; color: #7c3aed; letter-spacing: 1px; }' +
+      '.pl-brand-fallback small { display: block; font-size: 8pt; font-weight: 500; color: #6b7280; letter-spacing: 0.3px; }' +
       '.pl-title { text-align: right; }' +
-      '.pl-title h1 { font-size: 1.2rem; color: #7c3aed; margin: 0 0 2px; }' +
-      '.pl-title .date { font-size: 0.85rem; color: #6b7280; }' +
-      '.pl-title .count { font-size: 0.75rem; color: #6b7280; margin-top: 2px; }' +
-      'table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }' +
-      'th { text-align: left; padding: 8px 10px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #6b7280; border-bottom: 2px solid #e5e7eb; letter-spacing: 0.3px; }' +
-      'td { padding: 10px; border-bottom: 1px solid #f3f4f6; vertical-align: middle; }' +
-      'tr.overdue td { background: #fef2f2; }' +
-      '.ref { font-weight: 700; color: #7c3aed; font-family: monospace; }' +
-      'td:first-child { width: 28px; font-size: 1.3rem; color: #9ca3af; text-align: center; }' +
-      '.pl-footer { margin-top: 24px; padding-top: 14px; border-top: 1px solid #e5e7eb; text-align: center; font-size: 0.7rem; color: #9ca3af; letter-spacing: 0.3px; }' +
-      '@media print { body { padding: 16mm; } @page { margin: 8mm; } }' +
+      '.pl-title h1 { font-size: 16pt; font-weight: 700; color: #7c3aed; letter-spacing: 0.5px; margin-bottom: 2px; }' +
+      '.pl-title .pl-date { font-size: 10pt; color: #1e1b2e; font-weight: 600; }' +
+
+      /* Summary bar */
+      '.pl-summary { display: flex; gap: 32px; padding: 10px 16px; background: #faf8ff; border-radius: 4px; margin-bottom: 18px; }' +
+      '.pl-stat { display: flex; flex-direction: column; }' +
+      '.pl-stat-label { font-size: 8pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #6b7280; }' +
+      '.pl-stat-value { font-size: 16pt; font-weight: 700; color: #1e1b2e; line-height: 1; margin-top: 2px; }' +
+      '.pl-stat-value.red { color: #dc2626; }' +
+
+      /* Table */
+      'table { width: 100%; border-collapse: collapse; }' +
+      'thead tr { border-bottom: 2px solid #1e1b2e; }' +
+      'th { text-align: left; padding: 8px 6px; font-size: 8pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #6b7280; }' +
+      'td { padding: 10px 6px; border-bottom: 1px solid #e5e7eb; vertical-align: top; }' +
+
+      /* Columns */
+      '.pl-check { width: 22px; }' +
+      '.pl-check::before { content: ""; display: block; width: 14px; height: 14px; border: 1.5px solid #1e1b2e; border-radius: 2px; margin-top: 1px; }' +
+      '.pl-ref { width: 90px; font-family: "Courier New", monospace; font-size: 10pt; font-weight: 700; color: #7c3aed; white-space: nowrap; }' +
+      '.pl-cust { font-size: 10pt; font-weight: 600; }' +
+      '.pl-due { width: 110px; font-size: 9pt; white-space: nowrap; }' +
+      '.pl-event { font-size: 9pt; color: #374151; }' +
+      '.pl-sub { font-size: 7.5pt; color: #6b7280; margin-top: 1px; }' +
+      '.pl-size { width: 90px; font-size: 9pt; font-family: "Courier New", monospace; white-space: nowrap; }' +
+      '.pl-notes { width: 130px; border-left: 1px dashed #d1d5db; }' +
+
+      /* Overdue row */
+      '.pl-overdue td { background: #fef2f2; }' +
+      '.pl-badge { display: inline-block; padding: 1px 6px; border-radius: 2px; background: #dc2626; color: white; font-size: 7pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; margin-left: 4px; vertical-align: 1px; }' +
+
+      '.pl-empty { text-align: center; color: #9ca3af; padding: 32px 12px !important; font-style: italic; }' +
+
+      /* Footer / signature */
+      '.pl-signoff { margin-top: 28px; padding-top: 16px; border-top: 1px solid #e5e7eb; display: flex; gap: 40px; }' +
+      '.pl-signoff-field { flex: 1; }' +
+      '.pl-signoff-label { font-size: 8pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #6b7280; margin-bottom: 24px; }' +
+      '.pl-signoff-line { border-bottom: 1px solid #1e1b2e; }' +
+      '.pl-footer { margin-top: 18px; text-align: center; font-size: 7pt; color: #9ca3af; letter-spacing: 0.3px; }' +
+
+      /* Print behavior */
+      '@media print { body { padding: 12mm 14mm; } @page { size: letter; margin: 0; } thead { display: table-header-group; } tr { page-break-inside: avoid; } }' +
     '</style></head><body>' +
+
     '<div class="pl-head">' +
-      '<img src="/mtcc-ps-logo.png" alt="MTCC + Print Stuff">' +
-      '<div class="pl-title"><h1>Ready for Pickup</h1><div class="date">' + today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }) + '</div><div class="count">' + ready.length + ' order' + (ready.length !== 1 ? 's' : '') + ' awaiting pickup</div></div>' +
+      '<div class="pl-brand">' +
+        '<img src="/mtcc-ps-logo.png" alt="MTCC + Print Stuff" onerror="this.outerHTML=\'<div class=pl-brand-fallback>PRINT STUFF<small>MTCC Print Services</small></div>\'">' +
+      '</div>' +
+      '<div class="pl-title">' +
+        '<h1>Pickup List</h1>' +
+        '<div class="pl-date">' + dateLong + '</div>' +
+      '</div>' +
     '</div>' +
-    '<table><thead><tr><th></th><th>Order #</th><th>Customer</th><th>Due</th><th>Event</th><th>Size</th></tr></thead>' +
-    '<tbody>' + rows + '</tbody></table>' +
-    '<div class="pl-footer">Printed ' + today.toLocaleString() + ' &middot; Print Stuff &middot; Metro Toronto Convention Centre</div>' +
+
+    '<div class="pl-summary">' +
+      '<div class="pl-stat"><div class="pl-stat-label">Ready for Pickup</div><div class="pl-stat-value">' + ready.length + '</div></div>' +
+      '<div class="pl-stat"><div class="pl-stat-label">On Time</div><div class="pl-stat-value">' + onTimeCount + '</div></div>' +
+      '<div class="pl-stat"><div class="pl-stat-label">Overdue</div><div class="pl-stat-value' + (overdueCount > 0 ? ' red' : '') + '">' + overdueCount + '</div></div>' +
+    '</div>' +
+
+    '<table>' +
+      '<thead><tr>' +
+        '<th></th>' +
+        '<th>Order #</th>' +
+        '<th>Customer</th>' +
+        '<th>Due</th>' +
+        '<th>Event</th>' +
+        '<th>Size</th>' +
+        '<th>Notes</th>' +
+      '</tr></thead>' +
+      '<tbody>' + rows + '</tbody>' +
+    '</table>' +
+
+    '<div class="pl-signoff">' +
+      '<div class="pl-signoff-field"><div class="pl-signoff-label">Staff Signature</div><div class="pl-signoff-line"></div></div>' +
+      '<div class="pl-signoff-field"><div class="pl-signoff-label">Completed Date/Time</div><div class="pl-signoff-line"></div></div>' +
+    '</div>' +
+
+    '<div class="pl-footer">Generated ' + timestamp + ' &middot; Print Stuff &middot; Metro Toronto Convention Centre</div>' +
+
+    '<script>window.addEventListener("load", function(){ setTimeout(function(){ window.print(); }, 300); });</scr' + 'ipt>' +
+
     '</body></html>';
 
-  var w = window.open('', '_blank', 'width=900,height=1000');
+  var w = window.open('', '_blank', 'width=900,height=1100');
   w.document.write(html);
   w.document.close();
-  setTimeout(function() { w.print(); }, 400);
 }
 
 // ===== MTCC Issue Reporting =====

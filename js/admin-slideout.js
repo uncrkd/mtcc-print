@@ -348,6 +348,14 @@ var OrderSlideout = (function() {
       });
   }
 
+  // Status color map (matches status-config.php)
+  var STATUS_COLORS_LOCAL = {
+    unpaid: '#eab308', paid: '#ca8a04', preflight: '#8b5cf6', file_issue: '#ea580c',
+    printing: '#6366f1', ready: '#d97706', dispatched: '#7c3aed', shipped: '#14b8a6',
+    delivered: '#059669', pickedup: '#22c55e', missing: '#dc2626', unclaimed: '#e11d48',
+    cancelled: '#64748b', refunded: '#9ca3af'
+  };
+
   // Print the slideout contents as a clean, standalone printable page
   function printSlideout() {
     if (!currentRef) return;
@@ -356,7 +364,8 @@ var OrderSlideout = (function() {
 
     var ref = esc(order.referenceCode || '');
     var status = order.status || 'unpaid';
-    var statusLabel = STATUS_LABELS[status] || status;
+    var statusLabel = (window.STATUS_LABELS || STATUS_LABELS_DEFAULT)[status] || status;
+    var statusColor = STATUS_COLORS_LOCAL[status] || '#6b7280';
     var ci = order.customerInfo || {};
     var dim = order.dimensions || {};
     var pricing = order.pricing || {};
@@ -364,91 +373,155 @@ var OrderSlideout = (function() {
     var delivery = order.deliveryOption || 'mtcc';
     var deliveryTime = order.deliveryTime || 'anytime';
     var material = (order.material === 'fabric') ? 'Fabric' : 'Poster';
-
-    function row(lbl, val) {
-      return '<tr><td class="lbl">' + lbl + '</td><td class="val">' + val + '</td></tr>';
-    }
-
+    var building = (event.building || order.building || '').toLowerCase();
+    var buildingLabel = building === 'south' ? 'MTCC South Building' : (building === 'north' ? 'MTCC North Building' : '');
     var trackNum = genTrackingNumber(order);
-    var detailsRows =
-      row('Customer', esc(ci.name || 'N/A')) +
-      row('Size', (dim.width || '?') + '" &times; ' + (dim.height || '?') + '"') +
-      row('Material', material) +
-      row('Due', fmtDate(order.selectedDate) + ' · by ' + (TIME_LABELS[deliveryTime] || deliveryTime)) +
-      row('Delivery', (delivery === 'mtcc' ? 'MTCC Pick-up' : 'Address Delivery')) +
-      row('Event', esc(event.name || event.acronym || 'N/A')) +
-      row('Tier', esc(pricing.tier || 'Standard')) +
-      (trackNum ? row('Tracking #', '<span style="font-family:monospace;">' + esc(trackNum) + '</span>') : '');
 
-    var pricingRows = '';
-    if (pricing.basePrice) pricingRows += row('Base Price', fmtMoney(pricing.basePrice));
-    if (pricing.deliveryFee > 0) pricingRows += row('Delivery Fee', fmtMoney(pricing.deliveryFee));
-    if (pricing.tax) pricingRows += row('Tax (HST 13%)', fmtMoney(pricing.tax));
-    pricingRows += '<tr class="total-row"><td class="lbl">Total</td><td class="val">' + fmtMoney(pricing.total) + '</td></tr>';
-
-    var pickupRows = '';
-    if (order.pickup && order.pickup.picked_up_at) {
-      pickupRows =
-        row('Picked Up', fmtDateTime(order.pickup.picked_up_at)) +
-        row('By', esc(order.pickup.pickup_person || 'N/A') + (order.pickup.same_as_customer ? ' <em>(customer)</em>' : ''));
+    // Address (if delivery is not MTCC)
+    var addressLine = '';
+    if (delivery !== 'mtcc' && order.deliveryAddress) {
+      var addr = order.deliveryAddress;
+      var parts = [addr.address, addr.unit, addr.city, addr.province, addr.postal].filter(Boolean);
+      addressLine = parts.join(', ');
     }
 
-    var html =
-'<!DOCTYPE html><html><head><meta charset="UTF-8">' +
+    // Pricing lines
+    var pricingRows = '';
+    if (pricing.basePrice) pricingRows += '<tr><td>Base Price</td><td class="num">' + fmtMoney(pricing.basePrice) + '</td></tr>';
+    if (pricing.deliveryFee > 0) pricingRows += '<tr><td>Delivery Fee</td><td class="num">' + fmtMoney(pricing.deliveryFee) + '</td></tr>';
+    if (pricing.tax) pricingRows += '<tr><td>Tax (HST 13%)</td><td class="num">' + fmtMoney(pricing.tax) + '</td></tr>';
+    pricingRows += '<tr class="pp-total"><td>Total</td><td class="num">' + fmtMoney(pricing.total) + '</td></tr>';
+
+    // Pickup block (if present)
+    var pickupBlock = '';
+    if (order.pickup && order.pickup.picked_up_at) {
+      pickupBlock =
+        '<div class="pp-section pp-pickup">' +
+          '<div class="pp-section-title">Pickup Record</div>' +
+          '<div class="pp-dl">' +
+            '<div><span class="pp-dt">Picked up</span><span class="pp-dd">' + esc(fmtDateTime(order.pickup.picked_up_at)) + '</span></div>' +
+            '<div><span class="pp-dt">Received by</span><span class="pp-dd">' + esc(order.pickup.pickup_person || ci.name || 'Customer') + (order.pickup.same_as_customer ? ' <span class="pp-note">(customer)</span>' : '') + '</span></div>' +
+            (order.pickup.picked_up_by_staff ? '<div><span class="pp-dt">Logged by</span><span class="pp-dd">' + esc(order.pickup.picked_up_by_staff) + '</span></div>' : '') +
+          '</div>' +
+        '</div>';
+    }
+
+    var html = '<!DOCTYPE html><html><head><meta charset="UTF-8">' +
 '<title>Order ' + ref + '</title>' +
 '<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">' +
+'<script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.5/JsBarcode.all.min.js"></scr' + 'ipt>' +
 '<style>' +
-'* { box-sizing: border-box; }' +
-'body { font-family: Montserrat, -apple-system, sans-serif; margin: 0; padding: 32px 40px; color: #1e1b2e; background: white; }' +
-'.pp-header { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 20px; border-bottom: 2px solid #7c3aed; margin-bottom: 24px; }' +
-'.pp-logo img { max-width: 180px; height: auto; }' +
-'.pp-title-block { text-align: right; }' +
-'.pp-ref { font-size: 1.4rem; font-weight: 700; color: #7c3aed; letter-spacing: 0.5px; margin-bottom: 4px; }' +
-'.pp-status { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 0.72rem; font-weight: 700; color: white; background: #7c3aed; text-transform: uppercase; letter-spacing: 0.5px; }' +
-'.pp-section { margin-bottom: 20px; page-break-inside: avoid; }' +
-'.pp-section-title { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #6b7280; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid #e5e7eb; }' +
-'.pp-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }' +
-'.pp-table td { padding: 6px 0; vertical-align: top; }' +
-'.pp-table .lbl { width: 130px; color: #6b7280; font-weight: 500; }' +
-'.pp-table .val { color: #1e1b2e; font-weight: 600; }' +
-'.pp-table .total-row td { padding-top: 10px; border-top: 1.5px solid #7c3aed; font-size: 1rem; }' +
-'.pp-table .total-row .val { color: #7c3aed; font-weight: 700; }' +
-'.pp-footer { margin-top: 32px; padding-top: 16px; border-top: 1px solid #e5e7eb; text-align: center; font-size: 0.7rem; color: #9ca3af; letter-spacing: 0.3px; }' +
-'@media print { body { padding: 20px 28px; } @page { margin: 10mm; } }' +
+'* { box-sizing: border-box; margin: 0; padding: 0; }' +
+'body { font-family: Montserrat, -apple-system, BlinkMacSystemFont, Arial, sans-serif; color: #1e1b2e; background: white; padding: 28px 36px; font-size: 12pt; line-height: 1.35; }' +
+
+/* Header */
+'.pp-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; padding-bottom: 16px; border-bottom: 2px solid #1e1b2e; margin-bottom: 20px; }' +
+'.pp-brand img { max-width: 180px; height: auto; display: block; }' +
+'.pp-brand-fallback { font-size: 16pt; font-weight: 700; color: #7c3aed; letter-spacing: 1px; }' +
+'.pp-brand-fallback small { display: block; font-size: 9pt; font-weight: 500; color: #6b7280; letter-spacing: 0.3px; margin-top: 2px; }' +
+'.pp-meta { text-align: right; }' +
+'.pp-ref-label { font-size: 8pt; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #6b7280; margin-bottom: 2px; }' +
+'.pp-ref { font-size: 22pt; font-weight: 700; color: #1e1b2e; line-height: 1; letter-spacing: 0.5px; }' +
+'.pp-status { display: inline-block; margin-top: 6px; padding: 3px 12px; border-radius: 4px; font-size: 8pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: white; }' +
+
+/* Barcode section */
+'.pp-barcode { text-align: center; margin: 8px 0 20px; }' +
+'.pp-barcode svg { max-width: 320px; height: auto; }' +
+'.pp-tracking-num { font-family: "Courier New", monospace; font-size: 10pt; color: #6b7280; margin-top: 2px; letter-spacing: 1px; }' +
+
+/* Customer hero */
+'.pp-customer { text-align: center; padding: 14px 20px; background: #faf8ff; border-radius: 6px; margin-bottom: 20px; }' +
+'.pp-customer-label { font-size: 8pt; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #6b7280; margin-bottom: 4px; }' +
+'.pp-customer-name { font-size: 18pt; font-weight: 700; color: #1e1b2e; }' +
+'.pp-customer-event { font-size: 10pt; color: #6b7280; margin-top: 4px; }' +
+
+/* Sections */
+'.pp-section { margin-bottom: 18px; page-break-inside: avoid; }' +
+'.pp-section-title { font-size: 8pt; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: #7c3aed; padding-bottom: 5px; margin-bottom: 10px; border-bottom: 1px solid #e5e7eb; }' +
+
+/* Definition-list style grids */
+'.pp-dl { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 24px; }' +
+'.pp-dl > div { display: flex; justify-content: space-between; gap: 12px; padding: 2px 0; }' +
+'.pp-dt { font-size: 10pt; color: #6b7280; font-weight: 500; }' +
+'.pp-dd { font-size: 10pt; color: #1e1b2e; font-weight: 600; text-align: right; }' +
+'.pp-note { font-size: 8pt; color: #059669; font-weight: 500; }' +
+
+/* Pricing table */
+'.pp-pricing-table { width: 100%; border-collapse: collapse; font-size: 10pt; }' +
+'.pp-pricing-table td { padding: 6px 0; }' +
+'.pp-pricing-table td:first-child { color: #6b7280; }' +
+'.pp-pricing-table td.num { text-align: right; font-weight: 600; color: #1e1b2e; font-variant-numeric: tabular-nums; }' +
+'.pp-pricing-table tr.pp-total td { padding-top: 10px; border-top: 2px solid #1e1b2e; font-size: 12pt; font-weight: 700; color: #7c3aed; }' +
+
+/* Pickup highlight */
+'.pp-pickup { background: #ecfdf5; border-left: 3px solid #059669; padding: 12px 16px; border-radius: 4px; }' +
+'.pp-pickup .pp-section-title { color: #059669; border-bottom-color: #a7f3d0; }' +
+
+/* Footer */
+'.pp-footer { margin-top: 24px; padding-top: 12px; border-top: 1px solid #e5e7eb; text-align: center; font-size: 8pt; color: #9ca3af; letter-spacing: 0.3px; }' +
+
+'@media print { body { padding: 16mm 16mm; } @page { size: letter; margin: 0; } .pp-no-print { display: none; } }' +
 '</style></head><body>' +
 
 '<div class="pp-header">' +
-  '<div class="pp-logo"><img src="/mtcc-ps-logo.png" alt="MTCC + Print Stuff"></div>' +
-  '<div class="pp-title-block">' +
+  '<div class="pp-brand">' +
+    '<img src="/mtcc-ps-logo.png" alt="MTCC + Print Stuff" onerror="this.outerHTML=\'<div class=pp-brand-fallback>PRINT STUFF<small>MTCC Print Services</small></div>\'">' +
+  '</div>' +
+  '<div class="pp-meta">' +
+    '<div class="pp-ref-label">Order</div>' +
     '<div class="pp-ref">#' + ref + '</div>' +
-    '<span class="pp-status status-' + status + '">' + statusLabel + '</span>' +
+    '<span class="pp-status" style="background:' + statusColor + '">' + esc(statusLabel) + '</span>' +
   '</div>' +
 '</div>' +
 
-'<div class="pp-section">' +
-  '<div class="pp-section-title">Order Details</div>' +
-  '<table class="pp-table"><tbody>' + detailsRows + '</tbody></table>' +
-'</div>' +
-
-'<div class="pp-section">' +
-  '<div class="pp-section-title">Pricing</div>' +
-  '<table class="pp-table"><tbody>' + pricingRows + '</tbody></table>' +
-'</div>' +
-
-(pickupRows ?
-  '<div class="pp-section">' +
-    '<div class="pp-section-title">Pickup Record</div>' +
-    '<table class="pp-table"><tbody>' + pickupRows + '</tbody></table>' +
+/* Barcode */
+(trackNum ?
+  '<div class="pp-barcode">' +
+    '<svg id="pp-barcode-svg"></svg>' +
+    '<div class="pp-tracking-num">' + esc(trackNum) + '</div>' +
   '</div>' : '') +
 
-'<div class="pp-footer">Printed ' + new Date().toLocaleString() + ' &middot; Print Stuff &middot; Metro Toronto Convention Centre</div>' +
+/* Customer */
+'<div class="pp-customer">' +
+  '<div class="pp-customer-label">Customer</div>' +
+  '<div class="pp-customer-name">' + esc(ci.name || 'N/A') + '</div>' +
+  '<div class="pp-customer-event">' + esc(event.name || event.acronym || 'N/A') + (buildingLabel ? ' &middot; ' + esc(buildingLabel) : '') + '</div>' +
+'</div>' +
+
+/* Order Details */
+'<div class="pp-section">' +
+  '<div class="pp-section-title">Order Details</div>' +
+  '<div class="pp-dl">' +
+    '<div><span class="pp-dt">Size</span><span class="pp-dd">' + (dim.width || '?') + '" &times; ' + (dim.height || '?') + '"</span></div>' +
+    '<div><span class="pp-dt">Material</span><span class="pp-dd">' + material + '</span></div>' +
+    '<div><span class="pp-dt">Due</span><span class="pp-dd">' + esc(fmtDate(order.selectedDate)) + (TIME_LABELS[deliveryTime] && deliveryTime !== 'anytime' ? ' &middot; by ' + TIME_LABELS[deliveryTime] : '') + '</span></div>' +
+    '<div><span class="pp-dt">Tier</span><span class="pp-dd">' + esc(pricing.tier || 'Standard') + '</span></div>' +
+    '<div><span class="pp-dt">Delivery</span><span class="pp-dd">' + (delivery === 'mtcc' ? 'MTCC Pick-up' : 'Address Delivery') + '</span></div>' +
+    (addressLine ? '<div><span class="pp-dt">Address</span><span class="pp-dd">' + esc(addressLine) + '</span></div>' : '<div></div>') +
+  '</div>' +
+'</div>' +
+
+/* Pricing */
+'<div class="pp-section">' +
+  '<div class="pp-section-title">Pricing</div>' +
+  '<table class="pp-pricing-table">' + pricingRows + '</table>' +
+'</div>' +
+
+/* Pickup record (conditional) */
+pickupBlock +
+
+/* Footer */
+'<div class="pp-footer">Printed ' + new Date().toLocaleString() + ' &middot; Print Stuff &middot; Metro Toronto Convention Centre &middot; (437) 882-8822</div>' +
+
+/* Render barcode when loaded */
+'<script>window.addEventListener("load", function() { try { if (window.JsBarcode && "' + trackNum + '") { JsBarcode("#pp-barcode-svg", "' + trackNum + '", { format: "CODE128", width: 2, height: 50, displayValue: false, margin: 0 }); } window.print(); } catch(e) { window.print(); } });</scr' + 'ipt>' +
 
 '</body></html>';
 
-    var printWindow = window.open('', '_blank', 'width=800,height=900');
+    var printWindow = window.open('', '_blank', 'width=900,height=1100');
     printWindow.document.write(html);
     printWindow.document.close();
-    setTimeout(function() { printWindow.print(); }, 500);
+    // JsBarcode and window.print() run on load via inline script above
   }
 
   // Download PDF — triggers print dialog, user selects "Save as PDF"
