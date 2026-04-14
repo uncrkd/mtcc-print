@@ -1774,6 +1774,7 @@ function mtccFilterTodayPickups() {
     var dueDate = row.dataset.duedate || '';
     var status = row.dataset.status || '';
     var show = (dueDate === todayStr) && (status === 'ready' || status === 'delivered' || status === 'shipped');
+    row.classList.toggle('filtered-out', !show);
     row.style.display = show ? '' : 'none';
     if (show) matchCount++;
   });
@@ -1814,9 +1815,12 @@ function mtccTakeOverTable() {
 }
 
 function mtccClearFilters() {
-  // Show all rows
+  // Show all rows — remove .filtered-out class and inline display
   var rows = document.querySelectorAll('#ordersTableBody tr');
-  rows.forEach(function(row) { row.style.display = ''; });
+  rows.forEach(function(row) {
+    row.classList.remove('filtered-out');
+    row.style.display = '';
+  });
 
   var mtccSearch = document.getElementById('mtccSearchInput');
   if (mtccSearch) mtccSearch.value = '';
@@ -1867,6 +1871,9 @@ function mtccFilterLive(category, evt) {
     } else if (category === 'issues') {
       show = (status === 'missing' || status === 'unclaimed' || status === 'file_issue');
     }
+    // Use the .filtered-out class (same mechanism as simpleFilterManager)
+    // because it has `display: none !important` which inline styles can't override
+    row.classList.toggle('filtered-out', !show);
     row.style.display = show ? '' : 'none';
     if (show) matchCount++;
   });
