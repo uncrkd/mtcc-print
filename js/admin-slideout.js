@@ -488,7 +488,7 @@ var OrderSlideout = (function() {
   '<div class="pp-dl">' +
     '<div><span class="pp-dt">Size</span><span class="pp-dd">' + (dim.width || '?') + '" &times; ' + (dim.height || '?') + '"</span></div>' +
     '<div><span class="pp-dt">Material</span><span class="pp-dd">' + material + '</span></div>' +
-    '<div><span class="pp-dt">Due</span><span class="pp-dd">' + esc(fmtDate(order.selectedDate)) + (TIME_LABELS[deliveryTime] && deliveryTime !== 'anytime' ? ' &middot; by ' + TIME_LABELS[deliveryTime] : '') + '</span></div>' +
+    '<div><span class="pp-dt">Due</span><span class="pp-dd">' + esc(fmtDate(order.selectedDate)) + ' &middot; ' + esc(TIME_LABELS[deliveryTime] || 'Anytime') + '</span></div>' +
     '<div><span class="pp-dt">Tier</span><span class="pp-dd">' + esc(pricing.tier || 'Standard') + '</span></div>' +
     '<div><span class="pp-dt">Pickup</span><span class="pp-dd">' + (delivery === 'mtcc' ? esc(buildingShort || 'MTCC') : 'Address Delivery') + '</span></div>' +
     (addressLine ? '<div><span class="pp-dt">Address</span><span class="pp-dd">' + esc(addressLine) + '</span></div>' : '<div></div>') +
