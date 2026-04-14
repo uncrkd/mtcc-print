@@ -267,7 +267,7 @@ $currentYear = date('Y');
             background: white;
             border-radius: 12px;
             border: 1px solid var(--border-color);
-            box-shadow: rgba(0,0,0,0.04) 0 1px 2px;
+            box-shadow: rgba(0, 0, 0, 0.12) 0px 1px 3px, rgba(0, 0, 0, 0.24) 0px 1px 2px;
             margin-bottom: 24px;
             overflow: hidden;
         }
@@ -402,7 +402,7 @@ $currentYear = date('Y');
             <div class="mtcc-stat-sub">venue fee per event</div>
         </div>
         <?php if ($bestEvent): ?>
-        <a href="mtcc-statement.php?event=<?= urlencode($bestEvent['acronym']) ?>" class="mtcc-stat mtcc-stat-action mtcc-stat-featured">
+        <a href="mtcc-statement.php?event=<?= urlencode($bestEvent['acronym']) ?>" class="mtcc-stat mtcc-stat-action">
             <div class="mtcc-stat-top">
                 <span class="mtcc-stat-label">Best Event</span>
                 <span class="mtcc-stat-arrow">&rarr;</span>

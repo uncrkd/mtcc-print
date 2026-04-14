@@ -3633,6 +3633,30 @@ body.login-page {
   box-shadow: rgba(0,0,0,0.03) 0 1px 2px;
 }
 
+.mtcc-toolbar-select {
+  padding: 0 36px 0 14px;
+  height: 46px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  font-family: inherit;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: white url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5'><polyline points='6 9 12 15 18 9'/></svg>") no-repeat right 12px center;
+  color: var(--text-primary);
+  cursor: pointer;
+  box-shadow: rgba(0,0,0,0.03) 0 1px 2px;
+  appearance: none;
+  -webkit-appearance: none;
+  max-width: 240px;
+  text-overflow: ellipsis;
+}
+
+.mtcc-toolbar-select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
+}
+
 .mtcc-toolbar-btn:hover {
   border-color: var(--primary);
   color: var(--primary);

@@ -1702,7 +1702,22 @@ window.dashboardData = {
   </button>
 </div>
 
-<!-- MTCC Quick-Access Toolbar: Search + Scan + Today's Pickups -->
+<?php
+// Build list of unique event prefixes with counts for the event filter dropdown
+$mtccEventList = [];
+foreach ($orders as $o) {
+  $prefix = strtoupper(explode('-', $o['referenceCode'] ?? '')[0]);
+  if (!$prefix) continue;
+  if (!isset($mtccEventList[$prefix])) {
+    $evName = $o['event']['name'] ?? $o['event']['acronym'] ?? $prefix;
+    $mtccEventList[$prefix] = ['name' => $evName, 'count' => 0];
+  }
+  $mtccEventList[$prefix]['count']++;
+}
+ksort($mtccEventList);
+?>
+
+<!-- MTCC Quick-Access Toolbar: Search + Scan + Event Filter + Today's Pickups -->
 <div class="mtcc-toolbar">
   <div class="mtcc-toolbar-search">
     <span class="mtcc-toolbar-search-icon">
@@ -1710,6 +1725,12 @@ window.dashboardData = {
     </span>
     <input type="text" class="mtcc-toolbar-input" id="mtccSearchInput" placeholder="Customer is here to pick up &mdash; search by name or order #...">
   </div>
+  <select class="mtcc-toolbar-select" id="mtccEventFilter" onchange="mtccFilterByEvent(this.value)" title="Filter by event">
+    <option value="">All Events</option>
+    <?php foreach ($mtccEventList as $prefix => $ev): ?>
+    <option value="<?= htmlspecialchars($prefix) ?>"><?= htmlspecialchars($ev['name']) ?> (<?= $ev['count'] ?>)</option>
+    <?php endforeach; ?>
+  </select>
   <button class="mtcc-toolbar-btn mtcc-toolbar-btn-scan" onclick="mtccOpenScanner()" title="Scan order barcode">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px; vertical-align:-3px;"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="17" y2="12"/></svg>
     Scan
@@ -1796,6 +1817,41 @@ function mtccFilterTodayPickups() {
   }
 }
 
+// Filter the order table by event prefix (e.g., "CPMA")
+function mtccFilterByEvent(prefix) {
+  mtccTakeOverTable();
+
+  var rows = document.querySelectorAll('#ordersTableBody tr');
+  var matchCount = 0;
+  rows.forEach(function(row) {
+    var ref = (row.dataset.reference || '').toUpperCase();
+    var rowPrefix = ref.split('-')[0];
+    var show = !prefix || rowPrefix === prefix;
+    row.classList.toggle('filtered-out', !show);
+    row.style.display = show ? '' : 'none';
+    if (show) matchCount++;
+  });
+
+  // Clear other active states (event filter stands alone)
+  document.querySelectorAll('.mtcc-live-card').forEach(function(c) { c.classList.remove('mtcc-live-active'); });
+  if (typeof mtccActiveFilters !== 'undefined') mtccActiveFilters.clear();
+  document.querySelectorAll('.mtcc-toolbar-btn-primary').forEach(function(b) { b.classList.remove('mtcc-toolbar-active'); });
+
+  // Banner
+  var banner = document.getElementById('mtccFilterBanner');
+  var text = document.getElementById('mtccFilterBannerText');
+  var count = document.getElementById('mtccFilterBannerCount');
+  if (prefix && banner && text) {
+    var sel = document.getElementById('mtccEventFilter');
+    var eventLabel = sel && sel.selectedOptions[0] ? sel.selectedOptions[0].textContent.split(' (')[0] : prefix;
+    text.textContent = 'Event: ' + eventLabel;
+    if (count) count.textContent = '(' + matchCount + ' order' + (matchCount !== 1 ? 's' : '') + ')';
+    banner.style.display = 'flex';
+  } else if (banner) {
+    banner.style.display = 'none';
+  }
+}
+
 // MTCC takes over the table display — disables simpleFilterManager's pagination/eventsMode
 // so chip filters can show all matching orders across active AND archived events.
 function mtccTakeOverTable() {
@@ -1829,6 +1885,8 @@ function mtccClearFilters(silent) {
   if (mtccSearch) mtccSearch.value = '';
   var searchBox = document.getElementById('searchBox');
   if (searchBox) { searchBox.value = ''; }
+  var eventSelect = document.getElementById('mtccEventFilter');
+  if (eventSelect) eventSelect.value = '';
 
   // Reset active card/button state (skip if called silently from a toggle that already handled it)
   if (!silent) {

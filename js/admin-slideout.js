@@ -58,6 +58,25 @@ var OrderSlideout = (function() {
   function fmtDateTime(s) { if (!s) return ''; var d = new Date(s); return isNaN(d) ? s : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }); }
   function fmtMoney(v) { var n = parseFloat(v); return isNaN(n) ? '$0.00' : '$' + n.toFixed(2); }
 
+  // Generate MTCC tracking/barcode number (mirrors dispatch/api.php generateTrackingNumber)
+  // Format: MTCC + EVENT_ACRONYM + ORDER_NUMBER(3 digits) + DATE(YYMMDD)
+  function genTrackingNumber(order) {
+    if (!order) return '';
+    var ev = order.event || {};
+    var prefix = (ev.acronym || order.eventAcronym || '').toUpperCase();
+    var m = (order.referenceCode || '').match(/(\d+)$/);
+    var orderNum = (m ? m[1] : '001').padStart(3, '0');
+    var dateStr = order.selectedDate || order.orderDate || '';
+    var d = dateStr ? new Date(dateStr) : new Date();
+    if (isNaN(d.getTime())) d = new Date();
+    var y = String(d.getFullYear()).slice(-2);
+    var mo = String(d.getMonth() + 1).padStart(2, '0');
+    var da = String(d.getDate()).padStart(2, '0');
+    return prefix
+      ? ('MTCC' + prefix + orderNum + y + mo + da)
+      : ('MTCC' + y + mo + da + orderNum);
+  }
+
   // Use role-appropriate labels from PHP if available, otherwise fall back to admin defaults
   var STATUS_LABELS_DEFAULT = {
     unpaid:'Unpaid', paid:'Paid', preflight:'Sent to Vendor', file_issue:'File Issue',
@@ -131,6 +150,8 @@ var OrderSlideout = (function() {
       }
     }
 
+    var trackingNum = genTrackingNumber(order);
+
     // ---- ORDER DETAILS ----
     h += '<div class="so-section">';
     h += '<div class="so-section-label">Order Details</div>';
@@ -142,6 +163,7 @@ var OrderSlideout = (function() {
     h += '<span class="so-spec-lbl">Delivery</span><span class="so-spec-val">' + (delivery === 'mtcc' ? 'MTCC Pick-up' : 'Address Delivery') + '</span>';
     h += '<span class="so-spec-lbl">Event</span><span class="so-spec-val">' + esc(event.name || event.acronym || 'N/A') + '</span>';
     h += '<span class="so-spec-lbl">Tier</span><span class="so-spec-val">' + esc(pricing.tier || 'Standard') + '</span>';
+    if (trackingNum) h += '<span class="so-spec-lbl">Tracking #</span><span class="so-spec-val" style="font-family: monospace; font-size: 0.82rem;">' + esc(trackingNum) + '</span>';
     if (vendorName && !isMtcc) h += '<span class="so-spec-lbl">Vendor</span><span class="so-spec-val">' + esc(vendorName) + '</span>';
     h += '</div></div>';
 
@@ -322,54 +344,107 @@ var OrderSlideout = (function() {
       });
   }
 
-  // Print the slideout contents as a standalone printable page
+  // Print the slideout contents as a clean, standalone printable page
   function printSlideout() {
     if (!currentRef) return;
     var order = findOrder(currentRef);
     if (!order) return;
 
-    var content = document.getElementById('slideoutContent').innerHTML;
-    var header = document.getElementById('slideoutHeader').innerHTML;
+    var ref = esc(order.referenceCode || '');
+    var status = order.status || 'unpaid';
+    var statusLabel = STATUS_LABELS[status] || status;
+    var ci = order.customerInfo || {};
+    var dim = order.dimensions || {};
+    var pricing = order.pricing || {};
+    var event = order.event || {};
+    var delivery = order.deliveryOption || 'mtcc';
+    var deliveryTime = order.deliveryTime || 'anytime';
+    var material = (order.material === 'fabric') ? 'Fabric' : 'Poster';
 
-    // Strip the close button from header
-    var cleanHeader = header.replace(/<button[^>]*so-close[^>]*>.*?<\/button>/, '');
+    function row(lbl, val) {
+      return '<tr><td class="lbl">' + lbl + '</td><td class="val">' + val + '</td></tr>';
+    }
+
+    var trackNum = genTrackingNumber(order);
+    var detailsRows =
+      row('Customer', esc(ci.name || 'N/A')) +
+      row('Size', (dim.width || '?') + '" &times; ' + (dim.height || '?') + '"') +
+      row('Material', material) +
+      row('Due', fmtDate(order.selectedDate) + ' · by ' + (TIME_LABELS[deliveryTime] || deliveryTime)) +
+      row('Delivery', (delivery === 'mtcc' ? 'MTCC Pick-up' : 'Address Delivery')) +
+      row('Event', esc(event.name || event.acronym || 'N/A')) +
+      row('Tier', esc(pricing.tier || 'Standard')) +
+      (trackNum ? row('Tracking #', '<span style="font-family:monospace;">' + esc(trackNum) + '</span>') : '');
+
+    var pricingRows = '';
+    if (pricing.basePrice) pricingRows += row('Base Price', fmtMoney(pricing.basePrice));
+    if (pricing.deliveryFee > 0) pricingRows += row('Delivery Fee', fmtMoney(pricing.deliveryFee));
+    if (pricing.tax) pricingRows += row('Tax (HST 13%)', fmtMoney(pricing.tax));
+    pricingRows += '<tr class="total-row"><td class="lbl">Total</td><td class="val">' + fmtMoney(pricing.total) + '</td></tr>';
+
+    var pickupRows = '';
+    if (order.pickup && order.pickup.picked_up_at) {
+      pickupRows =
+        row('Picked Up', fmtDateTime(order.pickup.picked_up_at)) +
+        row('By', esc(order.pickup.pickup_person || 'N/A') + (order.pickup.same_as_customer ? ' <em>(customer)</em>' : ''));
+    }
+
+    var html =
+'<!DOCTYPE html><html><head><meta charset="UTF-8">' +
+'<title>Order ' + ref + '</title>' +
+'<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">' +
+'<style>' +
+'* { box-sizing: border-box; }' +
+'body { font-family: Montserrat, -apple-system, sans-serif; margin: 0; padding: 32px 40px; color: #1e1b2e; background: white; }' +
+'.pp-header { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 20px; border-bottom: 2px solid #7c3aed; margin-bottom: 24px; }' +
+'.pp-logo img { max-width: 180px; height: auto; }' +
+'.pp-title-block { text-align: right; }' +
+'.pp-ref { font-size: 1.4rem; font-weight: 700; color: #7c3aed; letter-spacing: 0.5px; margin-bottom: 4px; }' +
+'.pp-status { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 0.72rem; font-weight: 700; color: white; background: #7c3aed; text-transform: uppercase; letter-spacing: 0.5px; }' +
+'.pp-section { margin-bottom: 20px; page-break-inside: avoid; }' +
+'.pp-section-title { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #6b7280; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid #e5e7eb; }' +
+'.pp-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }' +
+'.pp-table td { padding: 6px 0; vertical-align: top; }' +
+'.pp-table .lbl { width: 130px; color: #6b7280; font-weight: 500; }' +
+'.pp-table .val { color: #1e1b2e; font-weight: 600; }' +
+'.pp-table .total-row td { padding-top: 10px; border-top: 1.5px solid #7c3aed; font-size: 1rem; }' +
+'.pp-table .total-row .val { color: #7c3aed; font-weight: 700; }' +
+'.pp-footer { margin-top: 32px; padding-top: 16px; border-top: 1px solid #e5e7eb; text-align: center; font-size: 0.7rem; color: #9ca3af; letter-spacing: 0.3px; }' +
+'@media print { body { padding: 20px 28px; } @page { margin: 10mm; } }' +
+'</style></head><body>' +
+
+'<div class="pp-header">' +
+  '<div class="pp-logo"><img src="/mtcc-ps-logo.png" alt="MTCC + Print Stuff"></div>' +
+  '<div class="pp-title-block">' +
+    '<div class="pp-ref">#' + ref + '</div>' +
+    '<span class="pp-status status-' + status + '">' + statusLabel + '</span>' +
+  '</div>' +
+'</div>' +
+
+'<div class="pp-section">' +
+  '<div class="pp-section-title">Order Details</div>' +
+  '<table class="pp-table"><tbody>' + detailsRows + '</tbody></table>' +
+'</div>' +
+
+'<div class="pp-section">' +
+  '<div class="pp-section-title">Pricing</div>' +
+  '<table class="pp-table"><tbody>' + pricingRows + '</tbody></table>' +
+'</div>' +
+
+(pickupRows ?
+  '<div class="pp-section">' +
+    '<div class="pp-section-title">Pickup Record</div>' +
+    '<table class="pp-table"><tbody>' + pickupRows + '</tbody></table>' +
+  '</div>' : '') +
+
+'<div class="pp-footer">Printed ' + new Date().toLocaleString() + ' &middot; Print Stuff &middot; Metro Toronto Convention Centre</div>' +
+
+'</body></html>';
 
     var printWindow = window.open('', '_blank', 'width=800,height=900');
-    printWindow.document.write(
-      '<!DOCTYPE html><html><head><meta charset="UTF-8">' +
-      '<title>Order ' + esc(order.referenceCode || '') + '</title>' +
-      '<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">' +
-      '<style>' +
-        'body { font-family: Montserrat, sans-serif; margin: 0; padding: 32px; color: #1e1b2e; }' +
-        '.print-logo { text-align: center; margin-bottom: 24px; }' +
-        '.print-logo img { max-width: 240px; }' +
-        'h1 { font-size: 1.4rem; color: #7c3aed; margin: 0 0 8px; }' +
-        '.so-header-ref { font-size: 1.2rem; font-weight: 700; color: #7c3aed; margin-bottom: 8px; }' +
-        '.status-badge { display: inline-block; padding: 4px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; color: white; background: #7c3aed; }' +
-        '.so-section { padding: 16px 0; border-bottom: 1px solid #e5e7eb; }' +
-        '.so-section-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #6b7280; margin-bottom: 10px; }' +
-        '.so-spec-grid { display: grid; grid-template-columns: 120px 1fr; gap: 6px 12px; font-size: 0.9rem; }' +
-        '.so-spec-lbl { color: #6b7280; }' +
-        '.so-spec-val { color: #1e1b2e; font-weight: 600; }' +
-        '.so-price-grid { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; font-size: 0.9rem; }' +
-        '.so-price-total { font-weight: 700; color: #7c3aed; padding-top: 8px; border-top: 1px solid #e5e7eb; }' +
-        '.so-download-btn, .so-timeline, .so-add-note, .so-note-save, .so-notes-section .so-add-note { display: none; }' +
-        '.so-material-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; background: #f3f4f6; font-size: 0.75rem; }' +
-        '.print-footer { margin-top: 32px; padding-top: 16px; border-top: 2px solid #7c3aed; text-align: center; font-size: 0.75rem; color: #9ca3af; }' +
-        '@media print { body { padding: 20px; } }' +
-      '</style></head><body>' +
-      '<div class="print-logo"><img src="/mtcc-ps-logo.png" alt="MTCC + Print Stuff"></div>' +
-      '<div class="so-header-ref">Order #' + esc(order.referenceCode || '') + '</div>' +
-      cleanHeader.replace(/<div class="so-header-ref">[^<]*<\/div>/, '') +
-      content +
-      '<div class="print-footer">Printed ' + new Date().toLocaleString() + ' &middot; Print Stuff &middot; Metro Toronto Convention Centre</div>' +
-      '</body></html>'
-    );
+    printWindow.document.write(html);
     printWindow.document.close();
-    // Wait for the logo and fonts to load, then print
-    setTimeout(function() {
-      printWindow.print();
-    }, 500);
+    setTimeout(function() { printWindow.print(); }, 500);
   }
 
   // Download PDF — triggers print dialog, user selects "Save as PDF"
