@@ -1178,7 +1178,7 @@ window.PERMS = {
 
 </div>
 
-<?php if (!empty($alerts)): ?>
+<?php if (!empty($alerts) && !$isMtccStaff): ?>
 <div class="smart-alerts-bar" id="smartAlertsBar">
   <div class="alerts-inner">
     <?php foreach ($alerts as $alert): ?>
@@ -1533,7 +1533,54 @@ window.PERMS = {
 
 <?php endif; ?>
 
-<!-- Top stat row removed for MTCC — Live Status cards below replace it -->
+<?php if ($isMtccStaff && $canViewMtccAnalytics):
+  $readyCount = 0;
+  $pickedUpToday = 0;
+  $todayStr = date('Y-m-d');
+  foreach ($orders as $o) {
+    if (($o['status'] ?? '') === 'delivered') $readyCount++;
+    if (($o['status'] ?? '') === 'pickedup') {
+      $mod = $o['modified'] ?? 0;
+      if ($mod && date('Y-m-d', $mod) === $todayStr) $pickedUpToday++;
+    }
+  }
+  $onTimeRate = $mtccAnalytics['on_time_rate'] ?? 0;
+  $onTimeColor = $onTimeRate >= 95 ? 'var(--success)' : ($onTimeRate >= 85 ? '#d97706' : 'var(--error)');
+?>
+
+<!-- MTCC Stats Row — revenue metrics -->
+<div class="mtcc-stats-row">
+
+  <!-- Today's Venue Fee -->
+  <div class="mtcc-stat">
+    <div class="mtcc-stat-top"><span class="mtcc-stat-label">Today's Venue Fee</span></div>
+    <div class="mtcc-stat-value">$<?= number_format($mtccAnalytics['today_venue_fee'], 2) ?></div>
+    <div class="mtcc-stat-sub"><?= $mtccAnalytics['today_orders'] ?> order<?= $mtccAnalytics['today_orders'] !== 1 ? 's' : '' ?> &middot; $<?= number_format($mtccAnalytics['today_base'], 2) ?> base</div>
+  </div>
+
+  <!-- This Week's Venue Fee -->
+  <div class="mtcc-stat">
+    <div class="mtcc-stat-top"><span class="mtcc-stat-label">This Week</span></div>
+    <div class="mtcc-stat-value">$<?= number_format($mtccAnalytics['week_venue_fee'], 2) ?></div>
+    <div class="mtcc-stat-sub"><?= $mtccAnalytics['week_orders'] ?> orders &middot; $<?= number_format($mtccAnalytics['week_base'], 2) ?> base</div>
+  </div>
+
+  <!-- Month-to-Date Venue Fee — the headline -->
+  <div class="mtcc-stat mtcc-stat-primary">
+    <div class="mtcc-stat-top"><span class="mtcc-stat-label">Venue Fee This Month</span></div>
+    <div class="mtcc-stat-value">$<?= number_format($mtccAnalytics['month_venue_fee'], 2) ?></div>
+    <div class="mtcc-stat-sub"><?= $mtccAnalytics['month_orders'] ?> orders &middot; $<?= number_format($mtccAnalytics['month_base'], 2) ?> base &middot; <?= $venueRatePct ?>%</div>
+  </div>
+
+  <!-- On-Time Rate -->
+  <div class="mtcc-stat">
+    <div class="mtcc-stat-top"><span class="mtcc-stat-label">On-Time Delivery</span></div>
+    <div class="mtcc-stat-value" style="color: <?= $onTimeColor ?>;"><?= $onTimeRate ?>%</div>
+    <div class="mtcc-stat-sub">Last 30 days</div>
+  </div>
+
+</div>
+<?php endif; ?>
 
 <!-- Pass data to JavaScript -->
 <script>
