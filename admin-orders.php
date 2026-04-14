@@ -2210,13 +2210,63 @@ document.addEventListener('keydown', function(e) {
       </tr>
     </thead>
     <tbody id="ordersTableBody">
-      <?php foreach ($orders as $order): ?>
+      <?php
+      // ============================================================
+      // MTCC staff: sort orders by operational urgency (not submitted date)
+      // 1. Overdue (delivered + past due) → customer is late
+      // 2. Ready for Pickup (delivered, oldest first) → waiting longest = top priority
+      // 3. Arriving Today (shipped/dispatched/ready due today)
+      // 4. Issues (missing/unclaimed/file_issue)
+      // 5. Everything else, sorted by due date ascending
+      // ============================================================
+      $ordersForTable = $orders;
+      if ($isMtccStaff) {
+          $mtccTodayStr = date('Y-m-d');
+          $getUrgencyRank = function($o) use ($mtccTodayStr) {
+              $status = $o['status'] ?? '';
+              $due = $o['selectedDate'] ?? '';
+              if ($status === 'delivered' && $due && $due < $mtccTodayStr) return 1; // Overdue
+              if ($status === 'delivered') return 2; // Ready for Pickup
+              if ($due === $mtccTodayStr && in_array($status, ['shipped', 'dispatched', 'ready'])) return 3; // Arriving today
+              if (in_array($status, ['missing', 'unclaimed', 'file_issue'])) return 4; // Issues
+              return 5; // Everything else
+          };
+          usort($ordersForTable, function($a, $b) use ($getUrgencyRank) {
+              $rankA = $getUrgencyRank($a);
+              $rankB = $getUrgencyRank($b);
+              if ($rankA !== $rankB) return $rankA - $rankB;
+              // Within same urgency bucket, sort by due date ascending (soonest first)
+              $dueA = $a['selectedDate'] ?? '9999-12-31';
+              $dueB = $b['selectedDate'] ?? '9999-12-31';
+              return strcmp($dueA, $dueB);
+          });
+      }
+      ?>
+      <?php foreach ($ordersForTable as $order): ?>
       <?php
       $orderStatus = $order['status'] ?? 'unpaid';
       $currentStatus = $statusConfig[$orderStatus] ?? $statusConfig['unpaid'];
 
-      // Determine if order is "new" (purely based on submitted status)
-      $isNew = ($orderStatus === 'unpaid');
+      // Determine if order is "new"
+      // Admin: new = unpaid orders (just submitted, not yet paid)
+      // MTCC: new = delivered at MTCC within last 24 hours, not yet picked up
+      if ($isMtccStaff) {
+        $modifiedTime = $order['modified'] ?? 0;
+        $isNew = ($orderStatus === 'delivered') && $modifiedTime && ((time() - $modifiedTime) < 86400);
+      } else {
+        $isNew = ($orderStatus === 'unpaid');
+      }
+
+      // MTCC urgency category for row coloring
+      $mtccUrgency = '';
+      if ($isMtccStaff) {
+        $due = $order['selectedDate'] ?? '';
+        $today = date('Y-m-d');
+        if ($orderStatus === 'delivered' && $due && $due < $today) $mtccUrgency = 'overdue';
+        elseif ($orderStatus === 'delivered') $mtccUrgency = 'ready';
+        elseif ($due === $today && in_array($orderStatus, ['shipped', 'dispatched', 'ready'])) $mtccUrgency = 'arriving';
+        elseif (in_array($orderStatus, ['missing', 'unclaimed', 'file_issue'])) $mtccUrgency = 'issue';
+      }
 
       // Extract turnaround type from pricing tier
       $turnaroundClass = 'standard';
@@ -2242,7 +2292,7 @@ document.addEventListener('keydown', function(e) {
         }
       }
       ?>
-      <tr class="<?= $order['status'] ?? 'unpaid' ?>" 
+      <tr class="<?= $order['status'] ?? 'unpaid' ?><?= $mtccUrgency ? ' mtcc-row-' . $mtccUrgency : '' ?>"
                             data-reference="<?= strtolower($order['referenceCode'] ?? '') ?>"
                             data-customer="<?= strtolower($order['customerInfo']['name'] ?? '') ?>"
                             <?php if (!$isMtccStaff): ?>data-email="<?= strtolower($order['customerInfo']['email'] ?? '') ?>"<?php endif; ?>

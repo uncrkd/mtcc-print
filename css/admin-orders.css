@@ -3485,6 +3485,67 @@ body.login-page {
   opacity: 0.85;
 }
 
+/* MTCC urgency coloring on Order # — instead of row stripe, tint the ref code */
+.mtcc-row-overdue .order-number {
+  color: #dc2626 !important;
+  font-weight: 700;
+}
+.mtcc-row-overdue .order-number-cell::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #dc2626;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.mtcc-row-ready .order-number {
+  color: #059669 !important;
+  font-weight: 700;
+}
+.mtcc-row-ready .order-number-cell::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.mtcc-row-arriving .order-number {
+  color: #d97706 !important;
+  font-weight: 700;
+}
+.mtcc-row-arriving .order-number-cell::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #f59e0b;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.mtcc-row-issue .order-number {
+  color: #6b7280 !important;
+  font-weight: 700;
+}
+.mtcc-row-issue .order-number-cell::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #9ca3af;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
 /* Active state — dashed becomes solid, outline moves to 0 offset (hugs the card edge) */
 .mtcc-live-active {
   transform: translateY(-1px);
