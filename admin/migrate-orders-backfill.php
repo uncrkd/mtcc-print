@@ -52,11 +52,15 @@ $report = [
     'total' => 0,
     'skipped' => 0,
     'updated_time' => 0,
+    'normalized_time' => 0,
     'updated_building' => 0,
     'updated_both' => 0,
     'building_unknown' => 0,
     'changes' => [],
 ];
+
+// Valid deliveryTime values — anything else gets normalized to "anytime"
+$validTimes = ['9am', '12pm', '3pm', '6pm', 'anytime'];
 
 foreach ($orderFiles as $file) {
     if (strpos($file, '_history.json') !== false) continue;
@@ -70,11 +74,16 @@ foreach ($orderFiles as $file) {
     $prefix = strtoupper(explode('-', $ref)[0]);
     $changed = [];
 
-    // 1. Backfill deliveryTime
-    if (empty($order['deliveryTime'])) {
+    // 1. Backfill or normalize deliveryTime
+    $currentTime = $order['deliveryTime'] ?? null;
+    if (empty($currentTime)) {
         $order['deliveryTime'] = 'anytime';
-        $changed[] = 'deliveryTime=anytime';
+        $changed[] = 'deliveryTime=anytime (was missing)';
         $report['updated_time']++;
+    } elseif (!in_array($currentTime, $validTimes, true)) {
+        $order['deliveryTime'] = 'anytime';
+        $changed[] = 'deliveryTime=anytime (normalized from "' . $currentTime . '")';
+        $report['normalized_time']++;
     }
 
     // 2. Backfill event.building
@@ -166,6 +175,7 @@ foreach ($orderFiles as $file) {
         <div class="stat"><div class="stat-label">Orders Scanned</div><div class="stat-value"><?= $report['total'] ?></div></div>
         <div class="stat"><div class="stat-label">Already OK (skipped)</div><div class="stat-value ok"><?= $report['skipped'] ?></div></div>
         <div class="stat"><div class="stat-label">Missing deliveryTime</div><div class="stat-value"><?= $report['updated_time'] ?></div></div>
+        <div class="stat"><div class="stat-label">Invalid deliveryTime</div><div class="stat-value"><?= $report['normalized_time'] ?></div></div>
         <div class="stat"><div class="stat-label">Missing Building</div><div class="stat-value"><?= $report['updated_building'] ?></div></div>
         <div class="stat"><div class="stat-label">Building Unknown</div><div class="stat-value <?= $report['building_unknown'] > 0 ? 'warn' : 'ok' ?>"><?= $report['building_unknown'] ?></div></div>
     </div>
