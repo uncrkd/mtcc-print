@@ -1621,16 +1621,62 @@ window.dashboardData = {
 	
 <?php if ($isMtccStaff):
   $todayPickupCount = 0;
+  $arrivingTodayCount = 0;
+  $readyNowCount = 0;
+  $overdueCount = 0;
+  $issuesCount = 0;
   $todayDateStr = date('Y-m-d');
   foreach ($orders as $o) {
     $dueDate = $o['selectedDate'] ?? '';
     $status = $o['status'] ?? '';
-    // Today's pickups: due today + ready/delivered status (not yet picked up)
+    // Today's pickups: due today + ready/delivered/shipped (broad filter)
     if ($dueDate === $todayDateStr && in_array($status, ['ready', 'delivered', 'shipped'])) {
       $todayPickupCount++;
     }
+    // Arriving today: courier en route to MTCC, due today
+    if ($dueDate === $todayDateStr && in_array($status, ['shipped', 'dispatched', 'ready'])) {
+      $arrivingTodayCount++;
+    }
+    // Ready now: at MTCC awaiting customer pickup
+    if ($status === 'delivered') {
+      $readyNowCount++;
+      // Overdue: ready but past due date
+      if ($dueDate && $dueDate < $todayDateStr) $overdueCount++;
+    }
+    // Issues: missing, unclaimed, file_issue
+    if (in_array($status, ['missing', 'unclaimed', 'file_issue'])) {
+      $issuesCount++;
+    }
   }
 ?>
+
+<!-- MTCC Live Status Row — operational at-a-glance for desk staff -->
+<div class="mtcc-live-status">
+  <div class="mtcc-live-label">Live Status</div>
+  <div class="mtcc-chip-row">
+    <button class="mtcc-chip mtcc-chip-amber" onclick="mtccFilterLive('arriving')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+      <span class="mtcc-chip-label">Arriving Today</span>
+      <span class="mtcc-chip-count"><?= $arrivingTodayCount ?></span>
+    </button>
+    <button class="mtcc-chip mtcc-chip-green" onclick="mtccFilterLive('ready')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 9.4l-9-5.19M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+      <span class="mtcc-chip-label">Ready for Pickup</span>
+      <span class="mtcc-chip-count"><?= $readyNowCount ?></span>
+    </button>
+    <button class="mtcc-chip mtcc-chip-red<?= $overdueCount === 0 ? ' mtcc-chip-muted' : '' ?>" onclick="mtccFilterLive('overdue')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span class="mtcc-chip-label">Overdue</span>
+      <span class="mtcc-chip-count"><?= $overdueCount ?></span>
+    </button>
+    <button class="mtcc-chip mtcc-chip-grey<?= $issuesCount === 0 ? ' mtcc-chip-muted' : '' ?>" onclick="mtccFilterLive('issues')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <span class="mtcc-chip-label">Issues</span>
+      <span class="mtcc-chip-count"><?= $issuesCount ?></span>
+    </button>
+  </div>
+</div>
+
 <!-- MTCC Quick-Access Toolbar: Search + Scan + Today's Pickups -->
 <div class="mtcc-toolbar">
   <div class="mtcc-toolbar-search">
@@ -1727,8 +1773,50 @@ function mtccClearFilters() {
   if (window.simpleFilterManager && window.simpleFilterManager.clearAll) {
     window.simpleFilterManager.clearAll();
   }
-  var btns = document.querySelectorAll('.mtcc-toolbar-btn-primary');
-  btns.forEach(function(b) { b.classList.remove('mtcc-toolbar-active'); });
+  document.querySelectorAll('.mtcc-toolbar-btn-primary, .mtcc-chip-active').forEach(function(b) {
+    b.classList.remove('mtcc-toolbar-active');
+    b.classList.remove('mtcc-chip-active');
+  });
+}
+
+// Live Status chip filter — filters the order table by operational category
+function mtccFilterLive(category) {
+  var today = new Date();
+  var y = today.getFullYear();
+  var m = String(today.getMonth() + 1).padStart(2, '0');
+  var d = String(today.getDate()).padStart(2, '0');
+  var todayStr = y + '-' + m + '-' + d;
+
+  // Clear other filter state
+  if (window.simpleFilterManager && window.simpleFilterManager.clearAll) {
+    window.simpleFilterManager.clearAll();
+  }
+
+  var rows = document.querySelectorAll('#ordersTableBody tr');
+  rows.forEach(function(row) {
+    var dueDate = row.dataset.duedate || '';
+    var status = row.dataset.status || '';
+    var show = false;
+
+    if (category === 'arriving') {
+      show = (dueDate === todayStr) && (status === 'shipped' || status === 'dispatched' || status === 'ready');
+    } else if (category === 'ready') {
+      show = (status === 'delivered');
+    } else if (category === 'overdue') {
+      show = (status === 'delivered') && dueDate && dueDate < todayStr;
+    } else if (category === 'issues') {
+      show = (status === 'missing' || status === 'unclaimed' || status === 'file_issue');
+    }
+    row.style.display = show ? '' : 'none';
+  });
+
+  // Visual state: highlight the active chip
+  document.querySelectorAll('.mtcc-chip').forEach(function(c) { c.classList.remove('mtcc-chip-active'); });
+  event.currentTarget.classList.add('mtcc-chip-active');
+
+  // Scroll to table
+  var table = document.getElementById('ordersTable');
+  if (table) table.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // ===== Barcode Scanner =====
