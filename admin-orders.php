@@ -1725,11 +1725,16 @@ ksort($mtccEventList);
     </span>
     <input type="text" class="mtcc-toolbar-input" id="mtccSearchInput" placeholder="Customer is here to pick up &mdash; search by name or order #...">
   </div>
-  <select class="mtcc-toolbar-select" id="mtccEventFilter" onchange="mtccFilterByEvent(this.value)" title="Filter by event">
+  <select class="mtcc-toolbar-select" id="mtccEventFilter" onchange="mtccApplyEventBuildingFilters()" title="Filter by event">
     <option value="">All Events</option>
     <?php foreach ($mtccEventList as $prefix => $ev): ?>
     <option value="<?= htmlspecialchars($prefix) ?>"><?= htmlspecialchars($ev['name']) ?> (<?= $ev['count'] ?>)</option>
     <?php endforeach; ?>
+  </select>
+  <select class="mtcc-toolbar-select mtcc-toolbar-select-narrow" id="mtccBuildingFilter" onchange="mtccApplyEventBuildingFilters()" title="Filter by building">
+    <option value="">Both Buildings</option>
+    <option value="north">North Building</option>
+    <option value="south">South Building</option>
   </select>
   <button class="mtcc-toolbar-btn mtcc-toolbar-btn-scan" onclick="mtccOpenScanner()" title="Scan order barcode">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px; vertical-align:-3px;"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="17" y2="12"/></svg>
@@ -1817,34 +1822,48 @@ function mtccFilterTodayPickups() {
   }
 }
 
-// Filter the order table by event prefix (e.g., "CPMA")
-function mtccFilterByEvent(prefix) {
+// Filter the order table by event + building (both combined via AND logic)
+function mtccApplyEventBuildingFilters() {
+  var evSel = document.getElementById('mtccEventFilter');
+  var bldSel = document.getElementById('mtccBuildingFilter');
+  var prefix = evSel ? evSel.value : '';
+  var building = bldSel ? bldSel.value : '';
+
   mtccTakeOverTable();
 
   var rows = document.querySelectorAll('#ordersTableBody tr');
   var matchCount = 0;
   rows.forEach(function(row) {
-    var ref = (row.dataset.reference || '').toUpperCase();
-    var rowPrefix = ref.split('-')[0];
-    var show = !prefix || rowPrefix === prefix;
+    var rowPrefix = (row.dataset.reference || '').toUpperCase().split('-')[0];
+    var rowBuilding = (row.dataset.building || '').toLowerCase();
+    var matchEvent = !prefix || rowPrefix === prefix;
+    var matchBuilding = !building || rowBuilding === building;
+    var show = matchEvent && matchBuilding;
     row.classList.toggle('filtered-out', !show);
     row.style.display = show ? '' : 'none';
     if (show) matchCount++;
   });
 
-  // Clear other active states (event filter stands alone)
+  // Clear other active states
   document.querySelectorAll('.mtcc-live-card').forEach(function(c) { c.classList.remove('mtcc-live-active'); });
   if (typeof mtccActiveFilters !== 'undefined') mtccActiveFilters.clear();
   document.querySelectorAll('.mtcc-toolbar-btn-primary').forEach(function(b) { b.classList.remove('mtcc-toolbar-active'); });
 
-  // Banner
+  // Banner — build label from active filters
   var banner = document.getElementById('mtccFilterBanner');
   var text = document.getElementById('mtccFilterBannerText');
   var count = document.getElementById('mtccFilterBannerCount');
-  if (prefix && banner && text) {
-    var sel = document.getElementById('mtccEventFilter');
-    var eventLabel = sel && sel.selectedOptions[0] ? sel.selectedOptions[0].textContent.split(' (')[0] : prefix;
-    text.textContent = 'Event: ' + eventLabel;
+  var parts = [];
+  if (prefix) {
+    var evLabel = evSel && evSel.selectedOptions[0] ? evSel.selectedOptions[0].textContent.split(' (')[0] : prefix;
+    parts.push('Event: ' + evLabel);
+  }
+  if (building) {
+    parts.push('Building: MTCC ' + building.charAt(0).toUpperCase() + building.slice(1));
+  }
+
+  if (parts.length && banner && text) {
+    text.textContent = parts.join(' + ');
     if (count) count.textContent = '(' + matchCount + ' order' + (matchCount !== 1 ? 's' : '') + ')';
     banner.style.display = 'flex';
   } else if (banner) {
@@ -1887,6 +1906,8 @@ function mtccClearFilters(silent) {
   if (searchBox) { searchBox.value = ''; }
   var eventSelect = document.getElementById('mtccEventFilter');
   if (eventSelect) eventSelect.value = '';
+  var buildingSelect = document.getElementById('mtccBuildingFilter');
+  if (buildingSelect) buildingSelect.value = '';
 
   // Reset active card/button state (skip if called silently from a toggle that already handled it)
   if (!silent) {
@@ -2240,6 +2261,7 @@ document.addEventListener('keydown', function(e) {
         <th class="sortable" data-sort="reference">Order #</th>
         <th class="sortable" data-sort="priority">Priority</th>
         <th class="sortable" data-sort="customer">Customer</th>
+        <?php if ($isMtccStaff): ?><th class="sortable" data-sort="event">Event</th><?php endif; ?>
         <th class="date-column-header" id="dateSortHeader">
           <div class="date-sort-toggle">
             <button class="date-sort-btn" data-sort="deadline">Due Date</button>
@@ -2268,6 +2290,20 @@ document.addEventListener('keydown', function(e) {
       </tr>
     </thead>
     <tbody id="ordersTableBody">
+      <?php
+      // Build map: event prefix → building name (for row data attribute + column display)
+      $mtccEventBuilding = [];
+      $mtccEventNameByPrefix = [];
+      if ($isMtccStaff) {
+          $allEventsForMap = array_merge($eventsData['active'] ?? [], $eventsData['archived'] ?? []);
+          foreach ($allEventsForMap as $ev) {
+              $pfx = strtoupper($ev['acronym'] ?? '');
+              if (!$pfx) continue;
+              $mtccEventBuilding[$pfx] = strtolower($ev['building'] ?? '');
+              $mtccEventNameByPrefix[$pfx] = $ev['name'] ?? $pfx;
+          }
+      }
+      ?>
       <?php
       // ============================================================
       // MTCC staff: sort orders by operational urgency (not submitted date)
@@ -2350,6 +2386,11 @@ document.addEventListener('keydown', function(e) {
         }
       }
       ?>
+      <?php
+      $orderPrefix = strtoupper(explode('-', $order['referenceCode'] ?? '')[0]);
+      $orderBuilding = $mtccEventBuilding[$orderPrefix] ?? ($order['event']['building'] ?? $order['building'] ?? '');
+      $orderEventName = $mtccEventNameByPrefix[$orderPrefix] ?? ($order['event']['name'] ?? $order['event']['acronym'] ?? $orderPrefix);
+      ?>
       <tr class="<?= $order['status'] ?? 'unpaid' ?><?= $mtccUrgency ? ' mtcc-row-' . $mtccUrgency : '' ?>"
                             data-reference="<?= strtolower($order['referenceCode'] ?? '') ?>"
                             data-customer="<?= strtolower($order['customerInfo']['name'] ?? '') ?>"
@@ -2360,6 +2401,8 @@ document.addEventListener('keydown', function(e) {
                             data-deadline="<?= isset($order['selectedDate']) ? strtotime($order['selectedDate']) : 0 ?>"
                             data-duedate="<?= $order['selectedDate'] ?? '' ?>"
                             data-value="<?= $order['pricing']['total'] ?? 0 ?>"
+                            data-event-name="<?= strtolower($orderEventName) ?>"
+                            data-building="<?= htmlspecialchars($orderBuilding) ?>"
                             <?php if (!$isMtccStaff): ?>data-cogs="<?= isset($order['vendor_pricing']['total']) ? $order['vendor_pricing']['total'] : 0 ?>"<?php endif; ?>
                             data-event-status="<?= isset($activeEventPrefixes[strtoupper(explode('-', $order['referenceCode'] ?? '')[0])]) ? 'active' : 'archived' ?>"> 
         
@@ -2398,7 +2441,15 @@ document.addEventListener('keydown', function(e) {
           <div class="cell-main"><?= htmlspecialchars($order['customerInfo']['name'] ?? 'Unknown') ?></div>
           <?php if (!$isMtccStaff): ?><div class="cell-micro"><?= htmlspecialchars($order['customerInfo']['email'] ?? '') ?></div><?php endif; ?>
         </td>
-        
+
+        <!-- Event Column (MTCC only) -->
+        <?php if ($isMtccStaff): ?>
+        <td>
+          <div class="cell-main"><?= htmlspecialchars($orderEventName) ?></div>
+          <?php if ($orderBuilding): ?><div class="cell-micro">MTCC <?= ucfirst(htmlspecialchars($orderBuilding)) ?></div><?php endif; ?>
+        </td>
+        <?php endif; ?>
+
         <!-- Due Date Column -->
         <td>
           <div class="cell-main">

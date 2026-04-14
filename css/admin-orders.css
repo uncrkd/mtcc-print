@@ -3657,6 +3657,10 @@ body.login-page {
   box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
 }
 
+.mtcc-toolbar-select-narrow {
+  max-width: 170px;
+}
+
 .mtcc-toolbar-btn:hover {
   border-color: var(--primary);
   color: var(--primary);
