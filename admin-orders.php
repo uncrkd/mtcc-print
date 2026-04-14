@@ -1631,7 +1631,7 @@ window.dashboardData = {
     }
   }
 ?>
-<!-- MTCC Quick-Access Toolbar: Search + Today's Pickups -->
+<!-- MTCC Quick-Access Toolbar: Search + Scan + Today's Pickups -->
 <div class="mtcc-toolbar">
   <div class="mtcc-toolbar-search">
     <span class="mtcc-toolbar-search-icon">
@@ -1639,6 +1639,10 @@ window.dashboardData = {
     </span>
     <input type="text" class="mtcc-toolbar-input" id="mtccSearchInput" placeholder="Customer is here to pick up &mdash; search by name or order #...">
   </div>
+  <button class="mtcc-toolbar-btn mtcc-toolbar-btn-scan" onclick="mtccOpenScanner()" title="Scan order barcode">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px; vertical-align:-3px;"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="17" y2="12"/></svg>
+    Scan
+  </button>
   <button class="mtcc-toolbar-btn mtcc-toolbar-btn-primary" onclick="mtccFilterTodayPickups()">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px; vertical-align:-3px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
     Today's Pickups
@@ -1646,6 +1650,25 @@ window.dashboardData = {
   </button>
   <button class="mtcc-toolbar-btn" onclick="mtccClearFilters()">Clear</button>
 </div>
+
+<!-- Barcode Scanner Modal -->
+<div id="mtccScannerModal" class="mtcc-scanner-modal" style="display:none;">
+  <div class="mtcc-scanner-backdrop" onclick="mtccCloseScanner()"></div>
+  <div class="mtcc-scanner-box">
+    <div class="mtcc-scanner-header">
+      <h3>Scan Order Barcode</h3>
+      <button class="mtcc-scanner-close" onclick="mtccCloseScanner()">&times;</button>
+    </div>
+    <div class="mtcc-scanner-body">
+      <div id="mtccScannerView" class="mtcc-scanner-view"></div>
+      <div class="mtcc-scanner-hint">Point the camera at the barcode on the customer's order confirmation</div>
+      <div id="mtccScannerStatus" class="mtcc-scanner-status"></div>
+    </div>
+  </div>
+</div>
+
+<!-- QuaggaJS for barcode scanning -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
 
 <script>
 // Forward MTCC search input to existing search box with live filtering
@@ -1707,6 +1730,108 @@ function mtccClearFilters() {
   var btns = document.querySelectorAll('.mtcc-toolbar-btn-primary');
   btns.forEach(function(b) { b.classList.remove('mtcc-toolbar-active'); });
 }
+
+// ===== Barcode Scanner =====
+var mtccScannerRunning = false;
+
+function mtccOpenScanner() {
+  var modal = document.getElementById('mtccScannerModal');
+  var status = document.getElementById('mtccScannerStatus');
+  if (!modal) return;
+  modal.style.display = 'flex';
+  modal.style.alignItems = 'center';
+  modal.style.justifyContent = 'center';
+  status.textContent = 'Initializing camera...';
+  status.className = 'mtcc-scanner-status';
+
+  if (typeof Quagga === 'undefined') {
+    status.textContent = 'Scanner library not loaded. Please refresh and try again.';
+    status.className = 'mtcc-scanner-status error';
+    return;
+  }
+
+  Quagga.init({
+    inputStream: {
+      type: 'LiveStream',
+      target: document.getElementById('mtccScannerView'),
+      constraints: {
+        facingMode: 'environment',
+        width: { min: 480 },
+        height: { min: 320 }
+      }
+    },
+    decoder: {
+      readers: ['code_128_reader', 'code_39_reader', 'ean_reader', 'upc_reader']
+    },
+    locate: true
+  }, function(err) {
+    if (err) {
+      console.error('Quagga init error:', err);
+      status.textContent = 'Camera access denied or unavailable.';
+      status.className = 'mtcc-scanner-status error';
+      return;
+    }
+    Quagga.start();
+    mtccScannerRunning = true;
+    status.textContent = 'Point the camera at a barcode...';
+  });
+
+  // Handle successful detection
+  Quagga.onDetected(mtccOnBarcodeDetected);
+}
+
+function mtccOnBarcodeDetected(result) {
+  if (!result || !result.codeResult || !result.codeResult.code) return;
+  var code = result.codeResult.code.toUpperCase().trim();
+
+  var status = document.getElementById('mtccScannerStatus');
+  status.textContent = 'Detected: ' + code;
+  status.className = 'mtcc-scanner-status success';
+
+  // Check that the scanned code looks like an order reference (PREFIX-### format)
+  var isOrderRef = /^[A-Z0-9]+-\d+$/i.test(code);
+  if (!isOrderRef) {
+    status.textContent = 'Not a valid order code: ' + code;
+    status.className = 'mtcc-scanner-status error';
+    return;
+  }
+
+  // Stop scanner and apply search
+  setTimeout(function() {
+    mtccCloseScanner();
+    var mtccSearch = document.getElementById('mtccSearchInput');
+    if (mtccSearch) {
+      mtccSearch.value = code;
+      mtccSearch.dispatchEvent(new Event('input', { bubbles: true }));
+      mtccSearch.focus();
+    }
+    // Scroll to table
+    var table = document.getElementById('ordersTable');
+    if (table) table.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 400);
+}
+
+function mtccCloseScanner() {
+  var modal = document.getElementById('mtccScannerModal');
+  if (modal) modal.style.display = 'none';
+  if (mtccScannerRunning && typeof Quagga !== 'undefined') {
+    try {
+      Quagga.offDetected(mtccOnBarcodeDetected);
+      Quagga.stop();
+    } catch (e) {
+      console.warn('Scanner stop error:', e);
+    }
+    mtccScannerRunning = false;
+  }
+}
+
+// Close scanner on escape key
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    var modal = document.getElementById('mtccScannerModal');
+    if (modal && modal.style.display !== 'none') mtccCloseScanner();
+  }
+});
 </script>
 <?php endif; ?>
 

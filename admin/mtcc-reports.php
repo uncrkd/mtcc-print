@@ -120,6 +120,65 @@ foreach ($activeBreakdown as $prefix => $ev) {
 
 $avgFeePerEvent = $totalEvents > 0 ? ($lifetimeFee / $totalEvents) : 0;
 
+// ============================================================
+// CSV EXPORT — triggered via ?export=csv
+// ============================================================
+if (isset($_GET['export']) && $_GET['export'] === 'csv') {
+    $filename = 'mtcc-revenue-' . date('Y-m-d') . '.csv';
+    header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Disposition: attachment; filename="' . $filename . '"');
+    header('Cache-Control: no-store, no-cache');
+
+    $out = fopen('php://output', 'w');
+    // BOM so Excel opens UTF-8 correctly
+    fputs($out, "\xEF\xBB\xBF");
+
+    // Header row
+    fputcsv($out, ['Event', 'Acronym', 'Dates', 'Status', 'Orders', 'Base Revenue', 'Venue Fee Rate', 'Venue Fee']);
+
+    // Active events first
+    foreach ($activeBreakdown as $prefix => $ev) {
+        fputcsv($out, [
+            $ev['name'],
+            $prefix,
+            $ev['dates'],
+            'Active',
+            $ev['orders'],
+            number_format($ev['base_revenue'], 2, '.', ''),
+            $venueRatePct . '%',
+            number_format($ev['venue_fee'], 2, '.', ''),
+        ]);
+    }
+
+    // Archived events
+    foreach ($archivedBreakdown as $prefix => $ev) {
+        fputcsv($out, [
+            $ev['name'],
+            $prefix,
+            $ev['dates'],
+            'Archived',
+            $ev['orders'],
+            number_format($ev['base_revenue'], 2, '.', ''),
+            $venueRatePct . '%',
+            number_format($ev['venue_fee'], 2, '.', ''),
+        ]);
+    }
+
+    // Totals row
+    $totalOrders = 0; $totalBase = 0; $totalFee = 0;
+    foreach ($activeBreakdown as $ev) { $totalOrders += $ev['orders']; $totalBase += $ev['base_revenue']; $totalFee += $ev['venue_fee']; }
+    foreach ($archivedBreakdown as $ev) { $totalOrders += $ev['orders']; $totalBase += $ev['base_revenue']; $totalFee += $ev['venue_fee']; }
+    fputcsv($out, []);
+    fputcsv($out, ['TOTALS', '', '', '', $totalOrders, number_format($totalBase, 2, '.', ''), '', number_format($totalFee, 2, '.', '')]);
+
+    fputcsv($out, []);
+    fputcsv($out, ['Generated', date('Y-m-d H:i:s')]);
+    fputcsv($out, ['Excludes cancelled & refunded orders']);
+
+    fclose($out);
+    exit;
+}
+
 $currentYear = date('Y');
 ?>
 <!DOCTYPE html>
@@ -146,6 +205,38 @@ $currentYear = date('Y');
             margin-bottom: 24px;
             padding-bottom: 16px;
             border-bottom: 1px solid var(--border-color);
+        }
+
+        .reports-header-inner {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 16px;
+        }
+
+        .reports-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .reports-export-btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 8px 16px;
+            background: white;
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.15s;
+            box-shadow: rgba(0,0,0,0.03) 0 1px 2px;
+        }
+
+        .reports-export-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
         }
 
         .reports-title {
@@ -279,8 +370,18 @@ $currentYear = date('Y');
     <a href="../admin-orders.php" class="reports-back">&larr; Back to Dashboard</a>
 
     <div class="reports-header">
-        <div class="reports-title">Revenue Reports</div>
-        <div class="reports-subtitle">Per-event revenue totals and venue fee calculations</div>
+        <div class="reports-header-inner">
+            <div>
+                <div class="reports-title">Revenue Reports</div>
+                <div class="reports-subtitle">Per-event revenue totals and venue fee calculations</div>
+            </div>
+            <div class="reports-actions">
+                <a href="?export=csv" class="reports-export-btn" title="Export all events to CSV">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    Export CSV
+                </a>
+            </div>
+        </div>
     </div>
 
     <!-- Lifetime Summary Cards -->
