@@ -135,6 +135,7 @@ var OrderSlideout = (function() {
     h += '<div class="so-section">';
     h += '<div class="so-section-label">Order Details</div>';
     h += '<div class="so-spec-grid">';
+    h += '<span class="so-spec-lbl">Customer</span><span class="so-spec-val">' + esc(ci.name || 'N/A') + '</span>';
     h += '<span class="so-spec-lbl">Size</span><span class="so-spec-val">' + (dim.width || '?') + '" &times; ' + (dim.height || '?') + '"</span>';
     h += '<span class="so-spec-lbl">Material</span><span class="so-spec-val"><span class="so-material-badge so-mat-' + material.toLowerCase() + '">' + material + '</span></span>';
     h += '<span class="so-spec-lbl">Due</span><span class="so-spec-val">' + fmtDate(order.selectedDate) + ' &middot; by ' + (TIME_LABELS[deliveryTime] || deliveryTime) + '</span>';
@@ -144,17 +145,15 @@ var OrderSlideout = (function() {
     if (vendorName && !isMtcc) h += '<span class="so-spec-lbl">Vendor</span><span class="so-spec-val">' + esc(vendorName) + '</span>';
     h += '</div></div>';
 
-    // ---- CUSTOMER ----
-    h += '<div class="so-section">';
-    h += '<div class="so-section-label">Customer</div>';
-    h += '<div class="so-spec-grid">';
-    h += '<span class="so-spec-lbl">Name</span><span class="so-spec-val">' + esc(ci.name || 'N/A') + '</span>';
+    // ---- CUSTOMER CONTACT (hidden for MTCC — they don't get email/phone) ----
     if (!isMtcc) {
+      h += '<div class="so-section">';
+      h += '<div class="so-section-label">Customer Contact</div>';
+      h += '<div class="so-spec-grid">';
       h += '<span class="so-spec-lbl">Email</span><span class="so-spec-val"><a href="mailto:' + esc(ci.email || '') + '">' + esc(ci.email || 'N/A') + '</a></span>';
       h += '<span class="so-spec-lbl">Phone</span><span class="so-spec-val">' + esc(ci.phone || 'N/A') + '</span>';
+      h += '</div></div>';
     }
-    if (ci.company) h += '<span class="so-spec-lbl">Company</span><span class="so-spec-val">' + esc(ci.company) + '</span>';
-    h += '</div></div>';
 
     // ---- PICKUP RECORD (if picked up) ----
     if (order.pickup && order.pickup.picked_up_at) {
