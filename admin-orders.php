@@ -1517,112 +1517,69 @@ window.PERMS = {
 
 <?php endif; ?>
 
-<?php if ($isMtccStaff && $canViewMtccAnalytics): ?>
-<!-- MTCC Summary Strip — compact, glanceable, always visible -->
-<div class="mtcc-summary-strip">
-  <div class="mtcc-strip-item">
-    <span class="mtcc-strip-label">Orders</span>
-    <span class="mtcc-strip-value"><?= $mtccAnalytics['valid_order_count'] ?></span>
-    <span class="mtcc-strip-sub">today: <?= $mtccAnalytics['today_orders'] ?></span>
-  </div>
-  <div class="mtcc-strip-divider"></div>
-  <div class="mtcc-strip-item">
-    <span class="mtcc-strip-label">Base Revenue</span>
-    <span class="mtcc-strip-value">$<?= number_format($mtccAnalytics['total_base'], 2) ?></span>
-    <span class="mtcc-strip-sub">today: $<?= number_format($mtccAnalytics['today_base'], 2) ?></span>
-  </div>
-  <div class="mtcc-strip-divider"></div>
-  <div class="mtcc-strip-item mtcc-strip-highlight">
-    <span class="mtcc-strip-label">Venue Fee (<?= $venueRatePct ?>%)</span>
-    <span class="mtcc-strip-value">$<?= number_format($mtccAnalytics['venue_fee_total'], 2) ?></span>
-    <span class="mtcc-strip-sub">month: $<?= number_format($mtccAnalytics['month_venue_fee'], 2) ?></span>
-  </div>
-  <div class="mtcc-strip-divider"></div>
-  <div class="mtcc-strip-item">
-    <span class="mtcc-strip-label">On-Time</span>
-    <span class="mtcc-strip-value" style="color: <?= $mtccAnalytics['on_time_rate'] >= 95 ? 'var(--success)' : ($mtccAnalytics['on_time_rate'] >= 85 ? '#d97706' : 'var(--error)') ?>;"><?= $mtccAnalytics['on_time_rate'] ?>%</span>
-  </div>
-</div>
+<?php if ($isMtccStaff && $canViewMtccAnalytics):
+  // Count orders in "ready for pickup" status (delivered = dropped at MTCC, awaiting customer)
+  $readyCount = 0;
+  foreach ($orders as $o) {
+    if (($o['status'] ?? '') === 'delivered') $readyCount++;
+  }
+  $onTimeRate = $mtccAnalytics['on_time_rate'] ?? 0;
+  $onTimeColor = $onTimeRate >= 95 ? 'var(--success)' : ($onTimeRate >= 85 ? '#d97706' : 'var(--error)');
+?>
 
-<!-- Collapsible: Event Breakdown -->
-<?php if (!empty($mtccAnalytics['event_breakdown'])): ?>
-<details class="mtcc-details">
-  <summary class="mtcc-details-toggle"><?= ICON_CALENDAR ?> Active Events <span class="mtcc-toggle-count"><?= count($mtccAnalytics['event_breakdown']) ?></span></summary>
-  <div class="mtcc-details-content">
-    <table class="stmt-list-table">
-      <thead>
-        <tr><th>Event</th><th>Orders</th><th>Base Revenue</th><th>Venue Fee</th></tr>
-      </thead>
-      <tbody>
-        <?php foreach ($mtccAnalytics['event_breakdown'] as $prefix => $ev): ?>
-        <tr>
-          <td style="font-weight: 600;"><?= htmlspecialchars($ev['name']) ?></td>
-          <td><?= $ev['orders'] ?></td>
-          <td>$<?= number_format($ev['base_revenue'], 2) ?></td>
-          <td style="color: #7c3aed; font-weight: 600;">$<?= number_format($ev['venue_fee'], 2) ?></td>
-        </tr>
-        <?php endforeach; ?>
-      </tbody>
-    </table>
-  </div>
-</details>
-<?php endif; ?>
+<!-- MTCC Hero + Supporting Metrics -->
+<div class="mtcc-hero-container">
 
-<!-- Collapsible: Order Status -->
-<?php if (!empty($mtccAnalytics['status_breakdown'])): ?>
-<details class="mtcc-details">
-  <summary class="mtcc-details-toggle"><?= ICON_FLAG ?> Order Status</summary>
-  <div class="mtcc-details-content">
-    <div class="mtcc-status-chips">
-      <?php
-      $allConfig = getStatusConfig();
-      foreach ($mtccAnalytics['status_breakdown'] as $label => $count):
-        $color = '#6b7280';
-        foreach ($allConfig as $code => $def) {
-          if (($def['labels']['mtcc_staff'] ?? '') === $label) { $color = $def['color']; break; }
-        }
-      ?>
-      <div class="mtcc-status-chip" style="border-left: 3px solid <?= $color ?>;">
-        <span class="mtcc-chip-count"><?= $count ?></span>
-        <span class="mtcc-chip-label"><?= htmlspecialchars($label) ?></span>
+  <!-- Hero: The Venue Fee is the star -->
+  <div class="mtcc-hero">
+    <div class="mtcc-hero-label">Venue Fee This Month</div>
+    <div class="mtcc-hero-value">$<?= number_format($mtccAnalytics['month_venue_fee'], 2) ?></div>
+    <div class="mtcc-hero-context">
+      from <strong><?= $mtccAnalytics['month_orders'] ?></strong> orders &middot; <strong>$<?= number_format($mtccAnalytics['month_base'], 2) ?></strong> base revenue &middot; <?= $venueRatePct ?>% rate
+    </div>
+    <div class="mtcc-hero-periods">
+      <div class="mtcc-period">
+        <span class="mtcc-period-label">Today</span>
+        <span class="mtcc-period-value">$<?= number_format($mtccAnalytics['today_venue_fee'], 2) ?></span>
       </div>
-      <?php endforeach; ?>
+      <div class="mtcc-period">
+        <span class="mtcc-period-label">This Week</span>
+        <span class="mtcc-period-value">$<?= number_format($mtccAnalytics['week_venue_fee'], 2) ?></span>
+      </div>
+      <div class="mtcc-period">
+        <span class="mtcc-period-label">All Time</span>
+        <span class="mtcc-period-value">$<?= number_format($mtccAnalytics['venue_fee_total'], 2) ?></span>
+      </div>
     </div>
   </div>
-</details>
-<?php endif; ?>
 
-<!-- Collapsible: Revenue Reports -->
-<?php
-$archivedEvents = $eventsData['archived'] ?? [];
-if (!empty($archivedEvents)):
-?>
-<details class="mtcc-details">
-  <summary class="mtcc-details-toggle"><?= ICON_MEMO ?> Revenue Reports <span class="mtcc-toggle-count"><?= count($archivedEvents) ?></span></summary>
-  <div class="mtcc-details-content">
-    <table class="stmt-list-table">
-      <thead>
-        <tr><th>Event</th><th>Dates</th><th>Orders</th><th>Base Revenue</th><th>Venue Fee</th><th></th></tr>
-      </thead>
-      <tbody>
-        <?php foreach ($archivedEvents as $ev):
-          $evBaseRevenue = $ev['baseRevenue'] ?? $ev['totalRevenue'] ?? 0;
-          $evVenueFee = $evBaseRevenue * $venueRate;
-        ?>
-        <tr>
-          <td style="font-weight: 600;"><?= htmlspecialchars($ev['name'] ?? $ev['acronym']) ?></td>
-          <td style="color: #6b7280; font-size: 0.82rem;"><?= htmlspecialchars($ev['dates'] ?? '') ?></td>
-          <td><?= $ev['orderCount'] ?? 0 ?></td>
-          <td>$<?= number_format($evBaseRevenue, 2) ?></td>
-          <td style="color: #7c3aed; font-weight: 600;">$<?= number_format($evVenueFee, 2) ?></td>
-          <td><a href="admin/mtcc-statement.php?event=<?= urlencode($ev['acronym'] ?? '') ?>" class="mtcc-view-stmt-btn">View</a></td>
-        </tr>
-        <?php endforeach; ?>
-      </tbody>
-    </table>
+  <!-- Supporting metrics: 3 scannable cards -->
+  <div class="mtcc-sub-grid">
+
+    <!-- Ready Today — clickable, filters order table -->
+    <a href="javascript:void(0)" onclick="filterByAlert('status-delivered')" class="mtcc-sub-card mtcc-sub-action">
+      <div class="mtcc-sub-value"><?= $readyCount ?></div>
+      <div class="mtcc-sub-label">Ready for Pickup</div>
+      <div class="mtcc-sub-hint">Click to filter &rarr;</div>
+    </a>
+
+    <!-- On-Time Rate -->
+    <div class="mtcc-sub-card">
+      <div class="mtcc-sub-value" style="color: <?= $onTimeColor ?>;"><?= $onTimeRate ?>%</div>
+      <div class="mtcc-sub-label">On-Time Delivery</div>
+      <div class="mtcc-sub-hint">Last 30 days</div>
+    </div>
+
+    <!-- Link to Revenue Reports page -->
+    <a href="admin/mtcc-reports.php" class="mtcc-sub-card mtcc-sub-action">
+      <div class="mtcc-sub-value"><?= count($eventsData['archived'] ?? []) ?></div>
+      <div class="mtcc-sub-label">Revenue Reports</div>
+      <div class="mtcc-sub-hint">View all &rarr;</div>
+    </a>
+
   </div>
-</details>
-<?php endif; ?>
+
+</div>
 <?php endif; ?>
 
 <!-- Pass data to JavaScript -->
