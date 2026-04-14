@@ -2172,7 +2172,7 @@ document.addEventListener('keydown', function(e) {
 <div id="kanbanContainer" style="display: none;"></div>
 <?php endif; ?>
 
-<div class="orders-table-container">
+<div class="orders-table-container<?= $isMtccStaff ? ' mtcc-view' : '' ?>">
   <table class="orders-table" id="ordersTable">
     <thead>
       <tr>

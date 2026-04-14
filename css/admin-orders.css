@@ -3485,66 +3485,21 @@ body.login-page {
   opacity: 0.85;
 }
 
-/* MTCC urgency coloring on Order # — instead of row stripe, tint the ref code */
-.mtcc-row-overdue .order-number {
-  color: #dc2626 !important;
-  font-weight: 700;
-}
-.mtcc-row-overdue .order-number-cell::before {
-  content: '';
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #dc2626;
-  margin-right: 6px;
-  vertical-align: middle;
-}
-
-.mtcc-row-ready .order-number {
-  color: #059669 !important;
-  font-weight: 700;
-}
-.mtcc-row-ready .order-number-cell::before {
-  content: '';
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #10b981;
-  margin-right: 6px;
-  vertical-align: middle;
-}
-
-.mtcc-row-arriving .order-number {
-  color: #d97706 !important;
-  font-weight: 700;
-}
-.mtcc-row-arriving .order-number-cell::before {
-  content: '';
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #f59e0b;
-  margin-right: 6px;
-  vertical-align: middle;
-}
-
-.mtcc-row-issue .order-number {
-  color: #6b7280 !important;
-  font-weight: 700;
-}
-.mtcc-row-issue .order-number-cell::before {
-  content: '';
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #9ca3af;
-  margin-right: 6px;
-  vertical-align: middle;
-}
+/* MTCC view: Order # text color matches the status color */
+.mtcc-view tr.unpaid .order-number      { color: #eab308 !important; font-weight: 700; }
+.mtcc-view tr.paid .order-number        { color: #ca8a04 !important; font-weight: 700; }
+.mtcc-view tr.preflight .order-number   { color: #8b5cf6 !important; font-weight: 700; }
+.mtcc-view tr.file_issue .order-number  { color: #ea580c !important; font-weight: 700; }
+.mtcc-view tr.printing .order-number    { color: #6366f1 !important; font-weight: 700; }
+.mtcc-view tr.ready .order-number       { color: #d97706 !important; font-weight: 700; }
+.mtcc-view tr.dispatched .order-number  { color: #7c3aed !important; font-weight: 700; }
+.mtcc-view tr.shipped .order-number     { color: #14b8a6 !important; font-weight: 700; }
+.mtcc-view tr.delivered .order-number   { color: #059669 !important; font-weight: 700; }
+.mtcc-view tr.pickedup .order-number    { color: #22c55e !important; font-weight: 700; }
+.mtcc-view tr.missing .order-number     { color: #dc2626 !important; font-weight: 700; }
+.mtcc-view tr.unclaimed .order-number   { color: #e11d48 !important; font-weight: 700; }
+.mtcc-view tr.cancelled .order-number   { color: #64748b !important; font-weight: 700; }
+.mtcc-view tr.refunded .order-number    { color: #9ca3af !important; font-weight: 700; }
 
 /* Active state — dashed becomes solid, outline moves to 0 offset (hugs the card edge) */
 .mtcc-live-active {
