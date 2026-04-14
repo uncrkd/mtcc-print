@@ -1738,6 +1738,7 @@ function mtccClearFilters() {
       <option value="100">100 rows</option>
       <option value="all">All</option>
     </select>
+    <?php if (!$isMtccStaff): ?>
     <div class="view-toggle-group">
       <button class="view-toggle-btn active" id="tableViewBtn" onclick="switchView('table')" title="Table View">&#9776; Table</button>
       <button class="view-toggle-btn" id="boardViewBtn" onclick="switchView('board')" title="Board View">&#9638; Board</button>
@@ -1745,6 +1746,7 @@ function mtccClearFilters() {
     <button id="filtersToggleBtn" class="table-header-btn-soft" onclick="toggleFiltersPanel()">
       <span><?= ICON_LABEL ?></span> Filters <span id="filterCountBadge" class="filter-count-badge" style="display: none;">0</span> <span id="filtersToggleIcon"><?= SYMBOL_ARROW_UP ?></span>
     </button>
+    <?php endif; ?>
     <?php if ($canCreateOrders): ?><a href="admin-create-order.php" class="create-order-btn-soft">+ Create Order</a><?php endif; ?>
     <button id="actionsMenuBtn" class="actions-menu-btn" onclick="toggleActionsMenu(event)" title="Actions Menu">
       <span class="actions-menu-icon"><?= SYMBOL_DOTS_VERTICAL ?></span>
@@ -1752,7 +1754,8 @@ function mtccClearFilters() {
   </div>
 </div>
 
-<!-- Collapsible Filters Container -->
+<!-- Collapsible Filters Container (hidden for MTCC staff) -->
+<?php if (!$isMtccStaff): ?>
 <div id="filtersContainer" class="filters-container collapsed">
   <div class="filters-header-row">
     <span class="filters-title"><?= ICON_LABEL ?> Filter Orders</span>
@@ -1835,9 +1838,10 @@ function mtccClearFilters() {
       <?php endforeach; ?>
     </div>
   </div>
-  
+
 
 </div>
+<?php endif; /* !$isMtccStaff filters container */ ?>
 
 <?php if (empty($orders)): ?>
 <div class="no-orders">
@@ -1845,8 +1849,10 @@ function mtccClearFilters() {
   <p>Orders will appear here once customers submit them.</p>
 </div>
 <?php else: ?>
-<!-- Kanban Board View (hidden by default) -->
+<!-- Kanban Board View (hidden for MTCC staff) -->
+<?php if (!$isMtccStaff): ?>
 <div id="kanbanContainer" style="display: none;"></div>
+<?php endif; ?>
 
 <div class="orders-table-container">
   <table class="orders-table" id="ordersTable">

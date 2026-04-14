@@ -34,7 +34,8 @@ $statuses = file_exists($statusFile) ? (json_decode(file_get_contents($statusFil
 
 $revenueStatuses = ['paid', 'preflight', 'file_issue', 'printing', 'ready', 'dispatched', 'shipped', 'delivered', 'pickedup'];
 
-// Build active event breakdown
+// Seed breakdowns for BOTH active and archived events
+// We recalculate from actual orders so numbers stay in sync with the individual report pages
 $activeBreakdown = [];
 foreach ($activeEvents as $ev) {
     $prefix = strtoupper($ev['acronym'] ?? '');
@@ -46,6 +47,19 @@ foreach ($activeEvents as $ev) {
     ];
 }
 
+$archivedBreakdown = [];
+foreach ($archivedEvents as $ev) {
+    $prefix = strtoupper($ev['acronym'] ?? '');
+    $archivedBreakdown[$prefix] = [
+        'acronym' => $prefix,
+        'name' => $ev['name'] ?? $prefix,
+        'dates' => $ev['dates'] ?? '',
+        'orders' => 0,
+        'base_revenue' => 0,
+    ];
+}
+
+// Single pass through all orders — compute live counts for active AND archived events
 if (is_dir($orderDir)) {
     $files = glob($orderDir . '*.json');
     foreach ($files as $file) {
@@ -55,22 +69,29 @@ if (is_dir($orderDir)) {
 
         $ref = $order['referenceCode'] ?? '';
         $prefix = strtoupper(explode('-', $ref)[0]);
-        if (!isset($activeBreakdown[$prefix])) continue;
 
         $status = $statuses[$ref] ?? ($order['status'] ?? 'unpaid');
         if (!in_array($status, $revenueStatuses)) continue;
 
-        $activeBreakdown[$prefix]['orders']++;
-        $activeBreakdown[$prefix]['base_revenue'] += $order['pricing']['basePrice'] ?? 0;
+        $base = $order['pricing']['basePrice'] ?? 0;
+
+        if (isset($activeBreakdown[$prefix])) {
+            $activeBreakdown[$prefix]['orders']++;
+            $activeBreakdown[$prefix]['base_revenue'] += $base;
+        } elseif (isset($archivedBreakdown[$prefix])) {
+            $archivedBreakdown[$prefix]['orders']++;
+            $archivedBreakdown[$prefix]['base_revenue'] += $base;
+        }
     }
 }
 
-foreach ($activeBreakdown as &$ev) {
-    $ev['venue_fee'] = $ev['base_revenue'] * $venueRate;
-}
+// Add venue fee to each event
+foreach ($activeBreakdown as &$ev) { $ev['venue_fee'] = $ev['base_revenue'] * $venueRate; }
+unset($ev);
+foreach ($archivedBreakdown as &$ev) { $ev['venue_fee'] = $ev['base_revenue'] * $venueRate; }
 unset($ev);
 
-// Lifetime metrics (archived + active)
+// Lifetime metrics — recomputed from live breakdowns (not stale events.json snapshots)
 $lifetimeFee = 0;
 $lifetimeBase = 0;
 $lifetimeOrders = 0;
@@ -78,15 +99,13 @@ $totalEvents = count($activeEvents) + count($archivedEvents);
 $bestEvent = null;
 $bestEventFee = 0;
 
-foreach ($archivedEvents as $ev) {
-    $evBase = $ev['baseRevenue'] ?? $ev['totalRevenue'] ?? 0;
-    $evFee = $evBase * $venueRate;
-    $lifetimeFee += $evFee;
-    $lifetimeBase += $evBase;
-    $lifetimeOrders += $ev['orderCount'] ?? 0;
-    if ($evFee > $bestEventFee) {
-        $bestEventFee = $evFee;
-        $bestEvent = ['name' => $ev['name'] ?? $ev['acronym'], 'acronym' => $ev['acronym'] ?? '', 'fee' => $evFee];
+foreach ($archivedBreakdown as $prefix => $ev) {
+    $lifetimeFee += $ev['venue_fee'];
+    $lifetimeBase += $ev['base_revenue'];
+    $lifetimeOrders += $ev['orders'];
+    if ($ev['venue_fee'] > $bestEventFee) {
+        $bestEventFee = $ev['venue_fee'];
+        $bestEvent = ['name' => $ev['name'], 'acronym' => $prefix, 'fee' => $ev['venue_fee']];
     }
 }
 foreach ($activeBreakdown as $prefix => $ev) {
@@ -352,9 +371,9 @@ $currentYear = date('Y');
     <div class="section">
         <div class="section-header">
             <div class="section-title">Past Events</div>
-            <div class="section-desc">Final revenue reports for completed events</div>
+            <div class="section-desc">Final revenue reports for completed events (excludes cancelled &amp; refunded orders)</div>
         </div>
-        <?php if (!empty($archivedEvents)): ?>
+        <?php if (!empty($archivedBreakdown)): ?>
         <table class="report-table">
             <thead>
                 <tr>
@@ -369,20 +388,18 @@ $currentYear = date('Y');
             <tbody>
                 <?php
                 $archivedTotal = ['orders' => 0, 'base' => 0, 'fee' => 0];
-                foreach ($archivedEvents as $ev):
-                    $evBase = $ev['baseRevenue'] ?? $ev['totalRevenue'] ?? 0;
-                    $evFee = $evBase * $venueRate;
-                    $archivedTotal['orders'] += $ev['orderCount'] ?? 0;
-                    $archivedTotal['base'] += $evBase;
-                    $archivedTotal['fee'] += $evFee;
+                foreach ($archivedBreakdown as $prefix => $ev):
+                    $archivedTotal['orders'] += $ev['orders'];
+                    $archivedTotal['base'] += $ev['base_revenue'];
+                    $archivedTotal['fee'] += $ev['venue_fee'];
                 ?>
                 <tr>
-                    <td class="col-event-name"><?= htmlspecialchars($ev['name'] ?? $ev['acronym']) ?></td>
-                    <td class="col-dates"><?= htmlspecialchars($ev['dates'] ?? '') ?></td>
-                    <td><?= $ev['orderCount'] ?? 0 ?></td>
-                    <td>$<?= number_format($evBase, 2) ?></td>
-                    <td class="col-fee">$<?= number_format($evFee, 2) ?></td>
-                    <td><a href="mtcc-statement.php?event=<?= urlencode($ev['acronym'] ?? '') ?>" class="view-btn">View Report</a></td>
+                    <td class="col-event-name"><?= htmlspecialchars($ev['name']) ?></td>
+                    <td class="col-dates"><?= htmlspecialchars($ev['dates']) ?></td>
+                    <td><?= $ev['orders'] ?></td>
+                    <td>$<?= number_format($ev['base_revenue'], 2) ?></td>
+                    <td class="col-fee">$<?= number_format($ev['venue_fee'], 2) ?></td>
+                    <td><a href="mtcc-statement.php?event=<?= urlencode($prefix) ?>" class="view-btn">View Report</a></td>
                 </tr>
                 <?php endforeach; ?>
                 <tr class="totals-row">
