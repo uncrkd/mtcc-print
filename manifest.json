@@ -1,0 +1,48 @@
+{
+  "name": "MTCC Print Services",
+  "short_name": "MTCC Print",
+  "description": "Order management and pickup tracking for MTCC Print Services",
+  "start_url": "/admin-orders.php",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#faf8ff",
+  "theme_color": "#7c3aed",
+  "categories": ["business", "productivity"],
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Today's Pickups",
+      "short_name": "Pickups",
+      "description": "View orders ready for pickup today",
+      "url": "/admin-orders.php",
+      "icons": [{ "src": "/logo.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Revenue Reports",
+      "short_name": "Reports",
+      "description": "View venue fee reports",
+      "url": "/admin/mtcc-reports.php",
+      "icons": [{ "src": "/logo.png", "sizes": "192x192" }]
+    }
+  ]
+}

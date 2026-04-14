@@ -1198,6 +1198,16 @@ if ($isMtccStaff) {
 <!-- MODULE 7: Order Quick-View Slide-Out -->
 <script src="js/admin-slideout.js"></script>
 
+<!-- PWA: manifest + theme + iOS support -->
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#7c3aed">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MTCC Print">
+<link rel="apple-touch-icon" href="/logo.png">
+<link rel="icon" type="image/png" href="/logo.png">
+
 <!-- Icon Library for JavaScript -->
 <?php outputIconsScript(); ?>
 
@@ -1925,6 +1935,81 @@ function mtccFilterTodayPickups() {
     banner.style.display = 'flex';
   }
 }
+
+// ===== PWA: register service worker + install prompt =====
+(function() {
+  // Register service worker
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+      navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(function(err) {
+        console.warn('Service worker registration failed:', err);
+      });
+    });
+  }
+
+  // Capture the install prompt for later use
+  var deferredPrompt = null;
+  var installBtn = null;
+
+  window.addEventListener('beforeinstallprompt', function(e) {
+    e.preventDefault();
+    deferredPrompt = e;
+    showInstallBanner();
+  });
+
+  function showInstallBanner() {
+    if (localStorage.getItem('mtcc_install_dismissed')) return;
+    if (installBtn) return;
+
+    installBtn = document.createElement('div');
+    installBtn.className = 'mtcc-install-banner';
+    installBtn.innerHTML =
+      '<div class="mtcc-install-text">' +
+        '<strong>Install MTCC Print</strong>' +
+        '<span>Add to home screen for quick access</span>' +
+      '</div>' +
+      '<button class="mtcc-install-yes" onclick="window.mtccInstall()">Install</button>' +
+      '<button class="mtcc-install-no" onclick="window.mtccDismissInstall()">&times;</button>';
+    document.body.appendChild(installBtn);
+    setTimeout(function() { installBtn.classList.add('show'); }, 50);
+  }
+
+  window.mtccInstall = function() {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(function(choiceResult) {
+      if (choiceResult.outcome === 'accepted') {
+        if (installBtn) installBtn.remove();
+      }
+      deferredPrompt = null;
+    });
+  };
+
+  window.mtccDismissInstall = function() {
+    localStorage.setItem('mtcc_install_dismissed', '1');
+    if (installBtn) { installBtn.classList.remove('show'); setTimeout(function(){ if (installBtn) installBtn.remove(); }, 300); }
+  };
+
+  // iOS-specific install instructions (iOS doesn't support beforeinstallprompt)
+  // Show a subtle hint the first time an iOS user visits on mobile
+  var isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+  var isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  if (isIOS && !isStandalone && !localStorage.getItem('mtcc_ios_hint_shown')) {
+    setTimeout(function() {
+      localStorage.setItem('mtcc_ios_hint_shown', '1');
+      var hint = document.createElement('div');
+      hint.className = 'mtcc-install-banner mtcc-install-ios';
+      hint.innerHTML =
+        '<div class="mtcc-install-text">' +
+          '<strong>Install MTCC Print</strong>' +
+          '<span>Tap Share → Add to Home Screen</span>' +
+        '</div>' +
+        '<button class="mtcc-install-no" onclick="this.parentElement.remove()">&times;</button>';
+      document.body.appendChild(hint);
+      setTimeout(function(){ hint.classList.add('show'); }, 50);
+    }, 3000);
+  }
+})();
 
 // ===== MTCC Live Updates: Auto-refresh + audio alert for new arrivals =====
 (function() {
@@ -2984,21 +3069,21 @@ document.addEventListener('keydown', function(e) {
           </span></td>
         
         <!-- Customer Column -->
-        <td>
+        <td data-mobile-label="Customer">
           <div class="cell-main"><?= htmlspecialchars($order['customerInfo']['name'] ?? 'Unknown') ?></div>
           <?php if (!$isMtccStaff): ?><div class="cell-micro"><?= htmlspecialchars($order['customerInfo']['email'] ?? '') ?></div><?php endif; ?>
         </td>
 
         <!-- Event Column (MTCC only) -->
         <?php if ($isMtccStaff): ?>
-        <td>
+        <td data-mobile-label="Event">
           <div class="cell-main"><?= htmlspecialchars($orderEventName) ?></div>
           <?php if ($orderBuilding): ?><div class="cell-micro">MTCC <?= ucfirst(htmlspecialchars($orderBuilding)) ?></div><?php endif; ?>
         </td>
         <?php endif; ?>
 
         <!-- Due Date Column -->
-        <td>
+        <td data-mobile-label="Due">
           <div class="cell-main">
             <?php
             $deliveryTimeDisplay = '';
@@ -3014,16 +3099,15 @@ document.addEventListener('keydown', function(e) {
           </div>
           <div class="cell-micro">Submitted: <?= isset($order['submittedAt']) ? date('D, M j, Y g:i A', strtotime($order['submittedAt'])) : 'Unknown' ?></div>
         </td>
-        
+
         <!-- Size Column -->
-        <td>
+        <td data-mobile-label="Size">
           <div class="cell-main"><?= $order['dimensions']['width'] ?? '?' ?>"  x  <?= $order['dimensions']['height'] ?? '?' ?>"</div>
           <div class="cell-micro"><?= ($order['material'] ?? 'poster') === 'fabric' ? 'Fabric' : 'Poster paper' ?></div>
         </td>
-        
+
         <!-- Price Column -->
-        <td>$
-          <?= number_format($order['pricing']['total'] ?? 0, 2) ?></td>
+        <td data-mobile-label="Price">$<?= number_format($order['pricing']['total'] ?? 0, 2) ?></td>
         
         <!-- Vendor Column (god_mode/super_admin only) -->
         <?php if ($canViewVendor): ?>
@@ -3033,7 +3117,7 @@ document.addEventListener('keydown', function(e) {
         <?php endif; ?>
 
         <!-- Status Column -->
-        <td><?php
+        <td data-mobile-label="Status"><?php
         $statusIcons = [
           'unpaid' => '<?= ICON_HOURGLASS ?>',
           'paid' => '<?= ICON_MONEY_BAG ?>',
