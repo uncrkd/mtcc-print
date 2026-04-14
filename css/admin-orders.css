@@ -3360,16 +3360,126 @@ body.login-page {
   color: var(--primary);
 }
 
+/* MTCC Quick-Access Toolbar */
+.mtcc-toolbar {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+  margin: 0 20px 16px;
+}
+
+.mtcc-toolbar-search {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.mtcc-toolbar-search-icon {
+  position: absolute;
+  left: 16px;
+  color: var(--text-secondary);
+  pointer-events: none;
+}
+
+.mtcc-toolbar-input {
+  width: 100%;
+  padding: 14px 16px 14px 44px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: white;
+  color: var(--text-primary);
+  transition: border-color 0.15s, box-shadow 0.15s;
+  box-shadow: rgba(0,0,0,0.03) 0 1px 2px;
+}
+
+.mtcc-toolbar-input::placeholder {
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+
+.mtcc-toolbar-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
+}
+
+.mtcc-toolbar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 16px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  font-family: inherit;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: white;
+  color: var(--text-primary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+  box-shadow: rgba(0,0,0,0.03) 0 1px 2px;
+}
+
+.mtcc-toolbar-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.mtcc-toolbar-btn-primary {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.mtcc-toolbar-btn-primary:hover {
+  background: #6d28d9;
+  color: white;
+}
+
+.mtcc-toolbar-btn-primary.mtcc-toolbar-active {
+  background: #1a0b2e;
+  border-color: #1a0b2e;
+}
+
+.mtcc-toolbar-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
+  margin-left: 6px;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.25);
+  color: white;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
 /* Responsive */
 @media (max-width: 900px) {
   .mtcc-stats-row {
     grid-template-columns: repeat(2, 1fr);
+  }
+  .mtcc-toolbar {
+    flex-wrap: wrap;
+  }
+  .mtcc-toolbar-search {
+    flex: 1 1 100%;
   }
 }
 
 @media (max-width: 480px) {
   .mtcc-stats-row {
     grid-template-columns: 1fr;
+  }
+  .mtcc-toolbar-btn {
+    flex: 1;
+    justify-content: center;
   }
 }
 

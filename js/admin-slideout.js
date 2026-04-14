@@ -146,6 +146,21 @@ var OrderSlideout = (function() {
     if (ci.company) h += '<span class="so-spec-lbl">Company</span><span class="so-spec-val">' + esc(ci.company) + '</span>';
     h += '</div></div>';
 
+    // ---- PICKUP RECORD (if picked up) ----
+    if (order.pickup && order.pickup.picked_up_at) {
+      h += '<div class="so-section">';
+      h += '<div class="so-section-label">Pickup Record</div>';
+      h += '<div class="so-spec-grid">';
+      h += '<span class="so-spec-lbl">Picked Up</span><span class="so-spec-val">' + fmtDateTime(order.pickup.picked_up_at) + '</span>';
+      h += '<span class="so-spec-lbl">By</span><span class="so-spec-val">' + esc(order.pickup.pickup_person || 'N/A');
+      if (order.pickup.same_as_customer) h += ' <span style="color: #059669; font-size: 0.75rem;">(customer)</span>';
+      h += '</span>';
+      if (!isMtcc && order.pickup.picked_up_by_staff) {
+        h += '<span class="so-spec-lbl">Staff</span><span class="so-spec-val">' + esc(order.pickup.picked_up_by_staff) + '</span>';
+      }
+      h += '</div></div>';
+    }
+
     // ---- PRICING ----
     if (isMtcc) {
       // MTCC sees only the total — no breakdown

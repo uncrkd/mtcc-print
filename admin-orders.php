@@ -97,6 +97,9 @@ if (isset($_POST['update_status'])) {
             throw new Exception('Failed to save status file');
         }
         
+        // Pickup person (optional, only on pickedup transitions)
+        $pickupPerson = trim($_POST['pickup_person'] ?? '');
+
         // Also update the individual order JSON file for scanner compatibility
         $orderDir = 'uploads/orders/';
         $orderFiles = glob($orderDir . '*-order.json');
@@ -104,16 +107,29 @@ if (isset($_POST['update_status'])) {
             $orderData = json_decode(file_get_contents($file), true);
             if ($orderData && isset($orderData['referenceCode']) && $orderData['referenceCode'] === $referenceCode) {
                 $orderData['status'] = $newStatus;
+                // Save pickup record if this is a pickedup transition
+                if ($newStatus === 'pickedup') {
+                    $orderData['pickup'] = [
+                        'picked_up_at' => date('c'),
+                        'picked_up_by_staff' => getCurrentAdminName(),
+                        'pickup_person' => $pickupPerson !== '' ? $pickupPerson : ($orderData['customerInfo']['name'] ?? ''),
+                        'same_as_customer' => ($pickupPerson === ''),
+                    ];
+                }
                 file_put_contents($file, json_encode($orderData, JSON_PRETTY_PRINT));
                 break;
             }
         }
-        
+
         // Log to order history
         $statusLabels = getStatusLabelsForRole('admin');
         $oldLabel = $statusLabels[$oldStatus] ?? $oldStatus;
         $newLabel = $statusLabels[$newStatus] ?? $newStatus;
-        logOrderHistory($referenceCode, 'status_change', "Status changed from \"$oldLabel\" to \"$newLabel\"", getCurrentAdminName());
+        $historyMsg = "Status changed from \"$oldLabel\" to \"$newLabel\"";
+        if ($newStatus === 'pickedup' && $pickupPerson !== '') {
+            $historyMsg .= ". Picked up by: $pickupPerson";
+        }
+        logOrderHistory($referenceCode, 'status_change', $historyMsg, getCurrentAdminName());
         
         // Log to activity log (if user is tracked)
         logAdminActivity('Status Change', [
@@ -1603,6 +1619,97 @@ window.dashboardData = {
 };
 </script>
 	
+<?php if ($isMtccStaff):
+  $todayPickupCount = 0;
+  $todayDateStr = date('Y-m-d');
+  foreach ($orders as $o) {
+    $dueDate = $o['selectedDate'] ?? '';
+    $status = $o['status'] ?? '';
+    // Today's pickups: due today + ready/delivered status (not yet picked up)
+    if ($dueDate === $todayDateStr && in_array($status, ['ready', 'delivered', 'shipped'])) {
+      $todayPickupCount++;
+    }
+  }
+?>
+<!-- MTCC Quick-Access Toolbar: Search + Today's Pickups -->
+<div class="mtcc-toolbar">
+  <div class="mtcc-toolbar-search">
+    <span class="mtcc-toolbar-search-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </span>
+    <input type="text" class="mtcc-toolbar-input" id="mtccSearchInput" placeholder="Customer is here to pick up &mdash; search by name or order #...">
+  </div>
+  <button class="mtcc-toolbar-btn mtcc-toolbar-btn-primary" onclick="mtccFilterTodayPickups()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px; vertical-align:-3px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    Today's Pickups
+    <span class="mtcc-toolbar-count"><?= $todayPickupCount ?></span>
+  </button>
+  <button class="mtcc-toolbar-btn" onclick="mtccClearFilters()">Clear</button>
+</div>
+
+<script>
+// Forward MTCC search input to existing search box with live filtering
+(function(){
+  var mtccSearch = document.getElementById('mtccSearchInput');
+  if (!mtccSearch) return;
+  mtccSearch.addEventListener('input', function() {
+    var searchBox = document.getElementById('searchBox');
+    if (searchBox) {
+      searchBox.value = mtccSearch.value;
+      searchBox.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+  });
+  // Focus the search bar on page load for quick access
+  setTimeout(function(){ mtccSearch.focus(); }, 100);
+})();
+
+// Filter to today's pickups: due today AND status in [ready, delivered, shipped]
+function mtccFilterTodayPickups() {
+  var today = new Date();
+  var y = today.getFullYear();
+  var m = String(today.getMonth() + 1).padStart(2, '0');
+  var d = String(today.getDate()).padStart(2, '0');
+  var todayStr = y + '-' + m + '-' + d;
+
+  // Clear existing filters
+  if (window.simpleFilterManager && window.simpleFilterManager.clearAll) {
+    window.simpleFilterManager.clearAll();
+  }
+
+  // Walk table rows and show only today's pickups
+  var rows = document.querySelectorAll('#ordersTableBody tr');
+  rows.forEach(function(row) {
+    var dueDate = row.dataset.duedate || '';
+    var status = row.dataset.status || '';
+    var show = (dueDate === todayStr) && (status === 'ready' || status === 'delivered' || status === 'shipped');
+    row.style.display = show ? '' : 'none';
+  });
+
+  // Scroll to table
+  var table = document.getElementById('ordersTable');
+  if (table) table.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  // Show active state on button
+  var btns = document.querySelectorAll('.mtcc-toolbar-btn-primary');
+  btns.forEach(function(b) { b.classList.add('mtcc-toolbar-active'); });
+}
+
+function mtccClearFilters() {
+  var rows = document.querySelectorAll('#ordersTableBody tr');
+  rows.forEach(function(row) { row.style.display = ''; });
+  var mtccSearch = document.getElementById('mtccSearchInput');
+  if (mtccSearch) mtccSearch.value = '';
+  var searchBox = document.getElementById('searchBox');
+  if (searchBox) { searchBox.value = ''; searchBox.dispatchEvent(new Event('input', { bubbles: true })); }
+  if (window.simpleFilterManager && window.simpleFilterManager.clearAll) {
+    window.simpleFilterManager.clearAll();
+  }
+  var btns = document.querySelectorAll('.mtcc-toolbar-btn-primary');
+  btns.forEach(function(b) { b.classList.remove('mtcc-toolbar-active'); });
+}
+</script>
+<?php endif; ?>
+
 <!-- Table Card Wrapper -->
 <div class="table-card-wrapper">
 

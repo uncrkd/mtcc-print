@@ -105,11 +105,15 @@ function updateTotal() {
  * @param {Function} successCallback - Optional callback on success
  * @param {Function} errorCallback - Optional callback on error
  */
-function updateOrderStatus(referenceCode, newStatus, successCallback = null, errorCallback = null) {
+function updateOrderStatus(referenceCode, newStatus, successCallback = null, errorCallback = null, extras = {}) {
     const formData = new FormData();
     formData.append('update_status', '1');
     formData.append('reference_code', referenceCode);
     formData.append('status', newStatus);
+    // Pass along any extra fields (e.g., pickupPerson for pickedup status)
+    Object.keys(extras || {}).forEach(function(k){
+        if (extras[k] != null && extras[k] !== '') formData.append(k, extras[k]);
+    });
     
     fetch('admin-orders.php', {
         method: 'POST',
@@ -870,23 +874,47 @@ function createQuickStatusDropdown(referenceCode, currentStatus) {
 function handleQuickStatusSelect(referenceCode, newStatus, currentStatus) {
     // Close dropdown immediately
     closeQuickStatusDropdown();
-    
+
     // If same status selected, do nothing
     if (newStatus === currentStatus) {
         return;
     }
-    
-    // Update status via existing function
-    updateOrderStatus(referenceCode, newStatus, 
-        // Success callback
-        (data) => {
-            // Update the badge's data-status attribute
-            updateQuickStatusBadgeData(referenceCode, newStatus);
-        },
-        // Error callback
-        (error) => {
-            console.error('Quick status update failed:', error);
+
+    // MTCC staff marking an order as "Picked Up" — prompt for pickup person name
+    var perms = window.PERMS || {};
+    var extras = {};
+    if (perms.isMtccStaff && newStatus === 'pickedup') {
+        // Look up customer name from dashboardData for the prompt
+        var customerName = '';
+        if (window.dashboardData && window.dashboardData.orders) {
+            var order = window.dashboardData.orders.find(function(o){
+                return (o.referenceCode || '').toUpperCase() === referenceCode.toUpperCase();
+            });
+            if (order) customerName = (order.customerInfo || {}).name || '';
         }
+
+        var pickupPerson = prompt(
+            'Picked up by:\n\n' +
+            'Enter the name of the person picking up this order.\n' +
+            'Leave blank if same as customer (' + (customerName || 'customer') + ').',
+            ''
+        );
+
+        // User cancelled — abort status change
+        if (pickupPerson === null) return;
+
+        // Trim. Empty = same as customer (we'll record the customer name)
+        pickupPerson = (pickupPerson || '').trim();
+        if (pickupPerson !== '') {
+            extras.pickup_person = pickupPerson;
+        }
+    }
+
+    // Update status via existing function
+    updateOrderStatus(referenceCode, newStatus,
+        (data) => { updateQuickStatusBadgeData(referenceCode, newStatus); },
+        (error) => { console.error('Quick status update failed:', error); },
+        extras
     );
 }
 

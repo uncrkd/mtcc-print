@@ -70,6 +70,37 @@ foreach ($activeBreakdown as &$ev) {
 }
 unset($ev);
 
+// Lifetime metrics (archived + active)
+$lifetimeFee = 0;
+$lifetimeBase = 0;
+$lifetimeOrders = 0;
+$totalEvents = count($activeEvents) + count($archivedEvents);
+$bestEvent = null;
+$bestEventFee = 0;
+
+foreach ($archivedEvents as $ev) {
+    $evBase = $ev['baseRevenue'] ?? $ev['totalRevenue'] ?? 0;
+    $evFee = $evBase * $venueRate;
+    $lifetimeFee += $evFee;
+    $lifetimeBase += $evBase;
+    $lifetimeOrders += $ev['orderCount'] ?? 0;
+    if ($evFee > $bestEventFee) {
+        $bestEventFee = $evFee;
+        $bestEvent = ['name' => $ev['name'] ?? $ev['acronym'], 'acronym' => $ev['acronym'] ?? '', 'fee' => $evFee];
+    }
+}
+foreach ($activeBreakdown as $prefix => $ev) {
+    $lifetimeFee += $ev['venue_fee'];
+    $lifetimeBase += $ev['base_revenue'];
+    $lifetimeOrders += $ev['orders'];
+    if ($ev['venue_fee'] > $bestEventFee) {
+        $bestEventFee = $ev['venue_fee'];
+        $bestEvent = ['name' => $ev['name'], 'acronym' => $prefix, 'fee' => $ev['venue_fee']];
+    }
+}
+
+$avgFeePerEvent = $totalEvents > 0 ? ($lifetimeFee / $totalEvents) : 0;
+
 $currentYear = date('Y');
 ?>
 <!DOCTYPE html>
@@ -84,6 +115,7 @@ $currentYear = date('Y');
     <link rel="stylesheet" href="../css/admin-sidebar.css">
     <link rel="stylesheet" href="../css/admin-components.css">
     <link rel="stylesheet" href="../css/admin-responsive.css">
+    <link rel="stylesheet" href="../css/admin-orders.css">
     <style>
         .reports-wrap {
             max-width: 1200px;
@@ -230,6 +262,41 @@ $currentYear = date('Y');
     <div class="reports-header">
         <div class="reports-title">Revenue Reports</div>
         <div class="reports-subtitle">Per-event revenue totals and venue fee calculations</div>
+    </div>
+
+    <!-- Lifetime Summary Cards -->
+    <div class="mtcc-stats-row" style="margin: 0 0 24px;">
+        <div class="mtcc-stat mtcc-stat-primary">
+            <div class="mtcc-stat-top"><span class="mtcc-stat-label">Total Venue Fee Earned</span></div>
+            <div class="mtcc-stat-value">$<?= number_format($lifetimeFee, 2) ?></div>
+            <div class="mtcc-stat-sub">$<?= number_format($lifetimeBase, 2) ?> base revenue &middot; <?= $lifetimeOrders ?> orders</div>
+        </div>
+        <div class="mtcc-stat">
+            <div class="mtcc-stat-top"><span class="mtcc-stat-label">Events Hosted</span></div>
+            <div class="mtcc-stat-value"><?= $totalEvents ?></div>
+            <div class="mtcc-stat-sub"><?= count($activeEvents) ?> active &middot; <?= count($archivedEvents) ?> past</div>
+        </div>
+        <div class="mtcc-stat">
+            <div class="mtcc-stat-top"><span class="mtcc-stat-label">Average Per Event</span></div>
+            <div class="mtcc-stat-value">$<?= number_format($avgFeePerEvent, 2) ?></div>
+            <div class="mtcc-stat-sub">venue fee per event</div>
+        </div>
+        <?php if ($bestEvent): ?>
+        <a href="mtcc-statement.php?event=<?= urlencode($bestEvent['acronym']) ?>" class="mtcc-stat mtcc-stat-action mtcc-stat-featured">
+            <div class="mtcc-stat-top">
+                <span class="mtcc-stat-label">Best Event</span>
+                <span class="mtcc-stat-arrow">&rarr;</span>
+            </div>
+            <div class="mtcc-stat-value">$<?= number_format($bestEvent['fee'], 2) ?></div>
+            <div class="mtcc-stat-sub"><?= htmlspecialchars($bestEvent['name']) ?></div>
+        </a>
+        <?php else: ?>
+        <div class="mtcc-stat">
+            <div class="mtcc-stat-top"><span class="mtcc-stat-label">Best Event</span></div>
+            <div class="mtcc-stat-value" style="font-size: 1rem; color: var(--text-secondary);">&mdash;</div>
+            <div class="mtcc-stat-sub">No events yet</div>
+        </div>
+        <?php endif; ?>
     </div>
 
     <!-- Active Events -->
