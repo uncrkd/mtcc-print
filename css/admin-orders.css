@@ -4058,7 +4058,10 @@ body.login-page {
 }
 
 @media (max-width: 640px) {
-  /* Container margins — respect safe-area insets (notch/Dynamic Island on iOS) */
+  /* Prevent horizontal overflow — stops weird zoom behaviour */
+  html, body { overflow-x: hidden; max-width: 100vw; }
+
+  /* Container margins — minimal on mobile + respect safe-area (notch) */
   .mtcc-hero-container,
   .mtcc-stats-row,
   .mtcc-live-cards,
@@ -4067,36 +4070,46 @@ body.login-page {
   .mtcc-empty-state,
   .mtcc-refresh-banner,
   .mtcc-preview-banner {
-    margin-left: calc(12px + env(safe-area-inset-left, 0px));
-    margin-right: calc(12px + env(safe-area-inset-right, 0px));
+    margin-left: calc(8px + env(safe-area-inset-left, 0px));
+    margin-right: calc(8px + env(safe-area-inset-right, 0px));
   }
 
-  /* Revenue stat cards — 2 per row, compact fonts */
+  /* Revenue stat cards — 2 per row, compact */
   .mtcc-stats-row {
     grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+    gap: 8px;
   }
   .mtcc-stat {
-    padding: 12px 12px;
+    padding: 10px 10px;
     border-top-width: 2px;
+    min-width: 0; /* allow flex/grid children to shrink below content size */
+    overflow: hidden;
   }
-  .mtcc-stat-label { font-size: 0.62rem; letter-spacing: 0.3px; }
-  .mtcc-stat-value { font-size: 1.15rem; letter-spacing: -0.3px; }
-  .mtcc-stat-sub { font-size: 0.65rem; }
+  .mtcc-stat-label { font-size: 0.58rem; letter-spacing: 0.2px; }
+  .mtcc-stat-value { font-size: 1rem; letter-spacing: -0.3px; }
+  .mtcc-stat-sub { font-size: 0.6rem; line-height: 1.25; }
 
-  /* Live Status cards — 2 per row, compact */
+  /* Live Status cards — 2 per row, tight */
   .mtcc-live-cards {
     grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+    gap: 8px;
   }
-  .mtcc-live-card { padding: 10px 12px; gap: 10px; }
-  .mtcc-live-icon { width: 28px; height: 28px; }
-  .mtcc-live-icon svg { width: 16px; height: 16px; }
-  .mtcc-live-text { padding-right: 8px; }
-  .mtcc-live-label-main { font-size: 0.72rem; }
-  .mtcc-live-label-sub { font-size: 0.62rem; }
-  .mtcc-live-count { font-size: 1.1rem; min-width: 24px; }
-  .mtcc-live-card::before { inset: 4px; }
+  .mtcc-live-card {
+    padding: 8px 10px;
+    gap: 8px;
+    min-width: 0;
+    overflow: hidden;
+  }
+  .mtcc-live-icon { width: 24px; height: 24px; border-radius: 6px; }
+  .mtcc-live-icon svg { width: 14px; height: 14px; }
+  .mtcc-live-text { padding-right: 6px; min-width: 0; }
+  .mtcc-live-label-main { font-size: 0.65rem; line-height: 1.2; }
+  .mtcc-live-label-sub { font-size: 0.56rem; }
+  .mtcc-live-count { font-size: 1rem; min-width: 20px; }
+  .mtcc-live-card::before { inset: 3px; border-width: 0.5px; }
+  .mtcc-live-card .mtcc-live-text {
+    border-right-width: 0.5px;
+  }
 
   /* Toolbar — search full-width, then 3 buttons on one row, clear full-width below */
   .mtcc-toolbar {
@@ -4185,31 +4198,56 @@ body.login-page {
   .mtcc-view .orders-table td:nth-child(3),
   .mtcc-view .orders-table td[data-mobile-label="Size"] { display: none; }
 
-  /* Each cell becomes a labeled data row */
+  /* Each cell becomes a labeled data row.
+     Use CSS grid so label (::before) sits left, and cell-main / cell-micro
+     stack vertically on the right. */
   .mtcc-view .orders-table td {
-    padding: 4px 0;
+    padding: 5px 0;
     border: none;
     font-size: 0.82rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 10px;
+    display: grid;
+    grid-template-columns: 72px 1fr;
+    column-gap: 10px;
+    row-gap: 1px;
+    align-items: start;
     white-space: normal;
+    word-break: break-word;
+    overflow-wrap: break-word;
   }
-  .mtcc-view .orders-table td .cell-main,
-  .mtcc-view .orders-table td .cell-micro { text-align: right; }
-  .mtcc-view .orders-table td .cell-main { font-size: 0.85rem; font-weight: 600; color: var(--text-primary); }
-  .mtcc-view .orders-table td .cell-micro { font-size: 0.7rem; color: var(--text-secondary); }
 
   /* Inject labels via data-mobile-label */
   .mtcc-view .orders-table td[data-mobile-label]::before {
     content: attr(data-mobile-label);
-    font-size: 0.65rem;
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    font-size: 0.62rem;
     font-weight: 700;
     color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.4px;
-    flex-shrink: 0;
+    padding-top: 1px;
+  }
+
+  /* Right column: cell-main on row 1, cell-micro on row 2 */
+  .mtcc-view .orders-table td .cell-main,
+  .mtcc-view .orders-table td .cell-micro {
+    grid-column: 2;
+    text-align: right;
+    min-width: 0;
+    overflow-wrap: break-word;
+  }
+  .mtcc-view .orders-table td .cell-main {
+    grid-row: 1;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.3;
+  }
+  .mtcc-view .orders-table td .cell-micro {
+    grid-row: 2;
+    font-size: 0.68rem;
+    color: var(--text-secondary);
+    line-height: 1.3;
   }
 
   /* Order number cell — hero of the card */
