@@ -3360,104 +3360,170 @@ body.login-page {
   color: var(--primary);
 }
 
-/* MTCC Live Status Row — operational at-a-glance */
-.mtcc-live-status {
+/* MTCC Live Status Cards — operational at-a-glance, full-size cards */
+.mtcc-live-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin: 0 20px 16px;
+}
+
+.mtcc-live-card {
   display: flex;
   align-items: center;
   gap: 14px;
-  margin: 0 20px 12px;
-  padding: 10px 14px;
+  padding: 18px 20px;
   background: white;
   border: 1px solid var(--border-color);
-  border-radius: 10px;
-  box-shadow: rgba(0,0,0,0.03) 0 1px 2px;
+  border-left-width: 4px;
+  border-radius: 12px;
+  box-shadow: rgba(0,0,0,0.04) 0 1px 3px;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: all 0.15s ease;
 }
 
-.mtcc-live-label {
-  font-size: 0.68rem;
+.mtcc-live-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.mtcc-live-icon {
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.mtcc-live-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.mtcc-live-count {
+  font-size: 1.8rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.5px;
+  margin-bottom: 4px;
+}
+
+.mtcc-live-label-main {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.mtcc-live-label-sub {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* Color variants — left border + icon tint */
+.mtcc-live-amber { border-left-color: #f59e0b; }
+.mtcc-live-amber .mtcc-live-icon { background: #fffbeb; color: #d97706; }
+.mtcc-live-amber .mtcc-live-count { color: #d97706; }
+.mtcc-live-amber:hover { border-color: #f59e0b; }
+
+.mtcc-live-green { border-left-color: #10b981; }
+.mtcc-live-green .mtcc-live-icon { background: #ecfdf5; color: #059669; }
+.mtcc-live-green .mtcc-live-count { color: #059669; }
+.mtcc-live-green:hover { border-color: #10b981; }
+
+.mtcc-live-red { border-left-color: #ef4444; }
+.mtcc-live-red .mtcc-live-icon { background: #fef2f2; color: #dc2626; }
+.mtcc-live-red .mtcc-live-count { color: #dc2626; }
+.mtcc-live-red:hover { border-color: #ef4444; }
+
+.mtcc-live-grey { border-left-color: #9ca3af; }
+.mtcc-live-grey .mtcc-live-icon { background: #f3f4f6; color: #6b7280; }
+.mtcc-live-grey .mtcc-live-count { color: #374151; }
+.mtcc-live-grey:hover { border-color: #9ca3af; }
+
+/* Muted when count is 0 */
+.mtcc-live-muted {
+  opacity: 0.55;
+}
+.mtcc-live-muted:hover {
+  opacity: 0.85;
+}
+
+/* Active state when filter applied */
+.mtcc-live-active {
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2), 0 4px 12px rgba(0,0,0,0.1);
+  transform: translateY(-1px);
+}
+.mtcc-live-active.mtcc-live-amber { border-color: #f59e0b; background: #fffbeb; }
+.mtcc-live-active.mtcc-live-green { border-color: #10b981; background: #ecfdf5; }
+.mtcc-live-active.mtcc-live-red { border-color: #ef4444; background: #fef2f2; }
+.mtcc-live-active.mtcc-live-grey { border-color: #9ca3af; background: #f3f4f6; }
+
+/* Active filter banner — shows above order table when filter applied */
+.mtcc-filter-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 20px 12px;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
+  border: 1px solid var(--primary);
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.1);
+}
+
+.mtcc-filter-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.mtcc-filter-banner-label {
+  font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  color: var(--primary);
+}
+
+.mtcc-filter-banner-text {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.mtcc-filter-banner-count {
+  font-size: 0.85rem;
   color: var(--text-secondary);
-  flex-shrink: 0;
-  padding-right: 14px;
-  border-right: 1px solid var(--border-color);
+  font-weight: 500;
 }
 
-.mtcc-chip-row {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  flex: 1;
-}
-
-.mtcc-chip {
+.mtcc-filter-banner-clear {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border: 1px solid transparent;
-  border-radius: 20px;
+  padding: 6px 14px;
+  background: white;
+  color: var(--primary);
+  border: 1px solid var(--primary);
+  border-radius: 8px;
   font-family: inherit;
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;
-  background: white;
 }
 
-.mtcc-chip-amber {
-  background: #fffbeb;
-  color: #92400e;
-  border-color: #fcd34d;
-}
-.mtcc-chip-amber:hover { background: #fef3c7; border-color: #f59e0b; }
-
-.mtcc-chip-green {
-  background: #ecfdf5;
-  color: #065f46;
-  border-color: #86efac;
-}
-.mtcc-chip-green:hover { background: #d1fae5; border-color: #10b981; }
-
-.mtcc-chip-red {
-  background: #fef2f2;
-  color: #991b1b;
-  border-color: #fca5a5;
-}
-.mtcc-chip-red:hover { background: #fee2e2; border-color: #ef4444; }
-
-.mtcc-chip-grey {
-  background: #f3f4f6;
-  color: #374151;
-  border-color: #d1d5db;
-}
-.mtcc-chip-grey:hover { background: #e5e7eb; border-color: #9ca3af; }
-
-/* Muted state when count is 0 */
-.mtcc-chip-muted {
-  opacity: 0.5;
-}
-.mtcc-chip-muted:hover { opacity: 0.7; }
-
-/* Active (selected) chip */
-.mtcc-chip-active {
-  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.3);
-  transform: translateY(-1px);
-}
-
-.mtcc-chip-count {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 22px;
-  height: 20px;
-  padding: 0 7px;
-  border-radius: 10px;
-  background: rgba(0, 0, 0, 0.08);
-  font-size: 0.72rem;
-  font-weight: 700;
-  margin-left: 2px;
+.mtcc-filter-banner-clear:hover {
+  background: var(--primary);
+  color: white;
 }
 
 /* MTCC Quick-Access Toolbar */
@@ -3701,8 +3767,8 @@ body.login-page {
 }
 
 /* Responsive */
-@media (max-width: 900px) {
-  .mtcc-stats-row {
+@media (max-width: 960px) {
+  .mtcc-live-cards {
     grid-template-columns: repeat(2, 1fr);
   }
   .mtcc-toolbar {
@@ -3711,24 +3777,18 @@ body.login-page {
   .mtcc-toolbar-search {
     flex: 1 1 100%;
   }
-  .mtcc-live-status {
-    flex-wrap: wrap;
-  }
-  .mtcc-live-label {
-    border-right: none;
-    padding-right: 0;
-    padding-bottom: 4px;
-    width: 100%;
-  }
 }
 
-@media (max-width: 480px) {
-  .mtcc-stats-row {
+@media (max-width: 560px) {
+  .mtcc-live-cards {
     grid-template-columns: 1fr;
   }
   .mtcc-toolbar-btn {
     flex: 1;
     justify-content: center;
+  }
+  .mtcc-live-count {
+    font-size: 1.5rem;
   }
 }
 

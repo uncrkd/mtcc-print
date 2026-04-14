@@ -1533,64 +1533,7 @@ window.PERMS = {
 
 <?php endif; ?>
 
-<?php if ($isMtccStaff && $canViewMtccAnalytics):
-  $readyCount = 0;
-  $pickedUpToday = 0;
-  $todayStr = date('Y-m-d');
-  foreach ($orders as $o) {
-    if (($o['status'] ?? '') === 'delivered') $readyCount++;
-    // Picked up today approximated via modified/paidAt date check
-    if (($o['status'] ?? '') === 'pickedup') {
-      $mod = $o['modified'] ?? 0;
-      if ($mod && date('Y-m-d', $mod) === $todayStr) $pickedUpToday++;
-    }
-  }
-  $onTimeRate = $mtccAnalytics['on_time_rate'] ?? 0;
-  $onTimeColor = $onTimeRate >= 95 ? 'var(--success)' : ($onTimeRate >= 85 ? '#d97706' : 'var(--error)');
-?>
-
-<!-- MTCC Stats Row — compact, scannable, purposeful -->
-<div class="mtcc-stats-row">
-
-  <!-- Ready for Pickup — the most actionable metric -->
-  <a href="javascript:void(0)" onclick="filterByAlert('status-delivered')" class="mtcc-stat mtcc-stat-action mtcc-stat-featured">
-    <div class="mtcc-stat-top">
-      <span class="mtcc-stat-label">Ready for Pickup</span>
-      <span class="mtcc-stat-arrow">&rarr;</span>
-    </div>
-    <div class="mtcc-stat-value"><?= $readyCount ?></div>
-    <div class="mtcc-stat-sub"><?= $pickedUpToday ?> picked up today</div>
-  </a>
-
-  <!-- Today's Venue Fee -->
-  <div class="mtcc-stat">
-    <div class="mtcc-stat-top">
-      <span class="mtcc-stat-label">Today's Venue Fee</span>
-    </div>
-    <div class="mtcc-stat-value">$<?= number_format($mtccAnalytics['today_venue_fee'], 2) ?></div>
-    <div class="mtcc-stat-sub"><?= $mtccAnalytics['today_orders'] ?> order<?= $mtccAnalytics['today_orders'] !== 1 ? 's' : '' ?> &middot; $<?= number_format($mtccAnalytics['today_base'], 2) ?> base</div>
-  </div>
-
-  <!-- Month-to-Date Venue Fee — the headline number -->
-  <div class="mtcc-stat mtcc-stat-primary">
-    <div class="mtcc-stat-top">
-      <span class="mtcc-stat-label">Venue Fee This Month</span>
-    </div>
-    <div class="mtcc-stat-value">$<?= number_format($mtccAnalytics['month_venue_fee'], 2) ?></div>
-    <div class="mtcc-stat-sub"><?= $mtccAnalytics['month_orders'] ?> orders &middot; $<?= number_format($mtccAnalytics['month_base'], 2) ?> base &middot; <?= $venueRatePct ?>%</div>
-  </div>
-
-  <!-- On-Time Rate -->
-  <div class="mtcc-stat">
-    <div class="mtcc-stat-top">
-      <span class="mtcc-stat-label">On-Time Delivery</span>
-    </div>
-    <div class="mtcc-stat-value" style="color: <?= $onTimeColor ?>;"><?= $onTimeRate ?>%</div>
-    <div class="mtcc-stat-sub">Last 30 days</div>
-  </div>
-
-</div>
-<?php endif; ?>
+<!-- Top stat row removed for MTCC — Live Status cards below replace it -->
 
 <!-- Pass data to JavaScript -->
 <script>
@@ -1650,31 +1593,66 @@ window.dashboardData = {
   }
 ?>
 
-<!-- MTCC Live Status Row — operational at-a-glance for desk staff -->
-<div class="mtcc-live-status">
-  <div class="mtcc-live-label">Live Status</div>
-  <div class="mtcc-chip-row">
-    <button class="mtcc-chip mtcc-chip-amber" onclick="mtccFilterLive('arriving')">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
-      <span class="mtcc-chip-label">Arriving Today</span>
-      <span class="mtcc-chip-count"><?= $arrivingTodayCount ?></span>
-    </button>
-    <button class="mtcc-chip mtcc-chip-green" onclick="mtccFilterLive('ready')">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 9.4l-9-5.19M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-      <span class="mtcc-chip-label">Ready for Pickup</span>
-      <span class="mtcc-chip-count"><?= $readyNowCount ?></span>
-    </button>
-    <button class="mtcc-chip mtcc-chip-red<?= $overdueCount === 0 ? ' mtcc-chip-muted' : '' ?>" onclick="mtccFilterLive('overdue')">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-      <span class="mtcc-chip-label">Overdue</span>
-      <span class="mtcc-chip-count"><?= $overdueCount ?></span>
-    </button>
-    <button class="mtcc-chip mtcc-chip-grey<?= $issuesCount === 0 ? ' mtcc-chip-muted' : '' ?>" onclick="mtccFilterLive('issues')">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-      <span class="mtcc-chip-label">Issues</span>
-      <span class="mtcc-chip-count"><?= $issuesCount ?></span>
-    </button>
+<!-- MTCC Live Status Cards — operational at-a-glance, clickable filters -->
+<div class="mtcc-live-cards">
+
+  <button class="mtcc-live-card mtcc-live-amber" data-mtcc-filter="arriving" onclick="mtccFilterLive('arriving', event)">
+    <div class="mtcc-live-icon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+    </div>
+    <div class="mtcc-live-body">
+      <div class="mtcc-live-count"><?= $arrivingTodayCount ?></div>
+      <div class="mtcc-live-label-main">Arriving Today</div>
+      <div class="mtcc-live-label-sub">Couriers en route</div>
+    </div>
+  </button>
+
+  <button class="mtcc-live-card mtcc-live-green" data-mtcc-filter="ready" onclick="mtccFilterLive('ready', event)">
+    <div class="mtcc-live-icon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 9.4l-9-5.19M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+    </div>
+    <div class="mtcc-live-body">
+      <div class="mtcc-live-count"><?= $readyNowCount ?></div>
+      <div class="mtcc-live-label-main">Ready for Pickup</div>
+      <div class="mtcc-live-label-sub">At MTCC now</div>
+    </div>
+  </button>
+
+  <button class="mtcc-live-card mtcc-live-red<?= $overdueCount === 0 ? ' mtcc-live-muted' : '' ?>" data-mtcc-filter="overdue" onclick="mtccFilterLive('overdue', event)">
+    <div class="mtcc-live-icon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    </div>
+    <div class="mtcc-live-body">
+      <div class="mtcc-live-count"><?= $overdueCount ?></div>
+      <div class="mtcc-live-label-main">Overdue</div>
+      <div class="mtcc-live-label-sub">Past due date</div>
+    </div>
+  </button>
+
+  <button class="mtcc-live-card mtcc-live-grey<?= $issuesCount === 0 ? ' mtcc-live-muted' : '' ?>" data-mtcc-filter="issues" onclick="mtccFilterLive('issues', event)">
+    <div class="mtcc-live-icon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    </div>
+    <div class="mtcc-live-body">
+      <div class="mtcc-live-count"><?= $issuesCount ?></div>
+      <div class="mtcc-live-label-main">Issues</div>
+      <div class="mtcc-live-label-sub">Missing / unclaimed</div>
+    </div>
+  </button>
+
+</div>
+
+<!-- Active filter banner — shows when a Live Status filter is applied -->
+<div id="mtccFilterBanner" class="mtcc-filter-banner" style="display:none;">
+  <div class="mtcc-filter-banner-left">
+    <span class="mtcc-filter-banner-label">Filtering:</span>
+    <span id="mtccFilterBannerText" class="mtcc-filter-banner-text"></span>
+    <span id="mtccFilterBannerCount" class="mtcc-filter-banner-count"></span>
   </div>
+  <button class="mtcc-filter-banner-clear" onclick="mtccClearFilters()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    Clear Filter
+  </button>
 </div>
 
 <!-- MTCC Quick-Access Toolbar: Search + Scan + Today's Pickups -->
@@ -1740,58 +1718,93 @@ function mtccFilterTodayPickups() {
   var d = String(today.getDate()).padStart(2, '0');
   var todayStr = y + '-' + m + '-' + d;
 
-  // Clear existing filters
-  if (window.simpleFilterManager && window.simpleFilterManager.clearAll) {
-    window.simpleFilterManager.clearAll();
-  }
+  // Bypass simpleFilterManager's pagination + eventsMode
+  mtccTakeOverTable();
 
-  // Walk table rows and show only today's pickups
+  var matchCount = 0;
   var rows = document.querySelectorAll('#ordersTableBody tr');
   rows.forEach(function(row) {
     var dueDate = row.dataset.duedate || '';
     var status = row.dataset.status || '';
     var show = (dueDate === todayStr) && (status === 'ready' || status === 'delivered' || status === 'shipped');
     row.style.display = show ? '' : 'none';
+    if (show) matchCount++;
   });
 
-  // Scroll to table
   var table = document.getElementById('ordersTable');
   if (table) table.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-  // Show active state on button
-  var btns = document.querySelectorAll('.mtcc-toolbar-btn-primary');
-  btns.forEach(function(b) { b.classList.add('mtcc-toolbar-active'); });
+  document.querySelectorAll('.mtcc-toolbar-btn-primary').forEach(function(b) { b.classList.add('mtcc-toolbar-active'); });
+  document.querySelectorAll('.mtcc-live-card').forEach(function(c) { c.classList.remove('mtcc-live-active'); });
+
+  // Show banner
+  var banner = document.getElementById('mtccFilterBanner');
+  var text = document.getElementById('mtccFilterBannerText');
+  var count = document.getElementById('mtccFilterBannerCount');
+  if (banner && text) {
+    text.textContent = "Today's Pickups";
+    if (count) count.textContent = '(' + matchCount + ' order' + (matchCount !== 1 ? 's' : '') + ')';
+    banner.style.display = 'flex';
+  }
+}
+
+// MTCC takes over the table display — disables simpleFilterManager's pagination/eventsMode
+// so chip filters can show all matching orders across active AND archived events.
+function mtccTakeOverTable() {
+  if (!window.simpleFilterManager) return;
+  var fm = window.simpleFilterManager;
+  fm.eventsMode = 'all';
+  if (fm.pagination) fm.pagination.perPage = 'all';
+  if (fm.filters) {
+    if (fm.filters.priority && fm.filters.priority.clear) fm.filters.priority.clear();
+    if (fm.filters.status && fm.filters.status.clear) fm.filters.status.clear();
+    if (fm.filters.duedate && fm.filters.duedate.clear) fm.filters.duedate.clear();
+    if (fm.filters.prefix && fm.filters.prefix.clear) fm.filters.prefix.clear();
+    fm.filters.search = '';
+  }
+  // Apply once so simpleFilterManager marks all rows visible, then our filter below overrides
+  if (typeof fm.applyFilters === 'function') fm.applyFilters();
 }
 
 function mtccClearFilters() {
+  // Show all rows
   var rows = document.querySelectorAll('#ordersTableBody tr');
   rows.forEach(function(row) { row.style.display = ''; });
+
   var mtccSearch = document.getElementById('mtccSearchInput');
   if (mtccSearch) mtccSearch.value = '';
   var searchBox = document.getElementById('searchBox');
-  if (searchBox) { searchBox.value = ''; searchBox.dispatchEvent(new Event('input', { bubbles: true })); }
-  if (window.simpleFilterManager && window.simpleFilterManager.clearAll) {
-    window.simpleFilterManager.clearAll();
-  }
-  document.querySelectorAll('.mtcc-toolbar-btn-primary, .mtcc-chip-active').forEach(function(b) {
-    b.classList.remove('mtcc-toolbar-active');
-    b.classList.remove('mtcc-chip-active');
-  });
+  if (searchBox) { searchBox.value = ''; }
+
+  // Reset active card state
+  document.querySelectorAll('.mtcc-live-card').forEach(function(c) { c.classList.remove('mtcc-live-active'); });
+  document.querySelectorAll('.mtcc-toolbar-btn-primary').forEach(function(b) { b.classList.remove('mtcc-toolbar-active'); });
+
+  // Hide banner
+  var banner = document.getElementById('mtccFilterBanner');
+  if (banner) banner.style.display = 'none';
 }
 
-// Live Status chip filter — filters the order table by operational category
-function mtccFilterLive(category) {
+// Live Status card filter — filters the order table by operational category
+function mtccFilterLive(category, evt) {
   var today = new Date();
   var y = today.getFullYear();
   var m = String(today.getMonth() + 1).padStart(2, '0');
   var d = String(today.getDate()).padStart(2, '0');
   var todayStr = y + '-' + m + '-' + d;
 
-  // Clear other filter state
-  if (window.simpleFilterManager && window.simpleFilterManager.clearAll) {
-    window.simpleFilterManager.clearAll();
-  }
+  // Bypass simpleFilterManager's pagination + eventsMode so we can show all matching rows
+  mtccTakeOverTable();
 
+  // Filter labels for the banner
+  var labels = {
+    arriving: 'Arriving Today',
+    ready: 'Ready for Pickup',
+    overdue: 'Overdue',
+    issues: 'Issues'
+  };
+
+  var matchCount = 0;
   var rows = document.querySelectorAll('#ordersTableBody tr');
   rows.forEach(function(row) {
     var dueDate = row.dataset.duedate || '';
@@ -1808,11 +1821,24 @@ function mtccFilterLive(category) {
       show = (status === 'missing' || status === 'unclaimed' || status === 'file_issue');
     }
     row.style.display = show ? '' : 'none';
+    if (show) matchCount++;
   });
 
-  // Visual state: highlight the active chip
-  document.querySelectorAll('.mtcc-chip').forEach(function(c) { c.classList.remove('mtcc-chip-active'); });
-  event.currentTarget.classList.add('mtcc-chip-active');
+  // Active card styling
+  document.querySelectorAll('.mtcc-live-card').forEach(function(c) { c.classList.remove('mtcc-live-active'); });
+  var clicked = (evt && evt.currentTarget) || document.querySelector('.mtcc-live-card[data-mtcc-filter="' + category + '"]');
+  if (clicked) clicked.classList.add('mtcc-live-active');
+
+  // Show the active-filter banner
+  var banner = document.getElementById('mtccFilterBanner');
+  var text = document.getElementById('mtccFilterBannerText');
+  var count = document.getElementById('mtccFilterBannerCount');
+  if (banner && text) {
+    text.textContent = labels[category] || category;
+    if (count) count.textContent = '(' + matchCount + ' order' + (matchCount !== 1 ? 's' : '') + ')';
+    banner.style.display = 'flex';
+    banner.setAttribute('data-category', category);
+  }
 
   // Scroll to table
   var table = document.getElementById('ordersTable');
