@@ -416,18 +416,18 @@ var OrderSlideout = (function() {
 
 /* Header */
 '.pp-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; padding-bottom: 16px; border-bottom: 2px solid #1e1b2e; margin-bottom: 20px; }' +
-'.pp-brand img { max-width: 180px; height: auto; display: block; }' +
-'.pp-brand-fallback { font-size: 16pt; font-weight: 700; color: #7c3aed; letter-spacing: 1px; }' +
-'.pp-brand-fallback small { display: block; font-size: 9pt; font-weight: 500; color: #6b7280; letter-spacing: 0.3px; margin-top: 2px; }' +
+'.pp-brand img { max-width: 300px; height: auto; display: block; }' +
+'.pp-brand-fallback { font-size: 20pt; font-weight: 700; color: #7c3aed; letter-spacing: 1px; }' +
+'.pp-brand-fallback small { display: block; font-size: 10pt; font-weight: 500; color: #6b7280; letter-spacing: 0.3px; margin-top: 2px; }' +
 '.pp-meta { text-align: right; }' +
 '.pp-ref-label { font-size: 8pt; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #6b7280; margin-bottom: 2px; }' +
 '.pp-ref { font-size: 22pt; font-weight: 700; color: #1e1b2e; line-height: 1; letter-spacing: 0.5px; }' +
 '.pp-status { display: inline-block; margin-top: 6px; padding: 3px 12px; border-radius: 4px; font-size: 8pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: white; }' +
 
-/* Barcode section */
-'.pp-barcode { text-align: center; margin: 8px 0 20px; }' +
-'.pp-barcode svg { max-width: 320px; height: auto; }' +
-'.pp-tracking-num { font-family: "Courier New", monospace; font-size: 10pt; color: #6b7280; margin-top: 2px; letter-spacing: 1px; }' +
+/* Barcode section (moved to bottom, before footer) */
+'.pp-barcode { text-align: center; margin: 28px 0 16px; padding: 16px 0; border-top: 1px solid #e5e7eb; border-bottom: 1px solid #e5e7eb; }' +
+'.pp-barcode svg { max-width: 400px; height: auto; }' +
+'.pp-tracking-num { font-family: "Courier New", monospace; font-size: 10pt; color: #6b7280; margin-top: 4px; letter-spacing: 1px; }' +
 
 /* Customer hero */
 '.pp-customer { text-align: center; padding: 14px 20px; background: #faf8ff; border-radius: 6px; margin-bottom: 20px; }' +
@@ -474,18 +474,11 @@ var OrderSlideout = (function() {
   '</div>' +
 '</div>' +
 
-/* Barcode */
-(trackNum ?
-  '<div class="pp-barcode">' +
-    '<svg id="pp-barcode-svg"></svg>' +
-    '<div class="pp-tracking-num">' + esc(trackNum) + '</div>' +
-  '</div>' : '') +
-
 /* Customer */
 '<div class="pp-customer">' +
   '<div class="pp-customer-label">Customer</div>' +
   '<div class="pp-customer-name">' + esc(ci.name || 'N/A') + '</div>' +
-  '<div class="pp-customer-event">' + esc(event.name || event.acronym || 'N/A') + (buildingLabel ? ' &middot; ' + esc(buildingLabel) : '') + '</div>' +
+  '<div class="pp-customer-event">' + esc(event.name || event.acronym || 'N/A') + '</div>' +
 '</div>' +
 
 /* Order Details */
@@ -496,7 +489,7 @@ var OrderSlideout = (function() {
     '<div><span class="pp-dt">Material</span><span class="pp-dd">' + material + '</span></div>' +
     '<div><span class="pp-dt">Due</span><span class="pp-dd">' + esc(fmtDate(order.selectedDate)) + (TIME_LABELS[deliveryTime] && deliveryTime !== 'anytime' ? ' &middot; by ' + TIME_LABELS[deliveryTime] : '') + '</span></div>' +
     '<div><span class="pp-dt">Tier</span><span class="pp-dd">' + esc(pricing.tier || 'Standard') + '</span></div>' +
-    '<div><span class="pp-dt">Delivery</span><span class="pp-dd">' + (delivery === 'mtcc' ? 'MTCC Pick-up' : 'Address Delivery') + '</span></div>' +
+    '<div><span class="pp-dt">Delivery</span><span class="pp-dd">' + (delivery === 'mtcc' ? 'MTCC Pick-up' + (buildingLabel ? ' &middot; ' + esc(buildingLabel) : '') : 'Address Delivery') + '</span></div>' +
     (addressLine ? '<div><span class="pp-dt">Address</span><span class="pp-dd">' + esc(addressLine) + '</span></div>' : '<div></div>') +
   '</div>' +
 '</div>' +
@@ -509,6 +502,13 @@ var OrderSlideout = (function() {
 
 /* Pickup record (conditional) */
 pickupBlock +
+
+/* Barcode at bottom */
+(trackNum ?
+  '<div class="pp-barcode">' +
+    '<svg id="pp-barcode-svg"></svg>' +
+    '<div class="pp-tracking-num">' + esc(trackNum) + '</div>' +
+  '</div>' : '') +
 
 /* Footer */
 '<div class="pp-footer">Printed ' + new Date().toLocaleString() + ' &middot; Print Stuff &middot; Metro Toronto Convention Centre &middot; (437) 882-8822</div>' +

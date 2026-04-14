@@ -2089,9 +2089,9 @@ function mtccPrintPickupList() {
 
       /* Header */
       '.pl-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; padding-bottom: 12px; border-bottom: 2px solid #1e1b2e; margin-bottom: 14px; }' +
-      '.pl-brand img { max-width: 150px; height: auto; display: block; }' +
-      '.pl-brand-fallback { font-size: 13pt; font-weight: 700; color: #7c3aed; letter-spacing: 1px; }' +
-      '.pl-brand-fallback small { display: block; font-size: 8pt; font-weight: 500; color: #6b7280; letter-spacing: 0.3px; }' +
+      '.pl-brand img { max-width: 260px; height: auto; display: block; }' +
+      '.pl-brand-fallback { font-size: 17pt; font-weight: 700; color: #7c3aed; letter-spacing: 1px; }' +
+      '.pl-brand-fallback small { display: block; font-size: 9pt; font-weight: 500; color: #6b7280; letter-spacing: 0.3px; }' +
       '.pl-title { text-align: right; }' +
       '.pl-title h1 { font-size: 14pt; font-weight: 700; color: #7c3aed; letter-spacing: 0.5px; margin-bottom: 2px; }' +
       '.pl-title .pl-date { font-size: 9pt; color: #1e1b2e; font-weight: 600; }' +
