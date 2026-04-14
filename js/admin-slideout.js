@@ -86,7 +86,17 @@ var OrderSlideout = (function() {
     var perms = window.PERMS || {};
 
     if (perms.isMtccStaff) {
-      el.innerHTML = '<button class="so-footer-btn so-btn-secondary" onclick="OrderSlideout.close()">Close</button>';
+      // MTCC: Print, Download, Close — no full detail page, no edit
+      el.innerHTML =
+        '<button class="so-footer-btn so-btn-secondary" onclick="OrderSlideout.print()" title="Print order details">' +
+          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>' +
+          'Print' +
+        '</button>' +
+        '<button class="so-footer-btn so-btn-secondary" onclick="OrderSlideout.downloadPDF()" title="Save as PDF">' +
+          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>' +
+          'Download PDF' +
+        '</button>' +
+        '<button class="so-footer-btn so-btn-primary" onclick="OrderSlideout.close()">Close</button>';
     } else {
       el.innerHTML =
         '<a href="?view=' + encodeURIComponent(ref) + '" class="so-footer-btn so-btn-primary">View Full Details</a>' +
@@ -161,17 +171,8 @@ var OrderSlideout = (function() {
       h += '</div></div>';
     }
 
-    // ---- PRICING ----
-    if (isMtcc) {
-      // MTCC sees only the total — no breakdown
-      if (pricing.total) {
-        h += '<div class="so-section">';
-        h += '<div class="so-section-label">Order Total</div>';
-        h += '<div class="so-price-grid">';
-        h += '<span class="so-price-total">Total</span><span class="so-price-total">' + fmtMoney(pricing.total) + '</span>';
-        h += '</div></div>';
-      }
-    } else {
+    // ---- PRICING ---- (full breakdown for both admin and MTCC)
+    {
       h += '<div class="so-section">';
       h += '<div class="so-section-label">Pricing</div>';
       h += '<div class="so-price-grid">';
@@ -322,5 +323,60 @@ var OrderSlideout = (function() {
       });
   }
 
-  return { open: open, close: close, saveNote: saveNote };
+  // Print the slideout contents as a standalone printable page
+  function printSlideout() {
+    if (!currentRef) return;
+    var order = findOrder(currentRef);
+    if (!order) return;
+
+    var content = document.getElementById('slideoutContent').innerHTML;
+    var header = document.getElementById('slideoutHeader').innerHTML;
+
+    // Strip the close button from header
+    var cleanHeader = header.replace(/<button[^>]*so-close[^>]*>.*?<\/button>/, '');
+
+    var printWindow = window.open('', '_blank', 'width=800,height=900');
+    printWindow.document.write(
+      '<!DOCTYPE html><html><head><meta charset="UTF-8">' +
+      '<title>Order ' + esc(order.referenceCode || '') + '</title>' +
+      '<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">' +
+      '<style>' +
+        'body { font-family: Montserrat, sans-serif; margin: 0; padding: 32px; color: #1e1b2e; }' +
+        '.print-logo { text-align: center; margin-bottom: 24px; }' +
+        '.print-logo img { max-width: 240px; }' +
+        'h1 { font-size: 1.4rem; color: #7c3aed; margin: 0 0 8px; }' +
+        '.so-header-ref { font-size: 1.2rem; font-weight: 700; color: #7c3aed; margin-bottom: 8px; }' +
+        '.status-badge { display: inline-block; padding: 4px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; color: white; background: #7c3aed; }' +
+        '.so-section { padding: 16px 0; border-bottom: 1px solid #e5e7eb; }' +
+        '.so-section-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #6b7280; margin-bottom: 10px; }' +
+        '.so-spec-grid { display: grid; grid-template-columns: 120px 1fr; gap: 6px 12px; font-size: 0.9rem; }' +
+        '.so-spec-lbl { color: #6b7280; }' +
+        '.so-spec-val { color: #1e1b2e; font-weight: 600; }' +
+        '.so-price-grid { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; font-size: 0.9rem; }' +
+        '.so-price-total { font-weight: 700; color: #7c3aed; padding-top: 8px; border-top: 1px solid #e5e7eb; }' +
+        '.so-download-btn, .so-timeline, .so-add-note, .so-note-save, .so-notes-section .so-add-note { display: none; }' +
+        '.so-material-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; background: #f3f4f6; font-size: 0.75rem; }' +
+        '.print-footer { margin-top: 32px; padding-top: 16px; border-top: 2px solid #7c3aed; text-align: center; font-size: 0.75rem; color: #9ca3af; }' +
+        '@media print { body { padding: 20px; } }' +
+      '</style></head><body>' +
+      '<div class="print-logo"><img src="/mtcc-ps-logo.png" alt="MTCC + Print Stuff"></div>' +
+      '<div class="so-header-ref">Order #' + esc(order.referenceCode || '') + '</div>' +
+      cleanHeader.replace(/<div class="so-header-ref">[^<]*<\/div>/, '') +
+      content +
+      '<div class="print-footer">Printed ' + new Date().toLocaleString() + ' &middot; Print Stuff &middot; Metro Toronto Convention Centre</div>' +
+      '</body></html>'
+    );
+    printWindow.document.close();
+    // Wait for the logo and fonts to load, then print
+    setTimeout(function() {
+      printWindow.print();
+    }, 500);
+  }
+
+  // Download PDF — triggers print dialog, user selects "Save as PDF"
+  function downloadPDF() {
+    printSlideout();
+  }
+
+  return { open: open, close: close, saveNote: saveNote, print: printSlideout, downloadPDF: downloadPDF };
 })();

@@ -2398,15 +2398,9 @@ document.addEventListener('keydown', function(e) {
         $orderRefCode = $order['referenceCode'] ?? '';
         ?>
           <div class="status-badge-wrapper">
-            <span class="status-badge status-badge-clickable status-<?= $orderStatus ?> status-has-tooltip"
+            <span class="status-badge status-badge-clickable status-<?= $orderStatus ?>"
                   data-current-status="<?= $orderStatus ?>"
-                  onclick="toggleQuickStatusDropdown(event, '<?= $orderRefCode ?>', '<?= $orderStatus ?>')"
-                  data-timeline="<?php
-                    $timeline = [];
-                    if (!empty($order['submittedAt'])) $timeline[] = 'Submitted: ' . date('M j, g:i A', strtotime($order['submittedAt']));
-                    if (!empty($order['paidAt'])) $timeline[] = 'Paid: ' . date('M j, g:i A', strtotime($order['paidAt']));
-                    echo htmlspecialchars(implode("\n", $timeline));
-                  ?>">
+                  onclick="toggleQuickStatusDropdown(event, '<?= $orderRefCode ?>', '<?= $orderStatus ?>')">
               <?= $statusIcons[$orderStatus] ?? '<?= ICON_MEMO ?>' ?>
               <?= $statusConfig[$orderStatus]['label'] ?? 'Unknown' ?>
             </span>
@@ -2578,34 +2572,6 @@ document.addEventListener('DOMContentLoaded', applyColumnConfig);
         }
       }, 50);
     }
-  });
-})();
-
-// Status timeline tooltip
-(function() {
-  var tooltip = null;
-
-  function createTooltip() {
-    tooltip = document.createElement('div');
-    tooltip.className = 'status-timeline-tooltip';
-    document.body.appendChild(tooltip);
-  }
-
-  document.addEventListener('mouseover', function(e) {
-    var badge = e.target.closest('.status-has-tooltip[data-timeline]');
-    if (!badge || !badge.dataset.timeline) return;
-
-    if (!tooltip) createTooltip();
-    tooltip.textContent = badge.dataset.timeline;
-    tooltip.style.display = 'block';
-
-    var rect = badge.getBoundingClientRect();
-    tooltip.style.left = (rect.left + rect.width / 2 - tooltip.offsetWidth / 2) + 'px';
-    tooltip.style.top = (rect.top - tooltip.offsetHeight - 8) + 'px';
-  });
-
-  document.addEventListener('mouseout', function(e) {
-    if (e.target.closest('.status-has-tooltip') && tooltip) tooltip.style.display = 'none';
   });
 })();
 
