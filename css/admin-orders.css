@@ -3382,9 +3382,17 @@ body.login-page {
   text-align: left;
   font-family: inherit;
   transition: all 0.15s ease;
-  /* Dashed "clickable" indicator — inset outline */
-  outline: 1.5px dashed var(--border-color);
-  outline-offset: -5px;
+}
+
+/* Dashed inset indicator (pseudo-element is more reliable than outline on buttons) */
+.mtcc-live-card::before {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  border: 2px dashed #d1d5db;
+  border-radius: 6px;
+  pointer-events: none;
+  transition: border 0.15s;
 }
 
 .mtcc-live-card:hover {
@@ -3409,7 +3417,7 @@ body.login-page {
   flex-direction: column;
   gap: 2px;
   /* Vertical dashed divider between text and count */
-  border-right: 1px dashed var(--border-color);
+  border-right: 2px dashed #d1d5db;
   padding-right: 12px;
 }
 
@@ -3442,30 +3450,30 @@ body.login-page {
   flex-shrink: 0;
 }
 
-/* Color variants — dashed outline + icon tint + count color */
-.mtcc-live-amber { outline-color: #fcd34d; }
+/* Color variants — dashed pseudo-outline + divider + icon tint + count color */
+.mtcc-live-amber::before { border-color: #f59e0b; }
 .mtcc-live-amber .mtcc-live-icon { background: #fffbeb; color: #d97706; }
-.mtcc-live-amber .mtcc-live-text { border-right-color: #fcd34d; }
+.mtcc-live-amber .mtcc-live-text { border-right-color: #f59e0b; }
 .mtcc-live-amber .mtcc-live-count { color: #d97706; }
-.mtcc-live-amber:hover { outline-color: #f59e0b; }
+.mtcc-live-amber:hover::before { border-color: #b45309; }
 
-.mtcc-live-green { outline-color: #86efac; }
+.mtcc-live-green::before { border-color: #10b981; }
 .mtcc-live-green .mtcc-live-icon { background: #ecfdf5; color: #059669; }
-.mtcc-live-green .mtcc-live-text { border-right-color: #86efac; }
+.mtcc-live-green .mtcc-live-text { border-right-color: #10b981; }
 .mtcc-live-green .mtcc-live-count { color: #059669; }
-.mtcc-live-green:hover { outline-color: #10b981; }
+.mtcc-live-green:hover::before { border-color: #047857; }
 
-.mtcc-live-red { outline-color: #fca5a5; }
+.mtcc-live-red::before { border-color: #ef4444; }
 .mtcc-live-red .mtcc-live-icon { background: #fef2f2; color: #dc2626; }
-.mtcc-live-red .mtcc-live-text { border-right-color: #fca5a5; }
+.mtcc-live-red .mtcc-live-text { border-right-color: #ef4444; }
 .mtcc-live-red .mtcc-live-count { color: #dc2626; }
-.mtcc-live-red:hover { outline-color: #ef4444; }
+.mtcc-live-red:hover::before { border-color: #b91c1c; }
 
-.mtcc-live-grey { outline-color: #d1d5db; }
+.mtcc-live-grey::before { border-color: #9ca3af; }
 .mtcc-live-grey .mtcc-live-icon { background: #f3f4f6; color: #6b7280; }
-.mtcc-live-grey .mtcc-live-text { border-right-color: #d1d5db; }
+.mtcc-live-grey .mtcc-live-text { border-right-color: #9ca3af; }
 .mtcc-live-grey .mtcc-live-count { color: #374151; }
-.mtcc-live-grey:hover { outline-color: #9ca3af; }
+.mtcc-live-grey:hover::before { border-color: #4b5563; }
 
 /* Muted when count is 0 */
 .mtcc-live-muted {
@@ -3475,18 +3483,20 @@ body.login-page {
   opacity: 0.85;
 }
 
-/* Active state — dashed outline becomes solid */
+/* Active state — dashed becomes solid */
 .mtcc-live-active {
-  outline-style: solid;
-  outline-width: 2px;
   transform: translateY(-1px);
   box-shadow: 0 4px 16px rgba(0,0,0,0.12);
 }
+.mtcc-live-active::before {
+  border-style: solid;
+  border-width: 2.5px;
+}
 .mtcc-live-active .mtcc-live-text { border-right-style: solid; }
-.mtcc-live-active.mtcc-live-amber { background: #fffbeb; outline-color: #d97706; }
-.mtcc-live-active.mtcc-live-green { background: #ecfdf5; outline-color: #059669; }
-.mtcc-live-active.mtcc-live-red { background: #fef2f2; outline-color: #dc2626; }
-.mtcc-live-active.mtcc-live-grey { background: #f3f4f6; outline-color: #6b7280; }
+.mtcc-live-active.mtcc-live-amber { background: #fffbeb; }
+.mtcc-live-active.mtcc-live-green { background: #ecfdf5; }
+.mtcc-live-active.mtcc-live-red { background: #fef2f2; }
+.mtcc-live-active.mtcc-live-grey { background: #f3f4f6; }
 
 /* Active filter banner — shows above order table when filter applied */
 .mtcc-filter-banner {
