@@ -2031,6 +2031,14 @@ function mtccPrintPickupList() {
 
   function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
   function fmtDueDate(s) { if (!s) return '—'; var d = new Date(s); return isNaN(d) ? s : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); }
+  var TIME_LBL_PL = { '9am': '9:00am', '12pm': '12:00pm', '3pm': '3:00pm', '6pm': '6:00pm' };
+  function fmtDueWithTime(order) {
+    var d = fmtDueDate(order.selectedDate);
+    if (d === '—') return d;
+    var t = order.deliveryTime;
+    if (t && t !== 'anytime' && TIME_LBL_PL[t]) return d + ' @ ' + TIME_LBL_PL[t];
+    return d;
+  }
 
   // Group orders by event acronym (prefix)
   var groups = {}; // { 'CPMA': { name, acronym, building, orders: [...] } }
@@ -2083,7 +2091,7 @@ function mtccPrintPickupList() {
       g.orders.forEach(function(o) {
         var ref = esc(o.referenceCode || '');
         var name = esc((o.customerInfo || {}).name || '');
-        var due = esc(fmtDueDate(o.selectedDate));
+        var due = esc(fmtDueWithTime(o));
         var w = (o.dimensions || {}).width || '?';
         var h = (o.dimensions || {}).height || '?';
         var isPastDue = o.selectedDate && o.selectedDate < todayStr;
