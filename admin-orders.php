@@ -2051,7 +2051,8 @@ function mtccPrintPickupList() {
     var ref = esc(o.referenceCode || '');
     var name = esc((o.customerInfo || {}).name || '');
     var due = esc(fmtDueDate(o.selectedDate));
-    var eventName = esc((o.event || {}).name || (o.event || {}).acronym || '');
+    // Use acronym for compactness on the pickup list (space is tight at 10pt)
+    var eventName = esc((o.event || {}).acronym || (o.event || {}).name || '');
     var building = ((o.event || {}).building || o.building || '').toLowerCase();
     var buildingLabel = building === 'south' ? 'South' : (building === 'north' ? 'North' : '');
     var w = (o.dimensions || {}).width || '?';
@@ -2102,26 +2103,29 @@ function mtccPrintPickupList() {
       '.pl-stat-value { font-size: 13pt; font-weight: 700; color: #1e1b2e; line-height: 1; }' +
       '.pl-stat-value.red { color: #dc2626; }' +
 
-      /* Table — single-line rows, 10pt */
-      'table { width: 100%; border-collapse: collapse; table-layout: fixed; }' +
+      /* Table — single-line rows, 9pt to fit everything without truncation */
+      'table { width: 100%; border-collapse: collapse; }' +
       'thead tr { border-bottom: 1.5px solid #1e1b2e; }' +
-      'th { text-align: left; padding: 6px 6px; font-size: 8pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: #6b7280; }' +
-      'td { padding: 7px 6px; border-bottom: 1px solid #e5e7eb; vertical-align: middle; font-size: 10pt; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }' +
+      'th { text-align: left; padding: 6px 4px; font-size: 7.5pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: #6b7280; }' +
+      'td { padding: 7px 4px; border-bottom: 1px solid #e5e7eb; vertical-align: middle; font-size: 9pt; white-space: nowrap; }' +
 
-      /* Column widths (total must fit letter paper ~7.5in printable) */
-      '.pl-check { width: 22px; padding-top: 9px !important; padding-bottom: 5px !important; }' +
-      '.pl-check::before { content: ""; display: block; width: 12px; height: 12px; border: 1.5px solid #1e1b2e; border-radius: 2px; }' +
-      '.pl-ref { width: 90px; font-family: "Courier New", monospace; font-weight: 700; color: #7c3aed; }' +
-      '.pl-cust { width: 150px; font-weight: 600; }' +
-      '.pl-due { width: 130px; }' +
-      '.pl-event { width: auto; color: #374151; }' +
-      '.pl-bldg { width: 90px; color: #6b7280; font-size: 9pt; }' +
-      '.pl-size { width: 80px; font-family: "Courier New", monospace; font-size: 9pt; }' +
-      '.pl-notes { width: 110px; border-left: 1px dashed #d1d5db; }' +
+      /* Zebra striping (subtle grey alt rows) */
+      'tbody tr:nth-child(even) td { background: #f9fafb; }' +
 
-      /* Overdue row */
-      '.pl-overdue td { background: #fef2f2; }' +
-      '.pl-badge { display: inline-block; padding: 1px 5px; border-radius: 2px; background: #dc2626; color: white; font-size: 7pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; margin-left: 4px; vertical-align: 1px; }' +
+      /* Columns */
+      '.pl-check { width: 16px; padding: 0 !important; text-align: center; }' +
+      '.pl-check::before { content: ""; display: inline-block; width: 11px; height: 11px; border: 1.5px solid #1e1b2e; border-radius: 2px; vertical-align: middle; }' +
+      '.pl-ref { font-family: "Courier New", monospace; font-weight: 700; color: #7c3aed; padding-left: 8px !important; }' +
+      '.pl-cust { font-weight: 600; }' +
+      '.pl-due { }' +
+      '.pl-event { color: #374151; }' +
+      '.pl-bldg { color: #6b7280; }' +
+      '.pl-size { font-family: "Courier New", monospace; font-size: 8.5pt; }' +
+      '.pl-notes { border-left: 1px dashed #d1d5db; }' +
+
+      /* Overdue row — subtle: red text on due column only, no row background */
+      '.pl-overdue .pl-due { color: #dc2626; font-weight: 700; }' +
+      '.pl-badge { display: inline-block; padding: 0 4px; border-radius: 2px; background: #dc2626; color: white; font-size: 6.5pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; margin-left: 3px; vertical-align: 1px; }' +
 
       '.pl-empty { text-align: center; color: #9ca3af; padding: 24px 12px !important; font-style: italic; white-space: normal !important; }' +
 
