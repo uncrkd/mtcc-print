@@ -23,9 +23,11 @@ $canDeleteOrders = hasPermission('orders_delete');
 $canViewVendor = in_array($_SESSION['admin_role'] ?? '', ['god_mode', 'super_admin']);
 
 // MTCC staff conditional rendering
-$isMtccStaff = (getCurrentAdminRole() === 'mtcc_staff');
-$canChangeMtccStatus = hasPermission('orders_status_mtcc');
-$canViewMtccAnalytics = hasPermission('mtcc_analytics');
+// god_mode / super_admin can preview the MTCC dashboard via ?view=mtcc
+$mtccPreviewMode = isset($_GET['view']) && $_GET['view'] === 'mtcc' && in_array(getCurrentAdminRole(), ['god_mode', 'super_admin']);
+$isMtccStaff = (getCurrentAdminRole() === 'mtcc_staff') || $mtccPreviewMode;
+$canChangeMtccStatus = hasPermission('orders_status_mtcc') || $mtccPreviewMode;
+$canViewMtccAnalytics = hasPermission('mtcc_analytics') || $mtccPreviewMode;
 $statusRole = $isMtccStaff ? 'mtcc_staff' : 'admin';
 
 // Allow MTCC staff access (they have orders_view)
@@ -516,12 +518,16 @@ if ( isset( $_POST[ 'bulk_update' ] ) && isAdminLoggedIn() ) {
   exit;
 }
 
+// ?view=mtcc is a preview mode flag for god_mode/super_admin — not an order lookup
+$viewParam = $_GET['view'] ?? '';
+$isMtccPreviewView = ($viewParam === 'mtcc');
+
 // Handle order view — MTCC staff cannot access full detail page (slideout only)
-if ( isset( $_GET[ 'view' ] ) && isAdminLoggedIn() && (getCurrentAdminRole() === 'mtcc_staff') ) {
+if ( isset( $_GET[ 'view' ] ) && !$isMtccPreviewView && isAdminLoggedIn() && (getCurrentAdminRole() === 'mtcc_staff') ) {
   header('Location: admin-orders.php');
   exit;
 }
-if ( isset( $_GET[ 'view' ] ) && isAdminLoggedIn() ) {
+if ( isset( $_GET[ 'view' ] ) && !$isMtccPreviewView && isAdminLoggedIn() ) {
   $referenceCode = $_GET[ 'view' ];
   $orderDir = 'uploads/orders/';
 
@@ -1216,10 +1222,19 @@ window.PERMS = {
 <?php require_once __DIR__ . '/includes/admin-sidebar.php'; renderSidebar('orders'); ?>
 <script src="js/admin-sidebar.js"></script>
 <div style="margin: 0 auto!important; padding: 0 20px!important;">
+<?php if ($mtccPreviewMode ?? false): ?>
+<!-- MTCC Preview Mode banner (god_mode/super_admin viewing as MTCC) -->
+<div class="mtcc-preview-banner">
+  <span class="mtcc-preview-icon">&#128065;&#65039;</span>
+  <span><strong>Previewing as MTCC Staff.</strong> This is how the dashboard appears to MTCC venue staff.</span>
+  <a href="admin-orders.php" class="mtcc-preview-exit">Exit Preview &rarr;</a>
+</div>
+<?php endif; ?>
+
 <!-- Page Header -->
 <div class="page-header">
   <div class="page-header-left">
-    <h1 class="page-title">Order Dashboard</h1>
+    <h1 class="page-title">Order Dashboard<?= ($mtccPreviewMode ?? false) ? ' <span class="page-title-badge">MTCC View</span>' : '' ?></h1>
     <div class="page-welcome">
       <span class="welcome-text">Welcome <?= htmlspecialchars(getCurrentAdminName()) ?>! <?= ICON_WAVE ?></span>
       <span class="welcome-date">Today is <?= date('l, F j, Y') ?></span>

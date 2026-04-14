@@ -3508,6 +3508,58 @@ body.login-page {
 .mtcc-live-active.mtcc-live-red { background: #fef2f2; }
 .mtcc-live-active.mtcc-live-grey { background: #f3f4f6; }
 
+/* MTCC Preview mode banner (god_mode/super_admin viewing as MTCC) */
+.mtcc-preview-banner {
+  background: linear-gradient(135deg, #1e1b2e 0%, #3730a3 100%);
+  color: white;
+  padding: 10px 20px;
+  margin: 0 20px 16px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.88rem;
+  box-shadow: 0 2px 8px rgba(30, 27, 46, 0.2);
+}
+
+.mtcc-preview-icon {
+  font-size: 1.2rem;
+}
+
+.mtcc-preview-banner strong {
+  font-weight: 700;
+}
+
+.mtcc-preview-exit {
+  margin-left: auto;
+  padding: 5px 14px;
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 0.82rem;
+  font-weight: 600;
+  transition: background 0.15s;
+}
+
+.mtcc-preview-exit:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.page-title-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 3px 10px;
+  background: #3730a3;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  border-radius: 4px;
+  vertical-align: middle;
+}
+
 /* MTCC empty state (when filter returns 0 rows) */
 .mtcc-empty-state {
   text-align: center;
