@@ -913,7 +913,14 @@ function handleQuickStatusSelect(referenceCode, newStatus, currentStatus) {
     // Update status via existing function
     updateOrderStatus(referenceCode, newStatus,
         (data) => { updateQuickStatusBadgeData(referenceCode, newStatus); },
-        (error) => { console.error('Quick status update failed:', error); },
+        (error) => {
+            console.error('Quick status update failed:', error);
+            if (typeof showNotification === 'function') {
+                showNotification('Status change failed: ' + (error || 'Unknown error'), 'error');
+            } else {
+                alert('Status change failed: ' + (error || 'Please try again.'));
+            }
+        },
         extras
     );
 }

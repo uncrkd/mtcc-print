@@ -98,11 +98,12 @@ function createActionsDropdown() {
 
     // Selection-specific actions
     if (hasSelection) {
-        // Status submenu — MTCC staff only sees pickedup/unclaimed/missing
+        // Status submenu — MTCC staff sees delivered (arrived at MTCC) + pickedup/unclaimed/missing
         let statusItems = '';
         if (isMtcc) {
             const labels = window.STATUS_LABELS || {};
             statusItems = `
+                <div class="submenu-item" onclick="bulkChangeStatus('delivered', event)"><span class="status-badge status-delivered">&#128230; ${labels.delivered || 'Ready for Pickup'}</span></div>
                 <div class="submenu-item" onclick="bulkChangeStatus('pickedup', event)"><span class="status-badge status-pickedup">&#9989; ${labels.pickedup || 'Picked Up'}</span></div>
                 <div class="submenu-item" onclick="bulkChangeStatus('unclaimed', event)"><span class="status-badge status-unclaimed">&#128236; ${labels.unclaimed || 'Unclaimed'}</span></div>
                 <div class="submenu-item" onclick="bulkChangeStatus('missing', event)"><span class="status-badge status-missing">&#9888; ${labels.missing || 'Missing'}</span></div>`;

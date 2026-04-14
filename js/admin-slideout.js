@@ -105,7 +105,7 @@ var OrderSlideout = (function() {
     var perms = window.PERMS || {};
 
     if (perms.isMtccStaff) {
-      // MTCC: Print, Download, Close — no full detail page, no edit
+      // MTCC: Print, Download, Report Issue, Close
       el.innerHTML =
         '<button class="so-footer-btn so-btn-secondary" onclick="OrderSlideout.print()" title="Print order details">' +
           '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>' +
@@ -114,6 +114,10 @@ var OrderSlideout = (function() {
         '<button class="so-footer-btn so-btn-secondary" onclick="OrderSlideout.downloadPDF()" title="Save as PDF">' +
           '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>' +
           'Download PDF' +
+        '</button>' +
+        '<button class="so-footer-btn so-btn-issue" onclick="mtccReportIssue(\'' + ref + '\')" title="Report an issue with this order">' +
+          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>' +
+          'Report Issue' +
         '</button>' +
         '<button class="so-footer-btn so-btn-primary" onclick="OrderSlideout.close()">Close</button>';
     } else {
