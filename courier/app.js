@@ -3081,6 +3081,19 @@ function renderMTCCDetailPanel(order, mode) {
     html += '<div class="mtcc-detail-row"><span class="mtcc-detail-label">Material</span><span class="mtcc-detail-value">' + escapeHtml(order.material) + '</span></div>';
     html += '<div class="mtcc-detail-row"><span class="mtcc-detail-label">Size</span><span class="mtcc-detail-value">' + escapeHtml(order.size) + '</span></div>';
     if (order.quantity > 1) html += '<div class="mtcc-detail-row"><span class="mtcc-detail-label">Quantity</span><span class="mtcc-detail-value">' + order.quantity + '</span></div>';
+
+    // Pricing (MTCC view only — paid-in-full orders). Matches the admin
+    // slideout pricing breakdown so the two experiences stay consistent.
+    if (typeof order.total !== 'undefined' && order.total > 0) {
+        var _money = function(v) { var n = parseFloat(v); return isNaN(n) ? '$0.00' : '$' + n.toFixed(2); };
+        html += '<div class="mtcc-detail-divider"></div>';
+        html += '<div class="mtcc-detail-row"><span class="mtcc-detail-label">Base Price</span><span class="mtcc-detail-value">' + _money(order.base_price) + '</span></div>';
+        if (order.delivery_fee && order.delivery_fee > 0) {
+            html += '<div class="mtcc-detail-row"><span class="mtcc-detail-label">Delivery</span><span class="mtcc-detail-value">' + _money(order.delivery_fee) + '</span></div>';
+        }
+        html += '<div class="mtcc-detail-row"><span class="mtcc-detail-label">Tax (HST)</span><span class="mtcc-detail-value">' + _money(order.tax) + '</span></div>';
+        html += '<div class="mtcc-detail-row mtcc-detail-total"><span class="mtcc-detail-label">Total</span><span class="mtcc-detail-value">' + _money(order.total) + '</span></div>';
+    }
     if (order.notes) {
         html += '<div class="mtcc-detail-divider"></div>';
         html += '<div class="mtcc-detail-row mtcc-detail-notes"><span class="mtcc-detail-label">Notes</span><span class="mtcc-detail-value">' + escapeHtml(order.notes) + '</span></div>';

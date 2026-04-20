@@ -170,6 +170,152 @@ if (isset($_POST['update_status'])) {
 }
 
 // Handle MTCC issue report submission
+// MTCC smart search — returns orders matching a partial query on
+// reference, customer name, email, or tracking. Mirrors courier's
+// handleSearchOrders() exactly so results look/behave identically.
+if (isset($_POST['mtcc_search_orders'])) {
+    header('Content-Type: application/json');
+    if (!isAdminLoggedIn()) {
+        echo json_encode(['success' => false, 'error' => 'Not authenticated']);
+        exit;
+    }
+    if (getCurrentAdminRole() !== 'mtcc_staff' && !hasPermission('orders_view')) {
+        echo json_encode(['success' => false, 'error' => 'Insufficient permissions']);
+        exit;
+    }
+
+    $query = strtolower(trim($_POST['query'] ?? ''));
+    if (strlen($query) < 2) {
+        echo json_encode(['success' => true, 'results' => []]);
+        exit;
+    }
+
+    // Load statuses (source of truth for current state)
+    $statusFile = __DIR__ . '/data/statuses.json';
+    $statuses = [];
+    if (file_exists($statusFile)) {
+        $statuses = json_decode(@file_get_contents($statusFile), true) ?: [];
+    }
+
+    $results = [];
+    $ordersDir = __DIR__ . '/uploads/orders/';
+    if (is_dir($ordersDir)) {
+        foreach (glob($ordersDir . '*.json') as $file) {
+            $order = json_decode(@file_get_contents($file), true);
+            if (!$order) continue;
+            $ref = $order['referenceCode'] ?? '';
+            if (!$ref) continue;
+
+            $status = $statuses[$ref] ?? ($order['status'] ?? 'unpaid');
+            if (in_array($status, ['cancelled', 'refunded'])) continue;
+
+            $customerName = strtolower($order['customerInfo']['name'] ?? $order['name'] ?? '');
+            $customerEmail = strtolower($order['customerInfo']['email'] ?? $order['email'] ?? '');
+            $refLower = strtolower($ref);
+
+            // Generate tracking for matching
+            $ep = strtoupper($order['event']['acronym'] ?? '');
+            $num = '001';
+            if (preg_match('/(\d+)$/', $ref, $m)) $num = $m[1];
+            $ds = $order['selectedDate'] ?? date('Y-m-d');
+            try { $dt = new DateTime($ds); } catch (Exception $e) { $dt = new DateTime(); }
+            $tracking = $ep
+                ? 'MTCC' . $ep . str_pad($num, 3, '0', STR_PAD_LEFT) . $dt->format('ymd')
+                : 'MTCC' . $dt->format('ymd') . str_pad($num, 3, '0', STR_PAD_LEFT);
+
+            if (strpos($refLower, $query) !== false ||
+                strpos($customerName, $query) !== false ||
+                strpos($customerEmail, $query) !== false ||
+                strpos(strtolower($tracking), $query) !== false) {
+
+                $building = $order['event']['building'] ?? $order['building'] ?? '';
+                $buildingLabel = $building === 'south' ? 'MTCC South' : ($building === 'north' ? 'MTCC North' : '');
+                $dueDateFmt = '';
+                if (!empty($order['selectedDate'])) {
+                    try { $dueDateFmt = (new DateTime($order['selectedDate']))->format('D, M j'); } catch (Exception $e) {}
+                }
+
+                $results[] = [
+                    'ref' => $ref,
+                    'status' => $status,
+                    'customer_name' => $order['customerInfo']['name'] ?? $order['name'] ?? '',
+                    'event' => $order['event']['acronym'] ?? '',
+                    'event_name' => $order['event']['name'] ?? '',
+                    'building' => $buildingLabel,
+                    'due_date_formatted' => $dueDateFmt,
+                ];
+                if (count($results) >= 20) break;
+            }
+        }
+    }
+
+    echo json_encode(['success' => true, 'results' => $results, 'query' => $query]);
+    exit;
+}
+
+// MTCC scanner lookup — given a tracking code or reference, return the
+// matching order's ref + status. Mirrors courier/api.php handleScanOrder.
+if (isset($_POST['mtcc_scan_lookup'])) {
+    header('Content-Type: application/json');
+    if (!isAdminLoggedIn()) {
+        echo json_encode(['success' => false, 'error' => 'Not authenticated']);
+        exit;
+    }
+    if (getCurrentAdminRole() !== 'mtcc_staff' && !hasPermission('orders_view')) {
+        echo json_encode(['success' => false, 'error' => 'Insufficient permissions']);
+        exit;
+    }
+
+    $tracking = strtoupper(trim($_POST['tracking'] ?? ''));
+    if (!$tracking) {
+        echo json_encode(['success' => false, 'error' => 'Tracking code required']);
+        exit;
+    }
+
+    $ordersDir = __DIR__ . '/uploads/orders/';
+    $foundRef = null;
+    if (is_dir($ordersDir)) {
+        foreach (glob($ordersDir . '*.json') as $file) {
+            $order = json_decode(@file_get_contents($file), true);
+            if (!$order) continue;
+            $ref = strtoupper($order['referenceCode'] ?? '');
+            if (!$ref) continue;
+            // Match by reference code directly
+            if ($ref === $tracking) { $foundRef = $order['referenceCode']; break; }
+            // Match by generated tracking number (MTCC + EVENT + 3-digit num + YYMMDD)
+            $ep = strtoupper($order['event']['acronym'] ?? '');
+            $num = '001';
+            if (preg_match('/(\d+)$/', $ref, $m)) $num = $m[1];
+            $ds = $order['selectedDate'] ?? date('Y-m-d');
+            try { $dt = new DateTime($ds); } catch (Exception $e) { $dt = new DateTime(); }
+            $gen = $ep
+                ? 'MTCC' . $ep . str_pad($num, 3, '0', STR_PAD_LEFT) . $dt->format('ymd')
+                : 'MTCC' . $dt->format('ymd') . str_pad($num, 3, '0', STR_PAD_LEFT);
+            if ($gen === $tracking) { $foundRef = $order['referenceCode']; break; }
+        }
+    }
+
+    if (!$foundRef) {
+        echo json_encode(['success' => false, 'error' => 'Order not found for: ' . $tracking]);
+        exit;
+    }
+
+    // Load current status from statuses.json (source of truth)
+    $statusFile = __DIR__ . '/data/statuses.json';
+    $statuses = [];
+    if (file_exists($statusFile)) {
+        $statuses = json_decode(@file_get_contents($statusFile), true) ?: [];
+    }
+    $currentStatus = $statuses[$foundRef] ?? 'unpaid';
+
+    echo json_encode([
+        'success' => true,
+        'ref' => $foundRef,
+        'status' => $currentStatus,
+    ]);
+    exit;
+}
+
 if (isset($_POST['mtcc_report_issue'])) {
     header('Content-Type: application/json');
     if (!isAdminLoggedIn()) {
@@ -183,6 +329,9 @@ if (isset($_POST['mtcc_report_issue'])) {
 
     $reportRef = trim($_POST['reference_code'] ?? '');
     $description = trim($_POST['description'] ?? '');
+    $issueType = trim($_POST['issue_type'] ?? '');
+    $issueLabel = trim($_POST['issue_label'] ?? '');
+    $photoData = $_POST['photo'] ?? ''; // data URL
     if (!$reportRef || !$description) {
         echo json_encode(['success' => false, 'error' => 'Missing required fields']);
         exit;
@@ -190,22 +339,51 @@ if (isset($_POST['mtcc_report_issue'])) {
 
     $staffName = getCurrentAdminName();
 
+    // Save photo attachment if provided (data URL from FileReader)
+    $photoSavedPath = null;
+    $photoUrl = null;
+    if ($photoData && strpos($photoData, 'data:image/') === 0) {
+        if (preg_match('/^data:image\/(jpeg|jpg|png|gif|webp);base64,(.+)$/i', $photoData, $m)) {
+            $ext = strtolower($m[1]) === 'jpg' ? 'jpeg' : strtolower($m[1]);
+            $binary = base64_decode($m[2]);
+            if ($binary !== false && strlen($binary) < 10 * 1024 * 1024) { // 10MB cap
+                $dir = __DIR__ . '/uploads/mtcc-issues';
+                if (!is_dir($dir)) @mkdir($dir, 0775, true);
+                $fname = 'issue_' . preg_replace('/[^A-Za-z0-9-]/', '', $reportRef) . '_' . time() . '.' . $ext;
+                $fullPath = $dir . '/' . $fname;
+                if (file_put_contents($fullPath, $binary, LOCK_EX) !== false) {
+                    $photoSavedPath = 'uploads/mtcc-issues/' . $fname;
+                    $photoUrl = 'https://mtcc.print-stuff.ca/' . $photoSavedPath;
+                }
+            }
+        }
+    }
+
     // Log to order history
-    logOrderHistory($reportRef, 'mtcc_issue', 'MTCC Issue: ' . $description, $staffName);
+    $historyDetail = 'MTCC Issue' . ($issueLabel ? ' (' . $issueLabel . ')' : '') . ': ' . $description;
+    if ($photoSavedPath) $historyDetail .= ' [photo attached]';
+    logOrderHistory($reportRef, 'mtcc_issue', $historyDetail, $staffName);
 
     // Send email to orders@printstuff.ca
     $to = 'orders@printstuff.ca';
-    $subject = 'MTCC Issue Report: #' . $reportRef;
-    $body = '<html><body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">'
-          . '<h2 style="color: #dc2626;">MTCC Issue Report</h2>'
-          . '<p><strong>Order:</strong> #' . htmlspecialchars($reportRef) . '</p>'
-          . '<p><strong>Reported by:</strong> ' . htmlspecialchars($staffName) . ' (MTCC Staff)</p>'
-          . '<p><strong>Date:</strong> ' . date('F j, Y g:i A') . '</p>'
-          . '<div style="background:#fef2f2;border-left:4px solid #dc2626;padding:12px 16px;margin:16px 0;border-radius:8px;">'
-          . '<strong>Issue description:</strong><br>' . nl2br(htmlspecialchars($description))
-          . '</div>'
-          . '<p><a href="https://mtcc.print-stuff.ca/admin-orders.php?view=' . urlencode($reportRef) . '" style="display:inline-block;background:#7c3aed;color:white;padding:10px 20px;border-radius:6px;text-decoration:none;">View Order</a></p>'
-          . '</body></html>';
+    $subject = 'MTCC Issue' . ($issueLabel ? ' (' . $issueLabel . ')' : '') . ': #' . $reportRef;
+    $body  = '<html><body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">';
+    $body .= '<h2 style="color: #dc2626;">MTCC Issue Report</h2>';
+    $body .= '<p><strong>Order:</strong> #' . htmlspecialchars($reportRef) . '</p>';
+    if ($issueLabel) {
+        $body .= '<p><strong>Category:</strong> <span style="background:#fef2f2;color:#dc2626;padding:3px 10px;border-radius:6px;font-weight:700;">' . htmlspecialchars($issueLabel) . '</span></p>';
+    }
+    $body .= '<p><strong>Reported by:</strong> ' . htmlspecialchars($staffName) . ' (MTCC Staff)</p>';
+    $body .= '<p><strong>Date:</strong> ' . date('F j, Y g:i A') . '</p>';
+    $body .= '<div style="background:#fef2f2;border-left:4px solid #dc2626;padding:12px 16px;margin:16px 0;border-radius:8px;">';
+    $body .= '<strong>Issue description:</strong><br>' . nl2br(htmlspecialchars($description));
+    $body .= '</div>';
+    if ($photoUrl) {
+        $body .= '<p><strong>Attached photo:</strong></p>';
+        $body .= '<p><a href="' . htmlspecialchars($photoUrl) . '"><img src="' . htmlspecialchars($photoUrl) . '" alt="Issue photo" style="max-width:100%;border-radius:8px;border:1px solid #e5e7eb;"></a></p>';
+    }
+    $body .= '<p><a href="https://mtcc.print-stuff.ca/admin-orders.php?view=' . urlencode($reportRef) . '" style="display:inline-block;background:#7c3aed;color:white;padding:10px 20px;border-radius:6px;text-decoration:none;">View Order</a></p>';
+    $body .= '</body></html>';
 
     $headers = "MIME-Version: 1.0\r\n" .
                "Content-Type: text/html; charset=UTF-8\r\n" .
@@ -1156,24 +1334,37 @@ if ($isMtccStaff) {
 <link href="https://cdn.jsdelivr.net/npm/gridstack@10.0.0/dist/gridstack.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/gridstack@10.0.0/dist/gridstack-extra.min.css" rel="stylesheet">
 
+<?php
+// Asset version — bump on any CSS/JS deploy to bust browser + 1-week .htaccess cache.
+// Keeps iOS PWAs from serving stale styles after an update.
+$ASSET_VERSION = '23';
+?>
 <!-- Core Styles (always load first) -->
-<link rel="stylesheet" href="css/admin-base.css">
-<link rel="stylesheet" href="css/admin-components.css">
-<link rel="stylesheet" href="css/admin-layout.css">
+<link rel="stylesheet" href="css/admin-base.css?v=<?= $ASSET_VERSION ?>">
+<link rel="stylesheet" href="css/admin-components.css?v=<?= $ASSET_VERSION ?>">
+<link rel="stylesheet" href="css/admin-layout.css?v=<?= $ASSET_VERSION ?>">
 
 <!-- Page-specific (load as needed) -->
-<link rel="stylesheet" href="css/admin-tables.css">
-<link rel="stylesheet" href="css/admin-orders.css">
-<link rel="stylesheet" href="css/admin-slideout.css">
+<link rel="stylesheet" href="css/admin-tables.css?v=<?= $ASSET_VERSION ?>">
+<link rel="stylesheet" href="css/admin-orders.css?v=<?= $ASSET_VERSION ?>">
+<link rel="stylesheet" href="css/admin-slideout.css?v=<?= $ASSET_VERSION ?>">
 
 <!-- Responsive (load last) -->
-<link rel="stylesheet" href="css/admin-responsive.css">
+<link rel="stylesheet" href="css/admin-responsive.css?v=<?= $ASSET_VERSION ?>">
 
 <!-- Sidebar Navigation -->
-<link rel="stylesheet" href="css/admin-sidebar.css">
+<link rel="stylesheet" href="css/admin-sidebar.css?v=<?= $ASSET_VERSION ?>">
 
 <!-- Print (load only when needed) -->
-<link rel="stylesheet" href="css/admin-print.css" media="print">
+<link rel="stylesheet" href="css/admin-print.css?v=<?= $ASSET_VERSION ?>" media="print">
+
+<?php if ($isMtccStaff): ?>
+<!-- MTCC issue-reporter styles (shared with courier app) + module -->
+<link rel="stylesheet" href="courier/courier-issues.css?v=<?= $ASSET_VERSION ?>">
+<script src="js/mtcc-issues.js?v=<?= $ASSET_VERSION ?>" defer></script>
+<!-- Haptic + audio feedback, parity with the courier app -->
+<script src="js/mtcc-haptic.js?v=<?= $ASSET_VERSION ?>"></script>
+<?php endif; ?>
 
 
 <!-- Online Indicator Styles -->
@@ -1230,10 +1421,10 @@ window.PERMS = {
 <?php outputStatusConfigScript($statusRole); ?>
 
 </head>
-<body>
+<body<?= $isMtccStaff ? ' class="mtcc-body"' : '' ?>>
 <?php require_once __DIR__ . '/includes/admin-sidebar.php'; renderSidebar('orders'); ?>
 <script src="js/admin-sidebar.js"></script>
-<div style="margin: 0 auto!important; padding: 0 20px!important;">
+<div class="admin-content-wrapper" style="margin: 0 auto!important;">
 <?php if ($mtccPreviewMode ?? false): ?>
 <!-- MTCC Preview Mode banner (god_mode/super_admin viewing as MTCC) -->
 <div class="mtcc-preview-banner">
@@ -1686,12 +1877,12 @@ window.PERMS = {
 <!-- Pass data to JavaScript -->
 <script>
 <?php
-// Sanitize orders for MTCC staff — strip vendor/COGS/PII, keep name + price
+// Sanitize orders for MTCC staff — strip vendor/COGS/margin.
+// Customer name + phone + email ARE shown (parity with the courier MTCC view,
+// which displays them so staff can reach the customer about pickup issues).
 $jsOrders = $orders;
 if ($isMtccStaff) {
     $jsOrders = array_map(function($o) {
-        unset($o['customerInfo']['email']);
-        unset($o['customerInfo']['phone']);
         unset($o['vendor_pricing']);
         unset($o['vendor_name']);
         unset($o['vendor_id']);
@@ -1802,7 +1993,7 @@ window.dashboardData = {
   </div>
   <button class="mtcc-filter-banner-clear" onclick="mtccClearFilters()">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-    Clear Filter
+    Clear
   </button>
 </div>
 
@@ -1827,7 +2018,12 @@ ksort($mtccEventList);
     <span class="mtcc-toolbar-search-icon">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     </span>
-    <input type="text" class="mtcc-toolbar-input" id="mtccSearchInput" placeholder="Customer is here to pick up &mdash; search by name or order #...">
+    <input type="text" class="mtcc-toolbar-input" id="mtccSearchInput" placeholder="Search order ID, customer name, email..." autocomplete="off" spellcheck="false">
+    <button class="mtcc-search-input-clear" id="mtccSearchInputClear" type="button" onclick="mtccClearGlobalSearch()" style="display:none;" aria-label="Clear search">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+    <!-- Smart-search results dropdown — populated by mtccGlobalSearch() -->
+    <div class="mtcc-search-results" id="mtccSearchResults"></div>
   </div>
   <select class="mtcc-toolbar-select" id="mtccEventFilter" onchange="mtccApplyEventBuildingFilters()" title="Filter by event">
     <option value="">All Events</option>
@@ -1844,16 +2040,15 @@ ksort($mtccEventList);
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px; vertical-align:-3px;"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="17" y2="12"/></svg>
     Scan
   </button>
-  <button class="mtcc-toolbar-btn mtcc-toolbar-btn-primary" onclick="mtccFilterTodayPickups()">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px; vertical-align:-3px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-    Today's Pickups
-    <span class="mtcc-toolbar-count"><?= $todayPickupCount ?></span>
-  </button>
-  <button class="mtcc-toolbar-btn" onclick="mtccPrintPickupList()" title="Print today's pickup list">
+  <!-- Today's Pickups button removed — redundant with the Live Status "Ready for
+       Pickup" + "Arriving Today" cards above, and the default filter already
+       applies Ready for Pickup on page load. -->
+  <button class="mtcc-toolbar-btn mtcc-toolbar-btn-primary" onclick="mtccPrintPickupList()" title="Print today's pickup list">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px; vertical-align:-3px;"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
     Print List
   </button>
-  <button class="mtcc-toolbar-btn" onclick="mtccClearFilters()">Clear</button>
+  <?php /* Toolbar Clear removed — redundant with the banner's own Clear
+           button that appears next to the active filter label. */ ?>
 </div>
 
 <!-- Empty state when a filter returns 0 rows -->
@@ -1865,17 +2060,50 @@ ksort($mtccEventList);
 </div>
 
 <!-- Barcode Scanner Modal -->
+<!-- Scanner modal — structure mirrors the courier app's #tab-scan exactly.
+     Classes (scanner-viewport, scanner-frame, frame-corner, scan-line,
+     scanner-toggle-btn, manual-entry, manual-input, scan-result) match
+     courier/app.css so behavior + visuals are identical. -->
 <div id="mtccScannerModal" class="mtcc-scanner-modal" style="display:none;">
   <div class="mtcc-scanner-backdrop" onclick="mtccCloseScanner()"></div>
-  <div class="mtcc-scanner-box">
-    <div class="mtcc-scanner-header">
-      <h3>Scan Order Barcode</h3>
-      <button class="mtcc-scanner-close" onclick="mtccCloseScanner()">&times;</button>
+  <div class="mtcc-scanner-sheet">
+    <div class="mtcc-scanner-sheet-header">
+      <h3>Scan Order</h3>
+      <button class="mtcc-scanner-close" onclick="mtccCloseScanner()" aria-label="Close">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
     </div>
-    <div class="mtcc-scanner-body">
-      <div id="mtccScannerView" class="mtcc-scanner-view"></div>
-      <div class="mtcc-scanner-hint">Point the camera at the barcode on the customer's order confirmation</div>
-      <div id="mtccScannerStatus" class="mtcc-scanner-status"></div>
+    <div class="mtcc-scanner-sheet-body">
+      <div class="scan-section">
+        <!-- Camera Scanner — identical markup to courier/index.php -->
+        <div class="scanner-viewport" id="scannerViewport">
+          <div id="scannerTarget"></div>
+          <div class="scanner-frame">
+            <div class="frame-corner tl"></div>
+            <div class="frame-corner tr"></div>
+            <div class="frame-corner bl"></div>
+            <div class="frame-corner br"></div>
+            <div class="scan-line"></div>
+          </div>
+          <button class="scanner-toggle-btn" id="scannerToggleBtn" onclick="toggleScanner()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <span>Starting...</span>
+          </button>
+        </div>
+
+        <!-- Manual Entry — identical markup to courier/index.php -->
+        <div class="manual-entry">
+          <div class="manual-divider"><span>or enter manually</span></div>
+          <div class="manual-input-group">
+            <input type="text" id="manualTracking" class="manual-input" placeholder="Tracking number or reference code" autocomplete="off" spellcheck="false">
+            <button class="manual-submit-btn" onclick="submitManualScan()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="scan-result" id="scanResult" style="display:none;"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -1884,19 +2112,154 @@ ksort($mtccEventList);
 <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
 
 <script>
-// Forward MTCC search input to existing search box with live filtering
-(function(){
+// MTCC smart search — mirrors courier dashboard search exactly.
+// Typing 2+ chars queries the server (matches ref / name / email / tracking),
+// renders a dropdown below the input with colored status badges, click =
+// open the detail panel. "004" matches "COMIC-004", "Jane" matches the
+// customer "Jane Smith", etc.
+var mtccSearchTimer = null;
+
+function mtccGlobalSearch(query) {
+  var clearBtn = document.getElementById('mtccSearchInputClear');
+  var resultsEl = document.getElementById('mtccSearchResults');
+  if (clearBtn) clearBtn.style.display = query ? 'flex' : 'none';
+  if (!resultsEl) return;
+
+  query = (query || '').trim();
+  if (query.length < 2) {
+    resultsEl.innerHTML = '';
+    resultsEl.classList.remove('active');
+    return;
+  }
+
+  if (mtccSearchTimer) clearTimeout(mtccSearchTimer);
+  mtccSearchTimer = setTimeout(function() {
+    var fd = new FormData();
+    fd.append('mtcc_search_orders', '1');
+    fd.append('query', query);
+    fetch(window.location.pathname, { method: 'POST', body: fd, credentials: 'same-origin' })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (!data || !data.success) return;
+        mtccRenderSearchResults(data.results || []);
+      })
+      .catch(function(){});
+  }, 200);
+}
+
+function mtccRenderSearchResults(results) {
+  var resultsEl = document.getElementById('mtccSearchResults');
+  if (!resultsEl) return;
+
+  if (results.length === 0) {
+    resultsEl.innerHTML = '<div class="mtcc-search-empty">No orders found</div>';
+    resultsEl.classList.add('active');
+    return;
+  }
+
+  var labels = window.STATUS_LABELS || {};
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  var html = '';
+  results.forEach(function(r) {
+    var statusLabel = labels[r.status] || r.status;
+    var subtitle = esc(r.customer_name);
+    if (r.event_name || r.event) subtitle += ' \u00b7 ' + esc(r.event_name || r.event);
+    if (r.building) subtitle += ' \u2014 ' + esc(r.building);
+
+    html += '<button class="mtcc-search-result" type="button" onclick="mtccOpenFromSearch(\'' + esc(r.ref) + '\')">';
+    html += '<div class="mtcc-search-left">';
+    html += '<div class="mtcc-search-row1">';
+    html += '<span class="mtcc-search-ref ref-status-' + esc(r.status) + '">' + esc(r.ref) + '</span>';
+    html += '<span class="order-status-badge status-' + esc(r.status) + ' badge-sm">' + esc(statusLabel) + '</span>';
+    html += '</div>';
+    html += '<div class="mtcc-search-row2">' + subtitle + '</div>';
+    html += '</div>';
+    html += '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>';
+    html += '</button>';
+  });
+  resultsEl.innerHTML = html;
+  resultsEl.classList.add('active');
+}
+
+function mtccOpenFromSearch(ref) {
+  if (window.mtccHaptic) window.mtccHaptic.tap();
+  mtccClearGlobalSearch();
+  if (window.OrderSlideout) window.OrderSlideout.open(ref);
+}
+
+function mtccClearGlobalSearch() {
+  var input = document.getElementById('mtccSearchInput');
+  var clearBtn = document.getElementById('mtccSearchInputClear');
+  var resultsEl = document.getElementById('mtccSearchResults');
+  if (input) input.value = '';
+  if (clearBtn) clearBtn.style.display = 'none';
+  if (resultsEl) { resultsEl.innerHTML = ''; resultsEl.classList.remove('active'); }
+}
+
+// Wire input + outside-click dismissal
+(function() {
   var mtccSearch = document.getElementById('mtccSearchInput');
   if (!mtccSearch) return;
-  mtccSearch.addEventListener('input', function() {
-    var searchBox = document.getElementById('searchBox');
-    if (searchBox) {
-      searchBox.value = mtccSearch.value;
-      searchBox.dispatchEvent(new Event('input', { bubbles: true }));
+  mtccSearch.addEventListener('input', function() { mtccGlobalSearch(this.value); });
+  mtccSearch.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') { mtccClearGlobalSearch(); this.blur(); }
+  });
+  // Dismiss results when tapping outside the search wrap
+  document.addEventListener('click', function(e) {
+    var wrap = document.querySelector('.mtcc-toolbar-search');
+    if (!wrap) return;
+    if (!wrap.contains(e.target)) {
+      var resultsEl = document.getElementById('mtccSearchResults');
+      if (resultsEl) resultsEl.classList.remove('active');
     }
   });
-  // Focus the search bar on page load for quick access
-  setTimeout(function(){ mtccSearch.focus(); }, 100);
+})();
+
+// Sync mobile-card visibility to match the current table rows.
+// Called at the end of every MTCC filter function. Matches by data-reference.
+function mtccSyncCardsToRows() {
+  var cardsHost = document.getElementById('mtccMobileCards');
+  if (!cardsHost) return;
+  document.querySelectorAll('#ordersTableBody tr').forEach(function(row) {
+    var ref = row.dataset.reference;
+    if (!ref) return;
+    var card = cardsHost.querySelector('.mtcc-m-card[data-reference="' + ref + '"]');
+    if (!card) return;
+    var hidden = row.classList.contains('filtered-out') || row.style.display === 'none';
+    card.classList.toggle('filtered-out', hidden);
+  });
+}
+
+// Keep cards in sync with the table whenever simpleFilterManager (or anything else)
+// changes row visibility — covers search input, column config, pagination, etc.
+(function() {
+  var cardsHost = document.getElementById('mtccMobileCards');
+  var tableBody = document.getElementById('ordersTableBody');
+  if (!cardsHost || !tableBody) return;
+
+  var syncScheduled = false;
+  function scheduleSync() {
+    if (syncScheduled) return;
+    syncScheduled = true;
+    requestAnimationFrame(function() {
+      syncScheduled = false;
+      mtccSyncCardsToRows();
+    });
+  }
+
+  var observer = new MutationObserver(scheduleSync);
+  observer.observe(tableBody, {
+    attributes: true,
+    attributeFilter: ['class', 'style'],
+    subtree: true
+  });
+
+  // Initial sync on load (covers simpleFilterManager's default pagination)
+  setTimeout(mtccSyncCardsToRows, 50);
+  setTimeout(mtccSyncCardsToRows, 300);
 })();
 
 // Filter to today's pickups: due today AND status in [ready, delivered, shipped]
@@ -1936,15 +2299,54 @@ function mtccFilterTodayPickups() {
     if (count) count.textContent = '(' + matchCount + ' order' + (matchCount !== 1 ? 's' : '') + ')';
     banner.style.display = 'flex';
   }
+
+  mtccSyncCardsToRows();
 }
 
 // ===== PWA: register service worker + install prompt =====
 (function() {
-  // Register service worker
+  // Register service worker with aggressive update flow so iOS PWAs pick up
+  // new deploys. Without this, iOS caches the old sw.js and CSS for days.
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function() {
-      navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(function(err) {
+      // updateViaCache: 'none' tells the browser NEVER to HTTP-cache sw.js.
+      navigator.serviceWorker.register('/sw.js', {
+        scope: '/',
+        updateViaCache: 'none'
+      }).then(function(reg) {
+        // Force an immediate update check on every page load
+        reg.update().catch(function(){});
+
+        // When a new worker is found, watch it install -> activate it.
+        reg.addEventListener('updatefound', function() {
+          var newWorker = reg.installing;
+          if (!newWorker) return;
+          newWorker.addEventListener('statechange', function() {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              newWorker.postMessage({ type: 'SKIP_WAITING' });
+            }
+          });
+        });
+
+        // When the active SW changes, reload once to pick up the new assets.
+        var hasReloaded = false;
+        navigator.serviceWorker.addEventListener('controllerchange', function() {
+          if (hasReloaded) return;
+          hasReloaded = true;
+          window.location.reload();
+        });
+      }).catch(function(err) {
         console.warn('Service worker registration failed:', err);
+      });
+
+      // Re-check for updates whenever the tab becomes visible again
+      // (helps iOS PWAs that were left open in the background).
+      document.addEventListener('visibilitychange', function() {
+        if (document.visibilityState === 'visible') {
+          navigator.serviceWorker.getRegistration('/').then(function(reg) {
+            if (reg) reg.update().catch(function(){});
+          });
+        }
       });
     });
   }
@@ -2343,40 +2745,26 @@ function mtccPrintPickupList() {
 // Opens a prompt to report a problem with an order (damage, mismatch, etc.).
 // Sends an email to admin via a small endpoint.
 function mtccReportIssue(referenceCode) {
-  var description = prompt(
-    'Report an issue with #' + referenceCode + '\n\n' +
-    'Describe the problem (damage, wrong size, missing item, customer complaint, etc.).\n' +
-    'Print Stuff will be notified by email.',
-    ''
-  );
-  if (description === null) return;
-  description = (description || '').trim();
-  if (description === '') return;
-
-  var formData = new FormData();
-  formData.append('mtcc_report_issue', '1');
-  formData.append('reference_code', referenceCode);
-  formData.append('description', description);
-
-  fetch(window.location.pathname, { method: 'POST', body: formData, credentials: 'same-origin' })
+  // Delegate to the MtccIssues bottom-sheet module (js/mtcc-issues.js).
+  // Falls back to a minimal prompt if the module hasn't loaded yet (e.g., older
+  // cached page during a deploy window).
+  if (window.MtccIssues && typeof window.MtccIssues.open === 'function') {
+    window.MtccIssues.open(referenceCode);
+    return;
+  }
+  var description = prompt('Report an issue with #' + referenceCode + '\n\nDescribe the problem.', '');
+  if (!description) return;
+  var fd = new FormData();
+  fd.append('mtcc_report_issue', '1');
+  fd.append('reference_code', referenceCode);
+  fd.append('description', description.trim());
+  fetch(window.location.pathname, { method: 'POST', body: fd, credentials: 'same-origin' })
     .then(function(r) { return r.json(); })
     .then(function(data) {
-      if (data && data.success) {
-        if (typeof showNotification === 'function') {
-          showNotification('Issue reported to Print Stuff. Thank you.', 'success');
-        } else {
-          alert('Issue reported to Print Stuff.');
-        }
-      } else {
-        var err = (data && data.error) || 'Unknown error';
-        if (typeof showNotification === 'function') showNotification('Failed to report issue: ' + err, 'error');
-        else alert('Failed to report issue: ' + err);
-      }
+      if (data && data.success) alert('Issue reported to Print Stuff.');
+      else alert('Failed: ' + ((data && data.error) || 'Unknown error'));
     })
-    .catch(function() {
-      if (typeof showNotification === 'function') showNotification('Network error. Please try again.', 'error');
-      else alert('Network error. Please try again.');
-    });
+    .catch(function() { alert('Network error. Please try again.'); });
 }
 
 // Quick pickup — one-click mark-as-picked-up for MTCC staff
@@ -2421,6 +2809,79 @@ function mtccQuickPickup(referenceCode) {
   }
 }
 
+// Confirm Pick Up — courier-style direct confirmation (no prompt). Used by
+// the Confirm Pick Up button in the MTCC detail panel. Shows a full-screen
+// "Picked Up!" success animation on success, matching courier/app.js.
+function mtccConfirmPickup(referenceCode) {
+  // Haptic tap as the user commits
+  if (window.mtccHaptic) window.mtccHaptic.tap();
+
+  // Look up customer name for the success overlay subtitle
+  var customerName = '';
+  if (window.dashboardData && window.dashboardData.orders) {
+    var order = window.dashboardData.orders.find(function(o){
+      return (o.referenceCode || '').toUpperCase() === referenceCode.toUpperCase();
+    });
+    if (order) customerName = (order.customerInfo || {}).name || '';
+  }
+
+  // Close the slideout immediately so the animation takes over the screen
+  if (window.OrderSlideout && typeof window.OrderSlideout.close === 'function') {
+    window.OrderSlideout.close();
+  }
+
+  if (typeof updateOrderStatus !== 'function') {
+    alert('Unable to confirm pickup (updateOrderStatus not loaded).');
+    return;
+  }
+
+  updateOrderStatus(referenceCode, 'pickedup',
+    function(/* data */) {
+      if (typeof updateQuickStatusBadgeData === 'function') {
+        updateQuickStatusBadgeData(referenceCode, 'pickedup');
+      }
+      // Update the row's status attribute so filters reflect the new state
+      var row = document.querySelector('#ordersTableBody tr[data-reference="' + referenceCode.toLowerCase() + '"]');
+      if (row) row.dataset.status = 'pickedup';
+      // Celebration haptic + chime (two-tone confirm)
+      if (window.mtccHaptic) window.mtccHaptic.confirm();
+      mtccShowPickupSuccess(referenceCode, customerName);
+      // After the animation, re-sync card/row visibility so the freshly
+      // picked-up order drops out of the Ready filter
+      setTimeout(function() {
+        if (typeof mtccApplyLiveFilters === 'function' && window.mtccActiveFilters && window.mtccActiveFilters.size > 0) {
+          mtccApplyLiveFilters(true);
+        }
+      }, 2800);
+    },
+    function(err) {
+      if (window.mtccHaptic) window.mtccHaptic.error();
+      if (typeof showNotification === 'function') showNotification('Pickup failed: ' + err, 'error');
+      else alert('Pickup failed: ' + err);
+    },
+    {} // no extras — keep it simple, matches courier behavior
+  );
+}
+
+// Full-screen "Picked Up!" success overlay — duplicated from the courier app's
+// showDeliverySuccess() for a consistent celebration animation.
+function mtccShowPickupSuccess(ref, customerName) {
+  var overlay = document.createElement('div');
+  overlay.className = 'delivery-success-overlay';
+  overlay.innerHTML =
+    '<div class="delivery-success-icon">' +
+      '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">' +
+        '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>' +
+      '</svg>' +
+    '</div>' +
+    '<div class="delivery-success-text">Picked Up!</div>' +
+    '<div class="delivery-success-sub">' + (ref ? '#' + ref : '') + (customerName ? ' \u2022 ' + customerName : '') + '</div>';
+  document.body.appendChild(overlay);
+  setTimeout(function() {
+    if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+  }, 2600);
+}
+
 // Quick mark delivered — one-click mark-received at MTCC
 function mtccQuickDelivered(referenceCode) {
   if (typeof closeActionMenu === 'function') closeActionMenu();
@@ -2452,17 +2913,23 @@ function mtccApplyEventBuildingFilters() {
 
   mtccTakeOverTable();
 
-  var rows = document.querySelectorAll('#ordersTableBody tr');
   var matchCount = 0;
+  function matchEventBuilding(el) {
+    var refPrefix = (el.dataset.reference || '').toUpperCase().split('-')[0];
+    var bld = (el.dataset.building || '').toLowerCase();
+    var matchEvent = !prefix || refPrefix === prefix;
+    var matchBuilding = !building || bld === building;
+    return matchEvent && matchBuilding;
+  }
+  var rows = document.querySelectorAll('#ordersTableBody tr');
   rows.forEach(function(row) {
-    var rowPrefix = (row.dataset.reference || '').toUpperCase().split('-')[0];
-    var rowBuilding = (row.dataset.building || '').toLowerCase();
-    var matchEvent = !prefix || rowPrefix === prefix;
-    var matchBuilding = !building || rowBuilding === building;
-    var show = matchEvent && matchBuilding;
+    var show = matchEventBuilding(row);
     row.classList.toggle('filtered-out', !show);
     row.style.display = show ? '' : 'none';
     if (show) matchCount++;
+  });
+  document.querySelectorAll('.mtcc-m-card').forEach(function(card) {
+    card.classList.toggle('filtered-out', !matchEventBuilding(card));
   });
 
   // Clear other active states
@@ -2490,6 +2957,8 @@ function mtccApplyEventBuildingFilters() {
   } else if (banner) {
     banner.style.display = 'none';
   }
+
+  mtccSyncCardsToRows();
 }
 
 // MTCC takes over the table display — disables simpleFilterManager's pagination/eventsMode
@@ -2514,11 +2983,13 @@ function mtccClearFilters(silent) {
   // Reset active filter tracking
   if (typeof mtccActiveFilters !== 'undefined') mtccActiveFilters.clear();
 
-  // Show all rows — remove .filtered-out class and inline display
-  var rows = document.querySelectorAll('#ordersTableBody tr');
-  rows.forEach(function(row) {
+  // Show all rows AND all mobile cards — remove .filtered-out class
+  document.querySelectorAll('#ordersTableBody tr').forEach(function(row) {
     row.classList.remove('filtered-out');
     row.style.display = '';
+  });
+  document.querySelectorAll('.mtcc-m-card').forEach(function(card) {
+    card.classList.remove('filtered-out');
   });
 
   var mtccSearch = document.getElementById('mtccSearchInput');
@@ -2543,12 +3014,39 @@ function mtccClearFilters(silent) {
   // Hide empty state
   var empty = document.getElementById('mtccEmptyState');
   if (empty) empty.style.display = 'none';
+
+  mtccSyncCardsToRows();
 }
 
 // Live Status filter — multi-select toggle. Tracks active categories in a Set.
 var mtccActiveFilters = new Set();
 
+// Default filter on page load for MTCC staff: show only orders they can act on
+// ("Ready for Pickup"). Avoids the firehose of every archived order. User can
+// tap the active card to clear, or toggle other categories. We run this after
+// simpleFilterManager has initialized so our filter overrides the default.
+(function applyMtccDefaultFilter() {
+  if (!window.PERMS || !window.PERMS.isMtccStaff) return;
+  function apply() {
+    // Honor explicit URL params — if someone linked to a specific filter,
+    // don't override it.
+    if (window.location.search && /[?&](filter|status|prefix|view)=/.test(window.location.search)) return;
+    mtccActiveFilters.add('ready');
+    // Mark the corresponding Live Status card as active
+    document.querySelectorAll('.mtcc-live-card').forEach(function(c) {
+      if (c.getAttribute('data-mtcc-filter') === 'ready') c.classList.add('mtcc-live-active');
+    });
+    mtccApplyLiveFilters(true); // true = don't auto-scroll on page load
+  }
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    setTimeout(apply, 150);
+  } else {
+    document.addEventListener('DOMContentLoaded', function() { setTimeout(apply, 150); });
+  }
+})();
+
 function mtccRowMatchesCategory(row, category, todayStr) {
+  // Accepts either a row or a card — both use data-duedate / data-status
   var dueDate = row.dataset.duedate || '';
   var status = row.dataset.status || '';
   if (category === 'arriving') {
@@ -2583,7 +3081,7 @@ function mtccFilterLive(category, evt) {
   mtccApplyLiveFilters();
 }
 
-function mtccApplyLiveFilters() {
+function mtccApplyLiveFilters(skipScroll) {
   var today = new Date();
   var y = today.getFullYear();
   var m = String(today.getMonth() + 1).padStart(2, '0');
@@ -2612,6 +3110,17 @@ function mtccApplyLiveFilters() {
     if (show) matchCount++;
   });
 
+  // Also filter mobile cards directly using their own data-* attributes, so
+  // any card without a matching row (pagination mismatch, card-only render)
+  // is still hidden under an active filter.
+  document.querySelectorAll('.mtcc-m-card').forEach(function(card) {
+    var show = false;
+    mtccActiveFilters.forEach(function(cat) {
+      if (mtccRowMatchesCategory(card, cat, todayStr)) show = true;
+    });
+    card.classList.toggle('filtered-out', !show);
+  });
+
   // Banner — show list of active filter names
   var banner = document.getElementById('mtccFilterBanner');
   var text = document.getElementById('mtccFilterBannerText');
@@ -2626,8 +3135,12 @@ function mtccApplyLiveFilters() {
 
   mtccToggleEmptyState(matchCount);
 
-  var table = document.getElementById('ordersTable');
-  if (table) table.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  if (!skipScroll) {
+    var table = document.getElementById('ordersTable');
+    if (table) table.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  mtccSyncCardsToRows();
 }
 
 // Show/hide empty-state message when a filter returns 0 rows
@@ -2637,98 +3150,183 @@ function mtccToggleEmptyState(matchCount) {
   empty.style.display = matchCount === 0 ? 'block' : 'none';
 }
 
-// ===== Barcode Scanner =====
-var mtccScannerRunning = false;
+// ===== Barcode Scanner — duplicated from courier/app.js (startScanner,
+// stopScanner, toggleScanner, submitManualScan, processScannedCode) with
+// only the server endpoint swapped (mtcc_scan_lookup instead of scan_order).
+var scannerActive = false;
+var scanLocked = false;
 
 function mtccOpenScanner() {
   var modal = document.getElementById('mtccScannerModal');
-  var status = document.getElementById('mtccScannerStatus');
   if (!modal) return;
   modal.style.display = 'flex';
-  modal.style.alignItems = 'center';
+  modal.style.alignItems = 'flex-end';
   modal.style.justifyContent = 'center';
-  status.textContent = 'Initializing camera...';
-  status.className = 'mtcc-scanner-status';
+  // Give the modal a frame to animate on open
+  requestAnimationFrame(function() { modal.classList.add('visible'); });
+
+  scanLocked = false;
+
+  // Unlock audio on user gesture — opening the scanner IS a user gesture
+  if (window.mtccHaptic) {
+    window.mtccHaptic.initAudio();
+    window.mtccHaptic.tap();
+  }
 
   if (typeof Quagga === 'undefined') {
-    status.textContent = 'Scanner library not loaded. Please refresh and try again.';
-    status.className = 'mtcc-scanner-status error';
+    var toggle = document.getElementById('scannerToggleBtn');
+    if (toggle) toggle.querySelector('span').textContent = 'Scanner not loaded';
+    if (window.mtccHaptic) window.mtccHaptic.error();
     return;
   }
 
+  // Auto-start on open (courier has a toggle; ours is modal so start right away)
+  startScanner();
+}
+
+// Courier-identical startScanner
+function startScanner() {
+  var target = document.getElementById('scannerTarget');
+  var toggleBtn = document.getElementById('scannerToggleBtn');
+
+  if (window.mtccHaptic) window.mtccHaptic.initAudio();
+
+  if (toggleBtn) toggleBtn.querySelector('span').textContent = 'Starting...';
+
+  if (typeof Quagga === 'undefined') return;
+
   Quagga.init({
     inputStream: {
+      name: 'Live',
       type: 'LiveStream',
-      target: document.getElementById('mtccScannerView'),
+      target: target,
       constraints: {
         facingMode: 'environment',
-        width: { min: 480 },
-        height: { min: 320 }
+        width: { ideal: 1280 },
+        height: { ideal: 720 }
       }
     },
     decoder: {
-      readers: ['code_128_reader', 'code_39_reader', 'ean_reader', 'upc_reader']
+      readers: ['code_128_reader', 'code_39_reader', 'ean_reader', 'ean_8_reader']
     },
     locate: true
   }, function(err) {
     if (err) {
-      console.error('Quagga init error:', err);
-      status.textContent = 'Camera access denied or unavailable.';
-      status.className = 'mtcc-scanner-status error';
+      console.error('Scanner init error:', err);
+      if (window.mtccHaptic) window.mtccHaptic.warning();
+      if (typeof showNotification === 'function') {
+        showNotification('Camera access denied or unavailable', 'error');
+      }
+      if (toggleBtn) toggleBtn.querySelector('span').textContent = 'Retry Camera';
       return;
     }
     Quagga.start();
-    mtccScannerRunning = true;
-    status.textContent = 'Point the camera at a barcode...';
+    scannerActive = true;
+    if (toggleBtn) {
+      toggleBtn.classList.add('active');
+      toggleBtn.querySelector('span').textContent = 'Camera Active';
+    }
   });
 
-  // Handle successful detection
-  Quagga.onDetected(mtccOnBarcodeDetected);
+  Quagga.onDetected(function(result) {
+    var code = result.codeResult.code;
+    if (code && !scanLocked) {
+      scanLocked = true;
+      if (window.mtccHaptic) window.mtccHaptic.scanDetected();
+      processScannedCode(code);
+    }
+  });
 }
 
-function mtccOnBarcodeDetected(result) {
-  if (!result || !result.codeResult || !result.codeResult.code) return;
-  var code = result.codeResult.code.toUpperCase().trim();
+function stopScanner() {
+  if (scannerActive) {
+    try { Quagga.stop(); } catch(e) {}
+    scannerActive = false;
+  }
+  var toggleBtn = document.getElementById('scannerToggleBtn');
+  if (toggleBtn) {
+    toggleBtn.classList.remove('active');
+    toggleBtn.querySelector('span').textContent = 'Restart Camera';
+  }
+}
 
-  var status = document.getElementById('mtccScannerStatus');
-  status.textContent = 'Detected: ' + code;
-  status.className = 'mtcc-scanner-status success';
+function toggleScanner() {
+  if (scannerActive) stopScanner();
+  else startScanner();
+}
 
-  // Check that the scanned code looks like an order reference (PREFIX-### format)
-  var isOrderRef = /^[A-Z0-9]+-\d+$/i.test(code);
-  if (!isOrderRef) {
-    status.textContent = 'Not a valid order code: ' + code;
-    status.className = 'mtcc-scanner-status error';
+function submitManualScan() {
+  var input = document.getElementById('manualTracking');
+  var val = (input.value || '').trim();
+  if (!val) {
+    if (window.mtccHaptic) window.mtccHaptic.warning();
+    if (typeof showNotification === 'function') showNotification('Enter a tracking number', 'info');
     return;
   }
+  if (window.mtccHaptic) window.mtccHaptic.tap();
+  processScannedCode(val);
+  input.value = '';
+}
 
-  // Stop scanner and apply search
-  setTimeout(function() {
-    mtccCloseScanner();
-    var mtccSearch = document.getElementById('mtccSearchInput');
-    if (mtccSearch) {
-      mtccSearch.value = code;
-      mtccSearch.dispatchEvent(new Event('input', { bubbles: true }));
-      mtccSearch.focus();
-    }
-    // Scroll to table
-    var table = document.getElementById('ordersTable');
-    if (table) table.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, 400);
+// Courier-identical processScannedCode, pointed at the admin lookup endpoint
+function processScannedCode(code) {
+  var fd = new FormData();
+  fd.append('mtcc_scan_lookup', '1');
+  fd.append('tracking', String(code).toUpperCase().trim());
+
+  fetch(window.location.pathname, { method: 'POST', body: fd, credentials: 'same-origin' })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (!data || !data.success) {
+        if (window.mtccHaptic) window.mtccHaptic.error();
+        if (typeof showNotification === 'function') {
+          showNotification((data && data.error) || 'Order not found', 'error');
+        }
+        scanLocked = false;
+        return;
+      }
+
+      var ref = data.ref;
+      var serverStatus = data.status;
+
+      // Sync dashboardData with server status
+      if (window.dashboardData && window.dashboardData.orders) {
+        var o = window.dashboardData.orders.find(function(x) {
+          return (x.referenceCode || '').toUpperCase() === ref.toUpperCase();
+        });
+        if (o) o.status = serverStatus;
+      }
+
+      if (window.mtccHaptic) window.mtccHaptic.success();
+      mtccCloseScanner();
+
+      if (serverStatus === 'delivered') {
+        if (typeof mtccConfirmPickup === 'function') mtccConfirmPickup(ref);
+        else if (window.OrderSlideout) window.OrderSlideout.open(ref);
+      } else {
+        if (window.OrderSlideout) window.OrderSlideout.open(ref);
+      }
+    })
+    .catch(function(err) {
+      console.error('Scan lookup error:', err);
+      if (window.mtccHaptic) window.mtccHaptic.error();
+      if (typeof showNotification === 'function') {
+        showNotification('Network error — please try again', 'error');
+      }
+      scanLocked = false;
+    });
 }
 
 function mtccCloseScanner() {
   var modal = document.getElementById('mtccScannerModal');
-  if (modal) modal.style.display = 'none';
-  if (mtccScannerRunning && typeof Quagga !== 'undefined') {
-    try {
-      Quagga.offDetected(mtccOnBarcodeDetected);
-      Quagga.stop();
-    } catch (e) {
-      console.warn('Scanner stop error:', e);
-    }
-    mtccScannerRunning = false;
+  if (modal) {
+    modal.classList.remove('visible');
+    setTimeout(function() { modal.style.display = 'none'; }, 300);
   }
+  stopScanner();
+  scanLocked = false;
+  var input = document.getElementById('manualTracking');
+  if (input) input.value = '';
 }
 
 // Close scanner on escape key
@@ -3209,6 +3807,86 @@ document.addEventListener('keydown', function(e) {
   </table>
 </div>
 </div> <!-- End table-card-wrapper -->
+
+<?php if ($isMtccStaff): ?>
+<!-- Mobile-only cards (mirrors table data; CSS swaps between table and cards by viewport) -->
+<div class="mtcc-mobile-cards" id="mtccMobileCards">
+  <?php foreach ($ordersForTable as $order):
+    $refCode = $order['referenceCode'] ?? '';
+    $status = $order['status'] ?? 'unpaid';
+    $custName = $order['customerInfo']['name'] ?? 'Unknown';
+    $prefix = strtoupper(explode('-', $refCode)[0]);
+    $evAcronym = $order['event']['acronym'] ?? $prefix;
+    $evName = $mtccEventNameByPrefix[$prefix] ?? ($order['event']['name'] ?? $evAcronym);
+    $orderBuilding = $mtccEventBuilding[$prefix] ?? ($order['event']['building'] ?? $order['building'] ?? '');
+    $buildingShort = $orderBuilding === 'south' ? 'MTCC South' : ($orderBuilding === 'north' ? 'MTCC North' : '');
+    $selectedDate = $order['selectedDate'] ?? '';
+    $dueDateFmt = $selectedDate ? date('D, M j, Y', strtotime($selectedDate)) : 'No date';
+    $deliveryTime = $order['deliveryTime'] ?? 'anytime';
+    $timeMap = ['9am' => '9:00 AM', '12pm' => '12:00 PM', '3pm' => '3:00 PM', '6pm' => '6:00 PM'];
+    $timeLabel = $timeMap[$deliveryTime] ?? 'Anytime';
+    $statusLabel = $statusConfig[$status]['label'] ?? ucfirst($status);
+
+    // MTCC phase for due-bar color (mirrors courier logic)
+    $mtccPhase = 'default';
+    if (in_array($status, ['preflight', 'file_issue', 'printing'])) $mtccPhase = 'production';
+    elseif ($status === 'ready') $mtccPhase = 'preparing';
+    elseif (in_array($status, ['dispatched', 'shipped'])) $mtccPhase = 'ontheway';
+    elseif ($status === 'delivered') $mtccPhase = 'ready-for-pickup';
+    elseif ($status === 'pickedup') $mtccPhase = 'pickedup';
+    elseif ($status === 'missing' || $status === 'unclaimed') $mtccPhase = 'missing';
+
+    // Today check for overdue / new
+    $todayStr = date('Y-m-d');
+    $isPastDue = $selectedDate && $selectedDate < $todayStr && in_array($status, ['delivered', 'ready', 'shipped']);
+    $isNewArrival = ($status === 'delivered') && isset($order['modified']) && $order['modified'] && ((time() - $order['modified']) < 86400);
+
+    // Size
+    $w = $order['dimensions']['width'] ?? '?';
+    $h = $order['dimensions']['height'] ?? '?';
+  ?>
+  <div class="mtcc-m-card status-<?= $status ?>"
+       data-reference="<?= strtolower($refCode) ?>"
+       data-status="<?= $status ?>"
+       data-duedate="<?= htmlspecialchars($selectedDate) ?>"
+       data-building="<?= htmlspecialchars($orderBuilding) ?>"
+       onclick="OrderSlideout.open('<?= htmlspecialchars($refCode) ?>')">
+    <!-- Due bar (colored by MTCC phase) -->
+    <div class="mtcc-m-due-bar mtcc-phase-<?= $mtccPhase ?>">
+      <span class="mtcc-m-due-text">Due <?= htmlspecialchars($dueDateFmt) ?><?= $timeLabel !== 'Anytime' ? ' &middot; ' . htmlspecialchars($timeLabel) : '' ?></span>
+      <span class="mtcc-m-status-badge"><?= htmlspecialchars($statusLabel) ?></span>
+    </div>
+
+    <!-- Top: ref (kabob menu removed — it had no target DOM and was dead.
+         All actions live in the slideout footer now.) -->
+    <div class="mtcc-m-top">
+      <div class="mtcc-m-ref">
+        <?php if ($isNewArrival): ?><span class="mtcc-m-new">NEW</span><?php endif; ?>
+        <span class="mtcc-m-ref-code">#<?= htmlspecialchars($refCode) ?></span>
+      </div>
+    </div>
+
+    <!-- Body: compact 2-item overview (Customer + Event). Size and price live
+         in the slideout details — keeping the card short for quick scanning. -->
+    <div class="mtcc-m-body">
+      <div class="mtcc-m-detail mtcc-m-detail-wide">
+        <span class="mtcc-m-detail-label">Customer</span>
+        <span class="mtcc-m-detail-value"><?= htmlspecialchars($custName) ?></span>
+      </div>
+      <div class="mtcc-m-detail mtcc-m-detail-wide">
+        <span class="mtcc-m-detail-label">Event</span>
+        <span class="mtcc-m-detail-value"><?= htmlspecialchars($evAcronym) ?><?= $buildingShort ? ' &mdash; ' . htmlspecialchars($buildingShort) : '' ?></span>
+      </div>
+    </div>
+
+    <?php /* Pickup action lives inside the detail panel now (parity with the
+             courier app). Cards stay compact and the confirmation flow is
+             deliberate — tap the card, review details, confirm. */ ?>
+  </div>
+  <?php endforeach; ?>
+</div>
+<?php endif; ?>
+
 <?php endif; ?>
 	
 <!-- Bulk Action Sticky Toolbar (matches Production dock style) -->

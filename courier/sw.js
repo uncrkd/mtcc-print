@@ -1,5 +1,5 @@
 // MTCC Courier Service Worker — Offline Support
-var CACHE_VERSION = 'mtcc-courier-v4';
+var CACHE_VERSION = 'mtcc-courier-v7';
 var APP_SHELL = [
     '/courier/',
     '/courier/app.css',

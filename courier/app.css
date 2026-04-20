@@ -6621,8 +6621,12 @@ input {
 }
 
 .mtcc-detail-divider {
-    height: 1px;
-    background: #e5e7eb;
+    height: 0;
+    border: none;
+    /* Dashed status-colored divider — tinted via --mtcc-header-color on the
+       panel so sections split visibly without a hard grey line. */
+    border-top: 1.5px dashed var(--mtcc-header-color, #d1d5db);
+    opacity: 0.55;
     margin: 4px 0;
 }
 
@@ -6637,6 +6641,14 @@ input {
     color: #374151;
     font-weight: 400;
     line-height: 1.5;
+}
+
+/* Pricing total row — bigger, bolder, to anchor the pricing block visually */
+.mtcc-detail-total .mtcc-detail-label,
+.mtcc-detail-total .mtcc-detail-value {
+    font-size: 0.95rem;
+    color: #1a1625;
+    font-weight: 800;
 }
 
 /* ============================================

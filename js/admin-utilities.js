@@ -929,15 +929,57 @@ function handleQuickStatusSelect(referenceCode, newStatus, currentStatus) {
  * Update the quick status badge data attribute after successful change
  */
 function updateQuickStatusBadgeData(referenceCode, newStatus) {
+    const refLower = referenceCode.toLowerCase();
     const rows = document.querySelectorAll('#ordersTableBody tr');
     rows.forEach(row => {
-        if (row.dataset.reference === referenceCode.toLowerCase()) {
+        if (row.dataset.reference === refLower) {
             const badge = row.querySelector('.status-badge-clickable');
             if (badge) {
                 badge.dataset.currentStatus = newStatus;
             }
         }
     });
+
+    // MTCC mobile cards — update the card in place after a status change so the
+    // quick-pickup button disappears and the status badge reflects the new state
+    // without waiting for a full page refresh.
+    const card = document.querySelector('.mtcc-m-card[data-reference="' + refLower + '"]');
+    if (card) {
+        // 1. Swap the status class on the card wrapper (drives .mtcc-m-card.status-* rules)
+        const prevStatusClass = Array.from(card.classList).find(c => c.indexOf('status-') === 0);
+        if (prevStatusClass) card.classList.remove(prevStatusClass);
+        card.classList.add('status-' + newStatus);
+        card.dataset.status = newStatus;
+
+        // 2. Update the colored due-bar phase
+        const dueBar = card.querySelector('.mtcc-m-due-bar');
+        if (dueBar) {
+            const phaseClass = Array.from(dueBar.classList).find(c => c.indexOf('mtcc-phase-') === 0);
+            if (phaseClass) dueBar.classList.remove(phaseClass);
+            let phase = 'default';
+            if (['preflight', 'file_issue', 'printing'].indexOf(newStatus) >= 0) phase = 'production';
+            else if (newStatus === 'ready') phase = 'preparing';
+            else if (['dispatched', 'shipped'].indexOf(newStatus) >= 0) phase = 'ontheway';
+            else if (newStatus === 'delivered') phase = 'ready-for-pickup';
+            else if (newStatus === 'pickedup') phase = 'pickedup';
+            else if (newStatus === 'missing' || newStatus === 'unclaimed') phase = 'missing';
+            dueBar.classList.add('mtcc-phase-' + phase);
+        }
+
+        // 3. Update the status badge label
+        const badge = card.querySelector('.mtcc-m-status-badge');
+        if (badge && window.STATUS_LABELS && window.STATUS_LABELS[newStatus]) {
+            badge.textContent = window.STATUS_LABELS[newStatus];
+        } else if (badge) {
+            badge.textContent = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
+        }
+
+        // 4. Remove the pickup button (it only belongs on delivered cards)
+        if (newStatus !== 'delivered') {
+            const pickupBtn = card.querySelector('.mtcc-m-pickup-btn');
+            if (pickupBtn) pickupBtn.remove();
+        }
+    }
 }
 
 /**

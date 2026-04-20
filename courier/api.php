@@ -1818,6 +1818,9 @@ function formatOrderForApp($order, $ref = null, $statusOverride = null) {
         // Pricing
         'delivery_tier' => $pricing['tier'] ?? '',
         'total' => $pricing['total'] ?? 0,
+        'base_price' => $pricing['basePrice'] ?? 0,
+        'tax' => $pricing['tax'] ?? 0,
+        'delivery_fee' => $pricing['deliveryFee'] ?? 0,
         // Courier payout
         'est_payout' => $payoutInfo['total'],
         'est_payout_breakdown' => $payoutInfo['breakdown'],

@@ -52,6 +52,19 @@ Options -Indexes
     ExpiresByType application/javascript "access plus 1 week"
 </IfModule>
 
+# NEVER cache the service worker or the PWA manifest.
+# These MUST be fetched fresh so updates can roll out to installed PWAs.
+<FilesMatch "^(sw\.js|manifest\.json)$">
+    <IfModule mod_headers.c>
+        Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+        Header set Pragma "no-cache"
+        Header set Expires "0"
+    </IfModule>
+    <IfModule mod_expires.c>
+        ExpiresActive Off
+    </IfModule>
+</FilesMatch>
+
 # Security headers
 <IfModule mod_headers.c>
     Header set X-Content-Type-Options "nosniff"

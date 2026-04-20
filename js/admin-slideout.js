@@ -22,6 +22,119 @@ var OrderSlideout = (function() {
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Escape' && panel.classList.contains('open')) close();
     });
+
+    attachDragToDismiss();
+  }
+
+  // Drag-to-dismiss: finger anywhere on the sheet can pull it down. If the
+  // gesture starts in the content area and the content is scrolled below the
+  // top, the browser handles scroll first; once the content reaches scrollTop
+  // 0, any further downward pull drags the sheet. Matches native iOS bottom
+  // sheets and the courier app.
+  function attachDragToDismiss() {
+    var startY = 0;
+    var currentY = 0;
+    var dragging = false;       // sheet is being dragged (transform driven by finger)
+    var pending = false;        // touch started, waiting to decide if drag or scroll
+    var startedOnHeader = false;
+    var contentEl = null;
+    var dismissThreshold = 100;
+    var velocityWindow = [];
+
+    function isMobile() { return window.matchMedia('(max-width: 600px)').matches; }
+
+    function onStart(e) {
+      if (!isMobile()) return;
+      if (!panel.classList.contains('open')) return;
+      if (!panel.contains(e.target)) return;
+
+      var t = e.touches ? e.touches[0] : e;
+      startY = t.clientY;
+      currentY = startY;
+      velocityWindow = [{ t: Date.now(), y: startY }];
+
+      var header = document.getElementById('slideoutHeader');
+      startedOnHeader = !!(header && header.contains(e.target));
+      contentEl = document.getElementById('slideoutContent');
+
+      if (startedOnHeader) {
+        // Header gestures always drag immediately
+        dragging = true;
+        pending = false;
+        panel.classList.add('dragging');
+      } else {
+        // Content gestures are pending — scroll first, drag only if finger
+        // pulls DOWN while content is already at the top.
+        dragging = false;
+        pending = true;
+      }
+    }
+
+    function onMove(e) {
+      if (!dragging && !pending) return;
+      var t = e.touches ? e.touches[0] : e;
+      currentY = t.clientY;
+      var delta = currentY - startY;
+
+      // Promote a pending content-start gesture into a drag if we're at the top
+      // AND finger is moving downward. Otherwise let the browser scroll.
+      if (pending) {
+        if (delta <= 0) return; // upward/lateral — not our gesture
+        if (contentEl && contentEl.scrollTop > 0) {
+          // Content can still scroll up — cancel and let scroll happen
+          pending = false;
+          return;
+        }
+        // Commit to drag
+        pending = false;
+        dragging = true;
+        startY = currentY; // rebase so the initial tracking-slack doesn't jump
+        delta = 0;
+        panel.classList.add('dragging');
+      }
+
+      if (!dragging) return;
+
+      // Track the finger (no upward travel — only pull-down)
+      var effective = Math.max(0, delta);
+      panel.style.transform = 'translateY(' + effective + 'px)';
+
+      velocityWindow.push({ t: Date.now(), y: currentY });
+      if (velocityWindow.length > 6) velocityWindow.shift();
+
+      if (e.cancelable) e.preventDefault();
+    }
+
+    function onEnd() {
+      if (!dragging && !pending) return;
+      pending = false;
+      if (!dragging) return;
+
+      dragging = false;
+      panel.classList.remove('dragging');
+      panel.style.transform = ''; // hand back to CSS spring
+
+      var delta = currentY - startY;
+
+      var velocity = 0;
+      if (velocityWindow.length >= 2) {
+        var first = velocityWindow[0];
+        var last = velocityWindow[velocityWindow.length - 1];
+        var dt = last.t - first.t;
+        if (dt > 0) velocity = (last.y - first.y) / dt;
+      }
+
+      if (delta > dismissThreshold || velocity > 0.5) {
+        close();
+      }
+    }
+
+    // Listeners on the panel, not the document — avoids interfering with
+    // anything else on the page, and guarantees we stop if the user lifts.
+    panel.addEventListener('touchstart', onStart, { passive: true });
+    panel.addEventListener('touchmove', onMove, { passive: false });
+    panel.addEventListener('touchend', onEnd);
+    panel.addEventListener('touchcancel', onEnd);
   }
 
   function open(refCode) {
@@ -40,7 +153,12 @@ var OrderSlideout = (function() {
   }
 
   function close() {
-    if (panel) panel.classList.remove('open');
+    if (panel) {
+      // Clear any inline transform from a drag so the CSS close transition runs
+      panel.style.transform = '';
+      panel.classList.remove('open');
+      panel.classList.remove('dragging');
+    }
     if (overlay) overlay.classList.remove('open');
     document.body.style.overflow = '';
     currentRef = null;
@@ -84,17 +202,67 @@ var OrderSlideout = (function() {
     shipped:'Shipped', delivered:'Delivered', pickedup:'Picked Up',
     unclaimed:'Unclaimed', missing:'Missing', cancelled:'Cancelled', refunded:'Refunded'
   };
-  var STATUS_LABELS = window.STATUS_LABELS || STATUS_LABELS_DEFAULT;
+  // Read lazily so we always get the role-specific labels from
+  // outputStatusConfigScript(), regardless of script load order.
+  function getStatusLabels() { return window.STATUS_LABELS || STATUS_LABELS_DEFAULT; }
   var TIME_LABELS = { '9am':'9:00 AM', '12pm':'12:00 PM', '3pm':'3:00 PM', '6pm':'6:00 PM', 'anytime':'Anytime' };
+
+  // MTCC phase color for the header banner (mirrors courier setPanelGradient)
+  function mtccPhaseColor(status) {
+    if (['preflight', 'file_issue', 'printing'].indexOf(status) !== -1) return '#6366f1';
+    if (status === 'ready') return '#d97706';
+    if (['dispatched', 'shipped'].indexOf(status) !== -1) return '#14b8a6';
+    if (status === 'delivered') return '#059669';
+    if (status === 'pickedup') return '#22c55e';
+    if (status === 'missing' || status === 'unclaimed') return '#dc2626';
+    return '#64748b';
+  }
+  function mtccPhaseEnd(color) {
+    var map = { '#d97706': '#b45309', '#7c3aed': '#6d28d9', '#14b8a6': '#0d9488',
+      '#059669': '#047857', '#22c55e': '#16a34a', '#dc2626': '#b91c1c',
+      '#6366f1': '#4f46e5', '#64748b': '#475569' };
+    return map[color] || color;
+  }
 
   function renderHeader(order) {
     var ref = esc(order.referenceCode || '');
     var status = order.status || 'unpaid';
     var el = document.getElementById('slideoutHeader');
+    var perms = window.PERMS || {};
+
+    // MTCC: colored due-date banner with status pill (matches courier app)
+    if (perms.isMtccStaff) {
+      var color = mtccPhaseColor(status);
+      var colorEnd = mtccPhaseEnd(color);
+      var dueStr = order.selectedDate ? fmtDate(order.selectedDate) : '';
+      var timeStr = TIME_LABELS[order.deliveryTime || 'anytime'] || 'Anytime';
+      var statusLabel = getStatusLabels()[status] || status;
+
+      // Panel gets the gradient background so the drag handle area flows seamlessly
+      if (panel) {
+        panel.style.setProperty('--mtcc-header-color', color);
+        panel.style.setProperty('--mtcc-header-color-end', colorEnd);
+        panel.classList.add('mtcc-panel');
+      }
+
+      var h = '<div class="mtcc-detail-header">';
+      h += '<div class="mtcc-detail-due">';
+      h += '<span class="mtcc-due-label">DUE DATE</span>';
+      h += '<span class="mtcc-due-value">' + (dueStr ? esc(dueStr) : 'No date') +
+           '  |  <span class="detail-due-by">by:</span> ' + esc(timeStr) + '</span>';
+      h += '</div>';
+      h += '<span class="order-status-badge mtcc-header-badge badge-' + status + '">' + esc(statusLabel) + '</span>';
+      h += '</div>';
+      el.innerHTML = h;
+      return;
+    }
+
+    // Non-MTCC: existing header
+    if (panel) panel.classList.remove('mtcc-panel');
     el.innerHTML =
       '<div class="so-header-top">' +
         '<div class="so-header-ref">#' + ref + '</div>' +
-        '<span class="status-badge status-' + status + '">' + (STATUS_LABELS[status] || status) + '</span>' +
+        '<span class="status-badge status-' + status + '">' + (getStatusLabels()[status] || status) + '</span>' +
         '<button class="so-close" onclick="OrderSlideout.close()">&times;</button>' +
       '</div>';
   }
@@ -104,9 +272,33 @@ var OrderSlideout = (function() {
     var el = document.getElementById('slideoutFooter');
     var perms = window.PERMS || {};
 
+    // MTCC: no footer — all actions (Confirm, Scan, Print, PDF, Report,
+    // Support) are rendered inline in the body to match the courier layout.
     if (perms.isMtccStaff) {
-      // MTCC: Print, Download, Report Issue, Close
+      el.innerHTML = '';
+      el.style.display = 'none';
+      return;
+    }
+    el.style.display = '';
+
+    if (false /* legacy MTCC footer — disabled; see renderMtccBody */) {
+      // MTCC: if the order is ready to pick up, surface "Mark Picked Up" as the
+      // primary action. It's the highest-frequency task at the counter, so it
+      // should sit at the top of the footer — big, green, unmistakable.
+      var status = (order.status || '').toLowerCase();
+      var pickupBtn = '';
+      if (status === 'delivered') {
+        pickupBtn =
+          '<button class="so-footer-btn so-btn-pickup" ' +
+              'onclick="OrderSlideout.close(); handleQuickStatusSelect(\'' + ref + '\', \'pickedup\', \'delivered\');" ' +
+              'title="Mark this order as picked up by the customer">' +
+            '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px; margin-right:6px;"><polyline points="20 6 9 17 4 12"/></svg>' +
+            'Confirm Picked Up' +
+          '</button>';
+      }
+
       el.innerHTML =
+        pickupBtn +
         '<button class="so-footer-btn so-btn-secondary" onclick="OrderSlideout.print()" title="Print order details">' +
           '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>' +
           'Print' +
@@ -119,7 +311,7 @@ var OrderSlideout = (function() {
           '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>' +
           'Report Issue' +
         '</button>' +
-        '<button class="so-footer-btn so-btn-primary" onclick="OrderSlideout.close()">Close</button>';
+        '<button class="so-footer-btn ' + (status === 'delivered' ? 'so-btn-secondary' : 'so-btn-primary') + '" onclick="OrderSlideout.close()">Close</button>';
     } else {
       el.innerHTML =
         '<a href="?view=' + encodeURIComponent(ref) + '" class="so-footer-btn so-btn-primary">View Full Details</a>' +
@@ -127,7 +319,132 @@ var OrderSlideout = (function() {
     }
   }
 
+  // MTCC body — mirrors the courier app's mtcc-panel layout exactly
+  // (ORDER/CODE row, label/value detail grid, pricing, notes, action buttons,
+  // secondary action row, Print Stuff Support).
+  function renderMtccBody(order) {
+    var ci = order.customerInfo || {};
+    var dim = order.dimensions || {};
+    var pricing = order.pricing || {};
+    var event = order.event || {};
+    var deliveryTime = order.deliveryTime || 'anytime';
+    var material = (order.material === 'fabric') ? 'Fabric' : 'Poster';
+    var status = (order.status || '').toLowerCase();
+    var ref = esc(order.referenceCode || '');
+    var trackingNum = genTrackingNumber(order);
+    var buildingRaw = (event.building || order.building || '').toLowerCase();
+    var buildingLabel = buildingRaw === 'south' ? 'MTCC South' : (buildingRaw === 'north' ? 'MTCC North' : '');
+
+    var h = '';
+
+    // ORDER / CODE header row
+    h += '<div class="mtcc-detail-id-section">';
+    h += '<div class="mtcc-detail-id-left">';
+    h += '<div class="mtcc-detail-id-label">ORDER</div>';
+    h += '<div class="mtcc-detail-id-value ref-status-' + esc(status) + '">' + ref + '</div>';
+    h += '</div>';
+    if (trackingNum) {
+      h += '<div class="mtcc-detail-id-right">';
+      h += '<div class="mtcc-detail-id-label">CODE</div>';
+      h += '<div class="mtcc-detail-id-code">' + esc(trackingNum) + '</div>';
+      h += '</div>';
+    }
+    h += '</div>';
+
+    // Detail grid — Customer / Phone / Email / divider / Event / Material / Size
+    h += '<div class="mtcc-detail-grid">';
+    h += '<div class="mtcc-detail-row"><span class="mtcc-detail-label">Customer</span><span class="mtcc-detail-value">' + esc(ci.name || 'Unknown') + '</span></div>';
+    if (ci.phone) {
+      var telHref = 'tel:' + String(ci.phone).replace(/[^0-9+]/g, '');
+      h += '<div class="mtcc-detail-row"><span class="mtcc-detail-label">Phone</span><a class="mtcc-detail-value mtcc-detail-link" href="' + telHref + '">' + esc(ci.phone) + '</a></div>';
+    }
+    if (ci.email) {
+      h += '<div class="mtcc-detail-row"><span class="mtcc-detail-label">Email</span><a class="mtcc-detail-value mtcc-detail-link" href="mailto:' + esc(ci.email) + '">' + esc(ci.email) + '</a></div>';
+    }
+    h += '<div class="mtcc-detail-divider"></div>';
+    h += '<div class="mtcc-detail-row"><span class="mtcc-detail-label">Event</span><span class="mtcc-detail-value">' + esc(event.name || event.acronym || 'N/A') + (buildingLabel ? ' &mdash; ' + esc(buildingLabel) : '') + '</span></div>';
+    h += '<div class="mtcc-detail-row"><span class="mtcc-detail-label">Material</span><span class="mtcc-detail-value">' + esc(material) + '</span></div>';
+    h += '<div class="mtcc-detail-row"><span class="mtcc-detail-label">Size</span><span class="mtcc-detail-value">' + (dim.width || '?') + '" &times; ' + (dim.height || '?') + '"</span></div>';
+    h += '<div class="mtcc-detail-row"><span class="mtcc-detail-label">Due</span><span class="mtcc-detail-value">' + fmtDate(order.selectedDate) + ' &middot; by ' + (TIME_LABELS[deliveryTime] || deliveryTime) + '</span></div>';
+
+    // Pricing (MTCC keeps this — transparency + matches price on the card)
+    h += '<div class="mtcc-detail-divider"></div>';
+    h += '<div class="mtcc-detail-row"><span class="mtcc-detail-label">Base Price</span><span class="mtcc-detail-value">' + fmtMoney(pricing.basePrice) + '</span></div>';
+    if (pricing.deliveryFee > 0) {
+      h += '<div class="mtcc-detail-row"><span class="mtcc-detail-label">Delivery</span><span class="mtcc-detail-value">' + fmtMoney(pricing.deliveryFee) + '</span></div>';
+    }
+    h += '<div class="mtcc-detail-row"><span class="mtcc-detail-label">Tax (HST)</span><span class="mtcc-detail-value">' + fmtMoney(pricing.tax) + '</span></div>';
+    h += '<div class="mtcc-detail-row mtcc-detail-total"><span class="mtcc-detail-label">Total</span><span class="mtcc-detail-value">' + fmtMoney(pricing.total) + '</span></div>';
+
+    // Pickup audit (if already picked up)
+    if (order.pickup && order.pickup.picked_up_at) {
+      h += '<div class="mtcc-detail-divider"></div>';
+      h += '<div class="mtcc-detail-row"><span class="mtcc-detail-label">Picked Up</span><span class="mtcc-detail-value">' + fmtDateTime(order.pickup.picked_up_at) + '</span></div>';
+      if (order.pickup.pickup_person) {
+        h += '<div class="mtcc-detail-row"><span class="mtcc-detail-label">Received By</span><span class="mtcc-detail-value">' + esc(order.pickup.pickup_person) +
+             (order.pickup.same_as_customer ? ' <span style="color:#059669;font-size:0.75rem;">(customer)</span>' : '') + '</span></div>';
+      }
+    }
+
+    // Notes (customer + internal)
+    var custNotes = (ci.additionalNotes || '').trim();
+    var internalNotes = order.internalNotes || [];
+    if (custNotes || internalNotes.length) {
+      h += '<div class="mtcc-detail-divider"></div>';
+      if (custNotes) {
+        h += '<div class="mtcc-detail-row mtcc-detail-notes"><span class="mtcc-detail-label">Notes</span><span class="mtcc-detail-value">' + esc(custNotes) + '</span></div>';
+      }
+    }
+
+    h += '</div>'; // .mtcc-detail-grid
+
+    // Action buttons
+    h += '<div class="mtcc-detail-actions">';
+    if (status === 'delivered') {
+      h += '<div class="mtcc-btn-row">';
+      h += '<button class="mtcc-action-btn mtcc-btn-confirm" onclick="mtccConfirmPickup(\'' + ref + '\');">';
+      h += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Confirm Pick Up</button>';
+      h += '<button class="mtcc-action-btn mtcc-btn-scan" onclick="OrderSlideout.close(); mtccOpenScanner();">';
+      h += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M8 7v10"/><path d="M12 7v10"/><path d="M17 7v10"/></svg> Scan to Verify</button>';
+      h += '</div>';
+    }
+
+    // Secondary actions — Print / Download PDF / Report Issue in one row
+    h += '<div class="mtcc-btn-row mtcc-btn-row-secondary">';
+    h += '<button class="mtcc-action-btn mtcc-btn-secondary-sm" onclick="OrderSlideout.print()">';
+    h += '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg> Print</button>';
+    h += '<button class="mtcc-action-btn mtcc-btn-secondary-sm" onclick="OrderSlideout.downloadPDF()">';
+    h += '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> PDF</button>';
+    h += '<button class="mtcc-action-btn mtcc-btn-issue-sm" onclick="mtccReportIssue(\'' + ref + '\');">';
+    h += '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Report</button>';
+    h += '</div>';
+
+    h += '</div>'; // .mtcc-detail-actions
+
+    // Print Stuff Support row
+    h += '<div class="bv7-quick-connect">';
+    h += '<div class="bv7-qc-label"><span class="bv7-qc-name bv7-qc-name-lg">Print Stuff Support</span></div>';
+    h += '<div class="bv7-qc-buttons">';
+    h += '<button class="bv7-qc-btn" onclick="if(typeof Tawk_API!==\'undefined\'&&Tawk_API.maximize)Tawk_API.maximize(); else window.open(\'https://tawk.to/chat/\',\'_blank\');" title="Live Chat">';
+    h += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"/><path d="M8 12h.01"/><path d="M12 12h.01"/><path d="M16 12h.01"/></svg>';
+    h += '</button>';
+    h += '<a class="bv7-qc-btn" href="tel:+14378828822" title="Call">';
+    h += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"/></svg>';
+    h += '</a>';
+    h += '</div>';
+    h += '</div>';
+
+    return h;
+  }
+
   function renderBody(order) {
+    var perms = window.PERMS || {};
+    // MTCC: fully different layout mirroring the courier MTCC panel
+    if (perms.isMtccStaff) {
+      document.getElementById('slideoutContent').innerHTML = renderMtccBody(order);
+      return;
+    }
+
     var h = '';
     var ci = order.customerInfo || {};
     var dim = order.dimensions || {};
@@ -138,8 +455,7 @@ var OrderSlideout = (function() {
     var deliveryTime = order.deliveryTime || 'anytime';
     var material = (order.material === 'fabric') ? 'Fabric' : 'Poster';
     var vendorName = order.vendor_name || '';
-    var perms = window.PERMS || {};
-    var isMtcc = perms.isMtccStaff;
+    var isMtcc = false;
 
     // ---- FILE DOWNLOAD (hidden for MTCC) ----
     if (!isMtcc) {
@@ -156,11 +472,24 @@ var OrderSlideout = (function() {
 
     var trackingNum = genTrackingNumber(order);
 
+    // ---- CUSTOMER NAME HERO (MTCC only) ----
+    // For MTCC staff, the customer name IS the identifier they verify at the
+    // counter. Promote it above the spec grid so it's impossible to miss.
+    if (isMtcc) {
+      h += '<div class="so-customer-hero">';
+      h += '<div class="so-customer-hero-label">Customer</div>';
+      h += '<div class="so-customer-hero-name">' + esc(ci.name || 'Unknown') + '</div>';
+      h += '</div>';
+    }
+
     // ---- ORDER DETAILS ----
     h += '<div class="so-section">';
     h += '<div class="so-section-label">Order Details</div>';
     h += '<div class="so-spec-grid">';
-    h += '<span class="so-spec-lbl">Customer</span><span class="so-spec-val">' + esc(ci.name || 'N/A') + '</span>';
+    // Skip the Customer row inside the grid for MTCC (already shown in hero above)
+    if (!isMtcc) {
+      h += '<span class="so-spec-lbl">Customer</span><span class="so-spec-val">' + esc(ci.name || 'N/A') + '</span>';
+    }
     h += '<span class="so-spec-lbl">Size</span><span class="so-spec-val">' + (dim.width || '?') + '" &times; ' + (dim.height || '?') + '"</span>';
     h += '<span class="so-spec-lbl">Material</span><span class="so-spec-val"><span class="so-material-badge so-mat-' + material.toLowerCase() + '">' + material + '</span></span>';
     h += '<span class="so-spec-lbl">Due</span><span class="so-spec-val">' + fmtDate(order.selectedDate) + ' &middot; by ' + (TIME_LABELS[deliveryTime] || deliveryTime) + '</span>';
@@ -209,6 +538,9 @@ var OrderSlideout = (function() {
     }
 
     // ---- TIMELINE ----
+    // MTCC staff don't need the full production timeline — they only care about
+    // the current pickup state, which is already shown in the header badge.
+    if (!isMtcc) {
     h += '<div class="so-section">';
     h += '<div class="so-section-label">Order Timeline</div>';
     h += '<div class="so-timeline">';
@@ -260,6 +592,7 @@ var OrderSlideout = (function() {
       }
     });
     h += '</div></div>';
+    } // end !isMtcc timeline guard
 
 // ---- NOTES ----
     h += '<div class="so-section so-notes-section">';
