@@ -428,6 +428,18 @@ Pre-launch codebase restructuring completed:
 
 Full customer order form with Stripe (3 flows), admin dashboard (216KB) with filtering/analytics/COGS, production queue with vendor assignment/timers, vendor fulfillment portal with audio alerts, problem detection system (10 files), dispatch system with batching/scanning/routing, courier PWA, events manager, auth system (3 types), email system (5 trigger files), timer system, reports with export, rate optimization analytics.
 
+## Multi-product catalog upgrade (April 2026)
+
+Generalized the admin order form + backend from poster-only to all products. New layers:
+- `src/Catalog/` — `MaterialRepository`, `AttributeRepository`, `ProductOptionsRepository`, `CatalogService` facade.
+- `src/Pricing/` — `PricingEngine`, `AreaPricingTable`, `QuantityPricingTable`, `AddOnCalculator`, `PriceMemory`. The old `Pricing\Posters\PricingTable` is a thin shim.
+- `data/shared/attributes/` — global libraries for materials, finishes, paper_stocks, sizes, ink_colors, imprint_methods.
+- `data/shared/price-memory/` — organic per-product pricing memory.
+- New endpoints: `GET /catalog/form-config`, `POST /catalog/attribute`, `POST /catalog/product-option`, `GET /api/quote`.
+- Create + detail-edit forms now use a product picker → dynamic spec block, with combobox attribute pickers (inline "Add new"), Discount field, source/memory hint, auto/manual pricing toggle, vendor capability filtering.
+
+**Architecture decisions doc:** [`docs/catalog.md`](mtcc-print-platform/docs/catalog.md). Read it before touching anything in `data/shared/`, `config/products/`, `src/Catalog/`, or `src/Pricing/`.
+
 ## What's On the Horizon
 
 - Dispatch Phase 2A expansion
