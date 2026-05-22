@@ -440,6 +440,10 @@ Generalized the admin order form + backend from poster-only to all products. New
 
 **Architecture decisions doc:** [`docs/catalog.md`](mtcc-print-platform/docs/catalog.md). Read it before touching anything in `data/shared/`, `config/products/`, `src/Catalog/`, or `src/Pricing/`.
 
+## Universal Configurator Phase 1A (May 2026)
+
+`/products/{slug}` route on the platform. v49 prototype ported into PHP views + JS + CSS at `src/Http/Views/storefront/configurator/`, `assets/css/products/configurator.css` (699 lines), `assets/js/products/configurator.js` (549 lines). Static catalog seed data in `data/shared/catalog/` (7 business-card JSONs). Mocked client-side pricing via `state.mock_pricing`. Vendor adapters + Catalog Manager ship in 1B; sub-category SEO pages + Proof View backend ship in 1C.
+
 ## What's On the Horizon
 
 - Dispatch Phase 2A expansion
