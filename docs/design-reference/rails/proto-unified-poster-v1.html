@@ -1,0 +1,1640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- DEV cache-bust: a plain reload self-redirects to a unique URL so the browser can never serve a stale build -->
+<script>(function(){ try{ if(!/[?&]v=/.test(location.search)){ location.replace(location.pathname + (location.search?location.search+'&':'?') + 'v=' + Date.now()); } }catch(e){} })();</script><meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate">
+<!-- NB: no <meta name="viewport"> on purpose. On desktop it can pin the layout viewport to device-width
+     (smaller than the window on portrait/high-DPI/multi-monitor setups), boxing the page. Desktop uses the window. -->
+
+<meta http-equiv="pragma" content="no-cache">
+<meta http-equiv="expires" content="0">
+<!--
+  ============================================================================
+  PRINT STUFF — PRODUCT CONFIGURATOR · FRAMEWORK PROTOTYPE
+  ============================================================================
+  PRODUCT-AGNOSTIC FRAMEWORK. This prototype defines the layout, flows, and
+  component design that EVERY product plugs into. "Poster" is only the SAMPLE
+  product used to exercise the framework — other products supply their own
+  product images, option sets, sizes, finishes, and copy dynamically.
+
+  Intentionally PLACEHOLDER / not authoritative (pulled in per-product at build):
+    • Pricing, per-unit math, volume discounts (rates are invented samples)
+    • In-hand dates and the calendar
+    • The "Poster" product, its options, and the sample artwork
+
+  Tax: HST is NOT shown in the configurator — it is added at CHECKOUT.
+
+  Deferred (not in this prototype):
+    • Mobile layout — pending Rory; production build to be made responsive
+    • Accessibility (roles/labels/keyboard/focus) — to be built in production phase
+  ============================================================================
+-->
+<title>PROTOTYPE — Poster (Premiere chassis) v2</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{ --brand:#7c3aed; --brand2:#a855f7; --bdark:#5b21b6; --plight:#ede9fe; --ink:#1a1625; --sub:#6b7280; --muted:#9ca3af; --green:#059669; --amber:#b45309; --grad:linear-gradient(135deg,#7c3aed,#5b21b6); --gradwide:linear-gradient(90deg,#a855f7,#7c3aed 50%,#4f6ef7); --ease:cubic-bezier(.22,1,.36,1); }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html,body{ min-height:100%; width:100%; margin:0; }
+  body{ font-family:'Inter',sans-serif; color:var(--ink); overflow-x:clip; }   /* clip (not hidden) so position:sticky still works */
+  .screen{ position:relative; width:100%; height:100vh; height:100lvh; height:100dvh; min-height:100vh; min-height:100lvh; min-height:100dvh; overflow:hidden; --slidedist:clamp(190px,20vw,300px); background:
+      radial-gradient(50% 50% at 50% 42%, #ffffff 0%, rgba(255,255,255,0) 64%),
+      radial-gradient(130% 120% at 50% 12%, #f6f1ff 0%, #e9def9 48%, #d5c5f0 100%); }
+  .prototag{ position:absolute; right:14px; bottom:14px; z-index:60; font-size:.52rem; font-weight:800; letter-spacing:.12em; color:rgba(91,33,182,.55); background:rgba(255,255,255,.5); border-radius:8px; padding:5px 10px; pointer-events:none; }
+  .uhdr{ position:relative; z-index:30; }
+  .uhdr .util{ height:36px; background:linear-gradient(135deg,#7c3aed,#5b21b6); display:flex; align-items:center; gap:16px; padding:0 30px; color:rgba(255,255,255,.85); font-size:.6rem; font-weight:600; }
+  .uhdr .util .cat{ font-weight:700; cursor:pointer; } .uhdr .util .cat.on{ background:#fff; color:var(--bdark); padding:6px 13px 9px; border-radius:10px 10px 0 0; margin-bottom:-9px; }
+  .uhdr .util .promo{ flex:1; text-align:center; color:#ddd0f7; } .uhdr .util .rsep{ width:1px; height:13px; background:rgba(255,255,255,.35); }
+  .uhdr .main{ height:58px; background:#fff; display:flex; align-items:center; gap:14px; padding:0 30px; }
+  .uhdr .logo{ font-family:'Montserrat',sans-serif; font-size:1.05rem; font-weight:800; } .uhdr .logo b{ color:var(--brand); }
+  .uhdr .allbtn{ background:var(--grad); color:#fff; border-radius:9px; padding:9px 14px; font-size:.62rem; font-weight:800; }
+  .uhdr .search{ flex:1; height:36px; border:1.5px solid #e3dbf4; border-radius:10px; display:flex; align-items:center; color:var(--muted); font-size:.62rem; overflow:hidden; }
+  .uhdr .search span{ flex:1; padding:0 13px; } .uhdr .search .go{ width:42px; align-self:stretch; background:var(--grad); display:flex; align-items:center; justify-content:center; color:#fff; }
+  .uhdr .hicons{ display:flex; gap:12px; font-size:.62rem; font-weight:700; color:var(--sub); align-items:center; }
+  .uhdr .subrow{ height:64px; background:#fff; border-top:1px solid #f3eefb; border-bottom:1px solid #eee9f8; display:flex; justify-content:center; align-items:center; gap:30px; }
+  .scat{ display:flex; flex-direction:column; align-items:center; gap:5px; cursor:pointer; position:relative; }
+  .scat .sic{ width:27px; height:27px; border-radius:8px; box-shadow:0 2px 6px rgba(60,30,130,.14); }
+  .scat .sn{ font-size:.55rem; font-weight:700; color:var(--sub); } .scat.on .sn{ color:var(--bdark); font-weight:800; }
+  .scat.on::after{ content:''; position:absolute; bottom:-11px; left:20%; right:20%; height:2.5px; border-radius:2px; background:var(--grad); }
+  .float{ position:absolute; z-index:20; }
+  .glasspill{ background:rgba(255,255,255,.68); backdrop-filter:blur(18px) saturate(1.5); border:1px solid rgba(255,255,255,.95); box-shadow:0 6px 18px rgba(60,30,130,.12); border-radius:16px; }
+  /* the three floating chrome pills share ONE height + glass shell so they read as a set */
+  .f-ctrls, .dtoggle, .f-buy{ box-sizing:border-box; }
+  .f-ctrls, .dtoggle{ min-height:50px; }   /* tighter: bigger pills inside, ~4px gap to the glass edge */
+  .f-ctrls{ top:172px; left:50%; transform:translateX(-50%); display:flex; gap:7px; padding:0 7px; align-items:center; }
+  .cpill{ font-family:inherit; font-size:.74rem; font-weight:700; color:var(--ink); border-radius:11px; padding:11px 17px; cursor:pointer; }
+  .cpill:hover{ background:rgba(124,58,237,.08); } .cpill.act{ background:var(--brand); color:#fff; box-shadow:0 3px 8px rgba(124,58,237,.4), 0 1px 2px rgba(0,0,0,.12), 0 0 0 .5px rgba(0,0,0,.05), inset 0 .5px 0 rgba(255,255,255,.45); }
+  /* segmented toggle — translates the platform's Apple toggle-switch vocabulary (forms.css) to a 2-up
+     segmented control: the .seg is the RECESSED TRACK (multi-layer inset shadow), the active .cpill is the
+     FLOATING THUMB (lift + close shadow + hairline ring + glossy top inset). Reused everywhere. */
+  .seg{ position:relative; display:inline-flex; gap:3px; background:#e9e6f2; border-radius:13px; padding:3px; box-shadow:inset 0 0 0 1px rgba(0,0,0,.05), inset 0 1px 2px rgba(0,0,0,.1), inset 0 -1px 0 rgba(255,255,255,.5); }
+  /* the active "thumb" is a single element that SLIDES between pills (JS sets left/width to the active pill) */
+  .seg-thumb{ position:absolute; z-index:0; top:3px; left:3px; height:36px; width:0; border-radius:9px; background:var(--brand); box-shadow:0 3px 8px rgba(124,58,237,.4), 0 1px 2px rgba(0,0,0,.12), 0 0 0 .5px rgba(0,0,0,.05), inset 0 .5px 0 rgba(255,255,255,.45); transition:left .34s cubic-bezier(.34,1.12,.5,1), width .34s cubic-bezier(.34,1.12,.5,1); pointer-events:none; }
+  .seg .cpill{ position:relative; z-index:1; display:inline-flex; align-items:center; justify-content:center; gap:7px; padding:11px 17px; border-radius:9px; color:var(--sub); white-space:nowrap; font-family:inherit; background:transparent; border:0; cursor:pointer; transition:color .26s var(--ease); }
+  .seg .cpill:hover{ color:var(--bdark); }
+  .seg .cpill.act, .seg .cpill.on{ color:#fff; }   /* bg/shadow now come from the sliding .seg-thumb */
+  .seg .cpill.act:hover, .seg .cpill.on:hover{ color:#fff; }
+  .f-ctrls .vsepp{ width:1px; height:18px; background:#e0d6f2; margin:0 3px; }
+  /* persistent BOTTOM BAR (both views): running total + details on the LEFT, Add-to-cart on the RIGHT.
+     The commitment lives where the deliberation is. Pure commit surface — Quick edit lives up top. */
+  .f-buy{ left:0; right:0; bottom:0; top:auto; min-height:0; height:clamp(84px,10.5vh,104px); border-radius:0; display:flex; align-items:center; justify-content:space-between; gap:20px; padding:0 clamp(24px,3.5vw,52px); box-shadow:0 -8px 28px rgba(60,30,130,.12); border-top:1px solid rgba(255,255,255,.85); background:rgba(255,255,255,.88); z-index:30; }
+  .f-buy .hp{ text-align:left; display:flex; flex-direction:column; gap:2px; min-width:0; }
+  /* row above the price: "Total" label + the running flash sit here */
+  .f-buy .hp-top{ display:flex; align-items:center; gap:10px; min-height:16px; }
+  .f-buy .hp-main{ display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
+  .f-buy .hp-lbl{ font-family:'Inter',sans-serif; font-size:.62rem; font-weight:800; letter-spacing:.09em; text-transform:uppercase; color:var(--sub); }
+  /* SOLID-colour total (theme display font), lighter weight + grey per-each */
+  .f-buy .hp .t{ font-family:'Montserrat',sans-serif; font-size:clamp(1.7rem,2.3vw,2.1rem); font-weight:700; letter-spacing:-.02em; line-height:1; color:var(--brand); }
+  .f-buy .hp-each{ font-family:'Inter',sans-serif; font-size:.78rem; font-weight:700; color:var(--sub); }
+  .f-buy .hp .s{ font-family:'Inter',sans-serif; font-size:.78rem; color:var(--sub); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:5px; }
+  /* running flash — sits ABOVE the price (in hp-top). Reverse-psychology: GREEN = up, RED = down */
+  .f-buy .pdelta{ font-family:'Montserrat',sans-serif; font-size:.92rem; font-weight:900; opacity:0; } .f-buy .pdelta.go, .qdf-top .pdelta.go, .qd3-lbl .pdelta.go{ animation:flash 1.25s var(--ease); } .pdelta.up{ color:#059669; } .pdelta.down{ color:#dc2626; }
+  @keyframes flash{ 0%{opacity:0;transform:translateY(7px) scale(.92)} 16%{opacity:1;transform:none} 76%{opacity:1} 100%{opacity:0;transform:translateY(-7px) scale(1.04)} }
+  .f-buy .addtot{ font-family:'Montserrat',sans-serif; font-weight:900; opacity:.92; }
+  .f-buy-actions{ display:flex; align-items:center; gap:16px; flex:none; }
+  .f-buy-actions .actdiv{ width:0; height:32px; flex:none; border-left:1.5px dashed #c7b8ec; }
+  /* Save build — secondary action: DASHED outline, less round */
+  .savebuild{ font-family:'Inter',sans-serif; font-size:.76rem; font-weight:800; color:var(--bdark); background:transparent; border:1.6px dashed #c7b8ec; border-radius:10px; padding:0 18px; height:46px; cursor:pointer; white-space:nowrap; transition:.15s var(--ease); }
+  .savebuild:hover{ border-color:var(--brand); color:var(--brand); background:rgba(124,58,237,.05); }
+  /* Add to cart — hero CTA, LESS round */
+  .f-buy .add, .qdrawer-foot .add{ display:inline-flex; align-items:center; gap:9px; background:linear-gradient(120deg,#8b5cf6,#6d28d9); color:#fff; border:0; border-radius:13px; padding:0 30px; height:52px; font-family:'Inter',sans-serif; font-size:1rem; font-weight:800; letter-spacing:.005em; cursor:pointer; box-shadow:0 10px 24px -4px rgba(109,40,217,.55), inset 0 1px 0 rgba(255,255,255,.28); white-space:nowrap; transition:transform .15s var(--ease), box-shadow .15s; }
+  .add .addcart{ width:19px; height:19px; flex:none; }
+  .f-buy .add:hover, .qdrawer-foot .add:hover{ transform:translateY(-2px); box-shadow:0 14px 30px -4px rgba(109,40,217,.62), inset 0 1px 0 rgba(255,255,255,.3); } .f-buy .add .addarr{ font-size:1.05rem; transition:transform .2s; } .f-buy .add:hover .addarr{ transform:translateX(4px); }
+  /* ===== N12 segmented buy-bar (the chosen bottom-bar design) ===== */
+  .f-buy .bb-seg{ display:flex; align-items:stretch; min-width:0; }
+  .f-buy .bb-cell{ display:flex; flex-direction:column; justify-content:center; gap:3px; padding:0 clamp(13px,1.5vw,22px); position:relative; }
+  .f-buy .bb-cell:first-child{ padding-left:0; }
+  .f-buy .bb-cell + .bb-cell::before{ content:''; position:absolute; left:0; top:50%; transform:translateY(-50%); height:30px; border-left:1.5px dashed #cdbff0; }
+  .f-buy .bb-l{ font-family:'Inter',sans-serif; font-size:.6rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--sub); white-space:nowrap; }
+  .f-buy .bb-v{ font-family:'Inter',sans-serif; font-weight:800; font-size:.92rem; color:var(--bdark); white-space:nowrap; }
+  .f-buy .bb-total .t{ font-family:'Montserrat',sans-serif; font-weight:700; font-size:clamp(1.7rem,2.3vw,2.2rem); letter-spacing:-.02em; line-height:1; background:var(--gradwide); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  /* drawer (v2) footer reuses the same N12 segmented price-bar style, scaled for the narrow panel */
+  .qdrawer-foot .bb-seg{ display:flex; align-items:stretch; min-width:0; }
+  .qdrawer-foot .bb-cell{ display:flex; flex-direction:column; justify-content:center; gap:3px; padding:0 clamp(9px,2.6vw,15px); position:relative; }
+  .qdrawer-foot .bb-cell:first-child{ padding-left:0; }
+  .qdrawer-foot .bb-cell + .bb-cell::before{ content:''; position:absolute; left:0; top:50%; transform:translateY(-50%); height:26px; border-left:1.5px dashed #cdbff0; }
+  .qdrawer-foot .bb-l{ font-family:'Inter',sans-serif; font-size:.56rem; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--sub); white-space:nowrap; }
+  .qdrawer-foot .bb-v{ font-family:'Inter',sans-serif; font-weight:800; font-size:.82rem; color:var(--bdark); white-space:nowrap; }
+  .qdrawer-foot .bb-total .t{ font-family:'Montserrat',sans-serif; font-weight:700; font-size:1.5rem; letter-spacing:-.02em; line-height:1; background:var(--gradwide); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  /* ===== Step-07 order summary = the Packing-slip card (chosen price card) ===== */
+  .oslip{ position:relative; max-width:580px; background:rgba(255,255,255,.9); backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,1); border-radius:20px; box-shadow:0 18px 44px rgba(60,30,130,.16); overflow:hidden; margin-top:30px; }
+  .oslip-pad{ padding:20px 24px 22px; }
+  .oslip-hd{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:14px; }
+  .oslip-biz{ font-family:'Montserrat',sans-serif; font-weight:900; font-size:1rem; color:var(--brand); }
+  .oslip-kk{ font-size:.54rem; font-weight:800; letter-spacing:.22em; text-transform:uppercase; color:#9b7fd4; }
+  .oslip-tbl{ display:grid; grid-template-columns:34px 1fr auto; gap:11px 12px; font-size:.84rem; }
+  .oslip-tbl .h{ font-size:.56rem; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:#9b7fd4; padding-bottom:6px; border-bottom:1.5px dashed #c8b6ee; }
+  .oslip-tbl .q{ color:var(--muted); font-weight:600; } .oslip-tbl .d{ color:var(--sub); font-weight:600; } .oslip-tbl .a{ font-weight:800; color:var(--bdark); text-align:right; }
+  .oslip-trow{ display:flex; align-items:center; justify-content:space-between; margin-top:14px; padding-top:13px; border-top:1.5px dashed #c8b6ee; }
+  .oslip-tl{ font-size:.72rem; font-weight:600; letter-spacing:.04em; color:var(--sub); }
+  .oslip-num{ font-family:'Montserrat',sans-serif; font-weight:700; font-size:1.9rem; line-height:.9; background:var(--gradwide); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .oslip-add{ display:flex; align-items:center; justify-content:center; gap:8px; width:100%; margin-top:15px; background:linear-gradient(135deg,#7c3aed,#5b21b6); color:#fff; border:0; border-radius:12px; padding:12px; font-family:'Inter',sans-serif; font-weight:800; font-size:.86rem; cursor:pointer; box-shadow:0 8px 18px -4px rgba(109,40,217,.5), inset 0 1px 0 rgba(255,255,255,.25); transition:transform .15s var(--ease); }
+  .oslip-add:hover{ transform:translateY(-2px); } .oslip-add svg{ width:16px; height:16px; flex:none; }
+  .f-rail2{ left:clamp(20px,3vw,60px); top:calc(162px + (100vh - 162px) * 0.40); transform:translateY(-50%); width:clamp(208px,15vw,272px); }
+  .f-rail2 .rt2{ font-size:.52rem; font-weight:800; letter-spacing:.22em; color:#9b7fd4; text-transform:uppercase; margin:0 0 8px 4px; }
+  .f-rail2 .items{ position:relative; }
+  .rn:not(:last-child) .ico::after{ content:''; position:absolute; left:50%; transform:translateX(-50%); top:calc(100% + 7px); height:clamp(14px,2.2vh,28px); border-left:1.5px dashed #c8b6ee; z-index:0; }
+  .rn{ position:relative; display:flex; align-items:center; gap:15px; padding:clamp(11px,1.5vh,18px) 0; cursor:pointer; }
+  .rn .ico{ width:clamp(52px,4.4vw,68px); display:flex; justify-content:center; flex:none; position:relative; z-index:2; }
+  .rn.cur .ico::before{ content:''; position:absolute; inset:-7px -5px; border-radius:12px; background:rgba(124,58,237,.1); box-shadow:inset 0 0 0 1.5px #d6c8f5; }
+  .rn .k{ font-size:clamp(.52rem,.8vw,.64rem); font-weight:800; letter-spacing:.12em; color:#9b7fd4; text-transform:uppercase; }
+  .rn .v{ font-size:clamp(.78rem,1.05vw,.92rem); font-weight:800; margin-top:2px; white-space:nowrap; }
+  .rn:hover .v{ color:var(--brand); } .rn.cur .v{ color:var(--bdark); }
+  .rn.done .k{ color:#059669; }
+  /* completed step — GREEN circle-check-big on top of the rail tile (icon) */
+  .rn.done::after{ content:''; position:absolute; top:clamp(2px,.5vh,8px); left:clamp(40px,3.3vw,52px); width:20px; height:20px; z-index:3; background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Ccircle cx='12' cy='12' r='11.5' fill='%23059669'/%3E%3Cpath d='M21.801 10A10 10 0 1 1 17 3.335' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='m9 11 3 3L22 4' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat; filter:drop-shadow(0 2px 4px rgba(5,150,105,.4)); }
+  .gmini2{ border-radius:4px; background:linear-gradient(160deg,#fff,#efeaf9); border:1px solid #e4dbf4; box-shadow:0 1px 3px rgba(0,0,0,.15); display:block; position:relative; z-index:2; }
+  .gmini2.dark{ background:linear-gradient(150deg,#241b38,#3a2a63 60%,#7c3aed 150%); border-color:transparent; }
+  .gmini2.dash{ background:rgba(255,255,255,.6); border:1.5px dashed #a98fe0; display:flex; align-items:center; justify-content:center; color:var(--brand); font-size:.62rem; font-weight:800; }
+  .gstack2{ position:relative; z-index:2; } .gstack2 i{ display:block; width:30px; height:3.5px; border-radius:1.5px; background:linear-gradient(160deg,#fff,#eee8f9); border:1px solid #e4dbf4; border-bottom:0; } .gstack2 i:last-child{ border-bottom:1px solid #e4dbf4; }
+  .gcal2{ width:28px; border-radius:6px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.18); border:1px solid rgba(124,58,237,.14); background:#fff; text-align:center; position:relative; z-index:2; }
+  .f-rail2 .gcal2{ width:38px; } .f-rail2 .gcal2 .dn{ font-size:.88rem; } .f-rail2 .gcal2 .bd{ font-size:.38rem; }
+  .gcal2 .bd{ background:linear-gradient(110deg,#60a5fa,#2563eb); color:#fff; font-size:.3rem; font-weight:800; letter-spacing:.12em; padding:2px 0; display:block; }
+  .gcal2 .dn{ font-family:'Montserrat',sans-serif; font-size:.62rem; font-weight:900; display:block; line-height:1.35; }
+  .gfin{ width:31px; height:27px; border-radius:4px; background:linear-gradient(115deg,#241b38,#6a59a0 50%,#241b38); box-shadow:0 2px 7px rgba(60,30,130,.3); position:relative; z-index:2; }
+  /* ===== leftzone: toggle sits ABOVE the centred rail; in All options the whole config becomes a full Cold-Open scroll column with a sticky stage ===== */
+  .leftzone{ position:absolute; left:clamp(20px,3vw,60px); width:clamp(208px,15vw,272px); top:172px; bottom:clamp(210px,25vh,262px); display:flex; flex-direction:column; justify-content:center; gap:14px; z-index:21; }  /* rail vertically CENTRED in step (flex-centre, transform-free so the switch fade can use transform) */
+  /* density toggle — same glass shell + canonical .seg as the other two pills */
+  /* density / viewer switch — top-left, on the hero-controls line, in BOTH views. Glass card with EVEN
+     9px all round the seg (min-height 54 centres the 36px seg → 9px top/bottom; padding gives 9px sides). */
+  .dtoggle{ top:172px; left:clamp(20px,3vw,60px); display:flex; align-items:center; gap:9px; padding:4px 8px 4px 13px; z-index:34; }
+  .dtoggle .seg .cpill{ font-size:.72rem; font-weight:700; }   /* content-width pills, same padding as every other seg */
+  /* "Build mode" label that names the view toggle */
+  .cvlabel{ display:flex; align-items:center; margin-right:1px; }
+  .cvlabel .cvk{ font-size:.62rem; font-weight:900; letter-spacing:.1em; color:var(--bdark); text-transform:uppercase; }
+  /* dashed vertical divider (used in the top strip + the buy bar) */
+  .vsepp.dashed{ width:0; height:30px; flex:none; border-left:1.5px dashed #c7b8ec; }
+  /* Proof button reads as its OWN button, not a toggle pill */
+  .dtoggle .proofbtn{ display:inline-flex; align-items:center; gap:7px; font-size:.72rem; font-weight:800; color:var(--bdark); background:rgba(124,58,237,.06); border:1.3px solid #e2d8f5; border-radius:10px; padding:9px 14px; cursor:pointer; white-space:nowrap; transition:.15s var(--ease); }
+  .dtoggle .proofbtn:hover{ border-color:var(--brand); background:rgba(124,58,237,.1); }
+  .dtoggle .proofbtn.act{ background:var(--brand); color:#fff; border-color:var(--brand); box-shadow:0 4px 12px rgba(124,58,237,.4); }
+  .dtoggle .proofbtn .pfico{ font-size:.9rem; line-height:1; }
+  /* orientation toggle — now lives in Step 2 (size), before the size cards */
+  .orientseg{ margin-top:2px; }
+  .bandorient{ margin:2px 0 14px; }
+  .coorient{ margin-top:10px; }
+  .dtoggle .ic{ display:inline-flex; gap:2px; align-items:center; } .dtoggle .ic i{ display:block; width:4px; height:11px; border-radius:1px; background:currentColor; opacity:.6; } .dtoggle .gico .ic i:nth-child(1){ height:11px } .dtoggle .gico .ic i:nth-child(2){ height:7px } .dtoggle .gico .ic i:nth-child(3){ height:9px }
+  .dtoggle .aico .ic{ display:grid; grid-template-columns:1fr 1fr; gap:2px; } .dtoggle .aico .ic i{ width:5px; height:5px; border-radius:1px; }
+  .dtoggle .cpill.on .ic i{ opacity:1; }
+  .scroll-hint{ position:absolute; left:50%; bottom:13px; transform:translateX(-50%); z-index:13; font-size:.6rem; font-weight:800; letter-spacing:.05em; color:#9b7fd4; display:flex; align-items:center; gap:7px; cursor:pointer; }
+  .scroll-hint .dn{ display:inline-block; animation:bob 1.8s infinite; } @keyframes bob{ 0%,100%{transform:translateY(0)} 50%{transform:translateY(4px)} }
+  .leftzone .f-rail2{ position:static; left:auto; top:auto; transform:none; width:auto; flex:none; }
+  .bandwrap{ display:block; }
+  .copanel{ display:none; }
+  /* --- All options: page scrolls; left = full Cold Open scenes (no inner scrollbar), right = sticky stage --- */
+  .allwrap{ display:contents; }
+  .screen.allopts{ height:auto; min-height:100vh; min-height:100lvh; min-height:100dvh; overflow:visible; }
+  .screen.allopts .allwrap{ display:flex; align-items:flex-start; }   /* scenes column + sticky stage */
+  .screen.allopts .uhdr{ position:sticky; top:0; z-index:33; }
+  .screen.allopts .leftzone{ position:static; float:none; transform:none; flex:0 0 clamp(380px,40vw,600px); height:auto; bottom:auto; justify-content:flex-start; gap:0; padding:92px clamp(26px,2.4vw,44px) 100px clamp(20px,3vw,60px); }   /* 92px top so Step 01 clears the fixed Build-mode strip */
+  .screen.allopts .leftzone .f-rail2{ display:none; }
+  .screen.allopts .bandwrap, .screen.allopts .scroll-hint{ display:none; }
+  .screen.allopts .copanel{ display:block; overflow:visible; }
+  /* sticky stage reserves room for the FIXED buy bar (+ a gap) so the poster is ALWAYS fully visible above it at any viewport size */
+  .screen.allopts .canvas{ position:sticky; inset:auto; top:158px; align-self:flex-start; flex:1 1 auto; height:calc(100vh - 158px - clamp(84px,10.5vh,104px) - 26px); margin:0 24px 0 6px; z-index:5; animation:stageIn .5s var(--ease) both; }
+  .screen.allopts .heroWrap{ top:0; bottom:0; padding:30px 24px; }   /* image vertically centred in the sticky stage */
+  /* --- animated switch (both directions) — ONE simultaneous motion driven by .switching ---
+     Everything fires at t=0 together: the product glides DIAGONALLY to its new centre, the NEW left
+     panel fades + slides in, the OLD left panel (a fixed clone "#ghostLeft") fades + slides out (true
+     cross-fade), and the bottom band pops up. */
+  @keyframes prodGlide{ from{ transform:translate(var(--dx,0px), var(--dy,0px)); } to{ transform:translate(0px,0px); } }
+  @keyframes lzIn{ from{ opacity:0; transform:translateX(-44px); } to{ opacity:1; transform:translateX(0); } }
+  @keyframes lzGhostOut{ from{ opacity:1; transform:translateX(0); } to{ opacity:0; transform:translateX(-40px); } }
+  @keyframes bandPop{ from{ opacity:0; transform:translateY(64px); } to{ opacity:1; transform:translateY(0); } }
+  @keyframes bandGhostOut{ from{ opacity:1; transform:translateY(0); } to{ opacity:0; transform:translateY(72px); } }
+  .screen.switching .heroWrap, .screen.switching .leftzone, .screen.switching .bandwrap, #ghostLeft, #ghostBand{ will-change:transform, opacity; }
+  .screen.switching .heroWrap{ animation:prodGlide 1.7s cubic-bezier(.4,0,.2,1) both; }
+  .screen.switching .leftzone{ animation:lzIn .9s cubic-bezier(.4,0,.2,1) both; }
+  #ghostLeft{ animation:lzGhostOut .62s cubic-bezier(.4,0,.2,1) both; }
+  /* entering step: bottom rail fade-slides UP with everything. leaving step: the band-ghost fade-slides DOWN out, same beat. */
+  .screen.switching:not(.allopts) .bandwrap{ animation:bandPop .62s cubic-bezier(.34,1.2,.5,1) both; }
+  #ghostBand{ animation:bandGhostOut .62s cubic-bezier(.4,0,.2,1) both; }
+  @media (prefers-reduced-motion:reduce){ .screen.switching .heroWrap, .screen.switching .leftzone, .screen.switching .bandwrap, #ghostLeft, #ghostBand{ animation:none; } }
+  .screen.allopts .f-ctrls{ position:fixed; top:170px; left:calc((100vw + clamp(380px,40vw,600px)) / 2); transform:translateX(-50%); z-index:34; }
+  .screen.allopts .dtoggle{ position:fixed; top:172px; }   /* stays top-left while the page scrolls */
+  .screen.allopts.atend .f-ctrls{ opacity:0; pointer-events:none; transition:opacity .25s; }
+  /* ===== full Cold Open scenes (verbatim styling, faithful sizes) ===== */
+  .copanel .scene{ padding:30px 0; } .copanel .scene:first-child{ padding-top:6px; } .copanel .scene + .scene{ border-top:1px dashed rgba(124,58,237,.16); margin-top:34px; padding-top:46px; }
+  .copanel .sno{ font-size:.62rem; font-weight:800; letter-spacing:.26em; color:#9b7fd4; text-transform:uppercase; }
+  .copanel h2{ font-family:'Montserrat',sans-serif; font-size:1.85rem; font-weight:900; letter-spacing:-.025em; margin-top:11px; line-height:1.04; } .copanel h2 em{ font-style:normal; background:var(--gradwide); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .copanel .ss{ font-size:.74rem; color:var(--sub); margin-top:9px; max-width:42ch; line-height:1.6; }
+  .bigrow{ display:grid; grid-template-columns:repeat(3,1fr); gap:13px; margin-top:22px; }
+  .ocard{ position:relative; aspect-ratio:.78/1; border-radius:14px; overflow:hidden; cursor:pointer; box-shadow:0 14px 34px rgba(40,20,90,.22); transition:transform .22s var(--ease); }
+  .ocard:hover{ transform:translateY(-6px) scale(1.02); }
+  .ocard .art{ position:absolute; inset:0; } .ocard .scrim{ position:absolute; inset:0; background:linear-gradient(180deg, rgba(15,10,30,0) 38%, rgba(15,10,30,.82) 100%); }
+  .ocard .txt{ position:absolute; left:0; right:0; bottom:0; padding:12px 13px; color:#fff; }
+  .ocard .n{ font-family:'Montserrat',sans-serif; font-size:.88rem; font-weight:800; } .ocard .d{ font-size:.54rem; color:rgba(255,255,255,.72); margin-top:2px; } .ocard .p{ font-size:.76rem; font-weight:800; margin-top:6px; } .ocard .p small{ font-size:.5rem; color:#9af6cd; font-weight:700; margin-left:4px; }
+  .ocard.on{ box-shadow:0 0 0 3px var(--brand), 0 18px 40px rgba(124,58,237,.3); }
+  .ocard .ptag{ position:absolute; top:9px; left:9px; z-index:2; font-size:.42rem; font-weight:800; letter-spacing:.06em; color:#fff; background:var(--grad); border-radius:5px; padding:4px 8px; box-shadow:0 3px 9px rgba(124,58,237,.4); }
+  .grplbl{ font-size:.6rem; font-weight:800; letter-spacing:.18em; color:var(--sub); text-transform:uppercase; margin:22px 0 4px; display:flex; align-items:center; gap:12px; }
+  .grplbl::after{ content:''; flex:1; height:1px; background:linear-gradient(90deg, rgba(124,58,237,.2), transparent 82%); }
+  .grow{ display:flex; align-items:center; flex-wrap:wrap; margin-top:10px; }
+  .gop{ text-align:center; padding:8px 6px; width:122px; cursor:pointer; border-radius:14px; transition:transform .18s var(--ease); position:relative; } .gop:hover{ transform:translateY(-3px); }
+  .gdv{ width:0; height:84px; border-left:1.5px dashed #c8b6ee; flex:none; }
+  .gop .gbox{ height:78px; display:flex; align-items:center; justify-content:center; }
+  .gop .bn{ font-size:.9rem; font-weight:800; margin-top:7px; } .gop .bx{ font-size:.58rem; color:var(--muted); font-weight:600; margin-top:2px; }
+  /* discount → centred badge under the card; absolute so cards stay aligned whether or not they have one */
+  .gop .be{ position:absolute; bottom:-9px; left:50%; transform:translateX(-50%); margin:0; z-index:3; font-size:.5rem; font-weight:800; color:#fff; background:var(--green); border-radius:99px; padding:2px 7px; box-shadow:0 2px 6px rgba(5,150,105,.45); white-space:nowrap; }
+  .gop.on .bn{ color:var(--bdark); }
+  .gmini{ border-radius:3px; background:linear-gradient(160deg,#fff,#efeaf9); border:1px solid #e4dbf4; box-shadow:0 1px 3px rgba(0,0,0,.12); transition:.25s; display:block; }
+  .gop.on .gmini{ background:linear-gradient(150deg,#241b38,#3a2a63 60%,#7c3aed 150%); border-color:#6d4fc2; color:#fff; box-shadow:0 0 0 2.5px var(--brand), 0 4px 14px rgba(124,58,237,.35); }
+  .gqty{ width:96px; height:58px; display:flex; align-items:center; justify-content:center; font-family:'Montserrat',sans-serif; font-weight:900; font-size:1.15rem; }
+  .copanel .gfin{ width:54px; height:54px; border-radius:9px; box-shadow:inset 0 0 0 1px rgba(0,0,0,.1); display:block; } .gop.on .gfin{ box-shadow:0 0 0 2.5px var(--brand), 0 4px 14px rgba(124,58,237,.35); }
+  .copanel .qref{ display:inline-flex; align-items:center; gap:8px; margin-top:14px; padding:9px 15px; background:rgba(255,255,255,.7); border:1px solid rgba(255,255,255,.95); border-radius:14px; font-size:.66rem; font-weight:600; color:var(--ink); box-shadow:0 4px 12px rgba(60,30,130,.08); } .copanel .qref b{ color:var(--bdark); font-weight:800; }
+  .scrollwrap{ margin-top:12px; } .xtrack{ display:flex; gap:8px; align-items:center; overflow-x:auto; overflow-y:visible; scrollbar-width:none; padding:8px 2px 18px; cursor:grab; } .xtrack::-webkit-scrollbar{ display:none; } .xtrack .gop{ flex:none; } .xtrack.dragging{ cursor:grabbing; user-select:none; } .xtrack.dragging .ocA{ transform:none; }
+  .grsub{ font-weight:600; color:var(--muted); text-transform:none; letter-spacing:0; }
+  /* "most popular" size — subtle highlight + ribbon (with breathing room below the header) */
+  .gop.popular{ background:rgba(124,58,237,.06); border-radius:14px; box-shadow:inset 0 0 0 1.5px rgba(124,58,237,.16); }
+  .gop .poptag{ position:absolute; top:-11px; left:50%; transform:translateX(-50%); z-index:4; font-size:.5rem; font-weight:800; letter-spacing:.04em; color:#fff; background:var(--grad); border-radius:99px; padding:3px 9px; box-shadow:0 4px 11px rgba(124,58,237,.45); white-space:nowrap; }
+  #coSizes{ margin-top:20px; }   /* room for the ribbon under the header */
+  /* custom size & quantity — shared field styling: floating label, centred ×/unit, divider */
+  .cfield{ position:relative; }
+  .cfield label{ position:absolute; top:-16px; left:50%; transform:translateX(-50%); font-size:.5rem; font-weight:800; letter-spacing:.13em; text-transform:uppercase; color:#9b7fd4; white-space:nowrap; text-align:center; }
+  .cinput{ width:78px; font-family:'Montserrat',sans-serif; font-size:1.28rem; font-weight:800; text-align:center; border:2px solid #e3daf4; border-radius:12px; padding:10px 8px; color:var(--bdark); background:#fff; box-shadow:0 4px 12px rgba(60,30,130,.06); transition:.16s var(--ease); }
+  .cinput::placeholder{ color:#c2b3e8; text-align:center; }
+  /* units field gets a centred label over the in/cm toggle, matching W/H */
+  .ufield{ position:relative; display:inline-flex; }
+  .ufield > label{ position:absolute; top:-16px; left:50%; transform:translateX(-50%); font-size:.5rem; font-weight:800; letter-spacing:.13em; text-transform:uppercase; color:#9b7fd4; white-space:nowrap; }
+  .cinput:hover{ border-color:#d2c2f0; } .cinput:focus{ outline:none; border-color:var(--brand); box-shadow:0 0 0 4px rgba(124,58,237,.16); }
+  .cscust{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-top:24px; }
+  .cscust .csprev{ width:50px; height:50px; display:flex; align-items:center; justify-content:center; flex:none; }
+  .cscust .csprevbox{ background:linear-gradient(150deg,#241b38,#3a2a63 60%,#7c3aed 150%); border-radius:3px; box-shadow:0 6px 16px rgba(124,58,237,.3); transition:width .25s var(--ease), height .25s var(--ease); }
+  .cscust .csdiv{ width:1.5px; height:50px; flex:none; background:linear-gradient(180deg,transparent,#ddd2f2 16%,#ddd2f2 84%,transparent); }
+  .cscust .csx{ font-size:1.3rem; font-weight:800; color:#c9bce8; }
+  /* in/cm inherits the canonical .seg/.cpill verbatim — no size/weight/shadow overrides */
+  .cscust .cshint{ flex:1 1 100%; font-size:.66rem; font-weight:600; color:var(--sub); margin-top:6px; } .cscust .cshint b{ color:var(--bdark); }
+  /* custom in use → inputs stay highlighted */
+  .cscust.on .cinput, .qcustom.on .cinput{ border-color:var(--brand); box-shadow:0 0 0 3px rgba(124,58,237,.13); }
+  /* centred divider label: ─── TEXT ─── (used for "Need an exact …" in both views) */
+  .dlbl{ display:flex; align-items:center; gap:14px; font-size:.6rem; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--sub); margin-top:18px; }
+  .dlbl::before, .dlbl::after{ content:''; flex:1; height:1.5px; border-radius:2px; background:rgba(124,58,237,.15); }
+  /* all-options: left-aligned label (line only on the right), matching the scene section labels */
+  #copanel .dlbl{ gap:12px; } #copanel .dlbl::before{ display:none; }
+  /* custom quantity — same treatment, no preview */
+  .qcustom{ display:flex; align-items:center; gap:13px; margin-top:24px; }
+  .qcustom .qsuf{ font-size:.86rem; font-weight:800; color:var(--muted); }
+  /* deadline ticket — VERBATIM from proto-coldopen-poster (no liberties) */
+  .dlv3{ background:#fff; border-radius:14px; box-shadow:0 8px 24px rgba(0,0,0,.08); overflow:hidden; border:1px solid #e7e0f4; margin-top:24px; cursor:pointer; transition:transform .2s var(--ease), box-shadow .2s var(--ease); max-width:640px; } .dlv3:hover{ transform:translateY(-3px); box-shadow:0 16px 38px rgba(40,20,90,.16); }
+  .dlv3 .vhead{ display:flex; align-items:center; background:var(--grad); color:#fff; padding:12px 22px; height:46px; }
+  .dlv3 .vhead .svc{ font-family:'Montserrat',sans-serif; font-size:.92rem; font-weight:900; letter-spacing:.05em; }
+  .dlv3 .vhead .pri{ margin-left:auto; font-size:.66rem; font-weight:800; letter-spacing:.16em; border-radius:6px; padding:5px 13px; background:linear-gradient(110deg,#60a5fa,#2563eb); box-shadow:0 2px 8px rgba(37,99,235,.45); }
+  /* reflowed for the narrower rail: top rows full-width, countdown + Change date in a bottom row */
+  .dlv3 .vbody{ display:flex; flex-direction:column; }
+  .dlv3 .vmain{ flex:none; }
+  .dlv3 .vgrid{ display:flex; border-bottom:1.5px dashed #e0d7f0; }
+  .dlv3 .vc{ flex:1; padding:13px 18px; } .dlv3 .vc + .vc{ border-left:1.5px dashed #e0d7f0; }
+  .dlv3 .vk{ font-size:.56rem; font-weight:800; letter-spacing:.16em; color:#9b7fd4; text-transform:uppercase; }
+  .dlv3 .vv{ font-size:.82rem; font-weight:800; margin-top:3px; } .dlv3 .vv.tier{ color:#2563eb; } .dlv3 .vv small{ display:block; font-weight:600; color:var(--sub); font-size:.66rem; margin-top:2px; }
+  .dlv3 .vrory{ font-family:'Montserrat',sans-serif; font-size:1.55rem; font-weight:900; line-height:1.26; padding:18px 18px 6px; } .dlv3 .vrory em{ font-style:normal; white-space:nowrap; background:var(--gradwide); -webkit-background-clip:text; background-clip:text; color:transparent; } .dlv3 .vtime{ white-space:nowrap; background:var(--gradwide); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .dlv3 .vfoot{ display:flex; align-items:center; gap:15px; padding:12px 18px 15px; }
+  .dlv3 .vbars{ width:104px; flex:none; height:34px; background:repeating-linear-gradient(90deg,#241f2e 0 2px,transparent 2px 4px,#241f2e 4px 5px,transparent 5px 9px); border-radius:2px; opacity:.85; }
+  .dlv3 .vfoot > div:last-child{ margin-left:auto; text-align:right; }
+  .dlv3 .vnud{ font-size:.7rem; color:var(--sub); font-weight:600; } .dlv3 .vnud b{ color:var(--bdark); }
+  .dlv3 .vord{ font-size:.8rem; font-weight:800; }
+  .dlv3 .vside{ display:flex; align-items:center; justify-content:space-between; gap:14px; border-top:2px solid #e7e0f4; padding:14px 18px; text-align:left; }
+  .dlv3 .vcd{ display:flex; flex-direction:column; gap:1px; }
+  .dlv3 .vt{ font-size:1.6rem; font-weight:800; font-variant-numeric:tabular-nums; line-height:1; background:var(--gradwide); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .dlv3 .vtl{ font-size:.6rem; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); }
+  .dlv3 .vbtn{ flex:none; display:inline-flex; align-items:center; justify-content:center; gap:8px; background:var(--grad); border:0; color:#fff; border-radius:12px; padding:12px 16px; font-family:inherit; font-size:.76rem; font-weight:800; cursor:pointer; box-shadow:0 6px 16px rgba(124,58,237,.35); }
+  .calsvg{ width:15px; height:15px; }
+  /* artwork dropzone — VERBATIM Cold Open .dz (themed, not a bare dashed button) */
+  .dz{ margin-top:24px; display:flex; align-items:center; gap:15px; border:1.5px dashed rgba(124,58,237,.42); border-radius:18px; background:rgba(255,255,255,.55); backdrop-filter:blur(16px); padding:17px 19px; cursor:pointer; box-shadow:0 12px 32px rgba(60,30,130,.1); transition:.2s var(--ease); max-width:640px; }
+  .dz:hover{ border-color:var(--brand); transform:translateY(-2px); }
+  .dz .ic{ width:44px; height:44px; border-radius:14px; background:var(--grad); color:#fff; display:flex; align-items:center; justify-content:center; flex:none; box-shadow:0 7px 16px rgba(124,58,237,.38); font-size:1rem; }
+  .dz .t{ font-size:.84rem; font-weight:800; } .dz .t small{ display:block; font-size:.6rem; color:var(--sub); font-weight:500; margin-top:3px; }
+  /* all-options receipt — the bottom-of-scroll breakdown (Add-to-cart is the persistent bar just below) */
+  .osum{ position:relative; margin-top:34px; max-width:540px; background:#fff; border:1px solid #ece6f7; border-radius:22px; padding:26px 28px 22px; box-shadow:0 18px 44px rgba(60,30,130,.13); overflow:hidden; }
+  .osum-bar{ position:absolute; top:0; left:0; right:0; height:5px; background:var(--gradwide); }
+  .osum-head{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; }
+  .osum-eyebrow{ font-size:.64rem; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:var(--bdark); }
+  .osum-badge{ font-size:.56rem; font-weight:800; color:var(--brand); background:rgba(124,58,237,.09); padding:5px 11px; border-radius:99px; white-space:nowrap; }
+  .osum-line{ display:flex; justify-content:space-between; align-items:baseline; gap:18px; padding:11px 0; border-bottom:1px solid #f4f0fb; font-size:.84rem; }
+  .osum-k{ color:var(--sub); font-weight:600; } .osum-v{ font-weight:800; color:var(--bdark); text-align:right; }
+  .osum-totalrow{ display:flex; align-items:center; justify-content:space-between; gap:18px; margin-top:18px; padding:16px 20px; background:linear-gradient(120deg,rgba(124,58,237,.08),rgba(79,110,247,.06)); border:1px solid rgba(124,58,237,.12); border-radius:14px; }
+  .osum-tl{ display:flex; flex-direction:column; gap:3px; } .osum-tlbl{ font-size:.62rem; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--sub); } .osum-teach{ font-size:.68rem; font-weight:700; color:var(--muted); }
+  .osum-tnum{ font-size:2rem; font-weight:900; letter-spacing:-.02em; color:var(--ink); }
+  .osum-rea{ text-align:center; font-size:.66rem; color:var(--sub); font-weight:600; margin-top:16px; line-height:1.5; }
+  /* ===== quick-edit "⚡ Everything" slide-down sheet (Premiere chrome) ===== */
+  /* Quick edit sits in its OWN filled segment (chip) so it reads as a distinct section */
+  /* Quick edit — top-right pill (edit lives with the build, not the buy bar). Fixed in both views. */
+  .qetop{ top:172px; right:26px; display:inline-flex; align-items:center; gap:7px; height:40px; padding:0 16px; font-family:inherit; font-size:.72rem; font-weight:800; color:var(--bdark); cursor:pointer; white-space:nowrap; border:0; background:rgba(255,255,255,.72); backdrop-filter:blur(18px) saturate(1.5); border:1px solid rgba(255,255,255,.9); border-radius:11px; box-shadow:0 6px 18px rgba(60,30,130,.12); z-index:34; transition:.15s var(--ease); }
+  .qetop:hover{ color:var(--brand); }
+  .qetop .qeic{ font-size:.95rem; } .qetop .qecar{ font-size:.7rem; opacity:.65; }
+  /* TEMP compare button — sits to the LEFT of Quick edit; opens the slide-from-left drawer mockup */
+  .qetop2{ right:178px; }
+  .qdim2{ position:fixed; inset:0; background:rgba(26,22,37,.34); backdrop-filter:blur(6px); z-index:44; opacity:0; pointer-events:none; transition:opacity .4s var(--ease); }
+  .qdim2.open{ opacity:1; pointer-events:auto; }
+  /* slides in from the RIGHT */
+  .qdrawer{ position:fixed; top:0; right:0; bottom:0; left:auto; width:clamp(380px,34vw,480px); background:rgba(255,255,255,.98); backdrop-filter:blur(20px) saturate(1.4); box-shadow:-16px 0 54px rgba(40,20,90,.3); z-index:45; transform:translateX(103%); transition:transform .42s cubic-bezier(.4,0,.2,1); display:flex; flex-direction:column; font-family:'Inter',sans-serif; }
+  .qdrawer.open{ transform:none; }
+  .qdrawer-head{ display:flex; align-items:center; justify-content:space-between; padding:24px 26px 16px; font-size:1.1rem; font-weight:900; border-bottom:1px solid #eee6f8; }
+  .qdrawer-head small{ font-size:.6rem; font-weight:800; letter-spacing:.05em; text-transform:uppercase; color:var(--brand); background:rgba(124,58,237,.09); padding:3px 9px; border-radius:99px; margin-left:8px; }
+  .qdrawer-x{ width:38px; height:38px; border-radius:50%; border:1.5px solid #e7ddf5; background:#f6f2fd; font-size:22px; line-height:1; cursor:pointer; color:var(--sub); }
+  .qdrawer-x:hover{ color:var(--brand); border-color:var(--brand); }
+  .qdrawer-body{ overflow-y:auto; padding:6px 24px 22px; flex:1; }
+  /* drawer sections use the SAME tiles as the step-by-step view */
+  .qdrawer-body .drow{ padding:22px 0 20px; border-bottom:1.5px dashed rgba(124,58,237,.12); }
+  .qdrawer-body .drow:last-child{ border-bottom:0; }
+  .qdrawer-body .dk{ display:block; font-size:.6rem; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:#9b7fd4; margin-bottom:11px; }
+  .qdrawer-body .dtiles{ display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start; }
+  .qdrawer-body .dtiles .ocA{ width:calc(33.333% - 6px); min-width:0; margin:0; backdrop-filter:none; }
+  .qdrawer-body .dtiles .ocA .qbadge, .qdrawer-body .dtiles .ocA .qsave{ font-size:.42rem; padding:2px 6px; }
+  /* v2 (panel) compressed: smaller tiles than the default Guided/Everything sizing */
+  .qdrawer-body .ocA{ padding:9px 7px 10px; border-radius:11px; }
+  .qdrawer-body .ocA .gb{ height:27px; margin-bottom:5px; }
+  .qdrawer-body .ocA .bn2{ font-size:.67rem; } .qdrawer-body .ocA .bx{ font-size:.5rem; margin-top:1px; }
+  /* orientation + size tiles: drop the subtext */
+  .qdrawer-body .ocA.otile .bx, .qdrawer-body .ocA[data-size] .bx{ display:none; }
+  /* size tiles: 4 per row, a touch taller */
+  .qdrawer-body .dtiles .ocA[data-size]{ width:calc(25% - 6px); }
+  .qdrawer-body .dtiles .ocA[data-size] .gb{ height:34px; }
+  .qdrawer-body .dseg{ display:block; }
+  .qdrawer-body .dcustom{ margin-top:2px; }
+  .qdrawer-body .dcustom .cscust{ margin-top:0; gap:11px; justify-content:flex-start; }
+  /* custom-qty tile in the drawer (cloned from the band, re-sized for the panel) */
+  .qdrawer-body .dtiles-qty{ row-gap:12px; }
+  /* quantity tiles: 4 per row, fixed 44px tall */
+  .qdrawer-body .dtiles-qty .ocA.qty{ width:calc(25% - 6px); height:62px; padding:8px 6px 14px; }
+  .qdrawer-body .dtiles-qty .ocA.qty .gb{ height:25px; margin-bottom:0; }
+  .qdrawer-body .dtiles-qty .ocA.qty .gqn{ font-size:1.05rem; }
+  .qdrawer-body .dtiles-qty .ocA.qty .qper{ margin-top:4px; }   /* padding under the $/ea subtext, clears the discount badge */
+  /* custom input box = one tile cell, SAME height as the qty tiles (!important beats the cloned inline height from matchQccHeight) */
+  .qdrawer-body .dtiles-qty .qpin{ flex:none; width:calc(25% - 6px); align-self:flex-start; }
+  .qdrawer-body .dtiles-qty .qpin .qcc{ width:100%; height:62px !important; }
+  .qdrawer-body .dtiles-qty .qpin .qcc-in{ font-size:1rem; }
+  .qdrawer-body .dtiles-qty .qcc-div{ display:none; }
+  /* drawer footer MIRRORS the full-page buy bar */
+  .qdrawer-foot{ border-top:1px solid #eee6f8; padding:16px 24px 18px; display:flex; flex-direction:column; gap:13px; background:#fff; }
+  .qdf-hp{ display:flex; flex-direction:column; gap:2px; }
+  .qdf-top{ display:flex; align-items:center; gap:9px; min-height:15px; }
+  .qdf-lbl{ font-size:.6rem; font-weight:800; letter-spacing:.09em; text-transform:uppercase; color:var(--sub); }
+  .qdf-top .pdelta{ font-family:'Montserrat',sans-serif; font-size:.9rem; font-weight:900; opacity:0; }
+  .qdf-main{ display:flex; align-items:baseline; gap:10px; }
+  .qdf-num{ font-family:'Montserrat',sans-serif; font-size:1.85rem; font-weight:700; letter-spacing:-.02em; color:var(--brand); }
+  .qdf-each{ font-family:'Inter',sans-serif; font-size:.78rem; font-weight:700; color:var(--sub); }
+  .qdf-sub{ font-family:'Inter',sans-serif; font-size:.76rem; color:var(--sub); font-weight:600; margin-top:3px; }
+  .qdf-acts{ display:flex; align-items:center; gap:13px; }
+  .qdf-save{ flex:none; height:48px; }
+  .qdf-acts .actdiv{ width:0; height:30px; flex:none; border-left:1.5px dashed #c7b8ec; }
+  .qdf-add{ flex:1; justify-content:center; height:52px; border-radius:13px; }
+  .screen.allopts .qetop, .screen.allopts .f-buy{ position:fixed; }
+  .screen.allopts.atend .qetop{ opacity:0; pointer-events:none; transition:opacity .25s; }
+  .qdim{ position:fixed; inset:0; background:rgba(26,22,37,.34); backdrop-filter:blur(6px); z-index:44; opacity:0; pointer-events:none; transition:opacity .45s var(--ease); }
+  .qdim.open{ opacity:1; pointer-events:auto; }
+  .qsheet{ position:fixed; top:0; left:50%; width:min(880px,94vw); z-index:46; background:rgba(255,255,255,.97); backdrop-filter:blur(30px) saturate(1.5); border:1px solid rgba(255,255,255,1); border-top:0; border-radius:0 0 26px 26px; box-shadow:0 50px 100px rgba(30,15,70,.42); padding:14px 30px 18px; text-align:left; transform:translate(-50%,calc(-100% - 16px)); transition:transform .6s cubic-bezier(.16,1,.3,1); max-height:calc(100vh - 32px); overflow-y:auto; scrollbar-width:none; }
+  .qsheet::-webkit-scrollbar{ display:none; }
+  .qsheet.open{ transform:translate(-50%,16px); }
+  .qsheet .handle{ width:46px; height:4.5px; border-radius:3px; background:#ddd2f0; margin:0 auto 10px; }
+  .qlbl{ text-align:center; font-size:.74rem; font-weight:800; color:var(--bdark); margin-bottom:9px; } .qlbl small{ font-weight:600; color:var(--muted); margin-left:7px; }
+  .qrow{ display:flex; align-items:center; gap:14px; padding:8px 0; border-bottom:1.5px dashed rgba(124,58,237,.1); } .qrow:last-of-type{ border-bottom:0; }
+  .qrow .qk{ width:84px; font-size:.5rem; font-weight:800; letter-spacing:.12em; color:#9b7fd4; text-transform:uppercase; flex:none; }
+  .qrow .qopts{ display:flex; gap:7px; flex-wrap:wrap; align-items:center; } .qrow .qopts.scroll{ flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none; } .qrow .qopts.scroll::-webkit-scrollbar{ display:none; }
+  .qchip{ display:flex; align-items:center; gap:7px; font-size:.66rem; font-weight:700; color:var(--ink); background:rgba(255,255,255,.9); border:1px solid #eee9f8; box-shadow:0 2px 7px rgba(60,30,130,.09); border-radius:11px; padding:8px 12px; cursor:pointer; white-space:nowrap; transition:.16s var(--ease); }
+  .qchip:hover{ border-color:#d6c8f5; } .qchip small{ color:var(--muted); font-weight:600; }
+  .qchip.on{ box-shadow:0 0 0 2px var(--brand), 0 5px 14px rgba(124,58,237,.28); color:var(--bdark); background:#fff; }
+  .qchip.dashy{ background:transparent; border:1.5px dashed #b79ae8; color:var(--brand); box-shadow:none; font-weight:800; }
+  .qchip .sw{ width:16px; height:13px; border-radius:3px; box-shadow:0 1px 3px rgba(60,30,130,.3); flex:none; }
+  .qchip .glyw{ display:block; border-radius:2.5px; background:linear-gradient(160deg,#fff,#efeaf9); border:1px solid #d8cbf0; flex:none; }
+  .qfoot{ display:flex; align-items:center; gap:16px; margin-top:10px; padding-top:12px; border-top:1.5px solid #efe8fb; }
+  .qfoot .tot{ font-size:1.25rem; font-weight:800; } .qfoot .tots{ font-size:.54rem; color:var(--sub); font-weight:600; }
+  .qfoot .done{ margin-left:auto; font-size:.64rem; font-weight:800; color:#fff; background:var(--grad); border:0; border-radius:99px; padding:11px 20px; cursor:pointer; box-shadow:0 8px 20px rgba(124,58,237,.32); }
+  /* ===== stage ===== */
+  .canvas{ position:absolute; inset:162px 0 0; z-index:5; }
+  .canvas .glow{ position:absolute; left:50%; top:42%; transform:translate(-50%,-50%); width:900px; height:620px; background:radial-gradient(50% 50% at 50% 50%, rgba(168,130,255,.32), transparent 70%); filter:blur(26px); }
+  /* shrink-to-fit: heroWrap is the gap between the pills and the band's solid area; the product flex-centers and scales down to stay fully visible (never clipped by the rail or hidden under the band) */
+  .heroWrap{ position:absolute; left:0; right:0; top:0; bottom:clamp(210px,25vh,262px); display:flex; align-items:center; justify-content:center; padding:62px 24px 0; z-index:6; transition:bottom .5s var(--ease); }
+  /* step-by-step: clear the floating rail on the left (symmetric, so the poster stays centred & never hides behind it) */
+  .screen:not(.allopts) .heroWrap{ padding-left:clamp(290px,20vw,360px); padding-right:clamp(290px,20vw,360px); }
+  /* exact proportions: JS (fitPoster) sets width/height to the real aspect ratio, scaled to fit the stage */
+  .poster{ position:relative; width:480px; height:720px; background:linear-gradient(160deg,#1a0f33 0%,#3b1f73 46%,#b53d8e 100%); border-radius:4px; overflow:hidden; box-shadow:0 50px 95px -30px rgba(50,25,110,.55), 0 0 80px rgba(124,58,237,.16); transition:width .5s var(--ease), height .5s var(--ease); }
+  .part{ position:absolute; inset:0; display:flex; flex-direction:column; justify-content:space-between; padding:8% 7%; color:#fff; }
+  .part::before{ content:''; position:absolute; right:-8%; top:9%; width:58%; height:46%; border-radius:50%; background:radial-gradient(circle at 42% 40%, rgba(255,214,90,.9), rgba(255,120,60,.46) 55%, transparent 72%); }
+  .part .pk{ position:relative; font-size:.6rem; letter-spacing:.4em; font-weight:700; opacity:.82; text-transform:uppercase; }
+  .part .pt{ position:relative; font-family:'Montserrat'; font-weight:900; font-size:clamp(2.2rem,5vw,4rem); line-height:.95; letter-spacing:-.02em; }
+  .part .pt em{ font-style:normal; color:#ffd75a; }
+  .part .pd{ position:relative; }
+  .part .pdt{ font-weight:900; font-size:clamp(1rem,1.8vw,1.4rem); } .part .pv{ font-size:.7rem; font-weight:600; opacity:.85; margin-top:5px; letter-spacing:.04em; }
+  .sgp{ position:absolute; inset:0; z-index:6; opacity:0; pointer-events:none; transition:opacity .3s; --bleed:16px; }
+  .poster.proof .sgp{ opacity:1; }
+  .sgp .gp-bleed{ position:absolute; inset:0; border:1.5px dashed rgba(96,165,250,.97); }
+  .sgp .gp-trim{ position:absolute; inset:var(--bleed); border:2px solid rgba(239,68,68,.97); }
+  .sgp .gp-safe{ position:absolute; inset:calc(2 * var(--bleed)); border:1.5px dashed rgba(52,211,153,.97); }
+  .pf-flag{ position:absolute; left:50%; top:44%; transform:translateX(-50%); z-index:9; display:none; align-items:center; gap:7px; pointer-events:none; }
+  .poster.proof:not(.pf-ok) .pf-flag{ display:flex; }
+  .pf-dot{ width:23px; height:23px; border-radius:50%; background:#f59e0b; color:#fff; font-weight:900; display:flex; align-items:center; justify-content:center; box-shadow:0 0 0 0 rgba(245,158,11,.6); animation:pulse 1.6s infinite; }
+  .pf-tag{ background:rgba(20,12,40,.92); color:#fff; font-size:.58rem; font-weight:700; padding:5px 10px; border-radius:8px; white-space:nowrap; }
+  @keyframes pulse{ 0%{box-shadow:0 0 0 0 rgba(245,158,11,.55)} 70%{box-shadow:0 0 0 12px rgba(245,158,11,0)} 100%{box-shadow:0 0 0 0 rgba(245,158,11,0)} }
+  .pfbar{ display:none; align-items:center; gap:11px; position:absolute; left:50%; transform:translateX(-50%); bottom:clamp(176px,23vh,240px); background:#fff; border-radius:99px; padding:8px 8px 8px 16px; box-shadow:0 6px 18px rgba(60,30,130,.12); z-index:12; }
+  .pfbar.show{ display:inline-flex; }
+  /* Everything view: pull the proof legend up under the sticky hero (centre it over the stage) */
+  .screen.allopts .pfbar{ position:fixed; left:calc((100vw + clamp(380px,40vw,600px)) / 2); bottom:clamp(36px,6vh,74px); }
+  .pfbar .lg{ display:flex; align-items:center; gap:6px; font-size:.62rem; font-weight:800; color:var(--ink); } .pfbar .lg i{ width:15px; height:9px; border-radius:2px; }
+  .pfbar .sep{ width:1px; height:15px; background:#e6def4; }
+  .pfbar .pf-warn{ display:inline-flex; align-items:center; gap:9px; font-size:.64rem; font-weight:800; color:#b45309; }
+  .pfbar .pf-ok2{ display:none; align-items:center; gap:8px; font-size:.64rem; font-weight:800; color:#047857; }
+  .pfbar.pf-ok .pf-warn{ display:none; } .pfbar.pf-ok .pf-ok2{ display:inline-flex; }
+  /* ===== Artwork proof — FULL-SCREEN design mock (real upload affordance + EXACT print geometry) ===== */
+  .dz.over{ border-color:var(--brand); background:rgba(124,58,237,.07); }
+  .dz.done{ border-style:solid; border-color:#10b981; background:rgba(16,185,129,.06); }
+  .prooffs{ position:fixed; inset:0; z-index:60; display:none; flex-direction:column; background:#13092a; font-family:'Inter',sans-serif; opacity:0; transition:opacity .25s var(--ease); }
+  .prooffs.open{ display:flex; opacity:1; }
+  .prooffs-bar{ flex:none; display:flex; align-items:center; gap:18px; padding:14px clamp(18px,3vw,40px); background:rgba(255,255,255,.04); border-bottom:1px solid rgba(255,255,255,.08); }
+  .prooffs-id{ display:flex; flex-direction:column; min-width:0; }
+  .prooffs .proofttl{ font-family:'Montserrat',sans-serif; font-weight:900; font-size:1.05rem; color:#fff; }
+  .prooffs .proofsub{ font-size:.72rem; font-weight:600; color:rgba(255,255,255,.6); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .prooffs-steps{ margin-left:auto; display:flex; align-items:center; gap:8px; }
+  .pstep{ font-size:.62rem; font-weight:800; letter-spacing:.04em; color:rgba(255,255,255,.4); padding:5px 12px; border-radius:99px; border:1px solid rgba(255,255,255,.14); white-space:nowrap; }
+  .pstep.on{ color:rgba(255,255,255,.85); } .pstep.cur{ color:#fff; background:var(--grad); border-color:transparent; box-shadow:0 4px 14px rgba(124,58,237,.5); }
+  .prooffs .proofx{ flex:none; width:38px; height:38px; border-radius:50%; border:1.5px solid rgba(255,255,255,.2); background:rgba(255,255,255,.06); font-size:21px; line-height:1; color:#fff; cursor:pointer; }
+  .prooffs .proofx:hover{ background:rgba(255,255,255,.14); }
+  .proofpane{ flex:1; min-height:0; display:none; }
+  .prooffs.s-check #proofCheck{ display:flex; } .prooffs.s-result #proofResult{ display:grid; }
+  /* STATE 2 · checking */
+  .proof-check{ flex-direction:column; align-items:center; justify-content:center; gap:16px; }
+  .proofspin{ width:52px; height:52px; border-radius:50%; border:4px solid rgba(255,255,255,.14); border-top-color:#a855f7; animation:proofspin .8s linear infinite; }
+  @keyframes proofspin{ to{ transform:rotate(360deg); } }
+  .proof-check .pc-t{ font-family:'Montserrat',sans-serif; font-weight:900; font-size:1.15rem; color:#fff; }
+  .proof-check .pc-s{ font-size:.8rem; font-weight:600; color:rgba(255,255,255,.55); }
+  /* STATE 3 · result — preview + sidebar */
+  .proof-result{ grid-template-columns:minmax(0,1fr) clamp(320px,26vw,380px); }
+  .proofview{ min-width:0; display:flex; flex-direction:column; padding:clamp(16px,2.4vw,34px); }
+  .proofstage-wrap{ flex:1; min-height:0; display:flex; align-items:center; justify-content:center; overflow:auto; }
+  .proofstage{ position:relative; box-shadow:0 30px 70px rgba(0,0,0,.55); }
+  .proofart{ position:absolute; inset:0; overflow:hidden; background:linear-gradient(135deg,#a855f7,#7c3aed 42%,#4f6ef7 88%); }
+  .proofart::after{ content:'YOUR ARTWORK'; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-family:'Montserrat',sans-serif; font-weight:900; font-size:.7rem; letter-spacing:.28em; color:rgba(255,255,255,.5); }
+  .proofstage .pg{ position:absolute; pointer-events:none; }
+  .pg-bleed{ inset:0; outline:2px solid #ff5b7f; outline-offset:-1px; }
+  .pg-trim{ border:1.5px solid rgba(255,255,255,.97); }       /* inset set EXACTLY by JS */
+  .pg-safe{ border:1.4px dashed rgba(255,255,255,.7); }        /* inset set EXACTLY by JS */
+  .proofstage.warn .pg-safe{ border-color:#fbbf24; box-shadow:0 0 0 1px rgba(251,191,36,.6); }
+  .pglabel{ position:absolute; font-size:.5rem; font-weight:800; letter-spacing:.1em; padding:2px 6px; border-radius:4px; white-space:nowrap; }
+  .lbl-bleed{ top:3px; left:3px; color:#fff; background:#ff5b7f; }
+  .lbl-trim{ bottom:3px; left:50%; transform:translateX(-50%); color:#1a0f33; background:rgba(255,255,255,.95); }
+  .lbl-safe{ top:50%; right:4px; transform:translateY(-50%); color:#1a0f33; background:rgba(255,255,255,.78); }
+  .proofview-foot{ flex:none; display:flex; align-items:flex-end; justify-content:space-between; gap:18px; margin-top:16px; }
+  .prooflegend{ display:flex; flex-wrap:wrap; gap:16px; font-size:.66rem; font-weight:800; color:rgba(255,255,255,.85); }
+  .prooflegend i{ display:inline-block; width:16px; height:0; vertical-align:middle; margin-right:6px; }
+  .prooflegend .l-trim{ border-top:2px solid #fff; } .prooflegend .l-safe{ border-top:2px dashed rgba(255,255,255,.8); } .prooflegend .l-bleed{ border-top:2px solid #ff5b7f; }
+  /* magnified corner detail — true 0.125″ margins (constant, fixed layout: 25px ≈ 0.125″ @ 200dpi-preview) */
+  .proofzoom{ position:relative; width:172px; height:172px; flex:none; border-radius:10px; overflow:hidden; border:1px solid rgba(255,255,255,.16); box-shadow:0 12px 30px rgba(0,0,0,.4); }
+  .pz-art{ position:absolute; inset:0; background:linear-gradient(135deg,#a855f7,#7c3aed 60%,#4f6ef7); }
+  .pz{ position:absolute; pointer-events:none; }
+  .pz-bleed{ top:0; left:0; width:120px; height:120px; border-top:2px solid #ff5b7f; border-left:2px solid #ff5b7f; }
+  .pz-trim{ top:25px; left:25px; width:100px; height:100px; border-top:2px solid #fff; border-left:2px solid #fff; }
+  .pz-safe{ top:50px; left:50px; width:90px; height:90px; border-top:1.5px dashed rgba(255,255,255,.85); border-left:1.5px dashed rgba(255,255,255,.85); }
+  .pz-tag{ position:absolute; font-size:.46rem; font-weight:800; letter-spacing:.02em; color:#fff; background:rgba(0,0,0,.5); padding:1px 5px; border-radius:3px; white-space:nowrap; }
+  .pz-tag-bleed{ top:5px; left:30px; } .pz-tag-safe{ top:30px; left:55px; }
+  .pz-cap{ position:absolute; bottom:5px; right:6px; font-size:.46rem; font-weight:800; letter-spacing:.04em; text-transform:uppercase; color:rgba(255,255,255,.55); }
+  /* sidebar */
+  .proofside{ display:flex; flex-direction:column; gap:14px; padding:24px; background:#fff; overflow:auto; }
+  .proofside-file{ font-size:.74rem; font-weight:700; color:var(--sub); padding-bottom:13px; border-bottom:1px solid #eee6f8; word-break:break-all; }
+  .proofdpi{ display:flex; align-items:center; gap:10px; }
+  .proofdpi-n{ font-family:'Montserrat',sans-serif; font-weight:900; font-size:2.1rem; line-height:1; color:var(--bdark); }
+  .proofdpi-u{ font-size:.6rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--sub); display:flex; flex-direction:column; gap:1px; }
+  .proofdpi-u small{ font-size:.58rem; font-weight:700; color:var(--muted); letter-spacing:0; text-transform:none; }
+  .proofdpi-badge{ margin-left:auto; font-size:.6rem; font-weight:800; padding:5px 11px; border-radius:99px; white-space:nowrap; }
+  .proofdpi-badge.ok{ color:#047857; background:rgba(16,185,129,.12); } .proofdpi-badge.warn{ color:#b45309; background:rgba(180,83,9,.13); }
+  .checklist{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; }
+  .ck{ display:grid; grid-template-columns:20px 1fr; column-gap:11px; row-gap:1px; align-items:center; padding:10px 12px; border-radius:12px; background:#faf7fe; border:1px solid #f0e9fb; }
+  .ck-ic{ grid-row:1/3; width:20px; height:20px; border-radius:50%; position:relative; }
+  .ck.ok .ck-ic{ background:#10b981; } .ck.warn .ck-ic{ background:#f59e0b; }
+  .ck.ok .ck-ic::after{ content:''; position:absolute; left:7px; top:4px; width:4px; height:8px; border:2px solid #fff; border-top:0; border-left:0; transform:rotate(45deg); }
+  .ck.warn .ck-ic::after{ content:'!'; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:900; font-size:.72rem; }
+  .ck-t{ font-weight:800; font-size:.82rem; color:var(--ink); }
+  .ck-d{ grid-column:2; font-size:.7rem; font-weight:600; color:var(--sub); }
+  .proof-toggle{ align-self:flex-start; background:none; border:0; color:var(--brand); font-weight:800; font-size:.72rem; cursor:pointer; padding:2px 0; }
+  .proofside-spacer{ flex:1; min-height:10px; }
+  .proofside-foot{ display:flex; gap:10px; }
+  .proofreplace{ flex:none; background:transparent; border:1.6px dashed #c7b8ec; border-radius:12px; padding:0 18px; height:50px; font-weight:800; color:var(--bdark); cursor:pointer; }
+  .proofreplace:hover{ border-color:var(--brand); color:var(--brand); }
+  .proofapprove{ flex:1; display:inline-flex; align-items:center; justify-content:center; gap:8px; background:linear-gradient(120deg,#8b5cf6,#6d28d9); color:#fff; border:0; border-radius:13px; height:50px; font-weight:800; font-size:.95rem; cursor:pointer; box-shadow:0 10px 24px -4px rgba(109,40,217,.5), inset 0 1px 0 rgba(255,255,255,.28); transition:transform .15s var(--ease); }
+  .proofapprove:hover{ transform:translateY(-2px); }
+  @media(max-width:820px){ .proof-result{ grid-template-columns:1fr; grid-template-rows:minmax(0,1fr) auto; } .proofview-foot{ flex-direction:column; align-items:stretch; } .proofside{ flex-direction:row; flex-wrap:wrap; align-items:center; } .proofside-spacer{ display:none; } }
+  /* proof controls — zoom + guides toggle */
+  .proofctrls{ flex:none; display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
+  .pvz{ display:inline-flex; align-items:center; gap:2px; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.12); border-radius:11px; padding:4px; }
+  .pvzbtn{ min-width:32px; height:32px; padding:0 9px; border:0; border-radius:8px; background:transparent; color:#fff; font-size:1rem; font-weight:800; cursor:pointer; line-height:1; }
+  .pvzbtn:hover{ background:rgba(255,255,255,.13); }
+  .pvzval{ min-width:46px; text-align:center; font-size:.72rem; font-weight:800; color:rgba(255,255,255,.85); }
+  .pvzfit{ font-size:.7rem; border-left:1px solid rgba(255,255,255,.14); border-radius:0 8px 8px 0; }
+  .pvtoggle{ height:38px; padding:0 16px; border-radius:11px; border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.06); color:rgba(255,255,255,.65); font-size:.74rem; font-weight:800; cursor:pointer; }
+  .pvtoggle.on{ color:#fff; background:var(--grad); border-color:transparent; box-shadow:0 4px 14px rgba(124,58,237,.45); }
+  .proofstage.noguides .pg, .proofstage.noguides .pglabel{ display:none; }
+  /* larger Guided-view upload dropzone */
+  .dz-guided{ margin-top:14px; max-width:none; flex-direction:column; justify-content:center; text-align:center; gap:11px; padding:clamp(20px,3.4vh,34px); min-height:clamp(120px,19vh,180px); border-width:2px; }
+  .dz-guided .t{ font-size:.95rem; } .dz-guided .ic{ width:54px; height:54px; font-size:1.3rem; border-radius:16px; }
+  /* uploaded artwork superimposed on the hero stage — MOCK sample art (real file render is build-phase) */
+  .poster.hasart{ background:linear-gradient(135deg,#f59e0b,#ec4899 32%,#7c3aed 64%,#2563eb); }
+  /* in-context artwork file-check card — replaces the dropzone after upload (stays in the configurator) */
+  .dz.filled{ display:block; cursor:default; border-style:solid; border-color:#e7ddf5; background:#fff; padding:0; min-height:0; box-shadow:0 12px 32px rgba(60,30,130,.1); }
+  .dz.filled:hover{ transform:none; border-color:#e7ddf5; }
+  .afc{ padding:15px 17px; display:flex; flex-direction:column; gap:11px; text-align:left; }
+  .afc-checking{ align-items:center; justify-content:center; min-height:118px; gap:8px; text-align:center; }
+  .afc-spin{ width:34px; height:34px; border-radius:50%; border:3px solid #ece4fb; border-top-color:var(--brand); animation:proofspin .8s linear infinite; }
+  .afc-ct{ font-family:'Montserrat',sans-serif; font-weight:900; font-size:.92rem; color:var(--ink); } .afc-cs{ font-size:.64rem; font-weight:600; color:var(--sub); }
+  .afc-hd{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .afc-name{ font-weight:800; font-size:.82rem; color:var(--ink); word-break:break-all; } .afc-name small{ color:var(--sub); font-weight:600; }
+  .afc-link{ flex:none; background:none; border:0; color:var(--brand); font-weight:800; font-size:.7rem; cursor:pointer; text-decoration:underline; text-underline-offset:2px; }
+  .afc-dpi{ display:flex; align-items:center; gap:9px; }
+  .afc-dpi-n{ font-family:'Montserrat',sans-serif; font-weight:900; font-size:1.5rem; line-height:1; color:var(--bdark); }
+  .afc-dpi-u{ font-size:.52rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--sub); display:flex; flex-direction:column; } .afc-dpi-u small{ font-size:.52rem; font-weight:700; color:var(--muted); letter-spacing:0; text-transform:none; }
+  .afc-badge{ margin-left:auto; font-size:.56rem; font-weight:800; padding:4px 10px; border-radius:99px; }
+  .afc-badge.ok{ color:#047857; background:rgba(16,185,129,.12); } .afc-badge.warn{ color:#b45309; background:rgba(180,83,9,.13); }
+  .afc-checks{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:5px; }
+  .afc-ck{ display:grid; grid-template-columns:16px 1fr; column-gap:8px; align-items:center; }
+  .afc-ck-ic{ width:16px; height:16px; border-radius:50%; position:relative; }
+  .afc-ck.ok .afc-ck-ic{ background:#10b981; } .afc-ck.warn .afc-ck-ic{ background:#f59e0b; }
+  .afc-ck.ok .afc-ck-ic::after{ content:''; position:absolute; left:5.5px; top:3px; width:3px; height:6px; border:1.6px solid #fff; border-top:0; border-left:0; transform:rotate(45deg); }
+  .afc-ck.warn .afc-ck-ic::after{ content:'!'; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:900; font-size:.6rem; }
+  .afc-ck-t{ font-weight:800; font-size:.72rem; color:var(--ink); } .afc-ck-d{ grid-column:2; font-size:.62rem; font-weight:600; color:var(--sub); }
+  .afc-acts{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:2px; }
+  .afc-btn{ height:36px; padding:0 13px; border-radius:10px; border:1.4px solid #e2d8f5; background:#fff; color:var(--bdark); font-weight:800; font-size:.7rem; cursor:pointer; }
+  .afc-btn.on{ background:var(--grad); color:#fff; border-color:transparent; } .afc-btn:hover{ border-color:var(--brand); }
+  .afc-cta{ margin-left:auto; height:36px; padding:0 16px; border-radius:10px; border:0; background:var(--grad); color:#fff; font-weight:800; font-size:.72rem; cursor:pointer; box-shadow:0 8px 18px -4px rgba(109,40,217,.45); }
+  .afc-cta.done{ background:rgba(16,185,129,.14); color:#047857; box-shadow:none; }
+  .pf-fix{ background:var(--grad); color:#fff; border:0; border-radius:8px; padding:6px 12px; font-family:inherit; font-weight:800; font-size:.6rem; cursor:pointer; }
+  .pf-replay{ background:none; border:0; color:#9b7fd4; cursor:pointer; font-size:.82rem; }
+  /* ===== bands ===== */
+  /* band = a PROPORTIONAL target (~22% of viewport) with legibility/touch guardrails, content vertically centred — so it scales smoothly with the screen like the hero instead of jumping at clamp extremes */
+  /* band sits just above the buy bar (4px), content bottom-anchored (flex-end) so there's no dead gap under the Next button; smaller min-height */
+  .band{ position:absolute; left:0; right:0; bottom:calc(clamp(84px,10.5vh,104px) + 4px); z-index:10; text-align:center; padding:clamp(8px,1.1vh,14px) 40px clamp(4px,0.6vh,8px); min-height:clamp(50px,6vh,90px); display:flex; flex-direction:column; justify-content:flex-end; background:none; transition:transform .44s cubic-bezier(.22,1,.36,1), opacity .34s ease; will-change:transform, opacity; }
+  .band.off{ opacity:0; transform:translateY(42px); pointer-events:none; transition:transform .3s cubic-bezier(.4,0,.7,.2), opacity .22s ease; }
+  .bq{ font-family:'Montserrat',sans-serif; font-size:clamp(1.1rem,1.8vw,1.55rem); font-weight:900; letter-spacing:-.02em; }
+  .bq em{ font-style:normal; background:var(--gradwide); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .bs{ font-size:clamp(.6rem,.82vw,.72rem); color:var(--sub); font-weight:600; margin-top:2px; }
+  .optrow{ display:flex; gap:11px; padding:14px 0 2px; justify-content:center; align-items:stretch; flex-wrap:wrap; }
+  /* tiles scaled down ~10% (width · padding · glyph · text all reduced) */
+  .ocA{ width:clamp(101px,8.8vw,151px); background:rgba(255,255,255,.85); backdrop-filter:blur(16px); border:1px solid rgba(255,255,255,.95); border-radius:13px; padding:clamp(11px,1.3vh,15px) 9px clamp(10px,1.2vh,14px); text-align:center; cursor:pointer; box-shadow:0 8px 20px rgba(60,30,130,.1); transition:transform .18s var(--ease), box-shadow .18s; flex:none; position:relative; }
+  .ocA:hover{ transform:translateY(-4px); }
+  /* gb tall enough to hold the preview glyphs, with clear space before the label so text never crowds the icon */
+  .ocA .gb{ height:clamp(31px,3.4vh,41px); display:flex; align-items:center; justify-content:center; margin-bottom:8px; }
+  .ocA .bn2{ font-size:clamp(.63rem,.83vw,.76rem); font-weight:800; } .ocA .bx{ font-size:clamp(.49rem,.68vw,.58rem); color:var(--muted); font-weight:600; margin-top:2px; }
+  .ocA.on{ box-shadow:0 0 0 2.5px var(--brand), 0 4px 14px rgba(124,58,237,.35); background:rgba(255,255,255,.97); }   /* selected: NO upward shift — stays in line */
+  /* purple circle-check-big badge on every selected tile (white check on a purple circle, top-right) */
+  /* lucide circle-check-big (white on a purple disc) — Guided tiles: top-right of the TILE */
+  .ocA.on::after{ content:''; position:absolute; top:-9px; right:-9px; width:23px; height:23px; z-index:4; background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Ccircle cx='12' cy='12' r='11.5' fill='%237c3aed'/%3E%3Cpath d='M21.801 10A10 10 0 1 1 17 3.335' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='m9 11 3 3L22 4' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat; filter:drop-shadow(0 2px 5px rgba(124,58,237,.45)); }
+  /* Everything view: badge tucked onto the top-right CORNER of the image ICON itself (the centred glyph) — not the wide invisible tile box — so it never floats away in empty space */
+  .gop.on .gbox > span, .ocard.on .art{ position:relative; }
+  .gop.on .gbox > span::after, .ocard.on .art::after{ content:''; position:absolute; top:-8px; right:-8px; width:21px; height:21px; z-index:6; pointer-events:none; background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Ccircle cx='12' cy='12' r='11.5' fill='%237c3aed'/%3E%3Cpath d='M21.801 10A10 10 0 1 1 17 3.335' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='m9 11 3 3L22 4' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat; filter:drop-shadow(0 2px 5px rgba(124,58,237,.45)); }
+  .ocard.on .art::after{ top:12px; right:12px; }
+  /* size step: orientation TILES sit left of the size tiles, split by a dashed divider */
+  .sizewrap{ display:flex; align-items:flex-start; justify-content:center; gap:0; flex-wrap:wrap; padding:14px 0 2px; }
+  .ogroup{ display:flex; flex-direction:column; align-items:center; gap:10px; }
+  .ogroup-lbl{ font-size:.5rem; font-weight:800; letter-spacing:.13em; text-transform:uppercase; color:#9b7fd4; }
+  .otiles{ display:flex; gap:9px; }
+  .szgroup .optrow{ padding:0; }
+  .ovdiv{ align-self:stretch; width:0; flex:none; border-left:1.6px dashed #b3a0e3; margin:26px 20px 6px; }
+  .ocA.otile{ }   /* same size as the size tiles (inherits base .ocA width + the 2-line height) */
+  /* Everything view: orientation tiles (gop style) */
+  .coorient-tiles{ gap:11px; margin-top:8px; justify-content:flex-start; }
+  .coorient-tiles .gop.otile{ width:122px; }
+  .qbadge{ position:absolute; top:-8px; left:50%; transform:translateX(-50%); white-space:nowrap; font-size:.46rem; font-weight:800; letter-spacing:.03em; text-transform:uppercase; background:var(--grad); color:#fff; border-radius:99px; padding:3px 8px; box-shadow:0 3px 9px rgba(124,58,237,.4); }
+  .gminp{ border-radius:3px; background:linear-gradient(160deg,#fff,#efeaf9); border:1px solid #e4dbf4; box-shadow:0 6px 16px rgba(0,0,0,.07); display:block; }
+  .gsw{ width:34px; height:27px; border-radius:5px; box-shadow:0 2px 7px rgba(60,30,130,.28); display:block; }
+  .gqn{ font-family:'Montserrat',sans-serif; font-size:clamp(.9rem,1.26vw,1.13rem); font-weight:900; }
+  /* step-by-step qty cards — normalized to the SAME gb height + padding as size/paper/finish tiles */
+  .ocA.qty{ width:clamp(112px,8.3vw,135px); padding:clamp(11px,1.3vh,15px) 7px clamp(10px,1.2vh,14px); position:relative; }
+  .ocA.qty .gb{ height:clamp(32px,3.6vh,48px); margin-bottom:7px; }
+  /* every Guided band option tile shares ONE height (gb + 2-line label area), content centred — so size/paper/finish/qty line up and the band/hero don't jump between steps */
+  .bandwrap .ocA{ display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:clamp(52px,6.1vh,79px); }
+  .bandwrap .ocA .gb{ flex:none; }
+  .ocA.qty .gqn{ font-size:clamp(1.04rem,1.44vw,1.4rem); }
+  /* per-unit price subtext under every quantity tile */
+  /* per-unit qty subtext matches the .bx sublabel EXACTLY (size · weight · colour) so all tile subtext is uniform */
+  .qper{ font-size:clamp(.56rem,.8vw,.66rem); font-weight:600; color:var(--muted); margin-top:3px; white-space:nowrap; line-height:1; }
+  #coQty .gop .qper{ margin-top:3px; }
+  /* green-outline "save %" pill, BELOW the card, only at volume breaks (like the most-popular badge) */
+  .qsave{ position:absolute; bottom:-9px; left:50%; transform:translateX(-50%); border:1.5px solid var(--green); color:var(--green); background:#fff; border-radius:99px; padding:2px 10px; font-size:.58rem; font-weight:800; letter-spacing:.02em; white-space:nowrap; box-shadow:0 3px 8px rgba(5,150,105,.2); }
+  /* qty track bottom padding trimmed so the gap to the Next button matches the other steps (was 26px) */
+  .qcards{ align-items:stretch; padding-bottom:12px; }
+  /* CUSTOM quantity card — sits OUTSIDE the scroll; preset cards FADE OUT as they approach it (mask), never pass behind */
+  .qrow2{ display:flex; align-items:flex-start; gap:0; width:100%; }
+  .bandwrap .qrow2{ max-width:900px; margin:0 auto; }
+  .qrow2 .qpin{ flex:none; align-self:flex-start; margin-top:8px; }   /* = xtrack padding-top, so the custom box TOP lines up with the tile tops */
+  .qrow2 .scrollwrap{ flex:1; min-width:0; margin-top:0; }
+  .qpin{ position:relative; z-index:6; display:flex; align-items:center; gap:10px; align-self:center; }
+  /* highlighted: WHITE bg, purple border + ring, RECESSED inner shadow, "custom" PILL badge on top */
+  .qpin .qcc{ position:relative; margin:0; padding:0; border:1.6px solid var(--brand); border-radius:14px; background:#fff; box-sizing:border-box; display:flex; align-items:center; justify-content:center; box-shadow:inset 0 4px 11px rgba(60,30,130,.34), inset 0 1px 2px rgba(60,30,130,.2), 0 0 0 3px rgba(124,58,237,.09), 0 8px 18px rgba(124,58,237,.14); transition:box-shadow .18s var(--ease), height .4s var(--ease), width .4s var(--ease); }
+  .qpin .qcc-pill{ position:absolute; top:-9px; left:50%; transform:translateX(-50%); background:var(--brand); color:#fff; font-size:.5rem; font-weight:800; letter-spacing:.1em; text-transform:uppercase; padding:3px 10px; border-radius:999px; box-shadow:0 3px 8px rgba(124,58,237,.4); white-space:nowrap; }
+  .qpin .qcc-in{ width:100%; box-sizing:border-box; border:0; background:transparent; outline:none; text-align:center; font-family:'Montserrat',sans-serif; font-weight:900; color:var(--bdark); padding:0 6px; -moz-appearance:textfield; appearance:textfield; }
+  .qpin .qcc-in::placeholder{ color:#b9a8e6; }
+  .qpin .qcc-in::-webkit-outer-spin-button, .qpin .qcc-in::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
+  .qpin .qcc:focus-within, .qpin .qcc.on{ box-shadow:inset 0 4px 11px rgba(124,58,237,.32), inset 0 1px 2px rgba(60,30,130,.2), 0 0 0 3px rgba(124,58,237,.2), 0 12px 26px rgba(124,58,237,.22); }
+  /* clearly DASHED vertical divider */
+  .qpin .qcc-div{ width:0; flex:none; align-self:stretch; margin:6px 0; border-left:2.6px dashed #7c3aed; }
+  .bandwrap .qpin .qcc{ width:clamp(120px,9.2vw,150px); height:clamp(74px,8vh,88px); }   /* matches the qty tile height */
+  .bandwrap .qpin .qcc-in{ font-size:clamp(1.2rem,1.7vw,1.6rem); }
+  #copanel .qpin .qcc{ width:122px; }   /* same width as the gop tiles; height matched to them by JS */
+  #copanel .qpin .qcc-in{ font-size:1.3rem; }
+  /* preset viewport fades at BOTH edges — left = cards vanishing as they near the custom card, right = "more →" */
+  .qcards-wrap{ -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 13px,#000 88%,transparent 100%); mask-image:linear-gradient(90deg,transparent 0,#000 13px,#000 88%,transparent 100%); }
+  .bandwrap .qcards{ padding-left:15px; }
+  #copanel .qcards{ padding-left:15px; }
+  .bandwrap .qcustom{ justify-content:center; } .bandwrap .dlbl{ max-width:560px; margin-left:auto; margin-right:auto; }
+  /* step custom-size widget centred (all-options stays left) */
+  .bandwrap .cscust{ justify-content:center; }
+  /* all-options qty: faded right edge so it reads as "more over there", not a hard cut */
+  #coQty{ -webkit-mask-image:linear-gradient(90deg,#000 0%,#000 88%,transparent 100%); mask-image:linear-gradient(90deg,#000 0%,#000 88%,transparent 100%); }
+  .navrow{ display:flex; justify-content:center; align-items:center; gap:14px; margin-top:9px; }
+  .navhint{ font-size:.62rem; font-weight:700; color:#9b7fd4; }
+  .nextbtn{ border:0; border-radius:99px; padding:9px 20px; font-family:inherit; font-size:.72rem; font-weight:800; cursor:pointer; background:var(--grad); color:#fff; box-shadow:0 12px 26px rgba(124,58,237,.32); }
+  .qref{ display:inline-flex; align-items:center; gap:8px; margin:11px auto 0; padding:8px 15px; background:rgba(255,255,255,.7); border:1px solid rgba(255,255,255,.95); border-radius:99px; font-size:.66rem; font-weight:600; color:var(--ink); box-shadow:0 4px 12px rgba(60,30,130,.08); } .qref b{ color:var(--bdark); font-weight:800; }
+  .csbox{ display:none; align-items:center; justify-content:center; gap:8px; margin-top:12px; } .csbox.show{ display:flex; }
+  .csbox input{ width:64px; font-family:inherit; font-size:.82rem; font-weight:800; text-align:center; border:1.5px solid #d9cdf2; border-radius:9px; padding:8px 6px; } .csbox input:focus{ outline:none; border-color:var(--brand); }
+  .csbox .x{ font-weight:800; color:var(--muted); } .csbox .u{ font-size:.62rem; font-weight:700; color:var(--muted); }
+  /* real in-hand pass card (from premiere-v10) — the "bottom calendar card" */
+  .pass{ display:flex; background:rgba(255,255,255,.88); backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,1); border-radius:20px; overflow:hidden; position:relative; box-shadow:0 18px 44px rgba(40,20,90,.22); max-width:840px; margin:12px auto 0; text-align:left; cursor:pointer; }
+  .pass::before{ content:''; position:absolute; inset:0; background:radial-gradient(50% 90% at 14% 0%, rgba(168,130,255,.16), transparent 60%); pointer-events:none; }
+  .pass .pcal{ width:86px; border-radius:16px; overflow:hidden; flex:none; align-self:center; margin-left:22px; box-shadow:0 8px 24px rgba(0,0,0,.1); border:1px solid rgba(124,58,237,.14); background:#fff; text-align:center; position:relative; z-index:2; }
+  .pass .pcal .band2{ background:linear-gradient(110deg,#60a5fa,#2563eb); color:#fff; font-size:.5rem; font-weight:800; letter-spacing:.2em; padding:5px 0; }
+  .pass .pcal .dy{ font-family:'Montserrat',sans-serif; font-size:1.8rem; font-weight:900; line-height:1.1; padding:5px 0 2px; }
+  .pass .pcal .wd{ font-size:.44rem; font-weight:800; letter-spacing:.14em; color:var(--muted); padding-bottom:7px; }
+  .pass .pvd{ width:0; border-left:1.5px dashed #c8b6ee; align-self:stretch; margin:14px 0 14px 20px; position:relative; z-index:2; }
+  .pass .pm2{ flex:1; padding:16px 24px 14px; position:relative; z-index:2; }
+  .pass .plbl2{ font-size:.52rem; font-weight:800; letter-spacing:.26em; text-transform:uppercase; color:#9b7fd4; }
+  .tierchip{ font-size:.5rem; font-weight:800; letter-spacing:.1em; border-radius:99px; padding:4px 11px; background:linear-gradient(110deg,#60a5fa,#2563eb); color:#fff; box-shadow:0 3px 10px rgba(37,99,235,.35); }
+  .pass .prory{ font-family:'Montserrat',sans-serif; font-size:1.3rem; font-weight:900; line-height:1.26; margin-top:8px; }
+  .pass .prory em{ font-style:normal; white-space:nowrap; background:var(--gradwide); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .pass .pnud2{ font-size:.76rem; color:var(--sub); font-weight:600; margin-top:9px; } .pass .pnud2 b{ color:var(--bdark); }
+  .pass .lockchk{ display:inline-flex; align-items:center; justify-content:center; color:var(--green); vertical-align:-4px; margin-right:3px; }
+  .pass .savemore{ color:var(--green); }
+  .pass .pstub2{ width:190px; flex:none; border-left:2px dashed #d8ccf2; background:rgba(247,243,254,.6); display:flex; flex-direction:column; justify-content:center; gap:4px; text-align:center; padding:13px 13px; position:relative; z-index:2; }
+  .pass .pstub2::before,.pass .pstub2::after{ content:''; position:absolute; left:-9px; width:16px; height:16px; border-radius:50%; background:#f3edfe; }
+  .pass .pstub2::before{ top:-8px; } .pass .pstub2::after{ bottom:-8px; }
+  .pass .pt{ font-size:1.25rem; font-weight:800; font-variant-numeric:tabular-nums; background:var(--gradwide); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .pass .ptl{ font-size:.48rem; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); }
+  .pass .pbars2{ height:20px; margin:5px 6px 3px; border-radius:2px; opacity:.75; background:repeating-linear-gradient(90deg,#3c3654 0 2px,transparent 2px 4px,#3c3654 4px 5px,transparent 5px 9px); }
+  .pass .pbtn{ display:inline-flex; align-items:center; justify-content:center; gap:7px; background:var(--grad); border:0; color:#fff; border-radius:11px; padding:10px 12px; font-family:inherit; font-size:.66rem; font-weight:800; cursor:pointer; box-shadow:0 6px 16px rgba(124,58,237,.35); }
+  /* all-options pass card: timer + Change date drop to a full-width bottom row */
+  .copanel .pass{ flex-wrap:wrap; max-width:580px; }
+  .copanel .pass .pstub2{ flex:1 1 100%; width:auto; border-left:0; border-top:2px dashed #d8ccf2; flex-direction:row; align-items:center; gap:16px; text-align:left; padding:13px 20px; }
+  .copanel .pass .pstub2::before, .copanel .pass .pstub2::after{ display:none; }
+  .copanel .pass .pcd{ display:flex; flex-direction:column; gap:1px; flex:none; }
+  .copanel .pass .pbars2{ flex:1; min-width:50px; margin:0; height:26px; }
+  .copanel .pass .pbtn{ margin-top:0; flex:none; padding:11px 15px; }
+  .upbtn{ display:inline-flex; align-items:center; gap:9px; border:1.5px dashed rgba(124,58,237,.5); background:rgba(255,255,255,.55); color:var(--ink); border-radius:99px; padding:13px 22px; font-family:inherit; font-size:.74rem; font-weight:800; cursor:pointer; }
+  .upbtn .ic{ width:24px; height:24px; border-radius:50%; background:var(--grad); color:#fff; display:flex; align-items:center; justify-content:center; font-size:.7rem; }
+  /* ===== Quick-edit COMPARE cluster (temporary: pick one of v1–v4) ===== */
+  .qecluster{ top:172px; right:26px; display:flex; align-items:center; gap:6px; padding:5px 7px 5px 13px; background:rgba(255,255,255,.74); backdrop-filter:blur(18px) saturate(1.5); border:1px solid rgba(255,255,255,.9); border-radius:13px; box-shadow:0 6px 18px rgba(60,30,130,.12); z-index:34; }
+  .qec-lbl{ font-size:.66rem; font-weight:900; color:var(--bdark); display:inline-flex; align-items:center; gap:5px; margin-right:3px; }
+  .qec-lbl .qeic{ font-size:.9rem; }
+  .qec-pill{ display:inline-flex; flex-direction:column; align-items:center; line-height:1.05; gap:2px; font-family:inherit; font-size:.72rem; font-weight:800; color:var(--bdark); background:#f3eefc; border:1.2px solid #e2d8f5; border-radius:9px; padding:6px 11px; cursor:pointer; transition:.13s var(--ease); }
+  .qec-pill small{ font-size:.48rem; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--sub); }
+  .qec-pill:hover{ border-color:var(--brand); color:var(--brand); background:#fff; }
+  .screen.allopts .qecluster{ position:fixed; }
+  .screen.allopts.atend .qecluster{ opacity:0; pointer-events:none; transition:opacity .25s; }
+  /* framework/sample-product watermark (non-interactive) */
+  .protobadge{ position:fixed; top:10px; left:50%; transform:translateX(-50%); z-index:55; pointer-events:none; font-family:'Inter',sans-serif; font-size:.6rem; font-weight:700; letter-spacing:.01em; color:var(--bdark); background:rgba(255,255,255,.85); backdrop-filter:blur(8px); border:1px solid rgba(124,58,237,.28); border-radius:99px; padding:5px 15px; box-shadow:0 4px 14px rgba(60,30,130,.13); white-space:nowrap; }
+  .protobadge b{ font-weight:900; color:var(--brand); }
+  @media(max-width:720px){ .protobadge{ font-size:.5rem; padding:4px 10px; } }
+  /* v3 (compact) + v4 (dropdowns) drawer CSS removed — v2 panel is the chosen Quick-edit treatment */
+</style>
+</head>
+<body>
+  <div class="protobadge"><b>Prototype</b> · sample product: Poster · images, options &amp; data vary per product</div>
+  <input type="file" id="artInput" accept=".pdf,.png,.jpg,.jpeg,.webp,.tif,.tiff,.ai,.eps" hidden>
+<div class="screen">
+  <div class="uhdr">
+    <div class="util"><span class="cat">Small Format</span><span class="cat">Business Cards</span><span class="cat on">Large Format</span><span class="cat">Apparel</span><span class="cat">Booklets</span><span class="promo">Free proof on every order · Same-day at MTCC</span><span>Track order</span><span class="rsep"></span><span>Sign in</span><span class="rsep"></span><span>(437) 882-8822</span></div>
+    <div class="main"><span class="logo">print<b>stuff</b></span><span class="allbtn">☰ All Products</span><span class="search"><span>Search products, materials, sizes…</span><span class="go">→</span></span><span class="hicons"><span>Get a quote</span><span>|</span><span>🛒 Cart</span></span></div>
+    <div class="subrow">
+      <div class="scat on"><span class="sic" style="background:linear-gradient(150deg,#241b38,#7c3aed)"></span><span class="sn">Posters</span></div>
+      <div class="scat"><span class="sic" style="background:linear-gradient(150deg,#3d3354,#5b4b86)"></span><span class="sn">Retractable banners</span></div>
+      <div class="scat"><span class="sic" style="background:linear-gradient(150deg,#1d1530,#2c2240)"></span><span class="sn">Vinyl banners</span></div>
+      <div class="scat"><span class="sic" style="background:linear-gradient(150deg,#2b2140,#6b4ba8)"></span><span class="sn">Foam board</span></div>
+      <div class="scat"><span class="sic" style="background:linear-gradient(150deg,#241f33,#8a76c9)"></span><span class="sn">Window decals</span></div>
+      <div class="scat"><span class="sic" style="background:linear-gradient(150deg,#33285c,#9b7fd4)"></span><span class="sn">Floor graphics</span></div>
+    </div>
+  </div>
+
+  <div class="float glasspill dtoggle" id="dtoggle">
+    <span class="cvlabel"><span class="cvk">View</span></span>
+    <span class="seg">
+      <span class="seg-thumb"></span>
+      <button id="dStep" class="cpill on gico" type="button"><span class="ic"><i></i><i></i><i></i></span>Guided</button>
+      <button id="dAll" class="cpill aico" type="button"><span class="ic"><i></i><i></i><i></i><i></i></span>Everything</button>
+    </span>
+    <span class="vsepp dashed"></span>
+    <button class="cpill proofbtn" id="vProof" type="button"><span class="pfico">▣</span> Proof &amp; file check</button>
+  </div>
+  <!-- Quick edit (the chosen v2 side-panel) — opens the slide-out editor that shares state with the main forms -->
+  <div class="float qecluster" id="qecluster">
+    <button class="qec-pill qec-main" id="btnEverything2" type="button"><span class="qeic">⚡</span> Quick edit</button>
+  </div>
+  <!-- bottom bar = N12 segmented summary: Total | Size | Paper | In hand on the LEFT, Add-to-cart on the RIGHT -->
+  <div class="float glasspill f-buy">
+    <div class="bb-seg">
+      <div class="bb-cell bb-total"><span class="bb-l">Total <span class="pdelta" id="pdelta"></span></span><span class="t" id="price">$60.00</span></div>
+      <div class="bb-cell"><span class="bb-l">Size</span><span class="bb-v" id="bbSize">36 × 48″</span></div>
+      <div class="bb-cell"><span class="bb-l">Paper</span><span class="bb-v" id="bbPaper">Satin photo</span></div>
+      <div class="bb-cell"><span class="bb-l">In hand</span><span class="bb-v" id="bbWhen">Tue, Jun 16</span></div>
+    </div>
+    <div class="f-buy-actions">
+      <button class="savebuild" type="button" id="saveBuild">Save build</button>
+      <span class="actdiv"></span>
+      <button class="add"><svg class="addcart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg> Add to cart <b class="addtot" id="addTot">· $60.00</b></button>
+    </div>
+  </div>
+
+  <!-- Quick edit v2 MOCKUP — same chips, but a drawer that slides in from the LEFT (compare vs top sheet) -->
+  <div class="qdim2" id="qdim2"></div>
+  <div class="qdrawer" id="sheet2">
+    <div class="qdrawer-head"><span>⚡ Quick edit <small>slide-out v2</small></span><button class="qdrawer-x" id="sheet2X" type="button">×</button></div>
+    <div class="qdrawer-body" id="sheet2Body"></div>
+    <div class="qdrawer-foot">
+      <div class="bb-seg">
+        <div class="bb-cell bb-total"><span class="bb-l">Total <span class="pdelta" id="pdelta2"></span></span><span class="t" id="drawerTotal">$60.00</span></div>
+        <div class="bb-cell"><span class="bb-l">Size</span><span class="bb-v" id="drawerSize">36 × 48″</span></div>
+        <div class="bb-cell"><span class="bb-l">In hand</span><span class="bb-v" id="drawerWhen">Tue, Jun 16</span></div>
+      </div>
+      <div class="qdf-acts">
+        <button class="savebuild qdf-save" type="button">Save build</button>
+        <span class="actdiv"></span>
+        <button class="add qdf-add" type="button"><svg class="addcart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg> Add to cart <b class="addtot" id="addTot2">· $60.00</b></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick edit v1 (top sheet), v3 (compact), v4 (dropdowns) removed — v2 side-panel (#sheet2) is the chosen treatment -->
+
+  <!-- Artwork proof — FULL-SCREEN, design-complete mock: real upload affordance + EXACT print geometry (0.125″ bleed/safe, computed from the live size). File rendering/analysis are built post-prototype. -->
+  <div class="prooffs s-upload" id="proofov" aria-hidden="true">
+    <div class="prooffs-bar">
+      <div class="prooffs-id"><span class="proofttl">Proof &amp; file check</span><span class="proofsub" id="proofFile">Drop or browse to start</span></div>
+      <div class="prooffs-steps" id="proofSteps"><span class="pstep on cur" data-step="0">1 · Upload</span><span class="pstep" data-step="1">2 · Check</span><span class="pstep" data-step="2">3 · Approve</span></div>
+      <button class="proofx" id="proofX" type="button" aria-label="Close">×</button>
+    </div>
+
+    <!-- Upload happens in the artwork step (not full-screen). The overlay opens straight to Check → Proof. -->
+
+    <!-- STATE 2 · checking -->
+    <div class="proofpane proof-check" id="proofCheck">
+      <div class="proofspin"></div>
+      <div class="pc-t">Checking your file…</div>
+      <div class="pc-s" id="checkingStep">Reading dimensions</div>
+    </div>
+
+    <!-- STATE 3 · proof -->
+    <div class="proofpane proof-result" id="proofResult">
+      <div class="proofview">
+        <div class="proofctrls">
+          <div class="pvz">
+            <button class="pvzbtn" id="pvZoomOut" type="button" title="Zoom out">−</button>
+            <span class="pvzval" id="pvZoomVal">Fit</span>
+            <button class="pvzbtn" id="pvZoomIn" type="button" title="Zoom in">+</button>
+            <button class="pvzbtn pvzfit" id="pvZoomFit" type="button" title="Fit to screen">⤢ Fit</button>
+          </div>
+          <button class="pvtoggle on" id="pvGuides" type="button" title="Toggle print guides">⊞ Guides</button>
+        </div>
+        <div class="proofstage-wrap">
+          <div class="proofstage" id="proofStage">
+            <div class="proofart"></div>
+            <div class="pg pg-bleed" id="pgBleed"></div>
+            <div class="pg pg-trim" id="pgTrim"></div>
+            <div class="pg pg-safe" id="pgSafe"></div>
+            <span class="pglabel lbl-bleed">BLEED</span>
+            <span class="pglabel lbl-trim" id="lblTrim">TRIM · 36 × 48″</span>
+            <span class="pglabel lbl-safe">SAFE</span>
+          </div>
+        </div>
+        <div class="proofview-foot">
+          <div class="prooflegend"><span><i class="l-bleed"></i>Bleed&nbsp;+0.125″</span><span><i class="l-trim"></i>Trim&nbsp;(cut line)</span><span><i class="l-safe"></i>Safe&nbsp;−0.125″</span></div>
+          <div class="proofzoom" title="Corner, magnified — true 0.125″ margins">
+            <div class="pz-art"></div>
+            <div class="pz pz-bleed"></div><div class="pz pz-trim"></div><div class="pz pz-safe"></div>
+            <span class="pz-tag pz-tag-bleed">bleed 0.125″</span>
+            <span class="pz-tag pz-tag-safe">safe 0.125″</span>
+            <span class="pz-cap">corner · magnified</span>
+          </div>
+        </div>
+      </div>
+      <aside class="proofside">
+        <div class="proofside-file" id="proofFile2">artwork.pdf · 18.4 MB</div>
+        <div class="proofdpi"><span class="proofdpi-n" id="proofDpi">300</span><span class="proofdpi-u">DPI<small id="proofDpiAt">at 36 × 48″</small></span><span class="proofdpi-badge ok" id="proofDpiBadge">Print-ready</span></div>
+        <ul class="checklist" id="checkList"></ul>
+        <button class="proof-toggle" id="proofToggle" type="button">▸ Preview a flagged file</button>
+        <div class="proofside-spacer"></div>
+        <div class="proofside-foot">
+          <button class="proofreplace" id="proofReplace" type="button">↻ Replace</button>
+          <button class="proofapprove" id="proofApprove" type="button">Approve proof →</button>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <div class="allwrap">
+  <div class="leftzone" id="leftzone">
+  <div class="float f-rail2" id="rail">
+    <div class="rt2">Your build</div>
+    <div class="items">
+      <div class="rn cur" data-scene="0"><span class="ico"><span class="gmini2" style="width:34px;height:46px"></span></span><span><div class="k">Size</div><div class="v" id="rvSize">24 × 36″ · portrait</div></span></div>
+      <div class="rn" data-scene="1"><span class="ico"><span class="gsw" id="rvPaperSw" style="background:linear-gradient(135deg,#3a2f55,#5a4a82)"></span></span><span><div class="k">Paper</div><div class="v" id="rvPaper">Satin photo</div></span></div>
+      <div class="rn" data-scene="2"><span class="ico"><span class="gfin"></span></span><span><div class="k">Finish</div><div class="v" id="rvFin">None</div></span></div>
+      <div class="rn" data-scene="3"><span class="ico"><span class="gstack2"><i></i><i></i><i></i><i></i></span></span><span><div class="k">Quantity</div><div class="v" id="rvQty">1 · $30 ea</div></span></div>
+      <div class="rn" data-scene="4" data-dock><span class="ico"><span class="gcal2"><span class="bd">JUN</span><span class="dn">16</span></span></span><span><div class="k">In hand</div><div class="v" id="rvWhen">Tue, Jun 16</div></span></div>
+      <div class="rn" data-scene="5"><span class="ico"><span class="gmini2 dash" style="width:38px;height:30px;font-size:.8rem">↑</span></span><span><div class="k">Artwork</div><div class="v" id="rvArt">add yours</div></span></div>
+    </div>
+  </div>
+
+  <!-- All-options panel — the real Cold Open option components -->
+  <div class="copanel" id="copanel">
+    <section class="scene">
+      <div class="sno">Step 01 · The print</div>
+      <h2>Start with a stock<br>that <em>carries.</em></h2>
+      <div class="ss">Colour depth, glare and feel all change with the stock — pick the surface that suits the room.</div>
+      <div class="bigrow" id="coStocks">
+        <div class="ocard on" data-paper="satin"><span class="ptag">★ MOST POPULAR</span><div class="art" style="background:linear-gradient(160deg,#1a0f33,#3b1f73 55%,#b53d8e 130%)"></div><div class="scrim"></div><div class="txt"><div class="n">Satin photo</div><div class="d">Glare-free · deep colour</div><div class="p">$5 <small>/sq ft</small></div></div></div>
+        <div class="ocard" data-paper="gloss"><div class="art" style="background:linear-gradient(160deg,#0e1024,#3a2a63 55%,#a855f7 130%)"></div><div class="scrim"></div><div class="txt"><div class="n">Gloss</div><div class="d">High shine · punchy</div><div class="p">$5.50 <small>/sq ft</small></div></div></div>
+        <div class="ocard" data-paper="matte"><div class="art" style="background:linear-gradient(160deg,#2a2440,#4a3f6e 55%,#7c6fae 130%)"></div><div class="scrim"></div><div class="txt"><div class="n">Matte</div><div class="d">Flat · easy to read</div><div class="p">$5 <small>/sq ft</small></div></div></div>
+        <div class="ocard" data-paper="heavy"><div class="art" style="background:linear-gradient(160deg,#201d30,#403a59 130%)"></div><div class="scrim"></div><div class="txt"><div class="n">Heavyweight</div><div class="d">Thick · premium</div><div class="p">$6.50 <small>/sq ft</small></div></div></div>
+        <div class="ocard" data-paper="canvas"><div class="art" style="background:linear-gradient(160deg,#4a4036,#6a5c49 130%);background-image:repeating-linear-gradient(0deg,rgba(0,0,0,.1) 0 1px,transparent 1px 3px)"></div><div class="scrim"></div><div class="txt"><div class="n">Canvas</div><div class="d">Textured · gallery</div><div class="p">$12 <small>/sq ft</small></div></div></div>
+        <div class="ocard" data-paper="backlit"><div class="art" style="background:linear-gradient(160deg,#1b2740,#2f6ea0 130%)"></div><div class="scrim"></div><div class="txt"><div class="n">Backlit film</div><div class="d">For lightboxes</div><div class="p">$14 <small>/sq ft</small></div></div></div>
+      </div>
+    </section>
+
+    <section class="scene">
+      <div class="sno">Step 02 · The size</div>
+      <h2>How <em>big?</em></h2>
+      <div class="ss">Set the orientation, then pick a size — every size flips to match, so you always see exactly what you'll get.</div>
+      <div class="grplbl">Orientation</div>
+      <div class="grow coorient-tiles">
+        <div class="gop otile on" data-orient="portrait"><div class="gbox"><span class="gmini" style="width:34px;height:48px"></span></div><div class="bn">Portrait</div></div>
+        <span class="gdv"></span>
+        <div class="gop otile" data-orient="landscape"><div class="gbox"><span class="gmini" style="width:48px;height:34px"></span></div><div class="bn">Landscape</div></div>
+      </div>
+      <div class="grplbl" style="margin-top:22px">Size <span class="grsub">— the four most booths order at events like this</span></div>
+      <div class="grow" id="coSizes">
+        <div class="gop popular on" data-size="36x48"><span class="poptag">★ Most popular</span><div class="gbox"><span class="gmini" style="width:48px;height:64px"></span></div><div class="bn">36 × 48″</div><div class="bx">large</div></div>
+        <span class="gdv"></span>
+        <div class="gop" data-size="a0"><div class="gbox"><span class="gmini" style="width:46px;height:65px"></span></div><div class="bn">33 × 47″</div><div class="bx">A0</div></div>
+        <span class="gdv"></span>
+        <div class="gop" data-size="46x45"><div class="gbox"><span class="gmini" style="width:60px;height:59px"></span></div><div class="bn">46 × 45″</div><div class="bx">near-square</div></div>
+        <span class="gdv"></span>
+        <div class="gop" data-size="96x48"><div class="gbox"><span class="gmini" style="width:76px;height:38px"></span></div><div class="bn">96 × 48″</div><div class="bx">backdrop</div></div>
+      </div>
+      <div class="dlbl" style="margin-top:24px">Need an exact size?</div>
+      <div class="cscust" id="coCustom">
+        <div class="csprev"><span class="csprevbox" id="csPrevBox"></span></div>
+        <span class="csdiv"></span>
+        <span class="cfield"><label>Width</label><input class="cinput" type="number" id="coCW" value="36" min="4" max="120"></span>
+        <span class="csx">×</span>
+        <span class="cfield"><label>Height</label><input class="cinput" type="number" id="coCH" value="48" min="4" max="120"></span>
+        <span class="csdiv"></span>
+        <span class="cfield ufield"><label>Units</label><span class="seg unitseg" id="csUnit"><span class="seg-thumb"></span><span class="cpill act" data-unit="in">in</span><span class="cpill" data-unit="cm">cm</span></span></span>
+        <div class="cshint" id="csHint">Type any size — we round <b>up</b> to the nearest inch, and set portrait/landscape to match. Up to <b>59″</b> short side · <b>120″</b> long side.</div>
+      </div>
+    </section>
+
+    <section class="scene">
+      <div class="sno">Step 03 · Finish</div>
+      <h2>Protect it &amp; set the <em>feel.</em></h2>
+      <div class="ss">A laminate guards against scuffs and fingerprints and tunes the shine; mounting makes it rigid and ready to hang.</div>
+      <div class="grow" id="coFin" style="flex-wrap:wrap">
+        <div class="gop on" data-fin="none"><div class="gbox"><span class="gfin" style="background:linear-gradient(150deg,#efeaf9,#ddd2f2)"></span></div><div class="bn">None</div><div class="bx">paper finish</div></div>
+        <span class="gdv"></span>
+        <div class="gop" data-fin="glosslam"><div class="gbox"><span class="gfin" style="background:linear-gradient(115deg,#3a2f55,#8b7fd0 50%,#3a2f55)"></span></div><div class="bn">Gloss laminate</div><div class="bx">+$2/sq ft</div></div>
+        <span class="gdv"></span>
+        <div class="gop" data-fin="mattelam"><div class="gbox"><span class="gfin" style="background:linear-gradient(150deg,#cdc6da,#a99fc4)"></span></div><div class="bn">Matte laminate</div><div class="bx">+$2/sq ft</div></div>
+      </div>
+    </section>
+
+    <section class="scene">
+      <div class="sno">Step 04 · The count</div>
+      <h2>How <em>many?</em></h2>
+      <div class="ss">One hero piece, or a set for every entrance — the price-per drops as the run grows.</div>
+      <div class="qrow2">
+        <div class="qpin qpin-co"><div class="qcc"><span class="qcc-pill">custom</span><input class="qcc-in" type="number" min="1" max="5000" placeholder="42" id="coQtyInput"></div><span class="qcc-div"></span></div>
+        <div class="scrollwrap qcards-wrap"><div class="xtrack qcards" id="coQty">
+        <div class="gop on" data-qty="1"><div class="gbox"><span class="gmini gqty">1</span></div></div>
+        <span class="gdv"></span>
+        <div class="gop" data-qty="2"><div class="gbox"><span class="gmini gqty">2</span></div></div>
+        <span class="gdv"></span>
+        <div class="gop" data-qty="3"><div class="gbox"><span class="gmini gqty">3</span></div><div class="be">−5%</div></div>
+        <span class="gdv"></span>
+        <div class="gop" data-qty="4"><div class="gbox"><span class="gmini gqty">4</span></div></div>
+        <span class="gdv"></span>
+        <div class="gop" data-qty="5"><div class="gbox"><span class="gmini gqty">5</span></div><div class="be">−10%</div></div>
+        <span class="gdv"></span>
+        <div class="gop" data-qty="6"><div class="gbox"><span class="gmini gqty">6</span></div></div>
+        <span class="gdv"></span>
+        <div class="gop" data-qty="7"><div class="gbox"><span class="gmini gqty">7</span></div></div>
+        <span class="gdv"></span>
+        <div class="gop" data-qty="8"><div class="gbox"><span class="gmini gqty">8</span></div></div>
+        <span class="gdv"></span>
+        <div class="gop" data-qty="9"><div class="gbox"><span class="gmini gqty">9</span></div></div>
+        <span class="gdv"></span>
+        <div class="gop" data-qty="10"><div class="gbox"><span class="gmini gqty">10</span></div><div class="be">−16%</div></div>
+        <span class="gdv"></span>
+        <div class="gop" data-qty="15"><div class="gbox"><span class="gmini gqty">15</span></div><div class="be">−20%</div></div>
+        <span class="gdv"></span>
+        <div class="gop" data-qty="20"><div class="gbox"><span class="gmini gqty">20</span></div></div>
+        <span class="gdv"></span>
+        <div class="gop" data-qty="25"><div class="gbox"><span class="gmini gqty">25</span></div><div class="be">−26%</div></div>
+        <span class="gdv"></span>
+        <div class="gop" data-qty="30"><div class="gbox"><span class="gmini gqty">30</span></div><div class="be">−30%</div></div>
+        <span class="gdv"></span>
+        <div class="gop" data-qty="50"><div class="gbox"><span class="gmini gqty">50</span></div><div class="be">−34%</div></div>
+        <span class="gdv"></span>
+        <div class="gop" data-qty="75"><div class="gbox"><span class="gmini gqty">75</span></div></div>
+        <span class="gdv"></span>
+        <div class="gop" data-qty="100"><div class="gbox"><span class="gmini gqty">100</span></div><div class="be">−40%</div></div>
+        <span class="gdv"></span>
+        <div class="gop" data-qty="150"><div class="gbox"><span class="gmini gqty">150</span></div></div>
+        <span class="gdv"></span>
+        <div class="gop" data-qty="200"><div class="gbox"><span class="gmini gqty">200</span></div></div>
+        <span class="gdv"></span>
+        <div class="gop" data-qty="250"><div class="gbox"><span class="gmini gqty">250</span></div></div>
+        <span class="gdv"></span>
+        <div class="gop" data-qty="500"><div class="gbox"><span class="gmini gqty">500</span></div></div>
+        <span class="gdv"></span>
+        <div class="gop" data-qty="1000"><div class="gbox"><span class="gmini gqty">1000</span></div></div>
+      </div></div>
+      </div>
+    </section>
+
+    <section class="scene">
+      <div class="sno">Step 05 · The deadline</div>
+      <h2>When do you need<br>it <em>in hand?</em></h2>
+      <div class="ss">Pick the date — the price follows. The longer you can wait, the less you pay.</div>
+      <!-- deadline card — Premiere v10 ".pass" version -->
+      <div class="pass" data-dock title="Tap the pass to change your date">
+        <div class="pcal"><div class="band2" id="pcB2">JUN</div><div class="dy" id="pcD2">16</div><div class="wd" id="pcW2">TUESDAY</div></div>
+        <span class="pvd"></span>
+        <div class="pm2">
+          <div style="display:flex;align-items:center;gap:10px"><span class="plbl2">In your hands</span><span class="tierchip" id="passTier2">STANDARD · 5 DAYS</span></div>
+          <div class="prory">Printed, trimmed and delivered by <em id="passDate2">Tue, June 16</em> by <em class="ptime">4pm</em> — promise.</div>
+          <div class="pnud2"><b>Order it now — price is locked in.</b> <span class="lockchk"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.801 10A10 10 0 1 1 17 3.335"/><path d="m9 11 3 3L22 4"/></svg></span><br>Need it sooner, costs a little more. Wait a little longer, <b class="savemore">saves a little more</b>.</div>
+        </div>
+        <div class="pstub2">
+          <div class="pcd"><div class="pt">05:12:04</div><div class="ptl">and this price is yours</div></div>
+          <div class="pbars2"></div>
+          <button class="pbtn" type="button" data-dock><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>Change date</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="scene">
+      <div class="sno">Step 06 · Your artwork</div>
+      <h2>Send us your <em>art.</em></h2>
+      <div class="ss">Drop a full-size file — we proof it for resolution, bleed and safe-zone, free, on every order.</div>
+      <div class="dz" id="coUpload"><span class="ic">↑</span><div class="t">Drop your artwork — see it on the poster instantly<small>PDF, AI, PNG, JPG, TIFF · 100MB · checked live for resolution, bleed &amp; safe-zone</small></div></div>
+    </section>
+
+    <section class="scene">
+      <div class="sno">Step 07 · Your order</div>
+      <h2>Ready to <em>print.</em></h2>
+      <div class="ss">The full breakdown — Add to cart sits in the bar just below.</div>
+      <!-- price card (Step 07) = the chosen Packing-slip order summary -->
+      <div class="oslip" id="osum">
+        <div class="oslip-pad">
+          <div class="oslip-hd"><span class="oslip-biz">Order Summary</span><span class="oslip-kk">Packing slip</span></div>
+          <div class="oslip-tbl">
+            <span class="h q">QTY</span><span class="h">DESCRIPTION</span><span class="h a">AMT</span>
+            <span class="q" id="osumQty">1</span><span class="d" id="osumDesc">Poster 36×48″ satin photo</span><span class="a" id="osumSub">$60.00</span>
+            <span class="q">—</span><span class="d" id="osumFin">Finish · none</span><span class="a" id="osumFinAmt">$0.00</span>
+          </div>
+          <div class="oslip-trow"><span class="oslip-tl">TOTAL</span><span class="oslip-num" id="osumTotal">$60.00</span></div>
+          <button class="oslip-add" id="osumAdd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>Add to cart</button>
+        </div>
+      </div>
+    </section>
+  </div>
+  </div><!-- /leftzone -->
+
+  <div class="canvas">
+    <div class="glow"></div>
+    <div class="heroWrap" id="heroWrap">
+      <div class="poster" id="poster" style="aspect-ratio:.667">
+        <div class="part" id="part">
+          <div class="pk">Print Stuff presents</div>
+          <div class="pt">SUMMER<br>SOUND<br><em>FEST</em></div>
+          <div class="pd"><div class="pdt">AUG 14–16 · 2026</div><div class="pv">Metro Toronto Convention Centre · gates 4 PM</div></div>
+        </div>
+        <div class="sgp"><span class="gp-bleed"></span><span class="gp-trim"></span><span class="gp-safe"></span></div>
+        <div class="pf-flag"><span class="pf-dot">!</span><span class="pf-tag">Image is 150 dpi — soft at this size</span></div>
+      </div>
+    </div>
+    <div class="pfbar" id="pfbar">
+      <span class="lg"><i style="border:1.5px dashed #60a5fa"></i>Bleed</span><span class="lg"><i style="background:#ef4444"></i>Trim</span><span class="lg"><i style="border:1.5px dashed #34d399"></i>Safe</span>
+      <span class="sep"></span>
+      <span class="pf-warn">⚠ Low resolution — 150 dpi at this size <button class="pf-fix" id="pfFix">✦ Upscale to 300 dpi</button></span>
+      <span class="pf-ok2"><span>✓ 300 dpi · CMYK · safe-zone clear — print-ready</span> <button class="pf-replay" id="pfReplay" title="show the catch again">↺</button></span>
+    </div>
+  </div>
+  </div><!-- /allwrap -->
+
+  <!-- BANDS (in Guided: one slides up at a time. In All options: this wrapper becomes the left panel) -->
+  <div class="bandwrap" id="bandwrap">
+  <div class="band" data-band="0">
+    <div class="bq">What <em>size?</em></div>
+    <div class="bs">Set the orientation, then pick a size — the poster flips to match.</div>
+    <div class="sizewrap">
+      <div class="ogroup">
+        <div class="otiles">
+          <div class="ocA otile on" data-orient="portrait"><div class="gb"><span class="gminp" style="width:22px;height:31px"></span></div><div class="bn2">Portrait</div><div class="bx">tall</div></div>
+          <div class="ocA otile" data-orient="landscape"><div class="gb"><span class="gminp" style="width:31px;height:22px"></span></div><div class="bn2">Landscape</div><div class="bx">wide</div></div>
+        </div>
+      </div>
+      <span class="ovdiv"></span>
+      <div class="ogroup szgroup">
+        <div class="optrow" id="sizeRow">
+          <div class="ocA on" data-size="36x48"><span class="qbadge">★ popular</span><div class="gb"><span class="gminp" style="width:34px;height:46px"></span></div><div class="bn2">36 × 48″</div><div class="bx">large</div></div>
+          <div class="ocA" data-size="a0"><div class="gb"><span class="gminp" style="width:33px;height:47px"></span></div><div class="bn2">33 × 47″</div><div class="bx">A0</div></div>
+          <div class="ocA" data-size="46x45"><div class="gb"><span class="gminp" style="width:44px;height:43px"></span></div><div class="bn2">46 × 45″</div><div class="bx">near-square</div></div>
+          <div class="ocA" data-size="96x48"><div class="gb"><span class="gminp" style="width:54px;height:27px"></span></div><div class="bn2">96 × 48″</div><div class="bx">backdrop</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="dlbl" style="margin-top:16px">Need an exact size?</div>
+    <div class="cscust" id="csBox">
+      <div class="csprev"><span class="csprevbox" id="csPrevBoxB"></span></div>
+      <span class="csdiv"></span>
+      <span class="cfield"><label>Width</label><input class="cinput" type="number" id="cW" value="36" min="4" max="120"></span>
+      <span class="csx">×</span>
+      <span class="cfield"><label>Height</label><input class="cinput" type="number" id="cH" value="48" min="4" max="120"></span>
+      <span class="csdiv"></span>
+      <span class="cfield ufield"><label>Units</label><span class="seg unitseg" id="csUnitB"><span class="seg-thumb"></span><span class="cpill act" data-unit="in">in</span><span class="cpill" data-unit="cm">cm</span></span></span>
+      <div class="cshint" id="csHintB">Type any size — we round <b>up</b> to the nearest inch, and set portrait/landscape to match. Up to <b>59″</b> short side · <b>120″</b> long side.</div>
+    </div>
+    <div class="navrow"><span class="navhint">The poster updates at full scale — see it big.</span><button class="nextbtn" data-goto="1">Next: Paper →</button></div>
+  </div>
+
+  <div class="band off" data-band="1">
+    <div class="bq">Which <em>paper?</em></div>
+    <div class="bs">The stock the image prints on — affects finish, depth and feel.</div>
+    <div class="optrow" id="paperRow">
+      <div class="ocA on" data-paper="satin"><div class="gb"><span class="gsw" style="background:linear-gradient(135deg,#3a2f55,#5a4a82)"></span></div><div class="bn2">Satin photo</div><div class="bx">$5/sq ft</div></div>
+      <div class="ocA" data-paper="matte"><div class="gb"><span class="gsw" style="background:linear-gradient(135deg,#34304a,#46415f)"></span></div><div class="bn2">Matte</div><div class="bx">$5/sq ft</div></div>
+      <div class="ocA" data-paper="gloss"><div class="gb"><span class="gsw" style="background:linear-gradient(115deg,#2f2747,#6a59a0 50%,#2f2747)"></span></div><div class="bn2">Gloss</div><div class="bx">$5.50/sq ft</div></div>
+      <div class="ocA" data-paper="heavy"><div class="gb"><span class="gsw" style="background:linear-gradient(135deg,#2c2740,#403a59)"></span></div><div class="bn2">Heavyweight</div><div class="bx">$6.50/sq ft</div></div>
+      <div class="ocA" data-paper="canvas"><div class="gb"><span class="gsw" style="background:linear-gradient(135deg,#4a4036,#6a5c49);background-image:repeating-linear-gradient(0deg,rgba(0,0,0,.07) 0 1px,transparent 1px 3px)"></span></div><div class="bn2">Canvas</div><div class="bx">$12/sq ft</div></div>
+      <div class="ocA" data-paper="backlit"><div class="gb"><span class="gsw" style="background:linear-gradient(135deg,#1b2740,#2f6ea0)"></span></div><div class="bn2">Backlit film</div><div class="bx">$14/sq ft</div></div>
+    </div>
+    <div class="navrow"><span class="navhint">Satin is the all-rounder; canvas for art pieces.</span><button class="nextbtn" data-goto="2">Next: Finish →</button></div>
+  </div>
+
+  <div class="band off" data-band="2">
+    <div class="bq">Any <em>finish?</em></div>
+    <div class="bs">Lamination protects; mounting makes it rigid and ready to hang.</div>
+    <div class="optrow" id="finRow">
+      <div class="ocA on" data-fin="none"><div class="gb"><span class="gminp" style="width:32px;height:27px"></span></div><div class="bn2">None</div><div class="bx">standard</div></div>
+      <div class="ocA" data-fin="glosslam"><div class="gb"><span class="gsw" style="background:linear-gradient(115deg,#3a2f55,#8b7fd0 50%,#3a2f55)"></span></div><div class="bn2">Gloss laminate</div><div class="bx">+$2/sq ft</div></div>
+      <div class="ocA" data-fin="mattelam"><div class="gb"><span class="gsw" style="background:linear-gradient(135deg,#34304a,#46415f)"></span></div><div class="bn2">Matte laminate</div><div class="bx">+$2/sq ft</div></div>
+    </div>
+    <div class="navrow"><span class="navhint">Mounted posters stand on an easel or hang flush.</span><button class="nextbtn" data-goto="3">Next: Quantity →</button></div>
+  </div>
+
+  <div class="band off" data-band="3">
+    <div class="bq">How <em>many?</em></div>
+    <div class="bs">Per-unit price drops on multiples.</div>
+    <div class="qrow2">
+      <div class="qpin"><div class="qcc"><span class="qcc-pill">custom</span><input class="qcc-in" type="number" min="1" max="5000" placeholder="42" id="bandQtyInput"></div><span class="qcc-div"></span></div>
+      <div class="scrollwrap qcards-wrap"><div class="xtrack qcards" id="qtyRow">
+      <div class="ocA qty on" data-qty="1"><div class="gb"><span class="gqn">1</span></div></div>
+      <div class="ocA qty" data-qty="2"><div class="gb"><span class="gqn">2</span></div></div>
+      <div class="ocA qty" data-qty="3"><div class="gb"><span class="gqn">3</span></div><span class="qsave">−5%</span></div>
+      <div class="ocA qty" data-qty="4"><div class="gb"><span class="gqn">4</span></div></div>
+      <div class="ocA qty" data-qty="5"><div class="gb"><span class="gqn">5</span></div><span class="qsave">−10%</span></div>
+      <div class="ocA qty" data-qty="6"><div class="gb"><span class="gqn">6</span></div></div>
+      <div class="ocA qty" data-qty="7"><div class="gb"><span class="gqn">7</span></div></div>
+      <div class="ocA qty" data-qty="8"><div class="gb"><span class="gqn">8</span></div></div>
+      <div class="ocA qty" data-qty="9"><div class="gb"><span class="gqn">9</span></div></div>
+      <div class="ocA qty" data-qty="10"><div class="gb"><span class="gqn">10</span></div><span class="qsave">−16%</span></div>
+      <div class="ocA qty" data-qty="15"><div class="gb"><span class="gqn">15</span></div><span class="qsave">−20%</span></div>
+      <div class="ocA qty" data-qty="20"><div class="gb"><span class="gqn">20</span></div></div>
+      <div class="ocA qty" data-qty="25"><div class="gb"><span class="gqn">25</span></div><span class="qsave">−26%</span></div>
+      <div class="ocA qty" data-qty="30"><div class="gb"><span class="gqn">30</span></div><span class="qsave">−30%</span></div>
+      <div class="ocA qty" data-qty="50"><div class="gb"><span class="gqn">50</span></div><span class="qsave">−34%</span></div>
+      <div class="ocA qty" data-qty="75"><div class="gb"><span class="gqn">75</span></div></div>
+      <div class="ocA qty" data-qty="100"><div class="gb"><span class="gqn">100</span></div><span class="qsave">−40%</span></div>
+      <div class="ocA qty" data-qty="150"><div class="gb"><span class="gqn">150</span></div></div>
+      <div class="ocA qty" data-qty="200"><div class="gb"><span class="gqn">200</span></div></div>
+      <div class="ocA qty" data-qty="250"><div class="gb"><span class="gqn">250</span></div></div>
+      <div class="ocA qty" data-qty="500"><div class="gb"><span class="gqn">500</span></div></div>
+      <div class="ocA qty" data-qty="1000"><div class="gb"><span class="gqn">1000</span></div></div>
+    </div></div>
+    </div>
+    <div class="navrow"><span class="navhint"></span><button class="nextbtn" data-goto="4">Next: When →</button></div>
+  </div>
+
+  <div class="band off" data-band="4">
+    <div class="bq">When do you need it <em>in hand?</em></div>
+    <div class="pass" data-dock title="Tap the pass to change your date">
+      <div class="pcal"><div class="band2" id="pcB">JUN</div><div class="dy" id="pcD">16</div><div class="wd" id="pcW">TUESDAY</div></div>
+      <span class="pvd"></span>
+      <div class="pm2">
+        <div style="display:flex;align-items:center;gap:10px"><span class="plbl2">In your hands</span><span class="tierchip" id="passTier">STANDARD · 5 DAYS</span></div>
+        <div class="prory">Printed, trimmed and delivered by <em id="passDate">Tue, June 16</em> by <em class="ptime">4pm</em> — promise.</div>
+        <div class="pnud2"><b>Order it now — price is locked in.</b> <span class="lockchk"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.801 10A10 10 0 1 1 17 3.335"/><path d="m9 11 3 3L22 4"/></svg></span><br>Need it sooner, costs a little more. Wait a little longer, <b class="savemore">saves a little more</b>.</div>
+      </div>
+      <div class="pstub2">
+        <div class="pt">05:12:04</div>
+        <div class="ptl">and this price is yours</div>
+        <div class="pbars2"></div>
+        <button class="pbtn" type="button" data-dock><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>Change date</button>
+      </div>
+    </div>
+    <div class="navrow"><span class="navhint">Mounting adds a day — we've built that in.</span><button class="nextbtn" data-goto="5">Next: Artwork →</button></div>
+  </div>
+
+  <div class="band off" data-band="5">
+    <div class="bq">Your <em>artwork.</em></div>
+    <div class="bs">Drop a full-size file — we proof it for resolution, bleed and safe-zone.</div>
+    <div class="dz dz-guided" id="btnUpload"><span class="ic">↑</span><div class="t">Drag your artwork here, or browse<small>PDF · AI · PNG · JPG · TIFF — proofed at full size</small></div></div>
+  </div>
+  </div><!-- /bandwrap -->
+
+  <div class="scroll-hint" id="scrollHint"><span>Specs · sizing · file setup · FAQ</span><span class="dn">↓</span></div>
+  <div class="prototag" id="prototag">POSTER · UNIFIED (density toggle) · v2</div>
+</div>
+
+<style>
+  .seo{ background:#fff; color:#2a2438; padding:60px 0 96px; position:relative; z-index:2; }
+  .seo .wrap{ max-width:1320px; margin:0 auto; padding:0 clamp(40px,5vw,90px); }
+  .seo .crumbs{ font-size:.7rem; font-weight:700; color:#9b8fb5; margin-bottom:16px; } .seo .crumbs a{ color:#9b8fb5; text-decoration:none; }
+  .seo h2{ font-family:'Montserrat',sans-serif; font-size:1.95rem; font-weight:900; letter-spacing:-.02em; color:#1a1625; }
+  .seo h3{ font-family:'Montserrat',sans-serif; font-size:1.18rem; font-weight:800; margin:36px 0 8px; color:#1a1625; }
+  .seo p{ font-size:.92rem; line-height:1.75; color:#4b4660; margin:10px 0; max-width:76ch; } .seo p.lead{ font-size:1.04rem; color:#352f4a; }
+  .seo a{ color:var(--brand); font-weight:700; text-decoration:none; } .seo a:hover{ text-decoration:underline; }
+  .seo ul{ margin:10px 0 10px 20px; } .seo li{ font-size:.9rem; line-height:1.7; color:#4b4660; margin:5px 0; }
+  .seo .spec{ width:100%; border-collapse:collapse; margin-top:16px; font-size:.88rem; }
+  .seo .spec td{ padding:11px 14px; border-bottom:1px solid #efe9f7; } .seo .spec tr td:first-child{ font-weight:800; color:#1a1625; width:32%; }
+  .seo .stocks{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:16px; }
+  .seo .stock{ border:1px solid #ece6f5; border-radius:14px; padding:15px 17px; background:#fcfaff; }
+  .seo .stock h4{ font-size:.94rem; font-weight:800; color:#1a1625; display:flex; align-items:center; gap:9px; } .seo .stock .sw{ width:22px; height:22px; border-radius:6px; flex:none; box-shadow:inset 0 0 0 1px rgba(0,0,0,.1); }
+  .seo .stock p{ font-size:.82rem; margin:7px 0 0; }
+  .seo .qa{ border-top:1px solid #eee7f6; padding:16px 0; } .seo .qa:last-child{ border-bottom:1px solid #eee7f6; }
+  .seo .qa h4{ font-size:.98rem; font-weight:800; color:#1a1625; } .seo .qa p{ margin:7px 0 0; }
+  .seo .reviews{ display:flex; gap:16px; flex-wrap:wrap; margin-top:16px; }
+  .seo .rev{ flex:1; min-width:240px; border:1px solid #ece6f5; border-radius:14px; padding:16px; background:#fff; } .seo .rev .stars{ color:#f59e0b; font-size:.92rem; letter-spacing:2px; } .seo .rev p{ font-size:.85rem; font-style:italic; margin-top:6px; } .seo .rev .who{ font-size:.72rem; font-weight:800; color:#1a1625; margin-top:8px; }
+  .seo .cta{ margin-top:44px; padding:26px 30px; border-radius:18px; background:linear-gradient(135deg,#241b38,#5b21b6); color:#fff; display:flex; align-items:center; gap:22px; flex-wrap:wrap; }
+  .seo .cta h3{ color:#fff; margin:0; font-size:1.3rem; } .seo .cta p{ color:rgba(255,255,255,.82); margin:5px 0 0; }
+  .seo .cta .b{ margin-left:auto; background:#fff; color:var(--brand); border:0; border-radius:12px; padding:14px 26px; font-family:inherit; font-weight:800; font-size:.86rem; cursor:pointer; }
+  @media(max-width:760px){ .seo .stocks{ grid-template-columns:1fr; } }
+</style>
+<!-- SEO / content section — server-rendered on the real page; present regardless of which density mode the configurator is in. This is the ranking surface (H1/H2, copy, specs, FAQ, schema). -->
+<section class="seo">
+  <div class="wrap">
+    <div class="crumbs"><a href="#">Home</a> / <a href="#">Large Format</a> / <a href="#">Posters</a></div>
+    <h2>Custom poster printing in Toronto — same-day at the MTCC</h2>
+    <p class="lead">High-resolution custom posters from 18 × 24″ up to 36 × 48″ and custom sizes, printed on satin photo, gloss, matte, heavyweight, canvas or backlit film. Every order is proofed for resolution, bleed and safe-zone before it goes to press, and same-day pickup is available at the Metro Toronto Convention Centre for orders placed before the daily cut-off.</p>
+    <p>Whether you're anchoring a trade-show booth, dressing a retail window, or hanging a gallery piece, the poster builder above prices your exact spec in real time — choose <b>Guided</b> to be walked through it one decision at a time, or <b>All options</b> to see every choice on one screen — with the price updating live and your in-hand date locked. Taxes are calculated at checkout.</p>
+
+    <h3>At a glance</h3>
+    <table class="spec">
+      <tr><td>Sizes</td><td>18×24″, 24×36″ (most popular), 27×40″, 36×48″, A1, or custom up to 120″ on a side</td></tr>
+      <tr><td>Orientation</td><td>Portrait or landscape</td></tr>
+      <tr><td>Stocks</td><td>Satin photo · Gloss · Matte · Heavyweight matte · Canvas · Backlit film</td></tr>
+      <tr><td>Finishing</td><td>Gloss or matte laminate · mounting on foamcore or gatorboard</td></tr>
+      <tr><td>Resolution</td><td>150 dpi minimum, 300 dpi recommended at final size</td></tr>
+      <tr><td>File types</td><td>PDF, AI, EPS, PSD, TIFF, PNG, JPG · up to 100 MB</td></tr>
+      <tr><td>Turnaround</td><td>Standard 5 business days · rush, next-day &amp; same-day available</td></tr>
+      <tr><td>Pickup &amp; delivery</td><td>Same-day pickup at MTCC North &amp; South · courier delivery across the GTA</td></tr>
+    </table>
+
+    <h3>Choosing your stock</h3>
+    <p>The stock is the single biggest driver of how a poster looks and feels in the room. Here's how we'd guide you:</p>
+    <div class="stocks">
+      <div class="stock"><h4><span class="sw" style="background:linear-gradient(135deg,#3a2f55,#5a4a82)"></span>Satin photo</h4><p>The all-rounder, and what 8 in 10 customers pick. Deep colour and a glare-free surface that reads cleanly under booth lighting. Our default recommendation for event posters.</p></div>
+      <div class="stock"><h4><span class="sw" style="background:linear-gradient(115deg,#2f2747,#6a59a0 50%,#2f2747)"></span>Gloss</h4><p>Maximum shine and colour pop — fantastic for photography and high-contrast art, though it can show glare under direct spotlights.</p></div>
+      <div class="stock"><h4><span class="sw" style="background:linear-gradient(135deg,#34304a,#46415f)"></span>Matte</h4><p>A flat, non-reflective finish that's easy to read from any angle. The safe choice for text-heavy posters and anything near a window.</p></div>
+      <div class="stock"><h4><span class="sw" style="background:linear-gradient(135deg,#4a4036,#6a5c49)"></span>Canvas</h4><p>A textured, fine-art surface for pieces meant to live on a wall well past the show. Pairs beautifully with a mounted finish.</p></div>
+    </div>
+
+    <h3>Sizes &amp; orientation</h3>
+    <p><b>24 × 36″</b> is the standard event poster and our most-ordered size — large enough to anchor a booth, small enough to ship and handle easily. Step up to <b>27 × 40″</b> (the classic movie one-sheet) or <b>36 × 48″</b> for a backdrop-scale statement, or down to <b>18 × 24″</b> for tabletop signs and easel displays. Need something specific? Enter any custom size up to 120″ on a side. Flip between portrait and landscape at the top of the builder — the proof and price update instantly.</p>
+
+    <h3>Finishing &amp; mounting</h3>
+    <p>A <b>laminate</b> (gloss or matte) adds a protective layer that guards against scuffs, fingerprints and moisture, and lets a poster be wiped clean — worth it for anything handled repeatedly or used show after show. <b>Mounting</b> on foamcore or gatorboard turns a flexible print into a rigid board that stands on an easel or hangs flush, with gatorboard being the stiffer, more durable of the two. Mounted posters add roughly a day to turnaround, which the in-hand date already accounts for.</p>
+
+    <h3>How to set up your file</h3>
+    <ul>
+      <li><b>Resolution:</b> aim for 300 dpi at final print size. We accept down to 150 dpi but will flag anything that will look soft — and the live proof shows you exactly how it'll read.</li>
+      <li><b>Bleed:</b> include 1/8″ (0.125″) of bleed on every edge so there's no white sliver after trimming.</li>
+      <li><b>Safe zone:</b> keep important text and logos at least 1/8″ inside the trim so nothing gets cut.</li>
+      <li><b>Colour:</b> supply CMYK where you can; we'll convert RGB and let you know if anything shifts.</li>
+      <li><b>Fonts &amp; formats:</b> a print-ready PDF with fonts embedded is ideal. AI, EPS, PSD, TIFF, PNG and JPG are all welcome.</li>
+    </ul>
+    <p>Not sure your file is right? Upload it anyway — every order is preflighted automatically the moment it lands, then a human proofs it before it prints. You'll see the catch (and the one-click fix) right on the poster above.</p>
+
+    <h3>Turnaround &amp; same-day at the MTCC</h3>
+    <p>Standard production is 5 business days, with rush, next-day and same-day options surfaced live as you pick your in-hand date. If you're exhibiting at the Metro Toronto Convention Centre, order before the daily cut-off and pick up the same day from the Business Centre on the North (300 Level) or South (800 Level) buildings — or have it couriered to your booth. There's no weekend production, so the builder bakes weekends and cut-offs into the date you're shown.</p>
+
+    <h3>Frequently asked questions</h3>
+    <div class="faq">
+      <div class="qa"><h4>What's the cheapest way to print a 24 × 36 poster?</h4><p>Satin photo with no laminate is the best value, and the per-poster price drops on multiples — ordering 5+ saves about 10%, and 25+ saves about 25%. Giving yourself more lead time also lowers the price; the calendar shows exactly how much you save at each in-hand date.</p></div>
+      <div class="qa"><h4>Can I get a poster printed today in Toronto?</h4><p>Yes — same-day printing is available for orders placed before the daily cut-off, with pickup at the MTCC or courier delivery across the GTA. Pick a same-day in-hand date in the builder and it'll confirm whether you've made the cut-off.</p></div>
+      <div class="qa"><h4>What resolution do I need?</h4><p>300 dpi at final size is ideal; 150 dpi is the practical minimum. The live proof flags low-resolution files and offers a one-click upscale so you can see the difference before you commit.</p></div>
+      <div class="qa"><h4>Do you proof my file before printing?</h4><p>Always. Every order is auto-preflighted for resolution, bleed and safe-zone the moment it's uploaded, and a person reviews it before it goes to press. Free on every order.</p></div>
+      <div class="qa"><h4>What's the difference between mounting on foamcore vs gatorboard?</h4><p>Both make the poster rigid. Foamcore is lighter and economical for short-term use; gatorboard is denser and far more durable, better for posters reused across multiple shows or handled often.</p></div>
+      <div class="qa"><h4>Can you match a specific colour?</h4><p>We print CMYK and can advise on the closest match. For critical brand colours, send a reference and we'll confirm before the run.</p></div>
+    </div>
+
+    <h3>Why Print Stuff</h3>
+    <div class="reviews">
+      <div class="rev"><div class="stars">★★★★★</div><p>"Needed 6 booth posters the morning of set-up. Ordered the night before, picked them up at the South building by 10am. Lifesavers."</p><div class="who">— Dana K., AAIC exhibitor</div></div>
+      <div class="rev"><div class="stars">★★★★★</div><p>"The proof caught a low-res logo I'd never have noticed. Fixed it in one click. Colours were bang on."</p><div class="who">— Marcus T., agency producer</div></div>
+      <div class="rev"><div class="stars">★★★★★</div><p>"Same price they quoted, no surprises, and the satin finish looked premium under the hall lights."</p><div class="who">— Priya S., COMIC vendor</div></div>
+    </div>
+
+    <div class="cta"><div><h3>Ready to print yours?</h3><p>Build it above in under two minutes — proofed, priced, and locked to your date.</p></div><button class="b" id="ctaTop">Start your poster ↑</button></div>
+    <!-- On the real page: schema.org Product + Offer + AggregateRating + FAQPage JSON-LD goes here, server-rendered. -->
+  </div>
+</section>
+
+<script src="datedock.js"></script>
+<script>
+(function(){
+  var $=function(id){ return document.getElementById(id); };
+  var qa=function(s){ return document.querySelectorAll(s); };
+  /* the .screen fills the viewport via pure CSS (100dvh) — no JS height measurement, no fixed pixels.
+     We only re-fit the poster art to the (fluid) stage when the viewport changes. */
+  window.addEventListener('resize', function(){ try{ if(typeof fitPoster==='function') fitPoster(); }catch(_){} placeAllThumbs(); if(typeof matchQccHeight==='function') matchQccHeight(); });
+  /* slide the segmented-toggle thumb under whichever pill is active (smooth motion) */
+  function placeThumb(seg){ if(!seg) return; var t=seg.querySelector('.seg-thumb'); var a=seg.querySelector('.cpill.act, .cpill.on'); if(!t||!a) return; t.style.left=a.offsetLeft+'px'; t.style.width=a.offsetWidth+'px'; }
+  function placeAllThumbs(){ qa('.seg').forEach(placeThumb); }
+  /* custom-qty box exactly matches the qty tile height (per view) so it lines up edge-to-edge */
+  function matchQccHeight(){ qa('.qrow2').forEach(function(row){ var qcc=row.querySelector('.qcc'), tile=row.querySelector('.scrollwrap .ocA, .scrollwrap .gop'); if(!qcc || !tile || !tile.offsetHeight) return; var h=tile.offsetHeight;
+    /* Everything view: match the qty-CARD BODY (exclude the per-unit subtext) so the custom box is ~card height, not card+subtext */
+    if(qcc.closest('.qpin-co')){ var qp=tile.querySelector('.qper'); if(qp){ h -= qp.offsetHeight + (parseFloat(getComputedStyle(qp).marginTop)||0); } }
+    qcc.style.height=h+'px'; }); }
+  /* every quantity tile shows its per-unit price as subtext under the number */
+  function updateQtyTiles(){ var base=(PAPER[st.paper].r+FIN[st.fin].r)*sqft()*(1+st.dAdd); qa('#qtyRow .ocA.qty[data-qty], #coQty .gop[data-qty]').forEach(function(t){ var q=+t.getAttribute('data-qty'); if(!q) return; var el=t.querySelector('.qper'); if(!el){ el=document.createElement('div'); el.className='qper'; t.appendChild(el); } el.textContent=fmt(base*volMult(q))+'/ea'; }); }
+  /* top-4 most-popular poster sizes + custom (A-Click roll cap: short side ≤59″, long side ≤120″) */
+  var SIZES={ '36x48':{w:36,h:48}, 'a0':{w:33,h:47}, '46x45':{w:46,h:45}, '96x48':{w:96,h:48} };
+  var ACLICK_MAX={ short:59, long:120 };   /* matte photo roll; poster paper is 54 short */
+  /* turnaround-tier colours (match the date dock) — badge + calendar header recolour by selected date */
+  var TIERGRAD={ early:'linear-gradient(120deg,#34d399,#059669)', standard:'linear-gradient(120deg,#60a5fa,#2563eb)', '3days':'linear-gradient(120deg,#fcd34d,#ca8a04)', '2days':'linear-gradient(120deg,#fb923c,#ea580c)', nextday:'linear-gradient(120deg,#f87171,#dc2626)', sameday:'linear-gradient(120deg,#a78bfa,#7c3aed)' };
+  var PAPER={ satin:{n:'Satin photo',r:5,sw:'linear-gradient(135deg,#3a2f55,#5a4a82)'}, matte:{n:'Matte',r:5,sw:'linear-gradient(135deg,#34304a,#46415f)'}, gloss:{n:'Gloss',r:5.5,sw:'linear-gradient(115deg,#2f2747,#6a59a0 50%,#2f2747)'}, heavy:{n:'Heavyweight matte',r:6.5,sw:'linear-gradient(135deg,#2c2740,#403a59)'}, canvas:{n:'Canvas',r:12,sw:'linear-gradient(135deg,#4a4036,#6a5c49)'}, backlit:{n:'Backlit film',r:14,sw:'linear-gradient(135deg,#1b2740,#2f6ea0)'} };
+  var FIN={ none:{n:'None',r:0}, glosslam:{n:'Gloss laminate',r:2}, mattelam:{n:'Matte laminate',r:2}, foam:{n:'Mounted · foamcore',r:6}, gator:{n:'Mounted · gatorboard',r:9} };
+  var st={ size:'36x48', orient:'portrait', cW:36, cH:48, unit:'in', paper:'satin', fin:'none', qty:1, when:'Tue, Jun 16', dAdd:0, art:false, proof:false };
+  var lastTotal=null;
+  function dims(){ var sz=SIZES[st.size]; var d=(st.size==='custom'||!sz)?[st.cW,st.cH]:[sz.w,sz.h]; var w=d[0],h=d[1]; return st.orient==='landscape'?[Math.max(w,h),Math.min(w,h)]:[Math.min(w,h),Math.max(w,h)]; }
+  function orientDims(w,h){ return st.orient==='landscape'?[Math.max(w,h),Math.min(w,h)]:[Math.min(w,h),Math.max(w,h)]; }
+  /* size cards: glyph + label flip to match the current orientation; custom preview reflects cW×cH */
+  function updateSizeCards(){
+    qa('#coSizes .gop[data-size], #sizeRow .ocA[data-size]').forEach(function(el){
+      var key=el.getAttribute('data-size'); var sz=SIZES[key]; if(!sz) return;
+      var d=orientDims(sz.w,sz.h);
+      var lbl=el.querySelector('.bn, .bn2'); if(lbl) lbl.textContent=d[0]+' × '+d[1]+'″';
+      var g=el.querySelector('.gmini, .gminp'); if(g){ var mx=Math.max(d[0],d[1]); var L=el.closest('#coSizes')?60:36; g.style.width=Math.round(Math.max(13,d[0]/mx*L))+'px'; g.style.height=Math.round(Math.max(13,d[1]/mx*L))+'px'; }
+    });
+    var w=st.cW||36, h=st.cH||48, m=Math.max(w,h)||1; ['csPrevBox','csPrevBoxB'].forEach(function(id){ var pb=$(id); if(pb){ pb.style.width=Math.round(w/m*46)+'px'; pb.style.height=Math.round(h/m*46)+'px'; } });
+  }
+  /* px reserved at the bottom of the Guided stage for the ACTIVE band (poster never overlaps it) */
+  function guidedReserve(){ var band=document.querySelector('.bandwrap .band:not(.off)'); if(!band) return 0;
+    var bandBottom=parseFloat(getComputedStyle(band).bottom)||78; return Math.round(bandBottom + band.offsetHeight + 18); }
+  /* size the poster to the EXACT aspect ratio, scaled to fit the stage (proportions never approximate) */
+  function fitPoster(instant){
+    var hw=$('heroWrap'), p=$('poster'); if(!hw||!p) return;
+    var cs=getComputedStyle(hw);
+    var availW=hw.clientWidth - parseFloat(cs.paddingLeft||0) - parseFloat(cs.paddingRight||0);
+    /* measure available HEIGHT from the STABLE canvas, never the heroWrap (whose bottom animates on step/view
+       changes — measuring it mid-transition is what was leaving the Everything poster stuck tiny) */
+    var canvas=hw.parentElement; var ch=canvas?canvas.clientHeight:hw.clientHeight;
+    var availH;
+    if(screen.classList.contains('allopts')){
+      availH=ch - parseFloat(cs.paddingTop||0) - parseFloat(cs.paddingBottom||0);
+    } else {
+      availH=ch - guidedReserve() - parseFloat(cs.paddingTop||0) - parseFloat(cs.paddingBottom||0);
+    }
+    if(availW<24||availH<24) return;
+    var maxH=Math.min(availH, 1000, window.innerHeight*0.96), maxW=availW;
+    var d=dims(), A=d[0]/d[1], w, h;
+    if(maxW/maxH > A){ h=maxH; w=h*A; } else { w=maxW; h=w/A; }
+    if(instant){ var tr=p.style.transition; p.style.transition='none'; p.style.width=Math.round(w)+'px'; p.style.height=Math.round(h)+'px'; void p.offsetWidth; p.style.transition=tr; }
+    else { p.style.width=Math.round(w)+'px'; p.style.height=Math.round(h)+'px'; }
+  }
+  /* reserve vertical room for the active band — the heroWrap CSS transition makes the change GLIDE between steps */
+  function fitBand(){ var hw=$('heroWrap'); if(!hw) return;
+    if(screen.classList.contains('allopts')){ if(hw.style.bottom) hw.style.bottom=''; return; }
+    hw.style.bottom=guidedReserve()+'px'; }
+  window.addEventListener('resize', function(){ fitBand(); fitPoster(true); });
+  function sqft(){ var d=dims(); return d[0]*d[1]/144; }
+  function volMult(q){ if(q>=100) return 0.6; if(q>=50) return 0.66; if(q>=30) return 0.7; if(q>=25) return 0.74; if(q>=15) return 0.8; if(q>=10) return 0.84; if(q>=5) return 0.9; if(q>=3) return 0.95; return 1; }
+  function total(){ return Math.max(18,(PAPER[st.paper].r+FIN[st.fin].r)*sqft()*st.qty*volMult(st.qty)*(1+st.dAdd)); }
+  function fmt(n){ return '$'+Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+  function flash(d){ var txt=(d>0?'+ ':'− ')+'$'+Math.abs(d).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}), cls='pdelta '+(d>0?'up':'down'); ['pdelta','pdelta2'].forEach(function(id){ var el=$(id); if(!el) return; el.textContent=txt; el.className=cls; void el.offsetWidth; el.classList.add('go'); setTimeout(function(){ el.classList.remove('go'); },1200); }); }
+  function computeGuides(){ var p=$('poster'); var w=p.getBoundingClientRect().width; if(!w) return; var d=dims(); var ppi=w/d[0]; var b=Math.max(6,Math.round(0.125*ppi)); $('poster').style.setProperty('--bleed', b+'px'); }
+
+  function paint(){
+    var d=dims();
+    $('poster').style.aspectRatio = d[0]+'/'+d[1];
+    $('poster').className='poster'+(st.orient==='landscape'?' land':'')+(st.proof?' proof':'')+($('poster').classList.contains('pf-ok')?' pf-ok':'');
+    $('rvSize').textContent = d[0]+' × '+d[1]+'″ · '+st.orient;
+    $('rvPaper').textContent = PAPER[st.paper].n; $('rvPaperSw').style.background = PAPER[st.paper].sw;
+    $('rvFin').textContent = FIN[st.fin].n; $('rvWhen').textContent = st.when;
+    $('rvQty').textContent = st.qty+' · '+fmt((PAPER[st.paper].r+FIN[st.fin].r)*sqft()*volMult(st.qty)*(1+st.dAdd))+' ea';
+    var t=total(); $('price').textContent=fmt(t);
+    if($('addTot')) $('addTot').textContent='· '+fmt(t);
+    if($('priceEach')) $('priceEach').textContent=st.qty+' · '+fmt(t/st.qty)+'/ea';
+    if($('priceSub')) $('priceSub').textContent=st.qty+(st.qty==1?' poster':' posters')+' · '+d[0]+'×'+d[1]+'″ · '+PAPER[st.paper].n+(FIN[st.fin].r?' · '+FIN[st.fin].n:'')+' · in-hand '+st.when;
+    /* N12 buy-bar segments */
+    if($('bbSize')) $('bbSize').textContent=d[0]+' × '+d[1]+'″';
+    if($('bbPaper')) $('bbPaper').textContent=PAPER[st.paper].n;
+    if($('bbWhen')) $('bbWhen').textContent=st.when;
+    /* all-options receipt */
+    if($('osumTotal')) $('osumTotal').textContent=fmt(t);
+    if($('drawerTotal')) $('drawerTotal').textContent=fmt(t);
+    if($('drawerSize')) $('drawerSize').textContent=d[0]+' × '+d[1]+'″';
+    if($('drawerWhen')) $('drawerWhen').textContent=st.when;
+    if($('drawerEach')) $('drawerEach').textContent=st.qty+' · '+fmt(t/st.qty)+'/ea';
+    if($('drawerSub')) $('drawerSub').textContent=st.qty+(st.qty==1?' poster':' posters')+' · '+d[0]+'×'+d[1]+'″ · '+PAPER[st.paper].n+' · in-hand '+st.when;
+    if($('addTot2')) $('addTot2').textContent='· '+fmt(t);
+    /* Step-07 packing slip: itemise the pre-tax total into poster + finish (HST is added at checkout, never shown in the configurator) */
+    var _fr=FIN[st.fin].r, _pr=PAPER[st.paper].r, _finAmt=_fr? t*_fr/(_pr+_fr) : 0, _postAmt=t-_finAmt;
+    if($('osumQty')) $('osumQty').textContent=st.qty;
+    if($('osumDesc')) $('osumDesc').textContent='Poster '+d[0]+'×'+d[1]+'″ '+PAPER[st.paper].n.toLowerCase();
+    if($('osumSub')) $('osumSub').textContent=fmt(_postAmt);
+    if($('osumFin')) $('osumFin').textContent='Finish · '+(_fr?FIN[st.fin].n:'none');
+    if($('osumFinAmt')) $('osumFinAmt').textContent=fmt(_finAmt);
+    [['data-size',st.size],['data-paper',st.paper],['data-fin',st.fin],['data-qty',String(st.qty)],['data-orient',st.orient]].forEach(function(p){ qa('['+p[0]+']').forEach(function(el){ if(el.classList.contains('ocA')||el.classList.contains('gop')||el.classList.contains('qpill')||el.classList.contains('qchip')||el.closest('#copanel')||el.closest('#sheet')) el.classList.toggle('on', el.getAttribute(p[0])===p[1]); }); });
+    if($('coCustom')) $('coCustom').classList.toggle('on', st.size==='custom');
+    var qPreset=!!document.querySelector('[data-qty="'+st.qty+'"]'); qa('.qcc').forEach(function(el){ el.classList.toggle('on', !qPreset); });
+    updateSizeCards(); fitBand(); fitPoster();
+    if(st.proof) computeGuides();
+    if(typeof syncOrient==='function') syncOrient();
+    if(typeof placeAllThumbs==='function') placeAllThumbs();
+    if(typeof updateQtyTiles==='function') updateQtyTiles();   /* add per-unit subtext FIRST */
+    if(typeof matchQccHeight==='function') matchQccHeight();    /* then match the box to the (now taller) tile */
+    if(typeof syncV2Custom==='function') syncV2Custom();        /* push state into the v2 quick-edit custom inputs */
+    if(lastTotal!==null && Math.abs(t-lastTotal)>1) flash(t-lastTotal); lastTotal=t;
+  }
+  function goScene(i){ qa('.band').forEach(function(b){ b.classList.toggle('off', +b.getAttribute('data-band')!==i); }); qa('#rail .rn').forEach(function(r){ r.classList.toggle('cur', +r.getAttribute('data-scene')===i); }); fitBand(); fitPoster(); }
+  qa('#rail .rn').forEach(function(r){ r.addEventListener('click', function(){ goScene(+r.getAttribute('data-scene')); }); });
+  qa('[data-goto]').forEach(function(b){ b.addEventListener('click', function(){ goScene(+b.getAttribute('data-goto')); }); });
+  function markDone(i){ var r=document.querySelector('#rail .rn[data-scene="'+i+'"]'); if(r) r.classList.add('done'); }
+  function bindRow(id, attr, fn, scene){ var row=$(id); row.addEventListener('click', function(e){ var t=e.target.closest('.ocA'); if(!t) return; row.querySelectorAll('.ocA').forEach(function(x){ x.classList.remove('on'); }); t.classList.add('on'); fn(t.getAttribute(attr)); markDone(scene); paint(); }); }
+  bindRow('sizeRow','data-size', function(v){ st.size=v; }, 0);
+  bindRow('paperRow','data-paper', function(v){ st.paper=v; }, 1);
+  bindRow('finRow','data-fin', function(v){ st.fin=v; }, 2);
+  /* quantity — qpill grids (band #qtyRow + all-options #coQty handled by the panel handler), show-more, custom amount */
+  function setQty(q){ q=Math.max(1, Math.round(+q)||1); st.qty=q; markDone(3); paint(); }
+  var _qr=$('qtyRow'); if(_qr) _qr.addEventListener('click', function(e){ var p=e.target.closest('[data-qty]'); if(p) setQty(p.getAttribute('data-qty')); });
+  ['coQtyInput','bandQtyInput'].forEach(function(id){ var i=$(id); if(i) i.addEventListener('input', function(){ if(i.value!=='') setQty(i.value); }); });
+  /* custom size — type ANY dimension in either box; longer side ≤120″, shorter ≤59″, orientation auto.
+     All-options inputs respect the in/cm toggle (cm rounds UP to the nearest inch for print). */
+  /* custom size — identical widget in BOTH views (band #cW/#cH + all-options #coCW/#coCH). Both respect the
+     in/cm toggle; everything ROUNDS UP to the nearest inch (we print to the inch) — see the hint. */
+  function mirrorCustom(){ var cm=(st.unit==='cm');
+    [['cW','cH'],['coCW','coCH']].forEach(function(p){ var a=$(p[0]),b=$(p[1]);
+      if(a&&document.activeElement!==a) a.value=cm?Math.round(st.cW*2.54):st.cW;
+      if(b&&document.activeElement!==b) b.value=cm?Math.round(st.cH*2.54):st.cH; });
+  }
+  function updateCsHint(){ var html=(st.unit==='cm')
+      ? 'Entered in cm — we print at <b>'+st.cW+'″ × '+st.cH+'″</b>, rounded <b>up</b> to the nearest inch.'
+      : 'Type any size — we round <b>up</b> to the nearest inch, and set portrait/landscape to match. Up to <b>59″</b> short side · <b>120″</b> long side.';
+    ['csHint','csHintB'].forEach(function(id){ var el=$(id); if(el) el.innerHTML=html; });
+  }
+  function setCustomInch(w,h){
+    w=Math.ceil(Math.max(4,Math.min(ACLICK_MAX.long, parseFloat(w)||st.cW)));   /* round UP to the inch */
+    h=Math.ceil(Math.max(4,Math.min(ACLICK_MAX.long, parseFloat(h)||st.cH)));
+    if(Math.min(w,h) > ACLICK_MAX.short){ if(w<=h) w=ACLICK_MAX.short; else h=ACLICK_MAX.short; }
+    st.cW=w; st.cH=h; st.size='custom'; st.orient=(w>h)?'landscape':'portrait'; markDone(0);
+    syncOrient();
+    mirrorCustom(); updateCsHint();
+    if($('csBox')) $('csBox').classList.add('show'); if($('coCustom')) $('coCustom').classList.add('on'); paint();
+  }
+  /* edit only the dimension that changed; cm → inches happens inside setCustomInch's ceil */
+  function _aIn(raw){ var v=parseFloat(raw); if(isNaN(v)) return null; return st.unit==='cm'?(v/2.54):v; }
+  [['cW','cH'],['coCW','coCH']].forEach(function(p){ var a=$(p[0]),b=$(p[1]);
+    if(a) a.addEventListener('input',function(){ var v=_aIn(a.value); if(v!==null) setCustomInch(v, st.cH); });
+    if(b) b.addEventListener('input',function(){ var v=_aIn(b.value); if(v!==null) setCustomInch(st.cW, v); });
+  });
+  /* in/cm toggles — either view flips st.unit; both segmented controls stay in sync */
+  ['csUnit','csUnitB'].forEach(function(id){ var seg=$(id); if(!seg) return;
+    seg.addEventListener('click', function(e){ var u=e.target.closest('.cpill'); if(!u) return; var unit=u.getAttribute('data-unit'); if(unit===st.unit) return; st.unit=unit;
+      ['csUnit','csUnitB'].forEach(function(sid){ var s=$(sid); if(s) s.querySelectorAll('.cpill').forEach(function(x){ x.classList.toggle('act', x.getAttribute('data-unit')===unit); }); });
+      mirrorCustom(); updateCsHint(); placeAllThumbs(); });
+  });
+  /* drag-to-scroll the qty tracks (both views). Drag listeners live on the scroller (.xtrack); the
+     click-suppressor sits on the parent .scrollwrap so it fires in the capture phase, before the card
+     delegation on .xtrack — so a drag never registers as a card pick. */
+  qa('.scrollwrap').forEach(function(wrap){ var sc=wrap.querySelector('.xtrack'); if(!sc) return; var down=false,sx=0,sl=0,moved=false;
+    sc.addEventListener('pointerdown',function(e){ if(e.target.closest('input,button')) return; down=true; moved=false; sx=e.clientX; sl=sc.scrollLeft; });
+    sc.addEventListener('pointermove',function(e){ if(!down) return; var dx=e.clientX-sx; if(Math.abs(dx)>4){ moved=true; sc.classList.add('dragging'); } sc.scrollLeft=sl-dx; });
+    function end(){ down=false; sc.classList.remove('dragging'); }
+    sc.addEventListener('pointerup',end); sc.addEventListener('pointercancel',end); sc.addEventListener('pointerleave',end);
+    wrap.addEventListener('click',function(e){ if(moved){ e.stopPropagation(); e.preventDefault(); moved=false; } }, true);
+  });
+  /* orientation now lives in Step 2 (size) — one .orientseg per view, kept in sync */
+  /* orientation is now 2 clickable TILES (.otile) in each size step */
+  function syncOrient(){ qa('.otile').forEach(function(x){ x.classList.toggle('on', x.getAttribute('data-orient')===st.orient); }); }
+  document.addEventListener('click', function(e){ var t=e.target.closest('.otile'); if(!t) return; st.orient=t.getAttribute('data-orient'); markDone(0); syncOrient(); paint(); });
+  function applyDate(info){ st.when=info.label; st.dAdd=info.mult; $('rvWhen').textContent=info.label;
+    var grad=TIERGRAD[info.tier]||TIERGRAD.standard;
+    /* both .pass cards (step band + all-options) — text + tier-coloured badge & calendar header */
+    ['passDate','passDate2'].forEach(function(id){ if($(id)) $(id).textContent=info.labelFull||info.label; });
+    ['pcD','pcD2'].forEach(function(id){ if($(id)) $(id).textContent=info.dy; });
+    ['pcB','pcB2'].forEach(function(id){ var el=$(id); if(el){ if(info.mo) el.textContent=info.mo; el.style.background=grad; } });
+    ['pcW','pcW2'].forEach(function(id){ if($(id)) $(id).textContent=info.wdFull||info.wd; });
+    ['passTier','passTier2'].forEach(function(id){ var el=$(id); if(el){ el.textContent=info.tierLabel||''; el.style.background=grad; el.style.boxShadow='none'; } });
+    var tm=info.time||'4pm'; qa('.ptime').forEach(function(el){ el.textContent=tm; });
+    if($('sheetDateTxt')) $('sheetDateTxt').textContent=(info.labelFull||info.label)+' · by '+tm;
+    if($('osumDate')) $('osumDate').textContent=(info.labelFull||info.label)+' · by '+tm;
+    markDone(4); paint(); }
+  document.addEventListener('click', function(e){ if(e.target.closest('[data-dock]') && window.DateDock){ window.DateDock.open({ current: st.when, basePrice: total()/(1+st.dAdd), qty: st.qty, onPick: applyDate }); } });
+  var _bu=$('btnUpload'); if(_bu){ _bu.addEventListener('click', function(){ if(!_bu.classList.contains('filled')) triggerUpload(); });
+    _bu.addEventListener('dragover', function(e){ e.preventDefault(); _bu.classList.add('over'); });
+    _bu.addEventListener('dragleave', function(){ _bu.classList.remove('over'); });
+    _bu.addEventListener('drop', function(e){ e.preventDefault(); _bu.classList.remove('over'); var f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0]; uploadArt(f?f.name:null, f?fmtBytes(f.size):null); }); }
+  function setPF(ok){ $('poster').classList.toggle('pf-ok', ok); $('pfbar').classList.toggle('pf-ok', ok); }
+  /* in Everything view, sit the proof legend right under the hero poster (not at the page bottom) */
+  function positionPfbar(){ var pf=$('pfbar'); if(!pf) return; if(screen.classList.contains('allopts') && pf.classList.contains('show')){ var pr=$('poster').getBoundingClientRect(); pf.style.bottom='auto'; pf.style.top=Math.round(pr.bottom+14)+'px'; pf.style.left=Math.round(pr.left+pr.width/2)+'px'; } else { pf.style.top=''; pf.style.bottom=''; pf.style.left=''; } }
+  function setGuides(on){ st.proof=on; var vb=$('vProof'); if(vb) vb.classList.toggle('act', on); if($('pfbar')) $('pfbar').classList.toggle('show', on); if(on){ setPF(false); setTimeout(computeGuides,50); } qa('.afc-guides').forEach(function(b){ b.classList.toggle('on', on); }); paint(); requestAnimationFrame(positionPfbar); }
+  var _vp=$('vProof'); if(_vp) _vp.addEventListener('click', function(){ setGuides(!st.proof); });
+  window.addEventListener('scroll', positionPfbar); window.addEventListener('resize', positionPfbar);
+  $('pfFix').addEventListener('click', function(){ setPF(true); });
+  $('pfReplay').addEventListener('click', function(){ setPF(false); });
+  window.addEventListener('resize', function(){ if(st.proof) computeGuides(); });
+  /* density toggle: Guided (compact rail + bottom band) ⇄ All options (expanded left panel, no band, sticky stage) */
+  var screen=document.querySelector('.screen');
+  /* clone the CURRENT (old) left panel into a fixed overlay so it can fade + slide OUT at the same time
+     as the new one fades IN — a true cross-fade with no scoped-style breakage (styles aren't .allopts-scoped) */
+  function leftGhost(){
+    var src = screen.classList.contains('allopts') ? $('copanel') : $('rail');
+    if(!src) return;
+    var r=src.getBoundingClientRect();
+    if(r.height<4 || r.width<4) return;
+    var old=document.getElementById('ghostLeft'); if(old) old.remove();
+    var g=src.cloneNode(true); g.id='ghostLeft';
+    var top=Math.max(0,r.top), h=Math.min(r.height, window.innerHeight-top);
+    g.style.cssText='position:fixed; left:'+Math.round(r.left)+'px; top:'+Math.round(top)+'px; width:'+Math.round(r.width)+'px; height:'+Math.round(h)+'px; margin:0; padding:0; display:block; transform:none; overflow:hidden; pointer-events:none; z-index:20;';
+    document.body.appendChild(g);
+    clearTimeout(leftGhost._t); leftGhost._t=setTimeout(function(){ var gg=document.getElementById('ghostLeft'); if(gg) gg.remove(); }, 700);
+    /* leaving step → also ghost the bottom rail (the active band) so it fade-slides DOWN out, in sync */
+    if(!screen.classList.contains('allopts')){
+      var band=document.querySelector('.band:not(.off)');
+      if(band){ var br=band.getBoundingClientRect(); if(br.height>4){
+        var ob=document.getElementById('ghostBand'); if(ob) ob.remove();
+        var gb=band.cloneNode(true); gb.id='ghostBand'; gb.classList.remove('off');
+        gb.style.cssText='position:fixed; left:'+Math.round(br.left)+'px; top:'+Math.round(br.top)+'px; width:'+Math.round(br.width)+'px; height:'+Math.round(br.height)+'px; margin:0; transform:none; pointer-events:none; z-index:20;';
+        document.body.appendChild(gb);
+        clearTimeout(leftGhost._tb); leftGhost._tb=setTimeout(function(){ var g2=document.getElementById('ghostBand'); if(g2) g2.remove(); }, 700);
+      } }
+    }
+  }
+  function setDensity(all){
+    if(screen.classList.contains('allopts')===all){ $('dAll').classList.toggle('on', all); $('dStep').classList.toggle('on', !all); placeAllThumbs(); return; }
+    window.scrollTo(0,0);
+    leftGhost();                                              /* old panel → fixed clone (fades out) */
+    var poster=$('poster');
+    var o=poster.getBoundingClientRect(), ocx=o.left+o.width/2, ocy=o.top+o.height/2;   /* product centre before swap */
+    screen.classList.toggle('allopts', all);                 /* swap — synchronous with .switching below, so no flash */
+    $('dAll').classList.toggle('on', all); $('dStep').classList.toggle('on', !all); placeAllThumbs();
+    if(!all){ goScene(0); screen.classList.remove('atend'); }                            /* reset band to default item */
+    fitBand(); fitPoster(true);                                                          /* reserve band room + refit poster to the new stage */
+    var n=poster.getBoundingClientRect(), ncx=n.left+n.width/2, ncy=n.top+n.height/2;    /* product centre after swap */
+    screen.style.setProperty('--dx', Math.round(ocx-ncx)+'px');                          /* glide starts at OLD centre → diagonal */
+    screen.style.setProperty('--dy', Math.round(ocy-ncy)+'px');
+    screen.classList.add('switching');                       /* hero glide + new panel fade-in + band pop, ALL now */
+    setTimeout(function(){ if(st.proof) computeGuides(); },130);
+    /* the newly-shown panel needs its qty subtext + custom-box height (re)computed once it's laid out */
+    requestAnimationFrame(function(){ if(typeof updateQtyTiles==='function') updateQtyTiles(); if(typeof matchQccHeight==='function') matchQccHeight(); });
+    clearTimeout(setDensity._t); setDensity._t=setTimeout(function(){ screen.classList.remove('switching'); if(typeof updateQtyTiles==='function') updateQtyTiles(); if(typeof matchQccHeight==='function') matchQccHeight(); }, 1900);
+  }
+  $('dStep').addEventListener('click', function(){ setDensity(false); });
+  $('dAll').addEventListener('click', function(){ setDensity(true); });
+  /* in All options the page scrolls + the stage is sticky — hide the fixed pills once the SEO block is reached */
+  window.addEventListener('scroll', function(){ if(!screen.classList.contains('allopts')) return; var seo=document.querySelector('.seo'); if(!seo) return; screen.classList.toggle('atend', seo.getBoundingClientRect().top < window.innerHeight*0.62); });
+  /* the All-options panel AND the ⚡ Everything sheet both drive the same shared state */
+  function applyOpt(o){
+    if(o.hasAttribute('data-paper')) st.paper=o.getAttribute('data-paper');
+    else if(o.hasAttribute('data-size')){ st.size=o.getAttribute('data-size'); var cs=$('csBox'); if(cs) cs.classList.toggle('show', st.size==='custom'); }
+    else if(o.hasAttribute('data-fin')) st.fin=o.getAttribute('data-fin');
+    else if(o.hasAttribute('data-qty')) st.qty=+o.getAttribute('data-qty');
+    else if(o.hasAttribute('data-orient')){ st.orient=o.getAttribute('data-orient'); if(typeof syncOrient==='function') syncOrient(); }
+    else return;
+    paint();
+  }
+  ['copanel'].forEach(function(pid){ var pel=$(pid); if(!pel) return; pel.addEventListener('click', function(e){ var o=e.target.closest('[data-paper],[data-size],[data-fin],[data-qty],[data-orient]'); if(o && pel.contains(o)) applyOpt(o); }); });
+  /* Quick edit — only the v2 side-panel remains */
+  function qeCloseAll(){ ['sheet2','qdim2'].forEach(function(id){ var e=$(id); if(e) e.classList.remove('open'); }); }
+  /* Quick edit v2 (mockup): side drawer. Clones the SAME tiles + custom inputs as the step-by-step view,
+     so it reads identically. Cloned options stay live through the applyOpt delegation + paint()'s .on sync. */
+  function openSheet2(o){ var b=$('sheet2Body');
+    if(o && b && !b.children.length){
+      function inner(sel){ var n=document.querySelector(sel); return n?n.innerHTML:''; }
+      function outer(sel){ var n=document.querySelector(sel); return n?n.outerHTML:''; }
+      b.innerHTML =
+        '<div class="drow"><div class="dk">Orientation</div><div class="dtiles">'+inner('.bandwrap .otiles')+'</div></div>'+
+        '<div class="drow"><div class="dk">Size</div><div class="dcustom">'+outer('#csBox')+'</div></div>'+
+        '<div class="drow"><div class="dk">Paper</div><div class="dtiles">'+inner('#paperRow')+'</div></div>'+
+        '<div class="drow"><div class="dk">Finish</div><div class="dtiles">'+inner('#finRow')+'</div></div>'+
+        '<div class="drow"><div class="dk">Quantity</div><div class="dtiles dtiles-qty">'+outer('.bandwrap .qpin')+inner('#qtyRow')+'</div></div>';
+      b.querySelectorAll('[id]').forEach(function(e){ e.removeAttribute('id'); });
+      /* tag the cloned custom-size inputs (ids were stripped) so they can two-way bind to st */
+      var _cs=b.querySelector('.cscust'); if(_cs){ var _ci=_cs.querySelectorAll('.cinput'); if(_ci[0]) _ci[0].setAttribute('data-crole','w'); if(_ci[1]) _ci[1].setAttribute('data-crole','h'); }
+      if(typeof placeAllThumbs==='function') placeAllThumbs();
+      if(typeof syncOrient==='function') syncOrient();
+      syncV2Custom();
+    }
+    if(o) qeCloseAll(); $('sheet2').classList.toggle('open', o); $('qdim2').classList.toggle('open', o); }
+  var _be2=$('btnEverything2'); if(_be2) _be2.addEventListener('click', function(){ openSheet2(true); });
+  var _s2x=$('sheet2X'); if(_s2x) _s2x.addEventListener('click', function(){ openSheet2(false); });
+  var _qd2=$('qdim2'); if(_qd2) _qd2.addEventListener('click', function(){ openSheet2(false); });
+  var _s2b=$('sheet2Body'); if(_s2b) _s2b.addEventListener('click', function(e){ var o=e.target.closest('[data-paper],[data-size],[data-fin],[data-qty],[data-orient]'); if(o) applyOpt(o); });
+  /* v2 custom inputs (size W/H, qty, unit) ⇄ main forms — cloned inputs have no ids, so bind by class/data-role */
+  function syncV2Custom(){ var b=$('sheet2Body'); if(!b||!b.children.length) return; var cm=(st.unit==='cm');
+    var w=b.querySelector('.cinput[data-crole="w"]'), h=b.querySelector('.cinput[data-crole="h"]');
+    if(w && document.activeElement!==w) w.value=cm?Math.round(st.cW*2.54):st.cW;
+    if(h && document.activeElement!==h) h.value=cm?Math.round(st.cH*2.54):st.cH;
+    b.querySelectorAll('.unitseg .cpill').forEach(function(x){ x.classList.toggle('act', x.getAttribute('data-unit')===st.unit); });
+    var hint=b.querySelector('.cshint'); if(hint) hint.innerHTML=cm?'Entered in cm — we print at <b>'+st.cW+'″ × '+st.cH+'″</b>, rounded <b>up</b> to the nearest inch.':'Type any size — we round <b>up</b> to the nearest inch, and set portrait/landscape to match. Up to <b>59″</b> short side · <b>120″</b> long side.';
+    var pv=b.querySelector('.cscust .csprevbox'); if(pv){ var W=st.cW||36,H=st.cH||48,m=Math.max(W,H)||1; pv.style.width=Math.round(W/m*46)+'px'; pv.style.height=Math.round(H/m*46)+'px'; }
+    var q=b.querySelector('.qcc-in'); if(q && document.activeElement!==q){ q.value = document.querySelector('[data-qty="'+st.qty+'"]') ? '' : st.qty; }
+  }
+  if(_s2b){
+    _s2b.addEventListener('input', function(e){ var t=e.target; if(!t.classList) return;
+      if(t.classList.contains('cinput')){ var v=_aIn(t.value); if(v!==null){ if(t.getAttribute('data-crole')==='h') setCustomInch(st.cW, v); else setCustomInch(v, st.cH); } }
+      else if(t.classList.contains('qcc-in')){ if(t.value!=='') setQty(t.value); } });
+    _s2b.addEventListener('click', function(e){ var u=e.target.closest('.cpill[data-unit]'); if(!u) return; var unit=u.getAttribute('data-unit'); if(unit===st.unit) return; st.unit=unit;
+      ['csUnit','csUnitB'].forEach(function(sid){ var s=$(sid); if(s) s.querySelectorAll('.cpill').forEach(function(x){ x.classList.toggle('act', x.getAttribute('data-unit')===unit); }); });
+      mirrorCustom(); updateCsHint(); syncV2Custom(); paint(); });
+  }
+  var _sb=$('saveBuild'); if(_sb) _sb.addEventListener('click', function(){ this.textContent='✓ Saved'; var b=this; setTimeout(function(){ b.textContent='Save build'; }, 1600); });
+  var _co=$('coUpload'); if(_co){ _co.addEventListener('click', function(){ if(!_co.classList.contains('filled')) triggerUpload(); });
+    _co.addEventListener('dragover', function(e){ e.preventDefault(); _co.classList.add('over'); });
+    _co.addEventListener('dragleave', function(){ _co.classList.remove('over'); });
+    _co.addEventListener('drop', function(e){ e.preventDefault(); _co.classList.remove('over'); var f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0]; uploadArt(f?f.name:null, f?fmtBytes(f.size):null); }); }
+  /* ===== Artwork proof — upload lives in the artwork step; only the PROOF goes FULL-SCREEN =====
+     Geometry is REAL (0.125″ bleed/safe from the live size). File render + true DPI/preflight are build-phase. */
+  var BLEED_IN=0.125, SAFE_IN=0.125, proofApproved=false, proofWarn=false, hasArt=false, curFile={name:'artwork.pdf', size:'18.4 MB'}, proofZoom=1, ZL=[1,1.5,2,3], proofFitW=0, proofFitH=0;
+  function fmtBytes(b){ if(b==null) return '18.4 MB'; if(b<1024) return b+' B'; var u=['KB','MB','GB'], i=-1; do{ b/=1024; i++; }while(b>=1024&&i<2); return b.toFixed(1)+' '+u[i]; }
+  function proofStateClass(s){ var ov=$('proofov'); if(!ov) return; ov.classList.remove('s-upload','s-check','s-result'); ov.classList.add('s-'+s);
+    var idx=s==='check'?1:2; qa('#proofSteps .pstep').forEach(function(p,i){ p.classList.toggle('on', i<=idx); p.classList.toggle('cur', i===idx); }); }
+  function applyZoom(){ var s=$('proofStage'); if(!s||!proofFitW) return; s.style.width=Math.round(proofFitW*proofZoom)+'px'; s.style.height=Math.round(proofFitH*proofZoom)+'px'; var v=$('pvZoomVal'); if(v) v.textContent=(Math.abs(proofZoom-1)<0.01?'Fit':Math.round(proofZoom*100)+'%'); }
+  function sizeProofStage(){ var s=$('proofStage'); if(!s) return; var wrap=s.parentElement, d=dims(), bW=d[0]+2*BLEED_IN, bH=d[1]+2*BLEED_IN, A=bW/bH;
+    var availW=(wrap.clientWidth||640)-8, availH=(wrap.clientHeight||520)-8, w, h; if(availW/availH>A){ h=Math.min(availH,900); w=h*A; } else { w=availW; h=w/A; }
+    proofFitW=w; proofFitH=h;
+    /* EXACT trim + safe insets as fractions of the bleed box */
+    var tX=BLEED_IN/bW*100, tY=BLEED_IN/bH*100, sX=(BLEED_IN+SAFE_IN)/bW*100, sY=(BLEED_IN+SAFE_IN)/bH*100;
+    var tr=$('pgTrim'); if(tr){ tr.style.top=tr.style.bottom=tY.toFixed(3)+'%'; tr.style.left=tr.style.right=tX.toFixed(3)+'%'; }
+    var sf=$('pgSafe'); if(sf){ sf.style.top=sf.style.bottom=sY.toFixed(3)+'%'; sf.style.left=sf.style.right=sX.toFixed(3)+'%'; }
+    if($('lblTrim')) $('lblTrim').textContent='TRIM · '+d[0]+' × '+d[1]+'″'; applyZoom(); }
+  function proofChecksData(){ var d=dims(), dpi=proofWarn?168:300; return { dpi:dpi, badge:(proofWarn?'Low resolution':'Print-ready'), bcls:(proofWarn?'warn':'ok'),
+    items: proofWarn
+      ? [['warn','Resolution',dpi+' DPI at '+d[0]+'×'+d[1]+'″ — may print soft'],['ok','Bleed','0.125″ on all sides'],['warn','Safe zone','2 elements within 0.25″ of the trim'],['ok','Color','CMYK — ready for press']]
+      : [['ok','Resolution','300 DPI — sharp at full size'],['ok','Bleed','0.125″ on all sides'],['ok','Safe zone','Text & logos clear of the trim'],['ok','Color','CMYK — ready for press']] }; }
+  function renderProofChecks(){ var d=dims(), c=proofChecksData();
+    if($('proofDpi')) $('proofDpi').textContent=c.dpi;
+    if($('proofDpiAt')) $('proofDpiAt').textContent='at '+d[0]+' × '+d[1]+'″';
+    var bd=$('proofDpiBadge'); if(bd){ bd.textContent=c.badge; bd.className='proofdpi-badge '+c.bcls; }
+    var cl=$('checkList'); if(cl) cl.innerHTML=c.items.map(function(x){ return '<li class="ck '+x[0]+'"><span class="ck-ic"></span><span class="ck-t">'+x[1]+'</span><span class="ck-d">'+x[2]+'</span></li>'; }).join('');
+    var s=$('proofStage'); if(s) s.classList.toggle('warn', proofWarn);
+    var tg=$('proofToggle'); if(tg) tg.textContent=proofWarn?'◂ Show a clean file':'▸ Preview a flagged file';
+    var ap=$('proofApprove'); if(ap) ap.textContent=proofWarn?'Approve anyway →':'Approve proof →'; }
+  /* in-context file-check card (lives in the artwork step; opt-in 'Inspect' opens the full-screen view) */
+  function artCardHTML(state){ if(state==='checking') return '<div class="afc afc-checking"><div class="afc-spin"></div><div class="afc-ct">Checking your file…</div><div class="afc-cs">resolution · bleed · safe-zone · color</div></div>';
+    var dt=dims(), c=proofChecksData(), lis=c.items.map(function(x){ return '<li class="afc-ck '+x[0]+'"><span class="afc-ck-ic"></span><span class="afc-ck-t">'+x[1]+'</span><span class="afc-ck-d">'+x[2]+'</span></li>'; }).join('');
+    return '<div class="afc"><div class="afc-hd"><span class="afc-name">'+curFile.name+'<small> · '+curFile.size+'</small></span><button class="afc-link afc-replace" type="button">Replace</button></div>'
+      +'<div class="afc-dpi"><span class="afc-dpi-n">'+c.dpi+'</span><span class="afc-dpi-u">DPI<small>at '+dt[0]+'×'+dt[1]+'″</small></span><span class="afc-badge '+c.bcls+'">'+c.badge+'</span></div>'
+      +'<ul class="afc-checks">'+lis+'</ul>'
+      +'<div class="afc-acts"><button class="afc-btn afc-guides'+(st.proof?' on':'')+'" type="button">⊞ Guides</button><button class="afc-btn afc-inspect" type="button">⤢ Inspect</button><button class="afc-cta afc-approve'+(proofApproved?' done':'')+'" type="button">'+(proofApproved?'✓ Approved':(proofWarn?'Approve anyway →':'Approve proof →'))+'</button></div></div>'; }
+  function renderArtCard(state){ ['btnUpload','coUpload'].forEach(function(id){ var z=$(id); if(z){ z.classList.add('filled'); z.innerHTML=artCardHTML(state); } }); if(typeof fitBand==='function'){ fitBand(); fitPoster(); } }
+  function setProofFile(){ var d=dims(); if($('proofFile')) $('proofFile').textContent=curFile.name+' · '+d[0]+' × '+d[1]+'″ · '+curFile.size; if($('proofFile2')) $('proofFile2').textContent=curFile.name+' · '+curFile.size; }
+  function applyHeroArt(on){ var p=$('poster'); if(p) p.classList.toggle('hasart', on!==false); }
+  function openOverlay(){ var ov=$('proofov'); if(ov){ ov.classList.add('open'); ov.setAttribute('aria-hidden','false'); } }
+  function showProof(){ proofZoom=1; proofStateClass('result'); setProofFile(); renderProofChecks(); requestAnimationFrame(sizeProofStage); }
+  function startCheck(){ proofStateClass('check'); var steps=['Reading dimensions','Measuring resolution','Checking bleed & safe-zone','Verifying color space'], i=0, cs=$('checkingStep'); if(cs) cs.textContent=steps[0];
+    clearInterval(startCheck._iv); startCheck._iv=setInterval(function(){ i++; if(cs&&steps[i]) cs.textContent=steps[i]; }, 360);
+    clearTimeout(startCheck._t); startCheck._t=setTimeout(function(){ clearInterval(startCheck._iv); showProof(); }, 1500); }
+  /* in-context: upload → art on hero + guides on + file-check card in the step (NO full-screen takeover) */
+  function uploadArt(name,size){ curFile={name:name||'artwork.pdf', size:size||'18.4 MB'}; hasArt=true; proofApproved=false; applyHeroArt(true);
+    if($('rvArt')) $('rvArt').textContent=curFile.name+' · proofing'; renderArtCard('checking');
+    clearTimeout(uploadArt._t); uploadArt._t=setTimeout(function(){ renderArtCard('result'); }, 1300); }
+  function reviewProof(){ openOverlay(); showProof(); }   /* opt-in full-screen inspect */
+  function triggerUpload(){ if(hasArt){ reviewProof(); } else { var ai=$('artInput'); if(ai) ai.click(); } }
+  function closeProof(){ var ov=$('proofov'); if(ov){ ov.classList.remove('open'); ov.setAttribute('aria-hidden','true'); clearTimeout(startCheck._t); clearInterval(startCheck._iv); } }
+  function approveProof(){ proofApproved=true; st.art=true; if($('rvArt')) $('rvArt').textContent=curFile.name+' ✓ approved'; renderArtCard('result'); var ov=$('proofov'); if(ov&&ov.classList.contains('open')) closeProof(); markDone(5); }
+  var _ai=$('artInput'); if(_ai) _ai.addEventListener('change', function(){ var f=this.files&&this.files[0]; uploadArt(f?f.name:null, f?fmtBytes(f.size):null); this.value=''; });
+  var _po=$('proofov'); if(_po){
+    var _px=$('proofX'); if(_px) _px.addEventListener('click', closeProof);
+    var _pa=$('proofApprove'); if(_pa) _pa.addEventListener('click', approveProof);
+    var _prp=$('proofReplace'); if(_prp) _prp.addEventListener('click', function(){ var ai=$('artInput'); if(ai) ai.click(); });
+    var _pt=$('proofToggle'); if(_pt) _pt.addEventListener('click', function(){ proofWarn=!proofWarn; renderProofChecks(); requestAnimationFrame(sizeProofStage); });
+    var _zi=$('pvZoomIn'); if(_zi) _zi.addEventListener('click', function(){ var i=ZL.indexOf(proofZoom); proofZoom=ZL[Math.min(ZL.length-1,(i<0?0:i)+1)]; applyZoom(); });
+    var _zo=$('pvZoomOut'); if(_zo) _zo.addEventListener('click', function(){ var i=ZL.indexOf(proofZoom); proofZoom=ZL[Math.max(0,(i<0?0:i)-1)]; applyZoom(); });
+    var _zf=$('pvZoomFit'); if(_zf) _zf.addEventListener('click', function(){ proofZoom=1; applyZoom(); });
+    var _gd=$('pvGuides'); if(_gd) _gd.addEventListener('click', function(){ var s=$('proofStage'); if(s){ s.classList.toggle('noguides'); _gd.classList.toggle('on', !s.classList.contains('noguides')); } });
+    window.addEventListener('resize', function(){ if(_po.classList.contains('open') && _po.classList.contains('s-result')) sizeProofStage(); });
+    document.addEventListener('keydown', function(e){ if(e.key==='Escape' && _po.classList.contains('open')) closeProof(); });
+  }
+  /* in-context file-check card actions: replace / guides (hero overlay) / inspect (full-screen) / approve */
+  document.addEventListener('click', function(e){ var b=e.target.closest('.afc-replace, .afc-guides, .afc-inspect, .afc-approve'); if(!b) return; e.preventDefault();
+    if(b.classList.contains('afc-replace')){ var ai=$('artInput'); if(ai) ai.click(); }
+    else if(b.classList.contains('afc-guides')){ setGuides(!st.proof); }
+    else if(b.classList.contains('afc-inspect')){ reviewProof(); }
+    else if(b.classList.contains('afc-approve')){ approveProof(); } });
+  /* Add-to-cart gate (soft, for the mockup): require an approved proof before ordering */
+  document.addEventListener('click', function(e){ var a=e.target.closest('.add, .oslip-add'); if(!a || a.closest('.prooffs')) return; if(!proofApproved){ e.preventDefault(); e.stopPropagation(); triggerUpload(); } }, true);
+  /* scroll hint → SEO content; CTA → back to the builder */
+  function smooth(y){ window.scrollTo({ top:y, behavior:'smooth' }); }
+  $('scrollHint').addEventListener('click', function(){ var s=document.querySelector('.seo'); smooth(s?s.offsetTop-8:window.innerHeight); });
+  var cta=$('ctaTop'); if(cta) cta.addEventListener('click', function(){ smooth(0); });
+  paint();
+  placeAllThumbs(); requestAnimationFrame(placeAllThumbs); setTimeout(placeAllThumbs, 250);   /* initial thumb placement (after fonts/layout settle) */
+})();
+</script>
+</body>
+</html>

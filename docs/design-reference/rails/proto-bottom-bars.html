@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Bottom bar — the winner (N12)</title>
+<script>if(!/[?&]v=/.test(location.search)){ location.replace(location.pathname + (location.search?location.search+'&':'?') + 'v=' + Date.now()); }</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Montserrat:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{ --brand:#7c3aed; --bdark:#5b21b6; --ink:#1f1430; --sub:#6b7280; --muted:#9ca3af; --green:#059669; --grad:linear-gradient(120deg,#8b5cf6,#6d28d9); --ease:cubic-bezier(.4,0,.2,1); }
+  *{ box-sizing:border-box; }
+  body{ margin:0; font-family:'Inter',sans-serif; color:var(--ink); background:linear-gradient(180deg,#f3eefc,#ece6fb); padding:38px clamp(20px,5vw,80px) 90px; }
+  h1{ font-family:'Montserrat',sans-serif; font-size:1.5rem; font-weight:900; letter-spacing:-.02em; margin:0 0 4px; }
+  .lede{ color:var(--sub); font-size:.9rem; margin:0 0 26px; max-width:78ch; } .lede b{ color:var(--bdark); }
+  .vlabel{ display:flex; align-items:baseline; gap:10px; margin:0 0 9px; flex-wrap:wrap; }
+  .vlabel .vn{ font-family:'Montserrat',sans-serif; font-weight:900; font-size:.82rem; color:var(--brand); letter-spacing:.03em; text-transform:uppercase; }
+  .vlabel .vd{ font-size:.78rem; color:var(--sub); }
+  .stage{ position:relative; height:158px; border-radius:18px; overflow:hidden; background:radial-gradient(120% 90% at 50% 0,#fff,#f6f1ff); border:1px solid #e7ddf5; box-shadow:0 10px 28px rgba(60,30,130,.08); }
+  .stage .ghost{ position:absolute; left:24px; top:20px; display:flex; gap:8px; }
+  .stage .ghost span{ width:54px; height:34px; border-radius:8px; background:#efe9fb; }
+  .bar{ position:absolute; left:0; right:0; bottom:0; }
+  .t-grad{ font-family:'Montserrat',sans-serif; font-weight:700; letter-spacing:-.02em; color:var(--brand); }
+  .add{ display:inline-flex; align-items:center; gap:9px; background:var(--grad); color:#fff; border:0; cursor:pointer; font-weight:800; box-shadow:0 10px 24px -4px rgba(109,40,217,.5), inset 0 1px 0 rgba(255,255,255,.28); white-space:nowrap; height:52px; border-radius:13px; padding:0 26px; font-size:1rem; }
+  .add .ic{ width:19px; height:19px; flex:none; }
+  .save{ font-weight:800; color:var(--bdark); background:transparent; border:1.5px dashed #c7b8ec; cursor:pointer; white-space:nowrap; height:48px; border-radius:10px; padding:0 18px; }
+  .ddiv{ flex:none; border-left:1.5px dashed #cdbff0; height:32px; }
+  .row{ height:98px; display:flex; align-items:center; justify-content:space-between; gap:18px; padding:0 26px; background:rgba(255,255,255,.94); border-top:1px solid #ece3fb; box-shadow:0 -8px 24px rgba(60,30,130,.1); }
+  .acts{ display:flex; align-items:center; gap:13px; }
+  .segset{ display:flex; align-items:stretch; } .sg{ display:flex; flex-direction:column; justify-content:center; gap:2px; padding:0 18px; position:relative; } .sg:first-child{ padding-left:0; }
+  /* shorter, dashed segment dividers (centred, not full-height) */
+  .sg + .sg::before{ content:''; position:absolute; left:0; top:50%; transform:translateY(-50%); height:28px; border-left:1.5px dashed #cdbff0; }
+  .sg .sv{ font-weight:800; font-size:.86rem; color:var(--bdark); } .sg .sl{ font-size:.58rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--sub); }
+</style>
+</head>
+<body>
+  <h1>Bottom bar — the winner</h1>
+  <p class="lede"><b>N12 · Segmented summary</b> locked in — bigger price, and <b>Save build</b> on the secondary button. Same data (1 · 36 × 48″ · satin · $60.00 · in-hand Tue, Jun 16).</p>
+
+  <div class="vlabel"><span class="vn">N12 · Segmented summary</span><span class="vd">the winner</span></div>
+  <div class="stage"><div class="ghost"><span></span><span></span><span></span></div>
+    <div class="bar row barN12"><div class="segset"><div class="sg"><span class="sl">Total</span><span class="t t-grad" style="font-size:2.2rem">$60.00</span></div><div class="sg"><span class="sl">Size</span><span class="sv">36 × 48″</span></div><div class="sg"><span class="sl">Paper</span><span class="sv">Satin</span></div><div class="sg"><span class="sl">In hand</span><span class="sv">Tue, Jun 16</span></div></div><div class="acts"><button class="save">Save build</button><span class="ddiv"></span><button class="add">Add to cart</button></div></div>
+  </div>
+
+<script>
+  document.querySelectorAll('.add').forEach(function(b){ if(b.querySelector('.ic')) return; b.insertAdjacentHTML('afterbegin','<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg> '); });
+</script>
+</body>
+</html>

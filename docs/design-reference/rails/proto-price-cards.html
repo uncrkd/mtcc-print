@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Price card mockups — the cut (round 19)</title>
+<script>if(!/[?&]v=/.test(location.search)){ location.replace(location.pathname + (location.search?location.search+'&':'?') + 'v=' + Date.now()); }</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Montserrat:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{ --brand:#7c3aed; --bdark:#5b21b6; --ink:#1a1625; --sub:#6b7280; --muted:#9ca3af; --green:#059669;
+    --grad:linear-gradient(135deg,#7c3aed,#5b21b6); --gradwide:linear-gradient(90deg,#a855f7,#7c3aed 50%,#4f6ef7); --blue:linear-gradient(110deg,#60a5fa,#2563eb);
+    --perf:#c8b6ee; --perf2:#d8ccf2; --ease:cubic-bezier(.22,1,.36,1); }
+  *{ box-sizing:border-box; }
+  body{ margin:0; font-family:'Inter',sans-serif; color:var(--ink); background:linear-gradient(180deg,#efe9fb,#e6def8); padding:38px clamp(20px,4vw,64px) 110px; }
+  h1{ font-family:'Montserrat',sans-serif; font-size:1.5rem; font-weight:900; letter-spacing:-.02em; margin:0 0 4px; }
+  .lede{ color:var(--sub); font-size:.9rem; margin:0 0 14px; max-width:74ch; } .lede b{ color:var(--bdark); }
+  .sech{ font-family:'Montserrat',sans-serif; font-weight:900; font-size:.86rem; letter-spacing:.06em; color:var(--bdark); margin:38px 0 18px; border-bottom:2px solid #cdbff0; padding-bottom:8px; }
+  .sech span{ color:var(--sub); font-weight:700; font-size:.74rem; letter-spacing:0; }
+  .grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(360px,1fr)); gap:44px 32px; align-items:start; }
+  .cell .cn{ display:flex; align-items:baseline; gap:9px; margin:0 0 14px; }
+  .cell .cn .n{ font-family:'Montserrat',sans-serif; font-weight:900; font-size:.78rem; color:var(--brand); letter-spacing:.02em; }
+  .gradtxt{ background:var(--gradwide); -webkit-background-clip:text; background-clip:text; color:transparent; }
+
+  .tk{ position:relative; background:rgba(255,255,255,.88); backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,1); border-radius:20px; overflow:hidden; box-shadow:0 18px 44px rgba(40,20,90,.22); cursor:pointer; transition:transform .2s var(--ease), box-shadow .2s var(--ease); }
+  .tk:hover{ transform:translateY(-3px); box-shadow:0 26px 56px rgba(40,20,90,.26); }
+  .tk::before{ content:''; position:absolute; inset:0; background:radial-gradient(50% 90% at 14% 0%, rgba(168,130,255,.16), transparent 60%); pointer-events:none; }
+  .tk > *{ position:relative; z-index:2; }
+  .kk{ font-size:.52rem; font-weight:800; letter-spacing:.22em; text-transform:uppercase; color:#9b7fd4; }
+  .bars{ height:22px; border-radius:2px; opacity:.78; background:repeating-linear-gradient(90deg,#3c3654 0 2px,transparent 2px 4px,#3c3654 4px 5px,transparent 5px 9px,#3c3654 9px 12px,transparent 12px 14px); }
+  .li{ display:flex; justify-content:space-between; gap:12px; align-items:baseline; padding:5px 0; } .tk .li .k{ color:var(--sub); font-weight:600; font-size:.8rem; } .tk .li .v{ font-weight:800; color:var(--bdark); font-size:.8rem; }
+  .perf{ border:0; border-top:1.5px dashed var(--perf); margin:11px 0; }
+  .biz{ font-family:'Montserrat',sans-serif; font-weight:900; color:var(--brand); } .num{ font-family:'Montserrat',sans-serif; font-weight:700; line-height:.9; }
+  .hdrow{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; }
+  .totrow{ display:flex; align-items:flex-end; justify-content:space-between; gap:12px; } .totrow .tl{ font-size:.6rem; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--sub); } .totrow .ea{ font-size:.64rem; font-weight:700; color:var(--muted); margin-top:2px; }
+
+  /* Add to cart button */
+  .addbtn{ display:inline-flex; align-items:center; justify-content:center; gap:8px; background:var(--grad); color:#fff; border:0; border-radius:11px; padding:11px 18px; font-family:'Inter',sans-serif; font-weight:800; font-size:.82rem; cursor:pointer; box-shadow:0 8px 18px -4px rgba(109,40,217,.5), inset 0 1px 0 rgba(255,255,255,.25); white-space:nowrap; }
+  .addbtn svg{ width:15px; height:15px; flex:none; }
+  .addbtn.full{ width:100%; margin-top:13px; }
+
+  /* Invoice */
+  .p1{ display:flex; } .p1 .rule{ width:7px; flex:none; background:var(--blue); } .p1 .body{ flex:1; padding:18px 24px 20px; } .p1 .hd{ display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:12px; } .p1 .hd .biz{ font-size:1.05rem; } .p1 .hd .no{ font-size:.6rem; font-weight:700; color:var(--muted); } .p1 .totrow .num{ font-size:2rem; }
+  /* Packing slip (now standard fonts) */
+  .m2 .pad{ padding:18px 22px 20px; } .m2 .tbl{ display:grid; grid-template-columns:30px 1fr auto; gap:11px 12px; font-size:.8rem; } .m2 .tbl .h{ font-size:.54rem; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:#9b7fd4; padding-bottom:6px; border-bottom:1.5px dashed var(--perf); } .m2 .tbl .q{ color:var(--muted); font-weight:600; } .m2 .tbl span{ color:var(--sub); font-weight:600; } .m2 .tbl .a{ font-weight:800; color:var(--bdark); text-align:right; } .m2 .trow{ display:flex; align-items:center; justify-content:space-between; margin-top:12px; padding-top:12px; border-top:1.5px dashed var(--perf); } .m2 .trow .tl{ font-size:.7rem; font-weight:600; color:var(--sub); } .m2 .trow .num{ font-size:1.8rem; }
+
+  /* Themed Stub (itemized) */
+  .tsbase .main{ flex:1; padding:16px 20px; } .tsbase .main .biz{ font-size:.9rem; margin-bottom:4px; } .stub{ background:rgba(247,243,254,.6); position:relative; }
+  .ts1 .stub{ border-top:2px dashed var(--perf2); padding:13px 18px; display:flex; align-items:center; justify-content:space-between; gap:14px; } .ts1 .stub::before,.ts1 .stub::after{ content:''; position:absolute; top:-9px; width:16px; height:16px; border-radius:50%; background:#ece4fb; } .ts1 .stub::before{ left:-8px; } .ts1 .stub::after{ right:-8px; } .ts1 .stub .tl{ font-size:.48rem; letter-spacing:.16em; color:var(--muted); } .ts1 .stub .num{ font-size:1.55rem; line-height:1; }
+  .ts4 .stub{ border-top:2px dashed var(--perf2); padding:13px 18px; display:flex; align-items:center; justify-content:space-between; gap:14px; } .ts4 .stub::after{ content:''; position:absolute; top:-9px; left:50%; transform:translateX(-50%); width:18px; height:18px; border-radius:50%; background:#ece4fb; } .ts4 .stub .tl{ font-size:.48rem; letter-spacing:.16em; color:var(--muted); } .ts4 .stub .num{ font-size:1.55rem; line-height:1; }
+</style>
+</head>
+<body>
+  <h1>Price card — the cut <span style="color:var(--sub);font-weight:700;font-size:.9rem">· 4 remaining</span></h1>
+  <p class="lede">Removed Gradient Cap; Packing slip now uses the standard fonts; header reads <b>Order Summary</b> on all. Same data (<b>1 × 36 × 48″ satin</b> · $53.10 · HST $6.90 · <b class="gradtxt">$60.00</b> · in-hand Tue, Jun 16).</p>
+
+  <div class="sech">Also kept <span>· 2</span></div>
+  <div class="grid">
+    <div class="cell"><div class="cn"><span class="n">Invoice</span></div><div class="tk p1"><div class="rule"></div><div class="body"><div class="hd"><span class="biz">Order Summary</span><span class="no">No. PS-0420</span></div><div class="li"><span class="k">Poster · 36 × 48″ · satin</span><span class="v">$53.10</span></div><div class="li"><span class="k">Finish — none</span><span class="v">$0.00</span></div><div class="li"><span class="k">HST 13%</span><span class="v">$6.90</span></div><hr class="perf"><div class="totrow"><div><div class="tl">Total due</div><div class="ea">1 · $60.00/ea · HST in</div></div><div class="num gradtxt">$60.00</div></div><button class="addbtn full"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>Add to cart</button></div></div></div>
+    <div class="cell"><div class="cn"><span class="n">Packing slip</span></div><div class="tk m2"><div class="pad"><div class="hdrow"><span class="biz" style="font-size:.95rem">Order Summary</span><span class="kk">Packing slip</span></div><div class="tbl"><span class="h q">QTY</span><span class="h">DESCRIPTION</span><span class="h a">AMT</span><span class="q">1</span><span>Poster 36 × 48″ satin</span><span class="a">$53.10</span><span class="q">—</span><span>Finish · none</span><span class="a">$0.00</span><span class="q">—</span><span>HST 13%</span><span class="a">$6.90</span></div><div class="trow"><span class="tl">TOTAL · HST IN</span><span class="num gradtxt">$60.00</span></div><button class="addbtn full"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>Add to cart</button></div></div></div>
+  </div>
+
+  <div class="sech">Themed Stub <span>· 2</span></div>
+  <div class="grid">
+    <div class="cell"><div class="cn"><span class="n">bottom stub</span></div><div class="tk tsbase ts1"><div class="main"><div class="biz">Order Summary</div><div class="li"><span class="k">Poster · 36 × 48″ · satin</span><span class="v">$53.10</span></div><div class="li"><span class="k">Finish — none</span><span class="v">$0.00</span></div><div class="li"><span class="k">HST 13%</span><span class="v">$6.90</span></div></div><div class="stub"><div style="text-align:left"><div class="tl">Total · Tue, Jun 16</div><div class="num gradtxt">$60.00</div></div><button class="addbtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>Add to cart</button></div></div></div>
+    <div class="cell"><div class="cn"><span class="n">centre-perf bottom</span></div><div class="tk tsbase ts4"><div class="main"><div class="biz">Order Summary</div><div class="li"><span class="k">Poster · 36 × 48″ · satin</span><span class="v">$53.10</span></div><div class="li"><span class="k">Finish — none</span><span class="v">$0.00</span></div><div class="li"><span class="k">HST 13%</span><span class="v">$6.90</span></div></div><div class="stub"><div style="text-align:left"><div class="tl">Total · Tue, Jun 16</div><div class="num gradtxt">$60.00</div></div><button class="addbtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>Add to cart</button></div></div></div>
+  </div>
+
+</body>
+</html>
