@@ -151,6 +151,11 @@
   .f-rail2 .gcal2{ width:38px; } .f-rail2 .gcal2 .dn{ font-size:.88rem; } .f-rail2 .gcal2 .bd{ font-size:.38rem; }
   .gcal2 .bd{ background:linear-gradient(110deg,#60a5fa,#2563eb); color:#fff; font-size:.3rem; font-weight:800; letter-spacing:.12em; padding:2px 0; display:block; }
   .gcal2 .dn{ font-family:'Montserrat',sans-serif; font-size:.62rem; font-weight:900; display:block; line-height:1.35; }
+  /* quantity mini-card — mirrors .gcal2 (purple header + live number) so the Quantity tile reflects the count like the date tile reflects the date */
+  .gqty2{ width:28px; border-radius:6px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.18); border:1px solid rgba(124,58,237,.14); background:#fff; text-align:center; position:relative; z-index:2; }
+  .f-rail2 .gqty2{ width:38px; } .f-rail2 .gqty2 .qn{ font-size:.88rem; } .f-rail2 .gqty2 .qb{ font-size:.38rem; }
+  .gqty2 .qb{ background:linear-gradient(110deg,#a855f7,#7c3aed); color:#fff; font-size:.3rem; font-weight:800; letter-spacing:.12em; padding:2px 0; display:block; }
+  .gqty2 .qn{ font-family:'Montserrat',sans-serif; font-size:.62rem; font-weight:900; display:block; line-height:1.35; }
   .gfin{ width:31px; height:27px; border-radius:4px; background:linear-gradient(115deg,#241b38,#6a59a0 50%,#241b38); box-shadow:0 2px 7px rgba(60,30,130,.3); position:relative; z-index:2; }
   /* ===== leftzone: toggle sits ABOVE the centred rail; in All options the whole config becomes a full Cold-Open scroll column with a sticky stage ===== */
   .leftzone{ position:absolute; left:clamp(20px,3vw,60px); width:clamp(208px,15vw,272px); top:172px; bottom:clamp(210px,25vh,262px); display:flex; flex-direction:column; justify-content:center; gap:14px; z-index:21; }  /* rail vertically CENTRED in step (flex-centre, transform-free so the switch fade can use transform) */
@@ -200,19 +205,20 @@
   @keyframes prodGlide{ from{ transform:translate(var(--dx,0px), var(--dy,0px)); } to{ transform:translate(0px,0px); } }
   @keyframes lzIn{ from{ opacity:0; transform:translateX(-44px); } to{ opacity:1; transform:translateX(0); } }
   @keyframes lzGhostOut{ from{ opacity:1; transform:translateX(0); } to{ opacity:0; transform:translateX(-40px); } }
-  @keyframes bandPop{ from{ opacity:0; transform:translateY(64px); } to{ opacity:1; transform:translateY(0); } }
+  @keyframes bandPop{ from{ opacity:0; transform:translateY(32px); } to{ opacity:1; transform:translateY(0); } }
   @keyframes bandGhostOut{ from{ opacity:1; transform:translateY(0); } to{ opacity:0; transform:translateY(72px); } }
-  .screen.switching .heroWrap, .screen.switching .leftzone, .screen.switching .bandwrap, #ghostLeft, #ghostBand{ will-change:transform, opacity; }
+  .screen.switching .heroWrap, .screen.switching .leftzone, .screen.switching .band:not(.off), #ghostLeft, #ghostBand{ will-change:transform, opacity; }
   .screen.switching .heroWrap{ animation:prodGlide 1.7s cubic-bezier(.4,0,.2,1) both; }
   .screen.switching .leftzone{ animation:lzIn .9s cubic-bezier(.4,0,.2,1) both; }
   #ghostLeft{ animation:lzGhostOut .62s cubic-bezier(.4,0,.2,1) both; }
   /* entering step: bottom rail fade-slides UP with everything. leaving step: the band-ghost fade-slides DOWN out, same beat. */
-  .screen.switching:not(.allopts) .bandwrap{ animation:bandPop .62s cubic-bezier(.34,1.2,.5,1) both; }
+  /* animate the active BAND, not the .bandwrap — a transform on the (0-height) wrapper would make it the band's containing block and park the band off-screen for the whole switch */
+  .screen.switching:not(.allopts) .band:not(.off){ animation:bandPop .5s cubic-bezier(.22,1,.36,1) both; }
   #ghostBand{ animation:bandGhostOut .62s cubic-bezier(.4,0,.2,1) both; }
   @media (prefers-reduced-motion:reduce){ .screen.switching .heroWrap, .screen.switching .leftzone, .screen.switching .bandwrap, #ghostLeft, #ghostBand{ animation:none; } }
   .screen.allopts .f-ctrls{ position:fixed; top:170px; left:calc((100vw + clamp(380px,40vw,600px)) / 2); transform:translateX(-50%); z-index:34; }
-  .screen.allopts .dtoggle{ position:fixed; top:172px; }   /* stays top-left while the page scrolls */
-  .screen.allopts.atend .f-ctrls{ opacity:0; pointer-events:none; transition:opacity .25s; }
+  .screen.allopts .dtoggle{ position:fixed; top:172px; }   /* fixed top-left while scrolling, then fades at the SEO block (like the quick-edit cluster) */
+  .screen.allopts.atend .f-ctrls, .screen.allopts.atend .dtoggle, .screen.allopts.atend .qetab{ opacity:0; pointer-events:none; transition:opacity .25s; }
   /* ===== full Cold Open scenes (verbatim styling, faithful sizes) ===== */
   .copanel .scene{ padding:30px 0; } .copanel .scene:first-child{ padding-top:6px; } .copanel .scene + .scene{ border-top:1px dashed rgba(124,58,237,.16); margin-top:34px; padding-top:46px; }
   .copanel .sno{ font-size:.62rem; font-weight:800; letter-spacing:.26em; color:#9b7fd4; text-transform:uppercase; }
@@ -315,17 +321,17 @@
   .osum-tnum{ font-size:2rem; font-weight:900; letter-spacing:-.02em; color:var(--ink); }
   .osum-rea{ text-align:center; font-size:.66rem; color:var(--sub); font-weight:600; margin-top:16px; line-height:1.5; }
   /* ===== quick-edit "⚡ Everything" slide-down sheet (Premiere chrome) ===== */
-  /* Quick edit sits in its OWN filled segment (chip) so it reads as a distinct section */
-  /* Quick edit — top-right pill (edit lives with the build, not the buy bar). Fixed in both views. */
-  .qetop{ top:172px; right:26px; display:inline-flex; align-items:center; gap:7px; height:40px; padding:0 16px; font-family:inherit; font-size:.72rem; font-weight:800; color:var(--bdark); cursor:pointer; white-space:nowrap; border:0; background:rgba(255,255,255,.72); backdrop-filter:blur(18px) saturate(1.5); border:1px solid rgba(255,255,255,.9); border-radius:11px; box-shadow:0 6px 18px rgba(60,30,130,.12); z-index:34; transition:.15s var(--ease); }
-  .qetop:hover{ color:var(--brand); }
-  .qetop .qeic{ font-size:.95rem; } .qetop .qecar{ font-size:.7rem; opacity:.65; }
-  /* TEMP compare button — sits to the LEFT of Quick edit; opens the slide-from-left drawer mockup */
-  .qetop2{ right:178px; }
+  /* (legacy top-right Quick-edit pill removed — Quick edit is now the folder tab on #sheet2) */
   .qdim2{ position:fixed; inset:0; background:rgba(26,22,37,.34); backdrop-filter:blur(6px); z-index:44; opacity:0; pointer-events:none; transition:opacity .4s var(--ease); }
   .qdim2.open{ opacity:1; pointer-events:auto; }
   /* slides in from the RIGHT */
-  .qdrawer{ position:fixed; top:0; right:0; bottom:0; left:auto; width:clamp(380px,34vw,480px); background:rgba(255,255,255,.98); backdrop-filter:blur(20px) saturate(1.4); box-shadow:-16px 0 54px rgba(40,20,90,.3); z-index:45; transform:translateX(103%); transition:transform .42s cubic-bezier(.4,0,.2,1); display:flex; flex-direction:column; font-family:'Inter',sans-serif; }
+  .qdrawer{ position:fixed; top:0; right:0; bottom:0; left:auto; width:clamp(380px,34vw,480px); background:rgba(255,255,255,.98); backdrop-filter:blur(20px) saturate(1.4); box-shadow:-16px 0 54px rgba(40,20,90,.3); z-index:45; transform:translateX(100%); transition:transform .42s cubic-bezier(.4,0,.2,1); display:flex; flex-direction:column; font-family:'Inter',sans-serif; overflow:visible; }
+  /* vertical folder tab — attached to the panel's left edge; pokes out while the panel is parked off-screen */
+  .qetab{ position:absolute; left:-46px; top:176px; width:46px; min-height:138px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:16px 0; background:linear-gradient(180deg,rgba(255,255,255,.97),rgba(247,243,254,.97)); backdrop-filter:blur(16px) saturate(1.4); border:1px solid rgba(124,58,237,.16); border-right:0; border-radius:14px 0 0 14px; box-shadow:-10px 0 24px rgba(60,30,130,.16); cursor:pointer; z-index:2; transition:background .15s var(--ease); }
+  .qetab .qeic{ font-size:1.05rem; line-height:1; }
+  .qetab .qet-txt{ writing-mode:vertical-rl; transform:rotate(180deg); font-family:'Inter',sans-serif; font-weight:800; font-size:.76rem; letter-spacing:.06em; color:var(--bdark); transition:color .15s var(--ease); }
+  .qetab:hover{ background:linear-gradient(180deg,#fff,#f3eefc); } .qetab:hover .qet-txt{ color:var(--brand); }
+  .qdrawer.peek{ transform:translateX(calc(100% - 15px)); }
   .qdrawer.open{ transform:none; }
   .qdrawer-head{ display:flex; align-items:center; justify-content:space-between; padding:24px 26px 16px; font-size:1.1rem; font-weight:900; border-bottom:1px solid #eee6f8; }
   .qdrawer-head small{ font-size:.6rem; font-weight:800; letter-spacing:.05em; text-transform:uppercase; color:var(--brand); background:rgba(124,58,237,.09); padding:3px 9px; border-radius:99px; margin-left:8px; }
@@ -377,8 +383,7 @@
   .qdf-save{ flex:none; height:48px; }
   .qdf-acts .actdiv{ width:0; height:30px; flex:none; border-left:1.5px dashed #c7b8ec; }
   .qdf-add{ flex:1; justify-content:center; height:52px; border-radius:13px; }
-  .screen.allopts .qetop, .screen.allopts .f-buy{ position:fixed; }
-  .screen.allopts.atend .qetop{ opacity:0; pointer-events:none; transition:opacity .25s; }
+  .screen.allopts .f-buy{ position:fixed; }
   .qdim{ position:fixed; inset:0; background:rgba(26,22,37,.34); backdrop-filter:blur(6px); z-index:44; opacity:0; pointer-events:none; transition:opacity .45s var(--ease); }
   .qdim.open{ opacity:1; pointer-events:auto; }
   .qsheet{ position:fixed; top:0; left:50%; width:min(880px,94vw); z-index:46; background:rgba(255,255,255,.97); backdrop-filter:blur(30px) saturate(1.5); border:1px solid rgba(255,255,255,1); border-top:0; border-radius:0 0 26px 26px; box-shadow:0 50px 100px rgba(30,15,70,.42); padding:14px 30px 18px; text-align:left; transform:translate(-50%,calc(-100% - 16px)); transition:transform .6s cubic-bezier(.16,1,.3,1); max-height:calc(100vh - 32px); overflow-y:auto; scrollbar-width:none; }
@@ -521,37 +526,51 @@
   .pvtoggle.on{ color:#fff; background:var(--grad); border-color:transparent; box-shadow:0 4px 14px rgba(124,58,237,.45); }
   .proofstage.noguides .pg, .proofstage.noguides .pglabel{ display:none; }
   /* larger Guided-view upload dropzone */
-  .dz-guided{ margin-top:14px; max-width:none; flex-direction:column; justify-content:center; text-align:center; gap:11px; padding:clamp(20px,3.4vh,34px); min-height:clamp(120px,19vh,180px); border-width:2px; }
+  .dz-guided{ margin-top:14px; width:100%; max-width:520px; align-self:center; flex-direction:column; justify-content:center; text-align:center; gap:11px; padding:clamp(18px,3vh,30px); min-height:clamp(116px,17vh,168px); border-width:2px; }
   .dz-guided .t{ font-size:.95rem; } .dz-guided .ic{ width:54px; height:54px; font-size:1.3rem; border-radius:16px; }
   /* uploaded artwork superimposed on the hero stage — MOCK sample art (real file render is build-phase) */
   .poster.hasart{ background:linear-gradient(135deg,#f59e0b,#ec4899 32%,#7c3aed 64%,#2563eb); }
   /* in-context artwork file-check card — replaces the dropzone after upload (stays in the configurator) */
-  .dz.filled{ display:block; cursor:default; border-style:solid; border-color:#e7ddf5; background:#fff; padding:0; min-height:0; box-shadow:0 12px 32px rgba(60,30,130,.1); }
-  .dz.filled:hover{ transform:none; border-color:#e7ddf5; }
-  .afc{ padding:15px 17px; display:flex; flex-direction:column; gap:11px; text-align:left; }
-  .afc-checking{ align-items:center; justify-content:center; min-height:118px; gap:8px; text-align:center; }
+  .dz.filled{ display:block; cursor:default; border:1px solid #ece6f7; background:#fff; padding:0; min-height:0; overflow:hidden; box-shadow:0 18px 44px rgba(60,30,130,.13); }
+  .dz.filled:hover{ transform:none; border-color:#ece6f7; }
+  /* widen the Guided dropzone once filled — the boarding-pass card needs more room than the empty drop target */
+  .dz-guided.filled{ max-width:680px; }
+  /* ===== chosen file-check cards: DC1 (Everything) · GX9 (Guided) ===== */
+  .fck-bigchk{ width:50px; height:50px; color:#10b981; } .fck-bigchk svg{ width:100%; height:100%; display:block; } .fck-bigchk.warn{ color:#f59e0b; }
+  .fck-passlbl{ font-size:.48rem; font-weight:900; letter-spacing:.13em; text-transform:uppercase; color:#059669; } .fck-passlbl.warn{ color:#b45309; }
+  .fck-h{ font-family:'Montserrat',sans-serif; font-weight:900; font-size:1.05rem; letter-spacing:-.01em; color:var(--ink); }
+  .fck-dim{ font-family:'Montserrat',sans-serif; font-weight:900; letter-spacing:-.01em; color:var(--bdark); line-height:.9; white-space:nowrap; } .fck-dim .u{ font-size:.4em; font-weight:800; color:var(--muted); }
+  .fck-chip{ display:inline-flex; align-items:center; gap:5px; font-size:.55rem; font-weight:800; letter-spacing:.03em; border-radius:99px; padding:4px 11px; background:linear-gradient(110deg,#10b981,#059669); color:#fff; box-shadow:0 3px 10px rgba(5,150,105,.3); white-space:nowrap; } .fck-chip.warn{ background:linear-gradient(110deg,#fbbf24,#f59e0b); box-shadow:0 3px 10px rgba(245,158,11,.3); }
+  .fck-file{ font-size:.68rem; font-weight:700; color:var(--sub); } .fck-file b{ color:var(--ink); font-weight:800; }
+  .fck-cells4{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+  .fck-cell{ background:#faf7fe; border:1px solid #f0e9fb; border-radius:9px; padding:8px 11px; } .fck-cell.ok{ background:#ecfaf4; border-color:#cdeede; } .fck-cell.bad{ background:#fff7ec; border-color:#f5e3c4; }
+  .fck-cell .cl{ font-size:.5rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); display:block; } .fck-cell .cv{ display:block; font-weight:800; font-size:.78rem; color:var(--bdark); margin-top:2px; } .fck-cell.bad .cv{ color:#b45309; }
+  .fck-btn{ display:inline-flex; align-items:center; justify-content:center; gap:6px; height:36px; padding:0 16px; border-radius:9px; border:0; background:var(--grad); color:#fff; font-weight:800; font-size:.74rem; cursor:pointer; box-shadow:0 8px 18px -4px rgba(109,40,217,.42); white-space:nowrap; } .fck-btn.done{ background:rgba(16,185,129,.16); color:#047857; box-shadow:none; }
+  .fck-ghost{ height:36px; padding:0 13px; border-radius:9px; border:1.4px solid #e6dff2; background:#fff; color:var(--bdark); font-weight:800; font-size:.7rem; cursor:pointer; white-space:nowrap; }
+  .fck-lnk{ background:none; border:0; color:var(--brand); font-weight:800; font-size:.72rem; cursor:pointer; padding:3px 0; white-space:nowrap; } .fck-lnk:hover{ text-decoration:underline; } .fck-lnk.mut{ color:var(--sub); }
+  /* DC1 — Everything: big check left · details right · tools bottom */
+  .fck-dc .fck-top{ display:flex; align-items:stretch; }
+  .fck-dc .fck-lc{ flex:none; width:86px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:7px; padding:16px 0; }
+  .fck-dc .fck-dv{ width:0; border-left:1.5px dashed #d8cef0; align-self:stretch; margin:15px 0; }
+  .fck-dc .fck-det{ flex:1; padding:15px 17px; min-width:0; }
+  .fck-dc .fck-hdrow{ display:flex; align-items:center; gap:10px; margin-bottom:9px; }
+  .fck-dc .fck-tools{ display:flex; align-items:center; gap:14px; padding:11px 16px; border-top:1px solid #f0e9fb; background:#faf8fd; }
+  /* GX9 — Guided: boarding pass + consolidated check + tear-off stub */
+  .fck-pass{ display:flex; align-items:stretch; position:relative; }
+  /* corner glow removed — kept the card flat &amp; clean in both pass and warn states */
+  .fck-fline{ display:flex; align-items:center; gap:7px; margin-top:5px; font-size:.68rem; font-weight:700; color:var(--sub); }
+  .fck-fline .fck-fn{ font-weight:800; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:58%; }
+  .fck-pass .fck-pcheck{ flex:none; align-self:center; width:82px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:7px; padding-left:8px; position:relative; z-index:2; }
+  .fck-pass .fck-pvd{ width:0; border-left:1.5px dashed #d8cef0; align-self:stretch; margin:16px 0 16px 16px; position:relative; z-index:2; }
+  .fck-pass .fck-pbody{ flex:1; padding:15px 17px; min-width:0; position:relative; z-index:2; }
+  .fck-pass .fck-hdrow{ display:flex; align-items:center; gap:10px; }
+  .fck-pass .fck-stub{ width:150px; flex:none; border-left:2px dashed #e0d6f2; background:#faf8fd; display:flex; flex-direction:column; justify-content:center; gap:8px; padding:13px; position:relative; z-index:2; } .fck-pass .fck-stub::before,.fck-pass .fck-stub::after{ content:''; position:absolute; left:-9px; width:16px; height:16px; border-radius:50%; background:#efe9fb; } .fck-pass .fck-stub::before{ top:-8px; } .fck-pass .fck-stub::after{ bottom:-8px; }
+  .afc{ position:relative; padding:17px 18px 15px; display:flex; flex-direction:column; gap:13px; text-align:left; }
+  .afc::before{ content:''; position:absolute; top:0; left:0; right:0; height:4px; background:var(--gradwide); }
+  .afc-checking{ align-items:center; justify-content:center; min-height:140px; gap:9px; text-align:center; }
   .afc-spin{ width:34px; height:34px; border-radius:50%; border:3px solid #ece4fb; border-top-color:var(--brand); animation:proofspin .8s linear infinite; }
   .afc-ct{ font-family:'Montserrat',sans-serif; font-weight:900; font-size:.92rem; color:var(--ink); } .afc-cs{ font-size:.64rem; font-weight:600; color:var(--sub); }
-  .afc-hd{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
-  .afc-name{ font-weight:800; font-size:.82rem; color:var(--ink); word-break:break-all; } .afc-name small{ color:var(--sub); font-weight:600; }
-  .afc-link{ flex:none; background:none; border:0; color:var(--brand); font-weight:800; font-size:.7rem; cursor:pointer; text-decoration:underline; text-underline-offset:2px; }
-  .afc-dpi{ display:flex; align-items:center; gap:9px; }
-  .afc-dpi-n{ font-family:'Montserrat',sans-serif; font-weight:900; font-size:1.5rem; line-height:1; color:var(--bdark); }
-  .afc-dpi-u{ font-size:.52rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--sub); display:flex; flex-direction:column; } .afc-dpi-u small{ font-size:.52rem; font-weight:700; color:var(--muted); letter-spacing:0; text-transform:none; }
-  .afc-badge{ margin-left:auto; font-size:.56rem; font-weight:800; padding:4px 10px; border-radius:99px; }
-  .afc-badge.ok{ color:#047857; background:rgba(16,185,129,.12); } .afc-badge.warn{ color:#b45309; background:rgba(180,83,9,.13); }
-  .afc-checks{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:5px; }
-  .afc-ck{ display:grid; grid-template-columns:16px 1fr; column-gap:8px; align-items:center; }
-  .afc-ck-ic{ width:16px; height:16px; border-radius:50%; position:relative; }
-  .afc-ck.ok .afc-ck-ic{ background:#10b981; } .afc-ck.warn .afc-ck-ic{ background:#f59e0b; }
-  .afc-ck.ok .afc-ck-ic::after{ content:''; position:absolute; left:5.5px; top:3px; width:3px; height:6px; border:1.6px solid #fff; border-top:0; border-left:0; transform:rotate(45deg); }
-  .afc-ck.warn .afc-ck-ic::after{ content:'!'; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:900; font-size:.6rem; }
-  .afc-ck-t{ font-weight:800; font-size:.72rem; color:var(--ink); } .afc-ck-d{ grid-column:2; font-size:.62rem; font-weight:600; color:var(--sub); }
-  .afc-acts{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:2px; }
-  .afc-btn{ height:36px; padding:0 13px; border-radius:10px; border:1.4px solid #e2d8f5; background:#fff; color:var(--bdark); font-weight:800; font-size:.7rem; cursor:pointer; }
-  .afc-btn.on{ background:var(--grad); color:#fff; border-color:transparent; } .afc-btn:hover{ border-color:var(--brand); }
-  .afc-cta{ margin-left:auto; height:36px; padding:0 16px; border-radius:10px; border:0; background:var(--grad); color:#fff; font-weight:800; font-size:.72rem; cursor:pointer; box-shadow:0 8px 18px -4px rgba(109,40,217,.45); }
-  .afc-cta.done{ background:rgba(16,185,129,.14); color:#047857; box-shadow:none; }
+  /* (legacy .afc result-card styles removed — superseded by the .fck cards; .afc/.afc-checking spinner above is still used) */
   .pf-fix{ background:var(--grad); color:#fff; border:0; border-radius:8px; padding:6px 12px; font-family:inherit; font-weight:800; font-size:.6rem; cursor:pointer; }
   .pf-replay{ background:none; border:0; color:#9b7fd4; cursor:pointer; font-size:.82rem; }
   /* ===== bands ===== */
@@ -564,11 +583,11 @@
   .bs{ font-size:clamp(.6rem,.82vw,.72rem); color:var(--sub); font-weight:600; margin-top:2px; }
   .optrow{ display:flex; gap:11px; padding:14px 0 2px; justify-content:center; align-items:stretch; flex-wrap:wrap; }
   /* tiles scaled down ~10% (width · padding · glyph · text all reduced) */
-  .ocA{ width:clamp(101px,8.8vw,151px); background:rgba(255,255,255,.85); backdrop-filter:blur(16px); border:1px solid rgba(255,255,255,.95); border-radius:13px; padding:clamp(11px,1.3vh,15px) 9px clamp(10px,1.2vh,14px); text-align:center; cursor:pointer; box-shadow:0 8px 20px rgba(60,30,130,.1); transition:transform .18s var(--ease), box-shadow .18s; flex:none; position:relative; }
+  .ocA{ width:clamp(112px,9.8vw,168px); background:rgba(255,255,255,.85); backdrop-filter:blur(16px); border:1px solid rgba(255,255,255,.95); border-radius:13px; padding:clamp(13px,1.6vh,18px) 11px clamp(12px,1.5vh,17px); text-align:center; cursor:pointer; box-shadow:0 8px 20px rgba(60,30,130,.1); transition:transform .18s var(--ease), box-shadow .18s; flex:none; position:relative; }
   .ocA:hover{ transform:translateY(-4px); }
   /* gb tall enough to hold the preview glyphs, with clear space before the label so text never crowds the icon */
-  .ocA .gb{ height:clamp(31px,3.4vh,41px); display:flex; align-items:center; justify-content:center; margin-bottom:8px; }
-  .ocA .bn2{ font-size:clamp(.63rem,.83vw,.76rem); font-weight:800; } .ocA .bx{ font-size:clamp(.49rem,.68vw,.58rem); color:var(--muted); font-weight:600; margin-top:2px; }
+  .ocA .gb{ height:clamp(35px,3.9vh,47px); display:flex; align-items:center; justify-content:center; margin-bottom:9px; }
+  .ocA .bn2{ font-size:clamp(.69rem,.92vw,.83rem); font-weight:800; } .ocA .bx{ font-size:clamp(.53rem,.74vw,.63rem); color:var(--muted); font-weight:600; margin-top:2px; }
   .ocA.on{ box-shadow:0 0 0 2.5px var(--brand), 0 4px 14px rgba(124,58,237,.35); background:rgba(255,255,255,.97); }   /* selected: NO upward shift — stays in line */
   /* purple circle-check-big badge on every selected tile (white check on a purple circle, top-right) */
   /* lucide circle-check-big (white on a purple disc) — Guided tiles: top-right of the TILE */
@@ -674,15 +693,7 @@
   .copanel .pass .pbtn{ margin-top:0; flex:none; padding:11px 15px; }
   .upbtn{ display:inline-flex; align-items:center; gap:9px; border:1.5px dashed rgba(124,58,237,.5); background:rgba(255,255,255,.55); color:var(--ink); border-radius:99px; padding:13px 22px; font-family:inherit; font-size:.74rem; font-weight:800; cursor:pointer; }
   .upbtn .ic{ width:24px; height:24px; border-radius:50%; background:var(--grad); color:#fff; display:flex; align-items:center; justify-content:center; font-size:.7rem; }
-  /* ===== Quick-edit COMPARE cluster (temporary: pick one of v1–v4) ===== */
-  .qecluster{ top:172px; right:26px; display:flex; align-items:center; gap:6px; padding:5px 7px 5px 13px; background:rgba(255,255,255,.74); backdrop-filter:blur(18px) saturate(1.5); border:1px solid rgba(255,255,255,.9); border-radius:13px; box-shadow:0 6px 18px rgba(60,30,130,.12); z-index:34; }
-  .qec-lbl{ font-size:.66rem; font-weight:900; color:var(--bdark); display:inline-flex; align-items:center; gap:5px; margin-right:3px; }
-  .qec-lbl .qeic{ font-size:.9rem; }
-  .qec-pill{ display:inline-flex; flex-direction:column; align-items:center; line-height:1.05; gap:2px; font-family:inherit; font-size:.72rem; font-weight:800; color:var(--bdark); background:#f3eefc; border:1.2px solid #e2d8f5; border-radius:9px; padding:6px 11px; cursor:pointer; transition:.13s var(--ease); }
-  .qec-pill small{ font-size:.48rem; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--sub); }
-  .qec-pill:hover{ border-color:var(--brand); color:var(--brand); background:#fff; }
-  .screen.allopts .qecluster{ position:fixed; }
-  .screen.allopts.atend .qecluster{ opacity:0; pointer-events:none; transition:opacity .25s; }
+  /* (legacy Quick-edit compare cluster removed — superseded by the folder-tab side panel) */
   /* framework/sample-product watermark (non-interactive) */
   .protobadge{ position:fixed; top:10px; left:50%; transform:translateX(-50%); z-index:55; pointer-events:none; font-family:'Inter',sans-serif; font-size:.6rem; font-weight:700; letter-spacing:.01em; color:var(--bdark); background:rgba(255,255,255,.85); backdrop-filter:blur(8px); border:1px solid rgba(124,58,237,.28); border-radius:99px; padding:5px 15px; box-shadow:0 4px 14px rgba(60,30,130,.13); white-space:nowrap; }
   .protobadge b{ font-weight:900; color:var(--brand); }
@@ -717,10 +728,8 @@
     <span class="vsepp dashed"></span>
     <button class="cpill proofbtn" id="vProof" type="button"><span class="pfico">▣</span> Proof &amp; file check</button>
   </div>
-  <!-- Quick edit (the chosen v2 side-panel) — opens the slide-out editor that shares state with the main forms -->
-  <div class="float qecluster" id="qecluster">
-    <button class="qec-pill qec-main" id="btnEverything2" type="button"><span class="qeic">⚡</span> Quick edit</button>
-  </div>
+  <!-- Quick edit is now a vertical folder tab attached to the slide-out panel (see #sheet2) -->
+
   <!-- bottom bar = N12 segmented summary: Total | Size | Paper | In hand on the LEFT, Add-to-cart on the RIGHT -->
   <div class="float glasspill f-buy">
     <div class="bb-seg">
@@ -739,6 +748,7 @@
   <!-- Quick edit v2 MOCKUP — same chips, but a drawer that slides in from the LEFT (compare vs top sheet) -->
   <div class="qdim2" id="qdim2"></div>
   <div class="qdrawer" id="sheet2">
+    <button class="qetab" id="btnEverything2" type="button"><span class="qeic">⚡</span><span class="qet-txt">Quick edit</span></button>
     <div class="qdrawer-head"><span>⚡ Quick edit <small>slide-out v2</small></span><button class="qdrawer-x" id="sheet2X" type="button">×</button></div>
     <div class="qdrawer-body" id="sheet2Body"></div>
     <div class="qdrawer-foot">
@@ -830,8 +840,8 @@
       <div class="rn cur" data-scene="0"><span class="ico"><span class="gmini2" style="width:34px;height:46px"></span></span><span><div class="k">Size</div><div class="v" id="rvSize">24 × 36″ · portrait</div></span></div>
       <div class="rn" data-scene="1"><span class="ico"><span class="gsw" id="rvPaperSw" style="background:linear-gradient(135deg,#3a2f55,#5a4a82)"></span></span><span><div class="k">Paper</div><div class="v" id="rvPaper">Satin photo</div></span></div>
       <div class="rn" data-scene="2"><span class="ico"><span class="gfin"></span></span><span><div class="k">Finish</div><div class="v" id="rvFin">None</div></span></div>
-      <div class="rn" data-scene="3"><span class="ico"><span class="gstack2"><i></i><i></i><i></i><i></i></span></span><span><div class="k">Quantity</div><div class="v" id="rvQty">1 · $30 ea</div></span></div>
-      <div class="rn" data-scene="4" data-dock><span class="ico"><span class="gcal2"><span class="bd">JUN</span><span class="dn">16</span></span></span><span><div class="k">In hand</div><div class="v" id="rvWhen">Tue, Jun 16</div></span></div>
+      <div class="rn" data-scene="3"><span class="ico"><span class="gqty2"><span class="qb">QTY</span><span class="qn" id="rvQtyN">1</span></span></span><span><div class="k">Quantity</div><div class="v" id="rvQty">1 · $30 ea</div></span></div>
+      <div class="rn" data-scene="4" data-dock><span class="ico"><span class="gcal2"><span class="bd" id="rvWhenMo">JUN</span><span class="dn" id="rvWhenDy">16</span></span></span><span><div class="k">In hand</div><div class="v" id="rvWhen">Tue, Jun 16</div></span></div>
       <div class="rn" data-scene="5"><span class="ico"><span class="gmini2 dash" style="width:38px;height:30px;font-size:.8rem">↑</span></span><span><div class="k">Artwork</div><div class="v" id="rvArt">add yours</div></span></div>
     </div>
   </div>
@@ -1304,6 +1314,7 @@
     if(maxW/maxH > A){ h=maxH; w=h*A; } else { w=maxW; h=w/A; }
     if(instant){ var tr=p.style.transition; p.style.transition='none'; p.style.width=Math.round(w)+'px'; p.style.height=Math.round(h)+'px'; void p.offsetWidth; p.style.transition=tr; }
     else { p.style.width=Math.round(w)+'px'; p.style.height=Math.round(h)+'px'; }
+    if(typeof positionPfbar==='function') positionPfbar();
   }
   /* reserve vertical room for the active band — the heroWrap CSS transition makes the change GLIDE between steps */
   function fitBand(){ var hw=$('heroWrap'); if(!hw) return;
@@ -1325,6 +1336,7 @@
     $('rvPaper').textContent = PAPER[st.paper].n; $('rvPaperSw').style.background = PAPER[st.paper].sw;
     $('rvFin').textContent = FIN[st.fin].n; $('rvWhen').textContent = st.when;
     $('rvQty').textContent = st.qty+' · '+fmt((PAPER[st.paper].r+FIN[st.fin].r)*sqft()*volMult(st.qty)*(1+st.dAdd))+' ea';
+    var qn=$('rvQtyN'); if(qn){ qn.textContent=st.qty; qn.style.fontSize = st.qty>999?'.58rem' : st.qty>99?'.72rem' : '.88rem'; }   /* quantity tile reflects the count */
     var t=total(); $('price').textContent=fmt(t);
     if($('addTot')) $('addTot').textContent='· '+fmt(t);
     if($('priceEach')) $('priceEach').textContent=st.qty+' · '+fmt(t/st.qty)+'/ea';
@@ -1427,6 +1439,7 @@
     ['passDate','passDate2'].forEach(function(id){ if($(id)) $(id).textContent=info.labelFull||info.label; });
     ['pcD','pcD2'].forEach(function(id){ if($(id)) $(id).textContent=info.dy; });
     ['pcB','pcB2'].forEach(function(id){ var el=$(id); if(el){ if(info.mo) el.textContent=info.mo; el.style.background=grad; } });
+    if($('rvWhenDy')) $('rvWhenDy').textContent=info.dy; if($('rvWhenMo')&&info.mo) $('rvWhenMo').textContent=info.mo;   /* rail In-hand tile mirrors the picked date */
     ['pcW','pcW2'].forEach(function(id){ if($(id)) $(id).textContent=info.wdFull||info.wd; });
     ['passTier','passTier2'].forEach(function(id){ var el=$(id); if(el){ el.textContent=info.tierLabel||''; el.style.background=grad; el.style.boxShadow='none'; } });
     var tm=info.time||'4pm'; qa('.ptime').forEach(function(el){ el.textContent=tm; });
@@ -1440,8 +1453,24 @@
     _bu.addEventListener('drop', function(e){ e.preventDefault(); _bu.classList.remove('over'); var f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0]; uploadArt(f?f.name:null, f?fmtBytes(f.size):null); }); }
   function setPF(ok){ $('poster').classList.toggle('pf-ok', ok); $('pfbar').classList.toggle('pf-ok', ok); }
   /* in Everything view, sit the proof legend right under the hero poster (not at the page bottom) */
-  function positionPfbar(){ var pf=$('pfbar'); if(!pf) return; if(screen.classList.contains('allopts') && pf.classList.contains('show')){ var pr=$('poster').getBoundingClientRect(); pf.style.bottom='auto'; pf.style.top=Math.round(pr.bottom+14)+'px'; pf.style.left=Math.round(pr.left+pr.width/2)+'px'; } else { pf.style.top=''; pf.style.bottom=''; pf.style.left=''; } }
-  function setGuides(on){ st.proof=on; var vb=$('vProof'); if(vb) vb.classList.toggle('act', on); if($('pfbar')) $('pfbar').classList.toggle('show', on); if(on){ setPF(false); setTimeout(computeGuides,50); } qa('.afc-guides').forEach(function(b){ b.classList.toggle('on', on); }); paint(); requestAnimationFrame(positionPfbar); }
+  /* pin the proof legend right ABOVE the hero image — SAME placement in both views.
+     Guided: pfbar is position:absolute in .canvas → offset by the offsetParent rect.
+     Everything: pfbar is position:fixed → offsetParent null → viewport coords.
+     (write-guarded so the rAF follow-loop below is a no-op when the poster isn't moving.) */
+  function positionPfbar(){ var pf=$('pfbar'); if(!pf) return;
+    if(!pf.classList.contains('show')){ pf.style.top=''; pf.style.bottom=''; pf.style.left=''; pf._lt=pf._ll=null; return; }
+    var p=$('poster'); if(!p) return; var pr=p.getBoundingClientRect(); if(!pr.width) return;
+    var op=pf.offsetParent, or=op?op.getBoundingClientRect():{top:0,left:0};
+    var nt=Math.round(pr.top-or.top-pf.offsetHeight-12), nl=Math.round(pr.left+pr.width/2-or.left);
+    pf.style.bottom='auto';
+    if(pf._lt!==nt){ pf.style.top=nt+'px'; pf._lt=nt; }
+    if(pf._ll!==nl){ pf.style.left=nl+'px'; pf._ll=nl; } }
+  /* follow-loop: while the legend is shown, re-pin it every frame so it glides WITH the poster
+     through the view-switch glide + step-change refits (instead of snapping to the final spot). */
+  var _pfRAF=0;
+  function pfTrackTick(){ var pf=$('pfbar'); if(!pf || !pf.classList.contains('show')){ _pfRAF=0; return; } positionPfbar(); _pfRAF=requestAnimationFrame(pfTrackTick); }
+  function startPfTrack(){ if(!_pfRAF) _pfRAF=requestAnimationFrame(pfTrackTick); }
+  function setGuides(on){ st.proof=on; var vb=$('vProof'); if(vb) vb.classList.toggle('act', on); if($('pfbar')) $('pfbar').classList.toggle('show', on); if(on){ setPF(false); setTimeout(computeGuides,50); } qa('.afc-guides').forEach(function(b){ b.classList.toggle('on', on); }); paint(); requestAnimationFrame(function(){ positionPfbar(); if(on) startPfTrack(); }); }
   var _vp=$('vProof'); if(_vp) _vp.addEventListener('click', function(){ setGuides(!st.proof); });
   window.addEventListener('scroll', positionPfbar); window.addEventListener('resize', positionPfbar);
   $('pfFix').addEventListener('click', function(){ setPF(true); });
@@ -1490,8 +1519,8 @@
     screen.classList.add('switching');                       /* hero glide + new panel fade-in + band pop, ALL now */
     setTimeout(function(){ if(st.proof) computeGuides(); },130);
     /* the newly-shown panel needs its qty subtext + custom-box height (re)computed once it's laid out */
-    requestAnimationFrame(function(){ if(typeof updateQtyTiles==='function') updateQtyTiles(); if(typeof matchQccHeight==='function') matchQccHeight(); });
-    clearTimeout(setDensity._t); setDensity._t=setTimeout(function(){ screen.classList.remove('switching'); if(typeof updateQtyTiles==='function') updateQtyTiles(); if(typeof matchQccHeight==='function') matchQccHeight(); }, 1900);
+    requestAnimationFrame(function(){ if(typeof updateQtyTiles==='function') updateQtyTiles(); if(typeof matchQccHeight==='function') matchQccHeight(); if(typeof positionPfbar==='function') positionPfbar(); if(st.proof && typeof startPfTrack==='function') startPfTrack(); });
+    clearTimeout(setDensity._t); setDensity._t=setTimeout(function(){ screen.classList.remove('switching'); if(typeof updateQtyTiles==='function') updateQtyTiles(); if(typeof matchQccHeight==='function') matchQccHeight(); if(typeof positionPfbar==='function') positionPfbar(); }, 1900);
   }
   $('dStep').addEventListener('click', function(){ setDensity(false); });
   $('dAll').addEventListener('click', function(){ setDensity(true); });
@@ -1529,8 +1558,12 @@
       if(typeof syncOrient==='function') syncOrient();
       syncV2Custom();
     }
-    if(o) qeCloseAll(); $('sheet2').classList.toggle('open', o); $('qdim2').classList.toggle('open', o); }
-  var _be2=$('btnEverything2'); if(_be2) _be2.addEventListener('click', function(){ openSheet2(true); });
+    if(o) qeCloseAll(); var sh=$('sheet2'); if(sh) sh.classList.remove('peek'); $('sheet2').classList.toggle('open', o); $('qdim2').classList.toggle('open', o); }
+  /* the folder tab toggles the panel; hovering it makes the panel peek out, retracting when the cursor leaves */
+  var _be2=$('btnEverything2'); if(_be2) _be2.addEventListener('click', function(){ openSheet2(!$('sheet2').classList.contains('open')); });
+  (function(){ var sh=$('sheet2'); if(!sh) return;
+    sh.addEventListener('mouseenter', function(){ if(!sh.classList.contains('open')) sh.classList.add('peek'); });
+    sh.addEventListener('mouseleave', function(){ sh.classList.remove('peek'); }); })();
   var _s2x=$('sheet2X'); if(_s2x) _s2x.addEventListener('click', function(){ openSheet2(false); });
   var _qd2=$('qdim2'); if(_qd2) _qd2.addEventListener('click', function(){ openSheet2(false); });
   var _s2b=$('sheet2Body'); if(_s2b) _s2b.addEventListener('click', function(e){ var o=e.target.closest('[data-paper],[data-size],[data-fin],[data-qty],[data-orient]'); if(o) applyOpt(o); });
@@ -1585,13 +1618,46 @@
     var tg=$('proofToggle'); if(tg) tg.textContent=proofWarn?'◂ Show a clean file':'▸ Preview a flagged file';
     var ap=$('proofApprove'); if(ap) ap.textContent=proofWarn?'Approve anyway →':'Approve proof →'; }
   /* in-context file-check card (lives in the artwork step; opt-in 'Inspect' opens the full-screen view) */
-  function artCardHTML(state){ if(state==='checking') return '<div class="afc afc-checking"><div class="afc-spin"></div><div class="afc-ct">Checking your file…</div><div class="afc-cs">resolution · bleed · safe-zone · color</div></div>';
-    var dt=dims(), c=proofChecksData(), lis=c.items.map(function(x){ return '<li class="afc-ck '+x[0]+'"><span class="afc-ck-ic"></span><span class="afc-ck-t">'+x[1]+'</span><span class="afc-ck-d">'+x[2]+'</span></li>'; }).join('');
-    return '<div class="afc"><div class="afc-hd"><span class="afc-name">'+curFile.name+'<small> · '+curFile.size+'</small></span><button class="afc-link afc-replace" type="button">Replace</button></div>'
-      +'<div class="afc-dpi"><span class="afc-dpi-n">'+c.dpi+'</span><span class="afc-dpi-u">DPI<small>at '+dt[0]+'×'+dt[1]+'″</small></span><span class="afc-badge '+c.bcls+'">'+c.badge+'</span></div>'
-      +'<ul class="afc-checks">'+lis+'</ul>'
-      +'<div class="afc-acts"><button class="afc-btn afc-guides'+(st.proof?' on':'')+'" type="button">⊞ Guides</button><button class="afc-btn afc-inspect" type="button">⤢ Inspect</button><button class="afc-cta afc-approve'+(proofApproved?' done':'')+'" type="button">'+(proofApproved?'✓ Approved':(proofWarn?'Approve anyway →':'Approve proof →'))+'</button></div></div>'; }
-  function renderArtCard(state){ ['btnUpload','coUpload'].forEach(function(id){ var z=$(id); if(z){ z.classList.add('filled'); z.innerHTML=artCardHTML(state); } }); if(typeof fitBand==='function'){ fitBand(); fitPoster(); } }
+  /* chosen file-check cards — Guided = GX9 (boarding pass), Everything = DC1 (deadline card) */
+  function fckTick(warn){ return warn
+    ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>'
+    : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.801 10A10 10 0 1 1 17 3.335"/><path d="m9 11 3 3L22 4"/></svg>'; }
+  function fckData(){ var c=proofChecksData(), d=dims();
+    var cells=[ {l:'Resolution', v:c.dpi+' DPI', ok:c.items[0][0]==='ok'}, {l:'Bleed', v:'0.125"', ok:c.items[1][0]==='ok'}, {l:'Safe zone', v:(c.items[2][0]==='ok'?'Clear':'Tight'), ok:c.items[2][0]==='ok'}, {l:'Color', v:'CMYK', ok:c.items[3][0]==='ok'} ];
+    var fails=cells.filter(function(x){return !x.ok;}).length;
+    return { d:d, dpi:c.dpi, cells:cells, fails:fails, warn:fails>0 }; }
+  function fckApprove(extra){ return '<button class="fck-btn afc-approve'+(proofApproved?' done':'')+'" type="button"'+(extra||'')+'>'+(proofApproved?'✓ Approved':(proofWarn?'Approve anyway →':'Approve proof →'))+'</button>'; }
+  function fckChecking(){ return '<div class="afc afc-checking"><div class="afc-spin"></div><div class="afc-ct">Checking your file…</div><div class="afc-cs">resolution · bleed · safe-zone · color</div></div>'; }
+  function fckGuided(){ var x=fckData(), w=x.warn, d=x.d;
+    var chip = w ? '⚠ '+x.fails+' issue'+(x.fails>1?'s':'') : '✓ 4/4 passed';
+    var cells = x.cells.map(function(c){ return '<div class="fck-cell '+(c.ok?'ok':'bad')+'"><span class="cl">'+c.l+'</span><span class="cv">'+c.v+'</span></div>'; }).join('');
+    return '<div class="fck fck-pass'+(w?' warn':'')+'">'
+      +'<div class="fck-pcheck"><span class="fck-bigchk'+(w?' warn':'')+'">'+fckTick(w)+'</span><span class="fck-passlbl'+(w?' warn':'')+'">'+(w?'Issue':'Passed')+'</span></div>'
+      +'<div class="fck-pvd"></div>'
+      +'<div class="fck-pbody"><div class="fck-hdrow"><span class="fck-h">'+(w?'Needs a look':'Ready to print')+'</span><span class="fck-chip'+(w?' warn':'')+'" style="margin-left:auto">'+chip+'</span></div>'
+        +'<div class="fck-fline"><span class="fck-fn">'+curFile.name+'</span><span>· '+curFile.size+'</span><button class="fck-lnk mut afc-replace" type="button" style="margin-left:auto">Replace</button></div>'
+        +'<div class="fck-dim" style="font-size:1.5rem;margin:5px 0 11px">'+d[0]+' × '+d[1]+' <span class="u">in</span></div>'
+        +'<div class="fck-cells4">'+cells+'</div></div>'
+      +'<div class="fck-stub">'+fckApprove(' style="width:100%"')+'<button class="fck-ghost afc-inspect" type="button" style="width:100%">Inspect</button></div>'
+      +'</div>'; }
+  function fckEverything(){ var x=fckData(), w=x.warn, d=x.d;
+    var chip = w ? '⚠ '+x.fails+' issue'+(x.fails>1?'s':'') : '4 / 4';
+    var stats = '<div class="fck-cell"><span class="cl">Size</span><span class="cv">'+d[0]+'×'+d[1]+'"</span></div>'
+      +'<div class="fck-cell '+(x.cells[0].ok?'':'bad')+'"><span class="cl">Res</span><span class="cv">'+x.dpi+'dpi</span></div>'
+      +'<div class="fck-cell"><span class="cl">Color</span><span class="cv">CMYK</span></div>'
+      +'<div class="fck-cell '+(x.cells[1].ok?'ok':'bad')+'"><span class="cl">Bleed</span><span class="cv">0.125"</span></div>';
+    return '<div class="fck fck-dc"><div class="fck-top">'
+      +'<div class="fck-lc"><span class="fck-bigchk'+(w?' warn':'')+'">'+fckTick(w)+'</span><span class="fck-passlbl'+(w?' warn':'')+'">'+(w?'Issue':'Passed')+'</span></div>'
+      +'<div class="fck-dv"></div>'
+      +'<div class="fck-det"><div class="fck-hdrow"><span class="fck-h">'+(w?'Needs a look':'Ready to print')+'</span><span class="fck-chip'+(w?' warn':'')+'" style="margin-left:auto">'+chip+'</span></div>'
+        +'<div class="fck-file" style="margin-bottom:11px"><b>'+curFile.name+'</b> · '+curFile.size+'</div>'
+        +'<div class="fck-cells4">'+stats+'</div></div></div>'
+      +'<div class="fck-tools"><button class="fck-lnk afc-inspect" type="button">⤢ Inspect</button><button class="fck-lnk mut afc-replace" type="button">Replace file</button>'+fckApprove(' style="margin-left:auto"')+'</div>'
+      +'</div>'; }
+  function renderArtCard(state){
+    var gd=$('btnUpload'); if(gd){ gd.classList.add('filled'); gd.innerHTML = state==='checking'?fckChecking():fckGuided(); }
+    var ev=$('coUpload'); if(ev){ ev.classList.add('filled'); ev.innerHTML = state==='checking'?fckChecking():fckEverything(); }
+    if(typeof fitBand==='function'){ fitBand(); fitPoster(); } }
   function setProofFile(){ var d=dims(); if($('proofFile')) $('proofFile').textContent=curFile.name+' · '+d[0]+' × '+d[1]+'″ · '+curFile.size; if($('proofFile2')) $('proofFile2').textContent=curFile.name+' · '+curFile.size; }
   function applyHeroArt(on){ var p=$('poster'); if(p) p.classList.toggle('hasart', on!==false); }
   function openOverlay(){ var ov=$('proofov'); if(ov){ ov.classList.add('open'); ov.setAttribute('aria-hidden','false'); } }
