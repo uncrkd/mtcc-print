@@ -708,11 +708,18 @@
   @media(max-width:1240px){ .bb-trust{ display:none; } }
   .oslip-trust{ text-align:center; font-size:.62rem; font-weight:600; color:var(--sub); margin-top:11px; }
   .oslip-tbl .a.oslip-promise{ font-weight:800; color:var(--green); font-size:.56rem; letter-spacing:.06em; text-transform:uppercase; align-self:center; }
-  .band .oslip-band{ margin:12px auto 0; text-align:left; max-width:560px; }
-  .band .oslip-band .oslip-pad{ padding:15px 22px 14px; }
-  .band .oslip-band .oslip-tbl{ gap:8px 12px; font-size:.8rem; }
-  .band .oslip-band .oslip-num{ font-size:1.6rem; }
-  .band .oslip-band .oslip-add{ margin-top:12px; padding:10px; }
+  /* Guided band-6 slip = boarding-pass shape: short like the In-hand card, stub on the right */
+  .band .oslip-band{ margin:12px auto 0; text-align:left; max-width:760px; }
+  .oslip-band .oslip-row{ display:flex; align-items:stretch; }
+  .oslip-band .oslip-main{ flex:1; min-width:0; padding:14px 20px 13px; }
+  .oslip-band .oslip-main .oslip-hd{ margin-bottom:10px; }
+  .oslip-band .oslip-tbl{ gap:7px 12px; font-size:.78rem; }
+  .oslip-band .oslip-stub{ width:216px; flex:none; border-left:2px dashed #e0d6f2; background:#faf8fd; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; gap:3px; padding:13px 16px; position:relative; }
+  .oslip-band .oslip-stub::before, .oslip-band .oslip-stub::after{ content:''; position:absolute; left:-9px; width:16px; height:16px; border-radius:50%; background:#efe9fb; }
+  .oslip-band .oslip-stub::before{ top:-8px; } .oslip-band .oslip-stub::after{ bottom:-8px; }
+  .oslip-band .oslip-stub .oslip-num{ font-size:1.7rem; }
+  .oslip-band .oslip-stub .oslip-add{ margin-top:9px; padding:10px 12px; font-size:.8rem; }
+  .oslip-band .oslip-stub .oslip-trust{ margin-top:7px; font-size:.52rem; line-height:1.45; }
   /* Add-to-cart journey: locked (lock chip) → approve → unlocked pulse (✓) → click → added (green) */
   .add .addlock{ display:none; align-items:center; margin-right:2px; opacity:.85; }
   .add.locked .addlock{ display:inline-flex; }
@@ -735,6 +742,7 @@
   .pcd.idle .ptl{ font-size:.56rem; letter-spacing:.04em; text-transform:none; color:var(--sub); font-weight:700; line-height:1.45; }
   /* warn-path: reassurance + honest consequence inside the file-check cards */
   .fck-rea{ font-size:.6rem; font-weight:600; color:var(--sub); margin-top:9px; line-height:1.5; } .fck-rea b{ color:var(--bdark); }
+  .fck-dimcap{ font-size:.54rem; font-weight:600; color:var(--muted); margin:0 0 10px; }
   .fck-btn.fixit{ background:linear-gradient(110deg,#10b981,#059669); box-shadow:0 8px 18px -4px rgba(5,150,105,.42); }
   .fck-chip.okd{ background:linear-gradient(110deg,#10b981,#059669); box-shadow:0 3px 10px rgba(5,150,105,.3); }
   .prooffix{ display:none; width:100%; align-items:center; justify-content:center; gap:8px; background:linear-gradient(110deg,#10b981,#059669); color:#fff; border:0; border-radius:12px; height:44px; font-weight:800; font-size:.82rem; cursor:pointer; box-shadow:0 8px 18px -4px rgba(5,150,105,.4); margin-bottom:10px; }
@@ -1204,18 +1212,25 @@
   <div class="band off" data-band="6">
     <div class="bq">Ready to <em>print.</em></div>
     <div class="bs">The full breakdown — one look, then it's in your cart.</div>
+    <!-- Guided review slip: BOARDING-PASS shape (short, like the In-hand card) — summary left · dashed
+         divider · total + Add-to-cart stub right. The Everything Step-07 slip keeps the tall receipt form. -->
     <div class="oslip oslip-band">
-      <div class="oslip-pad">
-        <div class="oslip-hd"><span class="oslip-biz">Order Summary</span><span class="oslip-kk">Packing slip</span></div>
-        <div class="oslip-tbl">
-          <span class="h q">QTY</span><span class="h">DESCRIPTION</span><span class="h a">AMT</span>
-          <span class="q" id="gslipQty">1</span><span class="d" id="gslipDesc">Poster 36×48″ satin photo</span><span class="a" id="gslipSub">$60.00</span>
-          <span class="q">—</span><span class="d" id="gslipFin">Finish · none</span><span class="a" id="gslipFinAmt">$0.00</span>
-          <span class="q">⏱</span><span class="d">In hand · <b id="gslipDate">Tue, June 16 · by 4pm</b></span><span class="a oslip-promise">promised</span>
+      <div class="oslip-row">
+        <div class="oslip-main">
+          <div class="oslip-hd"><span class="oslip-biz">Order Summary</span><span class="oslip-kk">Packing slip</span></div>
+          <div class="oslip-tbl">
+            <span class="h q">QTY</span><span class="h">DESCRIPTION</span><span class="h a">AMT</span>
+            <span class="q" id="gslipQty">1</span><span class="d" id="gslipDesc">Poster 36×48″ satin photo</span><span class="a" id="gslipSub">$60.00</span>
+            <span class="q">—</span><span class="d" id="gslipFin">Finish · none</span><span class="a" id="gslipFinAmt">$0.00</span>
+            <span class="q">⏱</span><span class="d">In hand · <b id="gslipDate">Tue, June 16 · by 4pm</b></span><span class="a oslip-promise">promised</span>
+          </div>
         </div>
-        <div class="oslip-trow"><span class="oslip-tl">TOTAL</span><span class="oslip-num" id="gslipTotal">$60.00</span></div>
-        <button class="oslip-add" id="gslipAdd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg><span class="addlbl">Add to cart</span></button>
-        <div class="oslip-trust">Free proof · human-checked before press · HST is the only thing added at checkout</div>
+        <div class="oslip-stub">
+          <span class="oslip-tl">TOTAL</span>
+          <span class="oslip-num" id="gslipTotal">$60.00</span>
+          <button class="oslip-add" id="gslipAdd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg><span class="addlbl">Add to cart</span></button>
+          <div class="oslip-trust">Free proof · human-checked before press · HST added at checkout</div>
+        </div>
       </div>
     </div>
   </div>
@@ -1761,7 +1776,8 @@
       +'<div class="fck-pvd"></div>'
       +'<div class="fck-pbody"><div class="fck-hdrow"><span class="fck-h">'+head+'</span>'+fckChipHtml(x)+'</div>'
         +'<div class="fck-fline"><span class="fck-fn">'+curFile.name+'</span><span>· '+curFile.size+'</span><button class="fck-lnk mut afc-replace" type="button" style="margin-left:auto">Replace</button></div>'
-        +'<div class="fck-dim" style="font-size:1.5rem;margin:5px 0 11px">'+d[0]+' × '+d[1]+' <span class="u">in</span></div>'
+        +'<div class="fck-dim" style="font-size:1.5rem;margin:5px 0 2px">'+d[0]+' × '+d[1]+' <span class="u">in</span></div>'
+        +'<div class="fck-dimcap">ordered print size — your file is proofed against this</div>'
         +'<div class="fck-cells4">'+cells+'</div>'+fckRea()+'</div>'
       +'<div class="fck-stub">'+fckApprove(' style="width:100%"')+fckAsIs()+'<button class="fck-ghost afc-inspect" type="button" style="width:100%">Inspect</button></div>'
       +'</div>'; }
@@ -1770,7 +1786,7 @@
     var head = eff ? 'Needs a look' : (x.warn ? 'Approved as-is' : 'Ready to print');
     /* DC1 cells (GAP 10): show the SAME checks the chip counts — Safe zone included, so "⚠ 2 issues"
        always matches two visible amber cells. Size is the neutral dimension display. */
-    var stats = '<div class="fck-cell"><span class="cl">Size</span><span class="cv">'+d[0]+'×'+d[1]+'"</span></div>'
+    var stats = '<div class="fck-cell"><span class="cl">Print size</span><span class="cv">'+d[0]+'×'+d[1]+'"</span></div>'
       +'<div class="fck-cell '+(x.cells[0].ok?'ok':'bad')+'"><span class="cl">Res</span><span class="cv">'+x.dpi+'dpi</span></div>'
       +'<div class="fck-cell '+(x.cells[2].ok?'ok':'bad')+'"><span class="cl">Safe zone</span><span class="cv">'+x.cells[2].v+'</span></div>'
       +'<div class="fck-cell '+(x.cells[1].ok?'ok':'bad')+'"><span class="cl">Bleed</span><span class="cv">0.125"</span></div>';
