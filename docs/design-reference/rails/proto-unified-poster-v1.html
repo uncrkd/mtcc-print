@@ -4,8 +4,11 @@
 <meta charset="utf-8">
 <!-- DEV cache-bust: a plain reload self-redirects to a unique URL so the browser can never serve a stale build -->
 <script>(function(){ try{ if(!/[?&]v=/.test(location.search)){ location.replace(location.pathname + (location.search?location.search+'&':'?') + 'v=' + Date.now()); } }catch(e){} })();</script><meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate">
-<!-- NB: no <meta name="viewport"> on purpose. On desktop it can pin the layout viewport to device-width
-     (smaller than the window on portrait/high-DPI/multi-monitor setups), boxing the page. Desktop uses the window. -->
+<!-- Viewport meta REINSTATED (v2b-mobile-chassis, 2026-07-03). The round-29k "desktop boxing" fear does
+     not reproduce on the production stack: every live storefront page ships this exact meta and renders
+     full-window on desktop (incl. this multi-monitor setup). Desktop browsers ignore width=device-width;
+     mobile REQUIRES it or the page renders zoomed-out and dead. -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <meta http-equiv="pragma" content="no-cache">
 <meta http-equiv="expires" content="0">
@@ -747,6 +750,51 @@
   .fck-chip.okd{ background:linear-gradient(110deg,#10b981,#059669); box-shadow:0 3px 10px rgba(5,150,105,.3); }
   .prooffix{ display:none; width:100%; align-items:center; justify-content:center; gap:8px; background:linear-gradient(110deg,#10b981,#059669); color:#fff; border:0; border-radius:12px; height:44px; font-weight:800; font-size:.82rem; cursor:pointer; box-shadow:0 8px 18px -4px rgba(5,150,105,.4); margin-bottom:10px; }
   .prooffix.show{ display:inline-flex; }
+  /* ===== v2b-mobile-chassis (390px spike, 2026-07-03): GUIDED is the mobile chassis. This layer proves
+     the fixed-canvas .screen survives a phone; the full v2 mobile build (Everything adaptation, touch
+     targets audit, real-device pass) is Stage-2 v2c-mobile. Desktop (>760px) is untouched. ===== */
+  @media (max-width:760px){
+    /* header: keep brand + utility promo, drop the desktop-only rows */
+    .uhdr .subrow, .uhdr .search, .uhdr .allbtn{ display:none; }
+    .uhdr .util{ padding:0 12px; gap:8px; } .uhdr .util .cat{ display:none; }
+    .uhdr .main{ height:50px; padding:0 14px; }
+    /* controls: view toggle compact, top-left; proof button joins it; Everything hidden on phones
+       (Guided is the mobile chassis — the Everything adaptation is Stage-2 scope) */
+    .dtoggle{ top:104px; left:10px; right:auto; padding:3px 6px; min-height:44px; }
+    .dtoggle .cvlabel{ display:none; }
+    #dAll{ display:none; }
+    .f-ctrls{ display:none; }   /* hero zoom/flip cluster — Stage-2 mobile treatment */
+    /* stage: hero clears the floating chrome, no desktop side padding (rail is hidden) */
+    .screen:not(.allopts) .heroWrap{ padding-left:16px; padding-right:16px; padding-top:56px; }
+    .leftzone{ display:none; }   /* the rail — Guided steps drive navigation via bands + Next */
+    /* bands: full-width, tighter padding, scroll internally instead of eating the hero */
+    .band{ padding:8px 12px 6px; max-height:56vh; overflow-y:auto; overscroll-behavior:contain; }
+    .band .optrow, .band .sizewrap{ gap:8px; }
+    .ovdiv{ display:none; }
+    .ocA{ width:104px; padding:10px 8px; }
+    .ocA.qty{ width:88px; }
+    .bandwrap .qpin .qcc{ width:104px; }
+    .pass{ flex-wrap:wrap; }
+    .pass .pcal{ margin:14px 0 0 14px; }
+    .pass .pstub2{ flex:1 1 100%; width:auto; border-left:0; border-top:2px dashed #d8ccf2; flex-direction:row; align-items:center; gap:14px; text-align:left; padding:11px 16px; }
+    .pass .pstub2::before, .pass .pstub2::after{ display:none; }
+    .oslip-band .oslip-row{ flex-direction:column; }
+    .oslip-band .oslip-stub{ width:auto; border-left:0; border-top:2px dashed #e0d6f2; }
+    .oslip-band .oslip-stub::before, .oslip-band .oslip-stub::after{ display:none; }
+    .fck-pass{ flex-wrap:wrap; }
+    .fck-pass .fck-stub{ width:100%; border-left:0; border-top:2px dashed #e0d6f2; flex-direction:row; align-items:center; }
+    .fck-pass .fck-stub::before, .fck-pass .fck-stub::after{ display:none; }
+    /* buy bar: Total(+each) + In hand + Add. Qty/Size/Paper cells + Save hide; 44px targets hold */
+    .f-buy{ padding:0 12px; gap:10px; height:clamp(76px,10vh,92px); }
+    .f-buy .bb-cell:nth-child(2), .f-buy .bb-cell:nth-child(3), .f-buy .bb-cell:nth-child(4){ display:none; }
+    .f-buy .bb-total .t{ font-size:1.5rem; }
+    .savebuild, .f-buy-actions .actdiv{ display:none; }
+    .f-buy .add{ padding:0 18px; height:48px; font-size:.9rem; }
+    .qetab{ display:none; }      /* quick-edit tab — Stage-2 mobile treatment (bottom-sheet) */
+    .scroll-hint{ display:none; }
+    .protobadge{ top:auto; bottom:8px; }
+    .prototag{ display:none; }
+  }
 </style>
 </head>
 <body>
@@ -1869,6 +1917,8 @@
   function smooth(y){ window.scrollTo({ top:y, behavior:'smooth' }); }
   $('scrollHint').addEventListener('click', function(){ var s=document.querySelector('.seo'); smooth(s?s.offsetTop-8:window.innerHeight); });
   var cta=$('ctaTop'); if(cta) cta.addEventListener('click', function(){ smooth(0); });
+  /* v2b-mobile-chassis: phones run the GUIDED chassis — the Everything adaptation is Stage-2 scope */
+  if(window.innerWidth < 761 && screen.classList.contains('allopts')) setDensity(false);
   paint();
   placeAllThumbs(); requestAnimationFrame(placeAllThumbs); setTimeout(placeAllThumbs, 250);   /* initial thumb placement (after fonts/layout settle) */
 })();
