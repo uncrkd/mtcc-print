@@ -699,6 +699,46 @@
   .protobadge b{ font-weight:900; color:var(--brand); }
   @media(max-width:720px){ .protobadge{ font-size:.5rem; padding:4px 10px; } }
   /* v3 (compact) + v4 (dropdowns) drawer CSS removed — v2 panel is the chosen Quick-edit treatment */
+  /* ===== Phase-A additions (2026-07-03, GAP-REPORT fixes): gate nudge · lock/unlock/added CTA states ·
+     per-unit in the bar · trust at the money surfaces · Guided band-6 slip · paper deltas · countdown idle ===== */
+  .bb-each{ font-family:'Inter',sans-serif; font-size:.7rem; font-weight:700; color:var(--sub); margin-top:2px; }
+  .bb-trust{ flex:1 1 auto; min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; text-align:center; padding:0 8px; }
+  .bb-trust .bt-rev{ font-size:.66rem; font-weight:700; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; } .bb-trust .bt-rev i{ font-style:italic; color:var(--sub); font-weight:600; }
+  .bb-trust .bt-line{ font-size:.58rem; font-weight:600; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; }
+  @media(max-width:1240px){ .bb-trust{ display:none; } }
+  .oslip-trust{ text-align:center; font-size:.62rem; font-weight:600; color:var(--sub); margin-top:11px; }
+  .oslip-tbl .a.oslip-promise{ font-weight:800; color:var(--green); font-size:.56rem; letter-spacing:.06em; text-transform:uppercase; align-self:center; }
+  .band .oslip-band{ margin:12px auto 0; text-align:left; max-width:560px; }
+  .band .oslip-band .oslip-pad{ padding:15px 22px 14px; }
+  .band .oslip-band .oslip-tbl{ gap:8px 12px; font-size:.8rem; }
+  .band .oslip-band .oslip-num{ font-size:1.6rem; }
+  .band .oslip-band .oslip-add{ margin-top:12px; padding:10px; }
+  /* Add-to-cart journey: locked (lock chip) → approve → unlocked pulse (✓) → click → added (green) */
+  .add .addlock{ display:none; align-items:center; margin-right:2px; opacity:.85; }
+  .add.locked .addlock{ display:inline-flex; }
+  .add.unlocked{ background:linear-gradient(120deg,#10b981,#059669); box-shadow:0 10px 24px -4px rgba(5,150,105,.5), inset 0 1px 0 rgba(255,255,255,.28); }
+  .add.added, .oslip-add.added{ background:linear-gradient(120deg,#10b981,#059669); }
+  /* attention pulse on the artwork step when the gate walks the customer there */
+  @keyframes gatePulse{ 0%{ box-shadow:0 0 0 0 rgba(124,58,237,.5);} 100%{ box-shadow:0 0 0 22px rgba(124,58,237,0);} }
+  .attn{ animation:gatePulse .9s var(--ease) 2; }
+  .gate-nudge{ position:fixed; z-index:70; transform:translate(-50%,-100%); background:#1a1625; color:#fff; font-size:.72rem; font-weight:700; padding:9px 15px; border-radius:11px; box-shadow:0 10px 30px rgba(20,10,50,.35); pointer-events:none; opacity:0; transition:opacity .25s var(--ease), transform .25s var(--ease); white-space:nowrap; }
+  .gate-nudge.show{ opacity:1; transform:translate(-50%,calc(-100% - 9px)); }
+  .gate-nudge::after{ content:''; position:absolute; left:50%; bottom:-5px; transform:translateX(-50%) rotate(45deg); width:10px; height:10px; background:#1a1625; }
+  /* paper tiles: live total-impact delta under the feel sublabel */
+  .bdelta{ font-size:clamp(.53rem,.74vw,.63rem); font-weight:800; margin-top:3px; }
+  .bdelta.inc{ color:var(--green); } .bdelta.up{ color:var(--bdark); } .bdelta.dn{ color:var(--green); }
+  /* qty next-break nudge */
+  .qnudge b{ color:var(--green); }
+  #coQtyNudge{ margin-top:10px; font-size:.66rem; font-weight:700; color:#9b7fd4; min-height:16px; }
+  /* countdown idle (no date picked yet — a countdown you chose is service, not pressure) */
+  .pcd.idle .pt{ display:none; }
+  .pcd.idle .ptl{ font-size:.56rem; letter-spacing:.04em; text-transform:none; color:var(--sub); font-weight:700; line-height:1.45; }
+  /* warn-path: reassurance + honest consequence inside the file-check cards */
+  .fck-rea{ font-size:.6rem; font-weight:600; color:var(--sub); margin-top:9px; line-height:1.5; } .fck-rea b{ color:var(--bdark); }
+  .fck-btn.fixit{ background:linear-gradient(110deg,#10b981,#059669); box-shadow:0 8px 18px -4px rgba(5,150,105,.42); }
+  .fck-chip.okd{ background:linear-gradient(110deg,#10b981,#059669); box-shadow:0 3px 10px rgba(5,150,105,.3); }
+  .prooffix{ display:none; width:100%; align-items:center; justify-content:center; gap:8px; background:linear-gradient(110deg,#10b981,#059669); color:#fff; border:0; border-radius:12px; height:44px; font-weight:800; font-size:.82rem; cursor:pointer; box-shadow:0 8px 18px -4px rgba(5,150,105,.4); margin-bottom:10px; }
+  .prooffix.show{ display:inline-flex; }
 </style>
 </head>
 <body>
@@ -733,15 +773,17 @@
   <!-- bottom bar = N12 segmented summary: Total | Size | Paper | In hand on the LEFT, Add-to-cart on the RIGHT -->
   <div class="float glasspill f-buy">
     <div class="bb-seg">
-      <div class="bb-cell bb-total"><span class="bb-l">Total <span class="pdelta" id="pdelta"></span></span><span class="t" id="price">$60.00</span></div>
+      <div class="bb-cell bb-total"><span class="bb-l">Total <span class="pdelta" id="pdelta"></span></span><span class="t" id="price">$60.00</span><span class="bb-each" id="bbEach" style="display:none">$60.00 /ea</span></div>
+      <div class="bb-cell"><span class="bb-l">Qty</span><span class="bb-v" id="bbQty">1</span></div>
       <div class="bb-cell"><span class="bb-l">Size</span><span class="bb-v" id="bbSize">36 × 48″</span></div>
       <div class="bb-cell"><span class="bb-l">Paper</span><span class="bb-v" id="bbPaper">Satin photo</span></div>
       <div class="bb-cell"><span class="bb-l">In hand</span><span class="bb-v" id="bbWhen">Tue, Jun 16</span></div>
     </div>
+    <div class="bb-trust"><span class="bt-rev">★★★★★ <i>"Same price they quoted, no surprises."</i> — Priya S.</span><span class="bt-line">Free proof · human-checked before press · HST is the only thing added at checkout</span></div>
     <div class="f-buy-actions">
       <button class="savebuild" type="button" id="saveBuild">Save build</button>
       <span class="actdiv"></span>
-      <button class="add"><svg class="addcart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg> Add to cart <b class="addtot" id="addTot">· $60.00</b></button>
+      <button class="add locked"><span class="addlock" title="Artwork approval unlocks checkout"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span><svg class="addcart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg> <span class="addlbl">Add to cart</span> <b class="addtot" id="addTot">· $60.00</b></button>
     </div>
   </div>
 
@@ -753,14 +795,15 @@
     <div class="qdrawer-body" id="sheet2Body"></div>
     <div class="qdrawer-foot">
       <div class="bb-seg">
-        <div class="bb-cell bb-total"><span class="bb-l">Total <span class="pdelta" id="pdelta2"></span></span><span class="t" id="drawerTotal">$60.00</span></div>
+        <div class="bb-cell bb-total"><span class="bb-l">Total <span class="pdelta" id="pdelta2"></span></span><span class="t" id="drawerTotal">$60.00</span><span class="bb-each" id="drawerEach" style="display:none">$60.00 /ea</span></div>
+        <div class="bb-cell"><span class="bb-l">Qty</span><span class="bb-v" id="drawerQty">1</span></div>
         <div class="bb-cell"><span class="bb-l">Size</span><span class="bb-v" id="drawerSize">36 × 48″</span></div>
         <div class="bb-cell"><span class="bb-l">In hand</span><span class="bb-v" id="drawerWhen">Tue, Jun 16</span></div>
       </div>
       <div class="qdf-acts">
         <button class="savebuild qdf-save" type="button">Save build</button>
         <span class="actdiv"></span>
-        <button class="add qdf-add" type="button"><svg class="addcart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg> Add to cart <b class="addtot" id="addTot2">· $60.00</b></button>
+        <button class="add qdf-add locked" type="button"><span class="addlock" title="Artwork approval unlocks checkout"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span><svg class="addcart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg> <span class="addlbl">Add to cart</span> <b class="addtot" id="addTot2">· $60.00</b></button>
       </div>
     </div>
   </div>
@@ -824,6 +867,7 @@
         <ul class="checklist" id="checkList"></ul>
         <button class="proof-toggle" id="proofToggle" type="button">▸ Preview a flagged file</button>
         <div class="proofside-spacer"></div>
+        <button class="prooffix afc-fix" id="proofFixBtn" type="button">✦ Fix it — upscale to 300 dpi</button>
         <div class="proofside-foot">
           <button class="proofreplace" id="proofReplace" type="button">↻ Replace</button>
           <button class="proofapprove" id="proofApprove" type="button">Approve proof →</button>
@@ -842,7 +886,8 @@
       <div class="rn" data-scene="2"><span class="ico"><span class="gfin"></span></span><span><div class="k">Finish</div><div class="v" id="rvFin">None</div></span></div>
       <div class="rn" data-scene="3"><span class="ico"><span class="gqty2"><span class="qb">QTY</span><span class="qn" id="rvQtyN">1</span></span></span><span><div class="k">Quantity</div><div class="v" id="rvQty">1 · $30 ea</div></span></div>
       <div class="rn" data-scene="4" data-dock><span class="ico"><span class="gcal2"><span class="bd" id="rvWhenMo">JUN</span><span class="dn" id="rvWhenDy">16</span></span></span><span><div class="k">In hand</div><div class="v" id="rvWhen">Tue, Jun 16</div></span></div>
-      <div class="rn" data-scene="5"><span class="ico"><span class="gmini2 dash" style="width:38px;height:30px;font-size:.8rem">↑</span></span><span><div class="k">Artwork</div><div class="v" id="rvArt">add yours</div></span></div>
+      <div class="rn" data-scene="5"><span class="ico"><span class="gmini2 dash" style="width:38px;height:30px;font-size:.8rem">↑</span></span><span><div class="k">Artwork</div><div class="v" id="rvArt">add yours · required</div></span></div>
+      <div class="rn" data-scene="6"><span class="ico"><span class="gstack2"><i></i><i></i><i></i><i></i></span></span><span><div class="k">Order</div><div class="v" id="rvOrder">review &amp; add</div></span></div>
     </div>
   </div>
 
@@ -872,7 +917,7 @@
         <span class="gdv"></span>
         <div class="gop otile" data-orient="landscape"><div class="gbox"><span class="gmini" style="width:48px;height:34px"></span></div><div class="bn">Landscape</div></div>
       </div>
-      <div class="grplbl" style="margin-top:22px">Size <span class="grsub">— the four most booths order at events like this</span></div>
+      <div class="grplbl" style="margin-top:22px">Size <span class="grsub">— the four sizes booths order most at events like this</span></div>
       <div class="grow" id="coSizes">
         <div class="gop popular on" data-size="36x48"><span class="poptag">★ Most popular</span><div class="gbox"><span class="gmini" style="width:48px;height:64px"></span></div><div class="bn">36 × 48″</div><div class="bx">large</div></div>
         <span class="gdv"></span>
@@ -898,7 +943,7 @@
     <section class="scene">
       <div class="sno">Step 03 · Finish</div>
       <h2>Protect it &amp; set the <em>feel.</em></h2>
-      <div class="ss">A laminate guards against scuffs and fingerprints and tunes the shine; mounting makes it rigid and ready to hang.</div>
+      <div class="ss">A laminate guards against scuffs and fingerprints — and tunes the shine from gallery-matte to full gloss.</div>
       <div class="grow" id="coFin" style="flex-wrap:wrap">
         <div class="gop on" data-fin="none"><div class="gbox"><span class="gfin" style="background:linear-gradient(150deg,#efeaf9,#ddd2f2)"></span></div><div class="bn">None</div><div class="bx">paper finish</div></div>
         <span class="gdv"></span>
@@ -960,6 +1005,7 @@
         <div class="gop" data-qty="1000"><div class="gbox"><span class="gmini gqty">1000</span></div></div>
       </div></div>
       </div>
+      <div id="coQtyNudge"></div>
     </section>
 
     <section class="scene">
@@ -976,7 +1022,7 @@
           <div class="pnud2"><b>Order it now — price is locked in.</b> <span class="lockchk"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.801 10A10 10 0 1 1 17 3.335"/><path d="m9 11 3 3L22 4"/></svg></span><br>Need it sooner, costs a little more. Wait a little longer, <b class="savemore">saves a little more</b>.</div>
         </div>
         <div class="pstub2">
-          <div class="pcd"><div class="pt">05:12:04</div><div class="ptl">and this price is yours</div></div>
+          <div class="pcd idle"><div class="pt"></div><div class="ptl">pick a date — we lock the price to it</div></div>
           <div class="pbars2"></div>
           <button class="pbtn" type="button" data-dock><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>Change date</button>
         </div>
@@ -1002,9 +1048,11 @@
             <span class="h q">QTY</span><span class="h">DESCRIPTION</span><span class="h a">AMT</span>
             <span class="q" id="osumQty">1</span><span class="d" id="osumDesc">Poster 36×48″ satin photo</span><span class="a" id="osumSub">$60.00</span>
             <span class="q">—</span><span class="d" id="osumFin">Finish · none</span><span class="a" id="osumFinAmt">$0.00</span>
+            <span class="q">⏱</span><span class="d">In hand · <b id="osumDate">Tue, June 16 · by 4pm</b></span><span class="a oslip-promise">promised</span>
           </div>
           <div class="oslip-trow"><span class="oslip-tl">TOTAL</span><span class="oslip-num" id="osumTotal">$60.00</span></div>
-          <button class="oslip-add" id="osumAdd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>Add to cart</button>
+          <button class="oslip-add" id="osumAdd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg><span class="addlbl">Add to cart</span></button>
+          <div class="oslip-trust">Free proof · human-checked before press · HST is the only thing added at checkout</div>
         </div>
       </div>
     </section>
@@ -1073,25 +1121,25 @@
     <div class="bq">Which <em>paper?</em></div>
     <div class="bs">The stock the image prints on — affects finish, depth and feel.</div>
     <div class="optrow" id="paperRow">
-      <div class="ocA on" data-paper="satin"><div class="gb"><span class="gsw" style="background:linear-gradient(135deg,#3a2f55,#5a4a82)"></span></div><div class="bn2">Satin photo</div><div class="bx">$5/sq ft</div></div>
-      <div class="ocA" data-paper="matte"><div class="gb"><span class="gsw" style="background:linear-gradient(135deg,#34304a,#46415f)"></span></div><div class="bn2">Matte</div><div class="bx">$5/sq ft</div></div>
-      <div class="ocA" data-paper="gloss"><div class="gb"><span class="gsw" style="background:linear-gradient(115deg,#2f2747,#6a59a0 50%,#2f2747)"></span></div><div class="bn2">Gloss</div><div class="bx">$5.50/sq ft</div></div>
-      <div class="ocA" data-paper="heavy"><div class="gb"><span class="gsw" style="background:linear-gradient(135deg,#2c2740,#403a59)"></span></div><div class="bn2">Heavyweight</div><div class="bx">$6.50/sq ft</div></div>
-      <div class="ocA" data-paper="canvas"><div class="gb"><span class="gsw" style="background:linear-gradient(135deg,#4a4036,#6a5c49);background-image:repeating-linear-gradient(0deg,rgba(0,0,0,.07) 0 1px,transparent 1px 3px)"></span></div><div class="bn2">Canvas</div><div class="bx">$12/sq ft</div></div>
-      <div class="ocA" data-paper="backlit"><div class="gb"><span class="gsw" style="background:linear-gradient(135deg,#1b2740,#2f6ea0)"></span></div><div class="bn2">Backlit film</div><div class="bx">$14/sq ft</div></div>
+      <div class="ocA on" data-paper="satin"><span class="qbadge">★ 8 in 10 pick this</span><div class="gb"><span class="gsw" style="background:linear-gradient(135deg,#3a2f55,#5a4a82)"></span></div><div class="bn2">Satin photo</div><div class="bx">glare-free · deep colour</div><div class="bdelta" data-pdelta="satin"></div></div>
+      <div class="ocA" data-paper="matte"><div class="gb"><span class="gsw" style="background:linear-gradient(135deg,#34304a,#46415f)"></span></div><div class="bn2">Matte</div><div class="bx">flat · easy to read</div><div class="bdelta" data-pdelta="matte"></div></div>
+      <div class="ocA" data-paper="gloss"><div class="gb"><span class="gsw" style="background:linear-gradient(115deg,#2f2747,#6a59a0 50%,#2f2747)"></span></div><div class="bn2">Gloss</div><div class="bx">high shine · punchy</div><div class="bdelta" data-pdelta="gloss"></div></div>
+      <div class="ocA" data-paper="heavy"><div class="gb"><span class="gsw" style="background:linear-gradient(135deg,#2c2740,#403a59)"></span></div><div class="bn2">Heavyweight</div><div class="bx">thick · premium</div><div class="bdelta" data-pdelta="heavy"></div></div>
+      <div class="ocA" data-paper="canvas"><div class="gb"><span class="gsw" style="background:linear-gradient(135deg,#4a4036,#6a5c49);background-image:repeating-linear-gradient(0deg,rgba(0,0,0,.07) 0 1px,transparent 1px 3px)"></span></div><div class="bn2">Canvas</div><div class="bx">textured · gallery</div><div class="bdelta" data-pdelta="canvas"></div></div>
+      <div class="ocA" data-paper="backlit"><div class="gb"><span class="gsw" style="background:linear-gradient(135deg,#1b2740,#2f6ea0)"></span></div><div class="bn2">Backlit film</div><div class="bx">for lightboxes</div><div class="bdelta" data-pdelta="backlit"></div></div>
     </div>
     <div class="navrow"><span class="navhint">Satin is the all-rounder; canvas for art pieces.</span><button class="nextbtn" data-goto="2">Next: Finish →</button></div>
   </div>
 
   <div class="band off" data-band="2">
     <div class="bq">Any <em>finish?</em></div>
-    <div class="bs">Lamination protects; mounting makes it rigid and ready to hang.</div>
+    <div class="bs">Lamination guards against scuffs and fingerprints — and sets the shine.</div>
     <div class="optrow" id="finRow">
       <div class="ocA on" data-fin="none"><div class="gb"><span class="gminp" style="width:32px;height:27px"></span></div><div class="bn2">None</div><div class="bx">standard</div></div>
       <div class="ocA" data-fin="glosslam"><div class="gb"><span class="gsw" style="background:linear-gradient(115deg,#3a2f55,#8b7fd0 50%,#3a2f55)"></span></div><div class="bn2">Gloss laminate</div><div class="bx">+$2/sq ft</div></div>
       <div class="ocA" data-fin="mattelam"><div class="gb"><span class="gsw" style="background:linear-gradient(135deg,#34304a,#46415f)"></span></div><div class="bn2">Matte laminate</div><div class="bx">+$2/sq ft</div></div>
     </div>
-    <div class="navrow"><span class="navhint">Mounted posters stand on an easel or hang flush.</span><button class="nextbtn" data-goto="3">Next: Quantity →</button></div>
+    <div class="navrow"><span class="navhint">Laminate = wipe-clean armour for posters used show after show.</span><button class="nextbtn" data-goto="3">Next: Quantity →</button></div>
   </div>
 
   <div class="band off" data-band="3">
@@ -1138,19 +1186,38 @@
         <div class="pnud2"><b>Order it now — price is locked in.</b> <span class="lockchk"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.801 10A10 10 0 1 1 17 3.335"/><path d="m9 11 3 3L22 4"/></svg></span><br>Need it sooner, costs a little more. Wait a little longer, <b class="savemore">saves a little more</b>.</div>
       </div>
       <div class="pstub2">
-        <div class="pt">05:12:04</div>
-        <div class="ptl">and this price is yours</div>
+        <div class="pcd idle"><div class="pt"></div><div class="ptl">pick a date — we lock the price to it</div></div>
         <div class="pbars2"></div>
         <button class="pbtn" type="button" data-dock><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>Change date</button>
       </div>
     </div>
-    <div class="navrow"><span class="navhint">Mounting adds a day — we've built that in.</span><button class="nextbtn" data-goto="5">Next: Artwork →</button></div>
+    <div class="navrow"><span class="navhint">Weekends and cut-offs are already baked into your date.</span><button class="nextbtn" data-goto="5">Next: Artwork →</button></div>
   </div>
 
   <div class="band off" data-band="5">
     <div class="bq">Your <em>artwork.</em></div>
-    <div class="bs">Drop a full-size file — we proof it for resolution, bleed and safe-zone.</div>
+    <div class="bs">Drop a full-size file — we proof it for resolution, bleed and safe-zone. Approving it unlocks Add&nbsp;to&nbsp;cart.</div>
     <div class="dz dz-guided" id="btnUpload"><span class="ic">↑</span><div class="t">Drag your artwork here, or browse<small>PDF · AI · PNG · JPG · TIFF — proofed at full size</small></div></div>
+    <div class="navrow"><span class="navhint">We check it in seconds — you approve the proof.</span><button class="nextbtn" data-goto="6">Next: Review →</button></div>
+  </div>
+
+  <div class="band off" data-band="6">
+    <div class="bq">Ready to <em>print.</em></div>
+    <div class="bs">The full breakdown — one look, then it's in your cart.</div>
+    <div class="oslip oslip-band">
+      <div class="oslip-pad">
+        <div class="oslip-hd"><span class="oslip-biz">Order Summary</span><span class="oslip-kk">Packing slip</span></div>
+        <div class="oslip-tbl">
+          <span class="h q">QTY</span><span class="h">DESCRIPTION</span><span class="h a">AMT</span>
+          <span class="q" id="gslipQty">1</span><span class="d" id="gslipDesc">Poster 36×48″ satin photo</span><span class="a" id="gslipSub">$60.00</span>
+          <span class="q">—</span><span class="d" id="gslipFin">Finish · none</span><span class="a" id="gslipFinAmt">$0.00</span>
+          <span class="q">⏱</span><span class="d">In hand · <b id="gslipDate">Tue, June 16 · by 4pm</b></span><span class="a oslip-promise">promised</span>
+        </div>
+        <div class="oslip-trow"><span class="oslip-tl">TOTAL</span><span class="oslip-num" id="gslipTotal">$60.00</span></div>
+        <button class="oslip-add" id="gslipAdd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg><span class="addlbl">Add to cart</span></button>
+        <div class="oslip-trust">Free proof · human-checked before press · HST is the only thing added at checkout</div>
+      </div>
+    </div>
   </div>
   </div><!-- /bandwrap -->
 
@@ -1195,7 +1262,7 @@
       <tr><td>Sizes</td><td>18×24″, 24×36″ (most popular), 27×40″, 36×48″, A1, or custom up to 120″ on a side</td></tr>
       <tr><td>Orientation</td><td>Portrait or landscape</td></tr>
       <tr><td>Stocks</td><td>Satin photo · Gloss · Matte · Heavyweight matte · Canvas · Backlit film</td></tr>
-      <tr><td>Finishing</td><td>Gloss or matte laminate · mounting on foamcore or gatorboard</td></tr>
+      <tr><td>Finishing</td><td>Gloss or matte laminate</td></tr>
       <tr><td>Resolution</td><td>150 dpi minimum, 300 dpi recommended at final size</td></tr>
       <tr><td>File types</td><td>PDF, AI, EPS, PSD, TIFF, PNG, JPG · up to 100 MB</td></tr>
       <tr><td>Turnaround</td><td>Standard 5 business days · rush, next-day &amp; same-day available</td></tr>
@@ -1214,8 +1281,8 @@
     <h3>Sizes &amp; orientation</h3>
     <p><b>24 × 36″</b> is the standard event poster and our most-ordered size — large enough to anchor a booth, small enough to ship and handle easily. Step up to <b>27 × 40″</b> (the classic movie one-sheet) or <b>36 × 48″</b> for a backdrop-scale statement, or down to <b>18 × 24″</b> for tabletop signs and easel displays. Need something specific? Enter any custom size up to 120″ on a side. Flip between portrait and landscape at the top of the builder — the proof and price update instantly.</p>
 
-    <h3>Finishing &amp; mounting</h3>
-    <p>A <b>laminate</b> (gloss or matte) adds a protective layer that guards against scuffs, fingerprints and moisture, and lets a poster be wiped clean — worth it for anything handled repeatedly or used show after show. <b>Mounting</b> on foamcore or gatorboard turns a flexible print into a rigid board that stands on an easel or hangs flush, with gatorboard being the stiffer, more durable of the two. Mounted posters add roughly a day to turnaround, which the in-hand date already accounts for.</p>
+    <h3>Finishing</h3>
+    <p>A <b>laminate</b> (gloss or matte) adds a protective layer that guards against scuffs, fingerprints and moisture, and lets a poster be wiped clean — worth it for anything handled repeatedly or used show after show. Gloss laminate deepens colour and shine; matte laminate kills glare and gives a smooth, premium hand-feel.</p>
 
     <h3>How to set up your file</h3>
     <ul>
@@ -1236,7 +1303,7 @@
       <div class="qa"><h4>Can I get a poster printed today in Toronto?</h4><p>Yes — same-day printing is available for orders placed before the daily cut-off, with pickup at the MTCC or courier delivery across the GTA. Pick a same-day in-hand date in the builder and it'll confirm whether you've made the cut-off.</p></div>
       <div class="qa"><h4>What resolution do I need?</h4><p>300 dpi at final size is ideal; 150 dpi is the practical minimum. The live proof flags low-resolution files and offers a one-click upscale so you can see the difference before you commit.</p></div>
       <div class="qa"><h4>Do you proof my file before printing?</h4><p>Always. Every order is auto-preflighted for resolution, bleed and safe-zone the moment it's uploaded, and a person reviews it before it goes to press. Free on every order.</p></div>
-      <div class="qa"><h4>What's the difference between mounting on foamcore vs gatorboard?</h4><p>Both make the poster rigid. Foamcore is lighter and economical for short-term use; gatorboard is denser and far more durable, better for posters reused across multiple shows or handled often.</p></div>
+      <div class="qa"><h4>Should I add a laminate?</h4><p>If the poster will be handled, transported between shows, or hung anywhere it might get touched or splashed — yes. Laminate lets it be wiped clean and roughly doubles its working life. For a one-night wall piece, the bare stock is fine.</p></div>
       <div class="qa"><h4>Can you match a specific colour?</h4><p>We print CMYK and can advise on the closest match. For critical brand colours, send a reference and we'll confirm before the run.</p></div>
     </div>
 
@@ -1268,15 +1335,50 @@
     /* Everything view: match the qty-CARD BODY (exclude the per-unit subtext) so the custom box is ~card height, not card+subtext */
     if(qcc.closest('.qpin-co')){ var qp=tile.querySelector('.qper'); if(qp){ h -= qp.offsetHeight + (parseFloat(getComputedStyle(qp).marginTop)||0); } }
     qcc.style.height=h+'px'; }); }
-  /* every quantity tile shows its per-unit price as subtext under the number */
-  function updateQtyTiles(){ var base=(PAPER[st.paper].r+FIN[st.fin].r)*sqft()*(1+st.dAdd); qa('#qtyRow .ocA.qty[data-qty], #coQty .gop[data-qty]').forEach(function(t){ var q=+t.getAttribute('data-qty'); if(!q) return; var el=t.querySelector('.qper'); if(!el){ el=document.createElement('div'); el.className='qper'; t.appendChild(el); } el.textContent=fmt(base*volMult(q))+'/ea'; }); }
+  /* every quantity tile shows its per-unit price as subtext under the number.
+     Break badges DOLLARIZE at 10+ (GAP 8): "save $412" lands harder than "−16%" for a concrete good. */
+  function updateQtyTiles(){ var base=(PAPER[st.paper].r+FIN[st.fin].r)*sqft()*(1+st.dAdd); qa('#qtyRow .ocA.qty[data-qty], #coQty .gop[data-qty]').forEach(function(t){ var q=+t.getAttribute('data-qty'); if(!q) return; var el=t.querySelector('.qper'); if(!el){ el=document.createElement('div'); el.className='qper'; t.appendChild(el); } el.textContent=fmt(base*volMult(q))+'/ea';
+    var bd=t.querySelector('.qsave, .be'); if(bd && q>=10){ var save=base*(1-volMult(q))*q; bd.textContent='save $'+Math.round(save).toLocaleString('en-US'); } }); }
+  /* paper tiles (Guided): live TOTAL-impact delta vs the selected stock — deltas anchor on the decision,
+     absolute $/sq-ft anchors on arithmetic (GAP 7) */
+  function updatePaperTiles(){ var cur=PAPER[st.paper].r, mul=sqft()*st.qty*volMult(st.qty)*(1+st.dAdd);
+    qa('.bdelta[data-pdelta]').forEach(function(el){ var k=el.getAttribute('data-pdelta'); if(!PAPER[k]) return;
+      if(k===st.paper){ el.textContent='included'; el.className='bdelta inc'; return; }
+      var dd=(PAPER[k].r-cur)*mul;
+      if(Math.abs(dd)<0.005){ el.textContent='same price'; el.className='bdelta'; return; }
+      el.textContent=(dd>0?'+':'−')+fmt(Math.abs(dd));
+      el.className='bdelta '+(dd>0?'up':'dn'); }); }
+  /* next-break quantity nudge (GAP 8) — the single highest-leverage upsell in print */
+  var QBREAKS=[3,5,10,15,25,30,50,100];
+  function updateQtyNudge(){ var base=(PAPER[st.paper].r+FIN[st.fin].r)*sqft()*(1+st.dAdd);
+    var nb=null; for(var i=0;i<QBREAKS.length;i++){ if(QBREAKS[i]>st.qty){ nb=QBREAKS[i]; break; } }
+    var html='';
+    if(nb){ var nowEa=base*volMult(st.qty), nbEa=base*volMult(nb), save=nowEa-nbEa, more=nb-st.qty;
+      if(save>0.005) html='<span class="qnudge">'+more+' more → <b>'+fmt(nbEa)+'/ea</b> (save '+fmt(save)+' each)</span>'; }
+    var bn=document.querySelector('.band[data-band="3"] .navhint'); if(bn) bn.innerHTML=html;
+    var cn=$('coQtyNudge'); if(cn) cn.innerHTML=html; }
+  /* ===== countdown (GAP 9): real, opt-in, honest. Starts when a date is PICKED (a countdown you chose is
+     service, not pressure), ticks to the next order cut-off (mock: 4pm local), and at zero rolls to the
+     next cut-off with honest copy instead of silently resetting. ===== */
+  var cdTimer=null, cdTarget=null;
+  function cdNextCutoff(){ var n=new Date(), t=new Date(n); t.setHours(16,0,0,0); if(t<=n) t.setDate(t.getDate()+1); return t; }
+  function cdTick(){ if(!cdTarget) return; var ms=cdTarget-new Date();
+    if(ms<=0){ cdTarget=cdNextCutoff(); qa('.pass .ptl').forEach(function(el){ el.textContent="today's cut-off passed — this is tomorrow's price"; }); ms=cdTarget-new Date(); }
+    var s=Math.floor(ms/1000), h=Math.floor(s/3600), m=Math.floor((s%3600)/60), x=s%60;
+    var txt=(h<10?'0':'')+h+':'+(m<10?'0':'')+m+':'+(x<10?'0':'')+x;
+    qa('.pass .pt').forEach(function(el){ el.textContent=txt; }); }
+  function startCountdown(){ cdTarget=cdNextCutoff();
+    qa('.pass .pcd').forEach(function(el){ el.classList.remove('idle'); });
+    qa('.pass .ptl').forEach(function(el){ el.textContent='and this price is yours'; });
+    if(!cdTimer) cdTimer=setInterval(cdTick,1000); cdTick(); }
   /* top-4 most-popular poster sizes + custom (A-Click roll cap: short side ≤59″, long side ≤120″) */
   var SIZES={ '36x48':{w:36,h:48}, 'a0':{w:33,h:47}, '46x45':{w:46,h:45}, '96x48':{w:96,h:48} };
   var ACLICK_MAX={ short:59, long:120 };   /* matte photo roll; poster paper is 54 short */
   /* turnaround-tier colours (match the date dock) — badge + calendar header recolour by selected date */
   var TIERGRAD={ early:'linear-gradient(120deg,#34d399,#059669)', standard:'linear-gradient(120deg,#60a5fa,#2563eb)', '3days':'linear-gradient(120deg,#fcd34d,#ca8a04)', '2days':'linear-gradient(120deg,#fb923c,#ea580c)', nextday:'linear-gradient(120deg,#f87171,#dc2626)', sameday:'linear-gradient(120deg,#a78bfa,#7c3aed)' };
   var PAPER={ satin:{n:'Satin photo',r:5,sw:'linear-gradient(135deg,#3a2f55,#5a4a82)'}, matte:{n:'Matte',r:5,sw:'linear-gradient(135deg,#34304a,#46415f)'}, gloss:{n:'Gloss',r:5.5,sw:'linear-gradient(115deg,#2f2747,#6a59a0 50%,#2f2747)'}, heavy:{n:'Heavyweight matte',r:6.5,sw:'linear-gradient(135deg,#2c2740,#403a59)'}, canvas:{n:'Canvas',r:12,sw:'linear-gradient(135deg,#4a4036,#6a5c49)'}, backlit:{n:'Backlit film',r:14,sw:'linear-gradient(135deg,#1b2740,#2f6ea0)'} };
-  var FIN={ none:{n:'None',r:0}, glosslam:{n:'Gloss laminate',r:2}, mattelam:{n:'Matte laminate',r:2}, foam:{n:'Mounted · foamcore',r:6}, gator:{n:'Mounted · gatorboard',r:9} };
+  /* mounting (foam/gator) stripped 2026-07-03 by owner decision — returns as a real product option post-launch */
+  var FIN={ none:{n:'None',r:0}, glosslam:{n:'Gloss laminate',r:2}, mattelam:{n:'Matte laminate',r:2} };
   var st={ size:'36x48', orient:'portrait', cW:36, cH:48, unit:'in', paper:'satin', fin:'none', qty:1, when:'Tue, Jun 16', dAdd:0, art:false, proof:false };
   var lastTotal=null;
   function dims(){ var sz=SIZES[st.size]; var d=(st.size==='custom'||!sz)?[st.cW,st.cH]:[sz.w,sz.h]; var w=d[0],h=d[1]; return st.orient==='landscape'?[Math.max(w,h),Math.min(w,h)]:[Math.min(w,h),Math.max(w,h)]; }
@@ -1339,27 +1441,30 @@
     var qn=$('rvQtyN'); if(qn){ qn.textContent=st.qty; qn.style.fontSize = st.qty>999?'.58rem' : st.qty>99?'.72rem' : '.88rem'; }   /* quantity tile reflects the count */
     var t=total(); $('price').textContent=fmt(t);
     if($('addTot')) $('addTot').textContent='· '+fmt(t);
-    if($('priceEach')) $('priceEach').textContent=st.qty+' · '+fmt(t/st.qty)+'/ea';
-    if($('priceSub')) $('priceSub').textContent=st.qty+(st.qty==1?' poster':' posters')+' · '+d[0]+'×'+d[1]+'″ · '+PAPER[st.paper].n+(FIN[st.fin].r?' · '+FIN[st.fin].n:'')+' · in-hand '+st.when;
-    /* N12 buy-bar segments */
+    /* N12 buy-bar segments — Qty cell + per-unit reframe at the commitment surface (GAP 6) */
+    if($('bbQty')) $('bbQty').textContent=st.qty;
+    if($('drawerQty')) $('drawerQty').textContent=st.qty;
+    ['bbEach','drawerEach'].forEach(function(id){ var el=$(id); if(!el) return; el.textContent=fmt(t/st.qty)+' /ea'; el.style.display=(st.qty>1?'':'none'); });
     if($('bbSize')) $('bbSize').textContent=d[0]+' × '+d[1]+'″';
     if($('bbPaper')) $('bbPaper').textContent=PAPER[st.paper].n;
     if($('bbWhen')) $('bbWhen').textContent=st.when;
-    /* all-options receipt */
-    if($('osumTotal')) $('osumTotal').textContent=fmt(t);
+    /* all-options receipt (osumTotal written in the slip loop below) */
     if($('drawerTotal')) $('drawerTotal').textContent=fmt(t);
     if($('drawerSize')) $('drawerSize').textContent=d[0]+' × '+d[1]+'″';
     if($('drawerWhen')) $('drawerWhen').textContent=st.when;
-    if($('drawerEach')) $('drawerEach').textContent=st.qty+' · '+fmt(t/st.qty)+'/ea';
     if($('drawerSub')) $('drawerSub').textContent=st.qty+(st.qty==1?' poster':' posters')+' · '+d[0]+'×'+d[1]+'″ · '+PAPER[st.paper].n+' · in-hand '+st.when;
     if($('addTot2')) $('addTot2').textContent='· '+fmt(t);
-    /* Step-07 packing slip: itemise the pre-tax total into poster + finish (HST is added at checkout, never shown in the configurator) */
+    /* Packing slips (Everything Step-07 = osum* · Guided band-6 = gslip*): itemise the pre-tax total
+       into poster + finish (HST is added at checkout, never shown in the configurator) */
     var _fr=FIN[st.fin].r, _pr=PAPER[st.paper].r, _finAmt=_fr? t*_fr/(_pr+_fr) : 0, _postAmt=t-_finAmt;
-    if($('osumQty')) $('osumQty').textContent=st.qty;
-    if($('osumDesc')) $('osumDesc').textContent='Poster '+d[0]+'×'+d[1]+'″ '+PAPER[st.paper].n.toLowerCase();
-    if($('osumSub')) $('osumSub').textContent=fmt(_postAmt);
-    if($('osumFin')) $('osumFin').textContent='Finish · '+(_fr?FIN[st.fin].n:'none');
-    if($('osumFinAmt')) $('osumFinAmt').textContent=fmt(_finAmt);
+    ['osum','gslip'].forEach(function(px){
+      if($(px+'Qty')) $(px+'Qty').textContent=st.qty;
+      if($(px+'Desc')) $(px+'Desc').textContent='Poster '+d[0]+'×'+d[1]+'″ '+PAPER[st.paper].n.toLowerCase();
+      if($(px+'Sub')) $(px+'Sub').textContent=fmt(_postAmt);
+      if($(px+'Fin')) $(px+'Fin').textContent='Finish · '+(_fr?FIN[st.fin].n:'none');
+      if($(px+'FinAmt')) $(px+'FinAmt').textContent=fmt(_finAmt);
+      if($(px+'Total')) $(px+'Total').textContent=fmt(t);
+    });
     [['data-size',st.size],['data-paper',st.paper],['data-fin',st.fin],['data-qty',String(st.qty)],['data-orient',st.orient]].forEach(function(p){ qa('['+p[0]+']').forEach(function(el){ if(el.classList.contains('ocA')||el.classList.contains('gop')||el.classList.contains('qpill')||el.classList.contains('qchip')||el.closest('#copanel')||el.closest('#sheet')) el.classList.toggle('on', el.getAttribute(p[0])===p[1]); }); });
     if($('coCustom')) $('coCustom').classList.toggle('on', st.size==='custom');
     var qPreset=!!document.querySelector('[data-qty="'+st.qty+'"]'); qa('.qcc').forEach(function(el){ el.classList.toggle('on', !qPreset); });
@@ -1369,6 +1474,8 @@
     if(typeof placeAllThumbs==='function') placeAllThumbs();
     if(typeof updateQtyTiles==='function') updateQtyTiles();   /* add per-unit subtext FIRST */
     if(typeof matchQccHeight==='function') matchQccHeight();    /* then match the box to the (now taller) tile */
+    if(typeof updatePaperTiles==='function') updatePaperTiles();/* live paper deltas for the current spec (GAP 7) */
+    if(typeof updateQtyNudge==='function') updateQtyNudge();    /* next-break nudge (GAP 8) */
     if(typeof syncV2Custom==='function') syncV2Custom();        /* push state into the v2 quick-edit custom inputs */
     if(lastTotal!==null && Math.abs(t-lastTotal)>1) flash(t-lastTotal); lastTotal=t;
   }
@@ -1444,7 +1551,9 @@
     ['passTier','passTier2'].forEach(function(id){ var el=$(id); if(el){ el.textContent=info.tierLabel||''; el.style.background=grad; el.style.boxShadow='none'; } });
     var tm=info.time||'4pm'; qa('.ptime').forEach(function(el){ el.textContent=tm; });
     if($('sheetDateTxt')) $('sheetDateTxt').textContent=(info.labelFull||info.label)+' · by '+tm;
-    if($('osumDate')) $('osumDate').textContent=(info.labelFull||info.label)+' · by '+tm;
+    /* the promise reaches BOTH receipts (GAP 5 — the in-hand date had fallen out of the slip) */
+    ['osumDate','gslipDate'].forEach(function(id){ if($(id)) $(id).textContent=(info.labelFull||info.label)+' · by '+tm; });
+    startCountdown();   /* a date was actively picked — the price-lock timer is now service, not theatre */
     markDone(4); paint(); }
   document.addEventListener('click', function(e){ if(e.target.closest('[data-dock]') && window.DateDock){ window.DateDock.open({ current: st.when, basePrice: total()/(1+st.dAdd), qty: st.qty, onPick: applyDate }); } });
   var _bu=$('btnUpload'); if(_bu){ _bu.addEventListener('click', function(){ if(!_bu.classList.contains('filled')) triggerUpload(); });
@@ -1616,7 +1725,8 @@
     var cl=$('checkList'); if(cl) cl.innerHTML=c.items.map(function(x){ return '<li class="ck '+x[0]+'"><span class="ck-ic"></span><span class="ck-t">'+x[1]+'</span><span class="ck-d">'+x[2]+'</span></li>'; }).join('');
     var s=$('proofStage'); if(s) s.classList.toggle('warn', proofWarn);
     var tg=$('proofToggle'); if(tg) tg.textContent=proofWarn?'◂ Show a clean file':'▸ Preview a flagged file';
-    var ap=$('proofApprove'); if(ap) ap.textContent=proofWarn?'Approve anyway →':'Approve proof →'; }
+    var ap=$('proofApprove'); if(ap) ap.textContent=proofWarn?'Print as-is →':'Approve proof →';
+    var fx=$('proofFixBtn'); if(fx) fx.classList.toggle('show', proofWarn && !proofApproved); }
   /* in-context file-check card (lives in the artwork step; opt-in 'Inspect' opens the full-screen view) */
   /* chosen file-check cards — Guided = GX9 (boarding pass), Everything = DC1 (deadline card) */
   function fckTick(warn){ return warn
@@ -1626,33 +1736,51 @@
     var cells=[ {l:'Resolution', v:c.dpi+' DPI', ok:c.items[0][0]==='ok'}, {l:'Bleed', v:'0.125"', ok:c.items[1][0]==='ok'}, {l:'Safe zone', v:(c.items[2][0]==='ok'?'Clear':'Tight'), ok:c.items[2][0]==='ok'}, {l:'Color', v:'CMYK', ok:c.items[3][0]==='ok'} ];
     var fails=cells.filter(function(x){return !x.ok;}).length;
     return { d:d, dpi:c.dpi, cells:cells, fails:fails, warn:fails>0 }; }
-  function fckApprove(extra){ return '<button class="fck-btn afc-approve'+(proofApproved?' done':'')+'" type="button"'+(extra||'')+'>'+(proofApproved?'✓ Approved':(proofWarn?'Approve anyway →':'Approve proof →'))+'</button>'; }
+  /* WARN path (GAP 3): the one-click FIX is the primary (it was buried in the guides legend);
+     "Print as-is" is an informed secondary, never a liability-transfer "Approve anyway". */
+  function fckApprove(extra){
+    if(proofApproved) return '<button class="fck-btn done afc-approve" type="button"'+(extra||'')+'>'+(proofWarn?'✓ Approved as-is':'✓ Approved')+'</button>';
+    if(proofWarn) return '<button class="fck-btn fixit afc-fix" type="button"'+(extra||'')+'>✦ Fix it — upscale to 300 dpi</button>';
+    return '<button class="fck-btn afc-approve" type="button"'+(extra||'')+'>Approve proof →</button>'; }
+  function fckAsIs(){ return (proofWarn && !proofApproved)
+    ? '<button class="fck-lnk mut afc-approve" type="button">Print as-is →</button>' : ''; }
+  function fckRea(){ return (proofWarn && !proofApproved)
+    ? '<div class="fck-rea">Printed as-is it may look a touch soft up close — most viewers won\'t notice at booth distance. <b>A human checks every file before press</b> — if anything looks off, we reach out before printing.</div>' : ''; }
   function fckChecking(){ return '<div class="afc afc-checking"><div class="afc-spin"></div><div class="afc-ct">Checking your file…</div><div class="afc-cs">resolution · bleed · safe-zone · color</div></div>'; }
-  function fckGuided(){ var x=fckData(), w=x.warn, d=x.d;
-    var chip = w ? '⚠ '+x.fails+' issue'+(x.fails>1?'s':'') : '✓ 4/4 passed';
+  function fckChipHtml(x){
+    if(proofApproved && x.warn) return '<span class="fck-chip okd" style="margin-left:auto">Approved as-is ✓</span>';
+    if(x.warn) return '<span class="fck-chip warn" style="margin-left:auto">⚠ '+x.fails+' issue'+(x.fails>1?'s':'')+'</span>';
+    return '<span class="fck-chip" style="margin-left:auto">✓ 4/4 passed</span>'; }
+  function fckGuided(){ var x=fckData(), d=x.d;
+    /* effective display state: once approved, the amber anxiety clears — never leave a warning on a completed step */
+    var eff = x.warn && !proofApproved;
+    var head = eff ? 'Needs a look' : (x.warn ? 'Approved as-is' : 'Ready to print');
     var cells = x.cells.map(function(c){ return '<div class="fck-cell '+(c.ok?'ok':'bad')+'"><span class="cl">'+c.l+'</span><span class="cv">'+c.v+'</span></div>'; }).join('');
-    return '<div class="fck fck-pass'+(w?' warn':'')+'">'
-      +'<div class="fck-pcheck"><span class="fck-bigchk'+(w?' warn':'')+'">'+fckTick(w)+'</span><span class="fck-passlbl'+(w?' warn':'')+'">'+(w?'Issue':'Passed')+'</span></div>'
+    return '<div class="fck fck-pass'+(eff?' warn':'')+'">'
+      +'<div class="fck-pcheck"><span class="fck-bigchk'+(eff?' warn':'')+'">'+fckTick(eff)+'</span><span class="fck-passlbl'+(eff?' warn':'')+'">'+(eff?'Issue':'Passed')+'</span></div>'
       +'<div class="fck-pvd"></div>'
-      +'<div class="fck-pbody"><div class="fck-hdrow"><span class="fck-h">'+(w?'Needs a look':'Ready to print')+'</span><span class="fck-chip'+(w?' warn':'')+'" style="margin-left:auto">'+chip+'</span></div>'
+      +'<div class="fck-pbody"><div class="fck-hdrow"><span class="fck-h">'+head+'</span>'+fckChipHtml(x)+'</div>'
         +'<div class="fck-fline"><span class="fck-fn">'+curFile.name+'</span><span>· '+curFile.size+'</span><button class="fck-lnk mut afc-replace" type="button" style="margin-left:auto">Replace</button></div>'
         +'<div class="fck-dim" style="font-size:1.5rem;margin:5px 0 11px">'+d[0]+' × '+d[1]+' <span class="u">in</span></div>'
-        +'<div class="fck-cells4">'+cells+'</div></div>'
-      +'<div class="fck-stub">'+fckApprove(' style="width:100%"')+'<button class="fck-ghost afc-inspect" type="button" style="width:100%">Inspect</button></div>'
+        +'<div class="fck-cells4">'+cells+'</div>'+fckRea()+'</div>'
+      +'<div class="fck-stub">'+fckApprove(' style="width:100%"')+fckAsIs()+'<button class="fck-ghost afc-inspect" type="button" style="width:100%">Inspect</button></div>'
       +'</div>'; }
-  function fckEverything(){ var x=fckData(), w=x.warn, d=x.d;
-    var chip = w ? '⚠ '+x.fails+' issue'+(x.fails>1?'s':'') : '4 / 4';
+  function fckEverything(){ var x=fckData(), d=x.d;
+    var eff = x.warn && !proofApproved;
+    var head = eff ? 'Needs a look' : (x.warn ? 'Approved as-is' : 'Ready to print');
+    /* DC1 cells (GAP 10): show the SAME checks the chip counts — Safe zone included, so "⚠ 2 issues"
+       always matches two visible amber cells. Size is the neutral dimension display. */
     var stats = '<div class="fck-cell"><span class="cl">Size</span><span class="cv">'+d[0]+'×'+d[1]+'"</span></div>'
-      +'<div class="fck-cell '+(x.cells[0].ok?'':'bad')+'"><span class="cl">Res</span><span class="cv">'+x.dpi+'dpi</span></div>'
-      +'<div class="fck-cell"><span class="cl">Color</span><span class="cv">CMYK</span></div>'
+      +'<div class="fck-cell '+(x.cells[0].ok?'ok':'bad')+'"><span class="cl">Res</span><span class="cv">'+x.dpi+'dpi</span></div>'
+      +'<div class="fck-cell '+(x.cells[2].ok?'ok':'bad')+'"><span class="cl">Safe zone</span><span class="cv">'+x.cells[2].v+'</span></div>'
       +'<div class="fck-cell '+(x.cells[1].ok?'ok':'bad')+'"><span class="cl">Bleed</span><span class="cv">0.125"</span></div>';
     return '<div class="fck fck-dc"><div class="fck-top">'
-      +'<div class="fck-lc"><span class="fck-bigchk'+(w?' warn':'')+'">'+fckTick(w)+'</span><span class="fck-passlbl'+(w?' warn':'')+'">'+(w?'Issue':'Passed')+'</span></div>'
+      +'<div class="fck-lc"><span class="fck-bigchk'+(eff?' warn':'')+'">'+fckTick(eff)+'</span><span class="fck-passlbl'+(eff?' warn':'')+'">'+(eff?'Issue':'Passed')+'</span></div>'
       +'<div class="fck-dv"></div>'
-      +'<div class="fck-det"><div class="fck-hdrow"><span class="fck-h">'+(w?'Needs a look':'Ready to print')+'</span><span class="fck-chip'+(w?' warn':'')+'" style="margin-left:auto">'+chip+'</span></div>'
+      +'<div class="fck-det"><div class="fck-hdrow"><span class="fck-h">'+head+'</span>'+fckChipHtml(x)+'</div>'
         +'<div class="fck-file" style="margin-bottom:11px"><b>'+curFile.name+'</b> · '+curFile.size+'</div>'
-        +'<div class="fck-cells4">'+stats+'</div></div></div>'
-      +'<div class="fck-tools"><button class="fck-lnk afc-inspect" type="button">⤢ Inspect</button><button class="fck-lnk mut afc-replace" type="button">Replace file</button>'+fckApprove(' style="margin-left:auto"')+'</div>'
+        +'<div class="fck-cells4">'+stats+'</div>'+fckRea()+'</div></div>'
+      +'<div class="fck-tools"><button class="fck-lnk afc-inspect" type="button">⤢ Inspect</button><button class="fck-lnk mut afc-replace" type="button">Replace file</button>'+fckAsIs()+fckApprove(' style="margin-left:auto"')+'</div>'
       +'</div>'; }
   function renderArtCard(state){
     var gd=$('btnUpload'); if(gd){ gd.classList.add('filled'); gd.innerHTML = state==='checking'?fckChecking():fckGuided(); }
@@ -1667,12 +1795,17 @@
     clearTimeout(startCheck._t); startCheck._t=setTimeout(function(){ clearInterval(startCheck._iv); showProof(); }, 1500); }
   /* in-context: upload → art on hero + guides on + file-check card in the step (NO full-screen takeover) */
   function uploadArt(name,size){ curFile={name:name||'artwork.pdf', size:size||'18.4 MB'}; hasArt=true; proofApproved=false; applyHeroArt(true);
+    qa('.add').forEach(function(b){ b.classList.add('locked'); b.classList.remove('unlocked'); });   /* new file → re-lock until its proof is approved */
     if($('rvArt')) $('rvArt').textContent=curFile.name+' · proofing'; renderArtCard('checking');
     clearTimeout(uploadArt._t); uploadArt._t=setTimeout(function(){ renderArtCard('result'); }, 1300); }
   function reviewProof(){ openOverlay(); showProof(); }   /* opt-in full-screen inspect */
   function triggerUpload(){ if(hasArt){ reviewProof(); } else { var ai=$('artInput'); if(ai) ai.click(); } }
   function closeProof(){ var ov=$('proofov'); if(ov){ ov.classList.remove('open'); ov.setAttribute('aria-hidden','true'); clearTimeout(startCheck._t); clearInterval(startCheck._iv); } }
-  function approveProof(){ proofApproved=true; st.art=true; if($('rvArt')) $('rvArt').textContent=curFile.name+' ✓ approved'; renderArtCard('result'); var ov=$('proofov'); if(ov&&ov.classList.contains('open')) closeProof(); markDone(5); }
+  function approveProof(){ proofApproved=true; st.art=true; if($('rvArt')) $('rvArt').textContent=curFile.name+' ✓ approved'; renderArtCard('result'); var ov=$('proofov'); if(ov&&ov.classList.contains('open')) closeProof(); markDone(5);
+    /* forward beat (GAP 1): approval visibly UNLOCKS the CTA and carries the customer to the finale */
+    qa('.add').forEach(function(b){ b.classList.remove('locked'); b.classList.add('unlocked'); setTimeout(function(){ b.classList.remove('unlocked'); }, 2400); });
+    if(screen.classList.contains('allopts')){ var os=$('osum'); if(os) os.scrollIntoView({ behavior:'smooth', block:'center' }); }
+    else goScene(6); }
   var _ai=$('artInput'); if(_ai) _ai.addEventListener('change', function(){ var f=this.files&&this.files[0]; uploadArt(f?f.name:null, f?fmtBytes(f.size):null); this.value=''; });
   var _po=$('proofov'); if(_po){
     var _px=$('proofX'); if(_px) _px.addEventListener('click', closeProof);
@@ -1686,14 +1819,36 @@
     window.addEventListener('resize', function(){ if(_po.classList.contains('open') && _po.classList.contains('s-result')) sizeProofStage(); });
     document.addEventListener('keydown', function(e){ if(e.key==='Escape' && _po.classList.contains('open')) closeProof(); });
   }
-  /* in-context file-check card actions: replace / guides (hero overlay) / inspect (full-screen) / approve */
-  document.addEventListener('click', function(e){ var b=e.target.closest('.afc-replace, .afc-guides, .afc-inspect, .afc-approve'); if(!b) return; e.preventDefault();
+  /* in-context file-check card actions: replace / guides (hero overlay) / inspect (full-screen) / fix / approve */
+  document.addEventListener('click', function(e){ var b=e.target.closest('.afc-replace, .afc-guides, .afc-inspect, .afc-approve, .afc-fix'); if(!b) return; e.preventDefault();
     if(b.classList.contains('afc-replace')){ var ai=$('artInput'); if(ai) ai.click(); }
     else if(b.classList.contains('afc-guides')){ setGuides(!st.proof); }
     else if(b.classList.contains('afc-inspect')){ reviewProof(); }
+    else if(b.classList.contains('afc-fix')){ /* the one-click upscale, surfaced where the anxiety is (GAP 3) */
+      proofWarn=false; setPF(true); renderProofChecks(); renderArtCard('result');
+      var ov=$('proofov'); if(ov && ov.classList.contains('open')) requestAnimationFrame(sizeProofStage); }
     else if(b.classList.contains('afc-approve')){ approveProof(); } });
-  /* Add-to-cart gate (soft, for the mockup): require an approved proof before ordering */
-  document.addEventListener('click', function(e){ var a=e.target.closest('.add, .oslip-add'); if(!a || a.closest('.prooffs')) return; if(!proofApproved){ e.preventDefault(); e.stopPropagation(); triggerUpload(); } }, true);
+  /* ===== HARD Add-to-cart gate (owner decision 2026-07-03) — but the gate NEVER hijacks (GAP 1):
+     it walks the customer to the artwork step, says why in words, and pulses the target. ===== */
+  function gateNudge(target,msg){ var el=document.querySelector('.gate-nudge'); if(!el){ el=document.createElement('div'); el.className='gate-nudge'; document.body.appendChild(el); }
+    el.textContent=msg; var r=target.getBoundingClientRect(); el.style.left=Math.round(r.left+r.width/2)+'px'; el.style.top=Math.round(r.top)+'px';
+    requestAnimationFrame(function(){ el.classList.add('show'); });
+    clearTimeout(gateNudge._t); gateNudge._t=setTimeout(function(){ el.classList.remove('show'); }, 3600); }
+  function gotoArtwork(){ var target;
+    if(screen.classList.contains('allopts')){ target=$('coUpload'); if(target) target.scrollIntoView({ behavior:'smooth', block:'center' }); }
+    else { goScene(5); target=$('btnUpload'); }
+    if(target){ target.classList.remove('attn'); void target.offsetWidth; target.classList.add('attn'); }
+    return target; }
+  document.addEventListener('click', function(e){ var a=e.target.closest('.add, .oslip-add'); if(!a || a.closest('.prooffs')) return;
+    if(!proofApproved){ e.preventDefault(); e.stopPropagation();
+      var t=gotoArtwork();
+      setTimeout(function(){ if(t) gateNudge(t, hasArt ? 'One thing left — approve your artwork proof' : 'Last step — add your artwork so we can proof it'); }, screen.classList.contains('allopts')?450:260);
+      return; }
+    /* approved → the END gets a beat (GAP 1): confirm right on the button (mock — real cart is build-phase) */
+    markDone(6); if($('rvOrder')) $('rvOrder').textContent='in cart ✓';
+    var lbl=a.querySelector('.addlbl'); a.classList.add('added'); if(lbl) lbl.textContent='✓ Added to cart';
+    clearTimeout(a._rt); a._rt=setTimeout(function(){ a.classList.remove('added'); if(lbl) lbl.textContent='Add to cart'; }, 2600);
+  }, true);
   /* scroll hint → SEO content; CTA → back to the builder */
   function smooth(y){ window.scrollTo({ top:y, behavior:'smooth' }); }
   $('scrollHint').addEventListener('click', function(){ var s=document.querySelector('.seo'); smooth(s?s.offsetTop-8:window.innerHeight); });
